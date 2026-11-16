@@ -1,5 +1,5 @@
-import {HOLDING_STILL, beat} from "./02_preview.js";
-import {draw, drawSteps, paintAll, step} from "./03_runs.js";
+import {draw, drawSteps, paintAll} from "./00_draw.js";
+import {HOLDING_STILL, beat, step} from "./02_preview.js";
 import {capture, state} from "./04_scenes.js";
 import {workOn} from "./10_led_sections.js";
 import {chosenTab, holdTabsPlace, showChosen} from "./11_tabs.js";

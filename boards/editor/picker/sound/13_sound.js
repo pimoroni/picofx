@@ -1,13 +1,14 @@
+import {banner} from "../00_banner.js";
+import {draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
-import {draw, drawSteps} from "../03_runs.js";
+import {entryParts, unquoted} from "../03_reading.js";
 import {allBodies, bodyParts, driveParts, frozen, state} from "../04_scenes.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
-import {banner} from "../18_drive.js";
+import {nameShown} from "../18_drive.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
 import {
-  adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, nameShown
+  adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia
 } from "../26_drive_files.js";
-import {entryParts, unquoted} from "../27_readback.js";
 
 // ---- a Sound tab ----------------------------------------------------------------------------
 // One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
@@ -211,7 +212,7 @@ function plainSoundTile(name) {
     draw();
   };
   // An example keeps no bin here, as flashing the board's examples again brings it back. Where the
-  // board's examples can be discovered, discover/29_discover_sound.js gives it one
+  // board's examples can be discovered, discover/sound/29_discover_sound.js gives it one
   if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
     tile.appendChild(binButton(name, "wav"));
   }

@@ -1,13 +1,88 @@
+import {draw, drawSteps} from "./00_draw.js";
+import {astrayOf} from "./01_colours.js";
 import {BOARD} from "./01_looks.js";
 import {
-  CHANNEL_INKS, OUTPUTS, draw, drawSteps, lampKey, order, outputSaid, placesOf, shortName, wiring
+  CHANNEL_INKS, MONO_FIRST, OUTPUTS, kinOf, order, outputSaid, placesOf, shortName, wiring
+} from "./03_outputs.js";
+import {
+  BACK, LEFT, ON, RIGHT, canEdit, joinAll, lampKey, setupOn, stepBack, stepOn
 } from "./03_runs.js";
-import {astrayOf} from "./05_effects.js";
+import {iconButton} from "./04_led_panels.js";
+import {GLASS_IN, GLASS_OUT, ZOOMS_OVER} from "./05_strips.js";
 import {
   breakOutInScenes, breakingOutputs, brokenSaid, moveLampInScenes, rejoinInScenes,
   resetWiringInScenes, wiringChanged
 } from "./07_board.js";
-import {setupOn} from "./08_setup.js";
+import {noArrow} from "./08_setup.js";
+import {middleOfView, toolButton, zoomOf, zoomTo} from "./31_stretch_bar.js";
+
+// ---- the wiring ---------------------------------------------------------------------------------
+// The wiring row over the outputs and each strip's header row, with their steps back and on, and
+// the wiring drawn and changed while the board is set up.
+
+// Light an output's three channels, each at its own edge and in its own colour, so what the
+// arrow would rejoin is visible before it is pressed
+export function showKin(out, on) {
+  (kinOf[out] || []).forEach(function (node) { node.classList.toggle("kin", on); });
+}
+
+// The one act there is, said as a direction. A colour output crosses to the mono side and
+// becomes three mono lights, and those three cross back as one colour output. It shows only
+// where the wiring can be changed, in the board's colour, and only on an output that breaks out
+export function crossing(out, colour) {
+  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
+  var made = document.createElement("button");
+  made.className = "cross boardarrow";
+  var says = colour
+    ? "split " + outputSaid(out) + " into three mono lights"
+    : "rejoin " + outputSaid(out) + " as one colour light";
+  made.title = says;
+  made.setAttribute("aria-label", says);
+  made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
+                   "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
+                   "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
+  made.onclick = function (event) {
+    event.stopPropagation();
+    if (colour) breakOut(out); else rejoin(out);
+  };
+  return made;
+}
+
+// ---- the rows around the bar ---------------------------------------------------------------
+
+// Add the run's controls at the right of its header row, the box naming its wiring or its strip.
+// A long strip zooms first, then come the steps back and on, then Join all as a quick reset
+export function headSteps(row, run) {
+  var steps = document.createElement("span");
+  steps.className = "headsteps";
+
+  // Zooming is only any use where there are more lights than a panel can show. The
+  // buttons hold the middle of the view, since a press has no place on the run to hold
+  if (run.strip && run.count > ZOOMS_OVER) {
+    steps.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
+                                 }));
+    var said = document.createElement("span");
+    said.className = "howfar";
+    said.textContent = Math.round(zoomOf(run) * 100) + "%";
+    steps.appendChild(said);
+    steps.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
+                                 }));
+  }
+
+  steps.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
+                               function () { stepBack(run); }));
+  steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
+                               function () { stepOn(run); }));
+  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                        "merge into one stretch, keeping the selected stretch's look");
+  join.onclick = function () { joinAll(run); };
+  steps.appendChild(join);
+  row.appendChild(steps);
+}
 
 // ---- the wiring, while the board is set up ------------------------------------------------
 // The outputs' own panel shows the wiring while the board is set up. The board's connectors run
@@ -253,7 +328,7 @@ function playSlide() {
 // Breaking an output out, its three lamps open out of where its one stood, each sliding
 // from there to its own place. Putting one back, the lamp it becomes closes in from the
 // middle of the three. The other lamps make way as they do for a move
-export function breakOut(out) {
+function breakOut(out) {
   slideFrom(null);
   var whole = sliding.was[lampKey({out: out, channel: null})];
   if (whole) {
@@ -264,7 +339,7 @@ export function breakOut(out) {
   breakOutInScenes(out);
 }
 
-export function rejoin(out) {
+function rejoin(out) {
   slideFrom(null);
   gatherFromThree(out);
   rejoinInScenes(out);

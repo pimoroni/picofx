@@ -1,5 +1,6 @@
-import {MONO_FIRST, active, mono, outs, pick, runs} from "./03_runs.js";
-import {STRIPS} from "./05_effects.js";
+import {MONO_FIRST} from "./03_outputs.js";
+import {active, mono, outs, pick, runs} from "./03_runs.js";
+import {STRIPS} from "./05_strips.js";
 
 // ---- the LED sections, for a page that shows one at a time ----------------------------------
 // The outputs and each strip, which the gallery can give a look to, as against the screens,

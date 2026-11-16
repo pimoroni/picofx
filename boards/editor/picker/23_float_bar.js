@@ -1,8 +1,9 @@
-import {drawSteps, escapeHtml} from "./03_runs.js";
+import {bannerSteps} from "./00_banner.js";
+import {drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
-import {bannerSteps} from "./18_drive.js";
-import {boardSet} from "./19_board_settings.js";
-import {onProgramPage, programTitle} from "./22_program.js";
+import {escapeHtml} from "./18_file_preview.js";
+import {boardSet, onProgramPage} from "./19_board_settings.js";
+import {programTitle} from "./22_program.js";
 
 // ---- the bar along the top ----------------------------------------------------------------------
 // Once the header has scrolled out of view a slim bar takes its place along the top, holding the

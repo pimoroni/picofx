@@ -1,6 +1,7 @@
-import {draw} from "../../03_runs.js";
+import {draw} from "../../00_draw.js";
 import {state} from "../../04_scenes.js";
-import {isExampleMedia, nameShown} from "../../26_drive_files.js";
+import {nameShown} from "../../18_drive.js";
+import {isExampleMedia} from "../../26_drive_files.js";
 import {
   discoverBin, discoverElement, discoverKinds, discoverPill, discoverPlaceBar, discoverSay,
   discoverSounds

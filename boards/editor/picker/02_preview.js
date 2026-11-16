@@ -1,4 +1,13 @@
-import {linesFor} from "./05_effects.js";
+import {draw, paintAll} from "./00_draw.js";
+import {blinkDuty, blinkSpeed, keyOf, lookNamed, withSection} from "./01_looks.js";
+import {BLINK, blinkWord} from "./02_blink.js";
+import {
+  forwardTargetFor, linesFor, ownColourFor, runsAWay, takesColour, withExact
+} from "./03_lines.js";
+import {widthOf} from "./03_outputs.js";
+import {MIDDLING, remember} from "./03_runs.js";
+import {lampUnder} from "./04_scenes.js";
+import {SOLID_COLOUR, START_MOODS} from "./05_strips.js";
 
 // ---- the lamps, lit by the line the look writes ---------------------------------------
 // A card can say what a look is made of, but only a lamp actually running it can say what it
@@ -240,7 +249,7 @@ function hueInk(hue, sat, val) {
   }).join("");
 }
 
-export var COLOURED = {
+var COLOURED = {
 
   rainbow: function (t, s) {
     return {level: 1, ink: hueInk(((t * num(s.speed, 1)) % 1) * 360, s.sat, s.val)};
@@ -298,12 +307,12 @@ function curved(sim, given, channel) {
 // ---- what one lamp of a target is doing at time t ----------------------------------------
 
 // Whether a strip's stretches are being played, so the looks take the strip's form
-export var previewingStrip = false;
+var previewingStrip = false;
 
 // The target a look writes for, built from what the lamp knows. Colour is always asked
 // for, so an entry naming one says what to draw the lamp in, and a caller showing mono lamps
 // draws it its own way. The preview plays a stretch as that many lamps of its own
-export function lampTarget(count) {
+function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
   var target = {kind: count === 1 ? "one" : "outputs", id: "outputs", name: "out",
@@ -315,7 +324,7 @@ export function lampTarget(count) {
 
 // What a look's entries light at slot, which lamp this is counted from zero, of count playing.
 // The effects part plays a stretch through this as the board will
-export function lookLit(look, holder, t, slot, count, sim) {
+function lookLit(look, holder, t, slot, count, sim) {
   if (!look || !look.entries) return null;
   var lines;
   try {
@@ -351,8 +360,155 @@ export function lookLit(look, holder, t, slot, count, sim) {
 
 // ---- painting them, forty times a second ---------------------------------------------
 
-export var FRAME = 1 / 40;
+var FRAME = 1 / 40;
 export var beat = 0;
 
 export var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ---- lighting -----------------------------------------------------------------------------
+
+export var painters = [];
+var walks = {};
+
+// What each lamp of a run shows now. A strip's stretches are played in the strip's form
+export function litRun(run) {
+  var out = [];
+  var store = walks[run.name] || (walks[run.name] = {});
+  previewingStrip = !!run.strip;
+  try {
+    run.sections.forEach(function (section) {
+      var look = lookNamed(section.look);
+      var wide = widthOf(section);
+      for (var i = 0; i < wide; i++) {
+        var which = section.from + i;
+        var lamp = run.lamps[which];
+        if (!lamp) continue;
+        var walk = store[which] || (store[which] = {});
+        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
+        out[which] = lit
+          ? {level: Math.max(0, Math.min(1, lit.level)),
+             ink: lamp.colour ? lit.ink : "#ffd9a0"}
+          : litUnder(run, which, lamp);
+      }
+    });
+  } finally {
+    previewingStrip = false;
+  }
+  return out;
+}
+
+// What a lamp the scene plays nothing on shows, marked unset= for its tile. As on the board, it
+// plays Always on's look where Always on has one there, and is off where another scene plays on it
+function litUnder(run, which, lamp) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) {
+    var section = under.always;
+    // Always on's lamps keep their own walks, so a scene's stretch never steps one on
+    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
+    var walk = store[which] || (store[which] = {});
+    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
+                       widthOf(section), walk);
+    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
+            always: true, unset: true};
+  }
+  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
+}
+
+export function step() {
+  beat += FRAME;
+  paintAll();
+  window.setTimeout(step, FRAME * 1000);
+}
+
+// What a look lights with its stretch as the one being played
+function sectionLit(look, holder, t, slot, count, sim) {
+  return withSection(holder && holder !== MIDDLING ? holder : null, function () {
+    return lookLit(look, holder, t, slot, count, sim);
+  });
+}
+
+// The gallery's cards play each look at middling settings, which carry one colour for all of
+// them. A card of a look given a colour plays in its look's own, the one a stretch given it
+// starts in, kept here by look
+var cardSettings = {};
+
+// What a look lights, a card's middling settings made its own
+function cardLit(look, holder, t, slot, count, sim) {
+  if (holder === MIDDLING && look && look.solid) {
+    // Drawn in the swatch's value, since the word it writes would take the lamps' softer shade
+    var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
+                                  colour: SOLID_COLOUR}, t, slot, count, sim);
+    return solid && {level: solid.level, ink: SOLID_COLOUR};
+  } else if (holder === MIDDLING && look && START_MOODS[look.name] !== undefined) {
+    // A look given a colour plays in its own at the setting it starts at, as below
+    var mood = START_MOODS[look.name];
+    var start = takesColour(look) &&
+                ownColourFor(look, lampTarget(count), MIDDLING.pace, mood, MIDDLING.colour);
+    holder = {pace: MIDDLING.pace, mood: mood, colour: start || MIDDLING.colour};
+  } else if (holder === MIDDLING && takesColour(look)) {
+    var key = keyOf(look);
+    if (!cardSettings[key]) {
+      var own = ownColourFor(look, lampTarget(count), MIDDLING.pace, MIDDLING.mood,
+                             MIDDLING.colour);
+      cardSettings[key] = {pace: MIDDLING.pace, mood: MIDDLING.mood,
+                           colour: own || MIDDLING.colour};
+    }
+    holder = cardSettings[key];
+  }
+  return sectionLit(look, holder, t, slot, count, sim);
+}
+
+// What a look lights at slot of count lamps playing, as the board will play it. That is with the
+// stretch's typed values, a blink through several colours as its list, a reversed stretch from
+// its far end, and a stretch at its brightness. A card plays at full
+export function livePlay(look, holder, t, slot, count, sim) {
+  var exact = holder && holder !== MIDDLING ? holder.exact : null;
+  return withExact(exact, function () {
+    var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
+                  holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
+    if (colours) {
+      var blinked = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
+                                           speed: blinkSpeed(holder.pace),
+                                           duty: blinkDuty(holder.mood)});
+      return {level: blinked.level * (holder.level < 1 ? holder.level : 1), ink: blinked.ink};
+    }
+    var backwards = holder && holder.reversed && count > 1 &&
+                    runsAWay(look, lampTarget(count), holder);
+    var lit = cardLit(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
+    if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
+    return Object.assign({}, lit, {level: lit.level * holder.level});
+  });
+}
+
+// A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are.
+// Its icon has a light at the end the stretch starts from and an arrow the way it runs
+export function directionToggle(run, section) {
+  var button = document.createElement("button");
+  button.type = "button";
+  var look = lookNamed(section.look);
+  var moves = runsAWay(look, forwardTargetFor(run, section), section);
+  button.className = "stoggle direction" + (section.reversed ? " reversed" : "") +
+                     (section.reversed && moves ? " on" : "");
+  button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
+  button.disabled = !moves;
+  button.title = !moves ? (!look ? "Which end it starts from, for looks that travel"
+                                 : widthOf(section) < 2 ? "One light has no direction"
+                                 : look.name + " looks the same from either end")
+               : section.reversed ? "Travels from the far end"
+                                  : "Travels from the near end";
+  button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
+    (section.reversed
+      ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
+        "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>"
+      : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
+        "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>") + "</svg> Reverse";
+  // Through the run, as a page that makes the stretches afresh leaves this one behind
+  button.onclick = function () {
+    remember(run);
+    var live = run.sections[run.picked];
+    live.reversed = !live.reversed;
+    draw();
+  };
+  return button;
+}

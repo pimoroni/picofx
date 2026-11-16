@@ -1,5 +1,6 @@
 import {toggle} from "./01_looks.js";
-import {renderSceneRow, sceneLoops, sceneRestarts, sceneShowsAgain, state} from "./04_scenes.js";
+import {renderSceneRow} from "./04_scene_tray.js";
+import {sceneLoops, sceneRestarts, sceneShowsAgain, state} from "./04_scenes.js";
 
 // ---- a scene's own settings, in the screens' style ---------------------------------------
 // Whether the scene's effects begin again each time it comes round is a toggle with its icon, as

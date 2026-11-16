@@ -1,9 +1,8 @@
-import {draw} from "./03_runs.js";
-import {isBanked} from "./05_effects.js";
+import {draw} from "./00_draw.js";
 
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
 // the numbered parts in this folder and any of the board's own, joined in number order, those in
-// a feature folder only for a board with that feature. This first part holds the looks.
+// a feature folder only for a board with that feature. This part holds the board and the looks.
 
 // The board the page is for, from its editor/fx_board.json. It holds the board's outputs, strips
 // and screen ports, whether it has a hub, sound and the network looks, and the examples it offers
@@ -359,4 +358,101 @@ export function lookLines(look, target, pace, mood, colour) {
     ? look.alone(target, pace, mood, colour)
     : look.entries(target, pace, mood, colour);
   return target.colour ? lines : lines.map(withoutColour);
+}
+
+// Scanner and Chase light each output as the light reaches it and let it go slowly, a fade
+// split into its rise and its fall, as one fade both ways rises too slowly to reach full before
+// the light moves on. The fall is the Trail the light leaves, a slider of its own, so Speed sets
+// only how fast it moves. Scanner's trail runs long, as sweep_trail.py has it, and Chase's runs
+// short, as a runway light's does
+//
+// The rise is sweep_trail.py's 0.05s in proportion, since that is tuned to its one speed and
+// spacing, and a fixed rise leaves a fast scanner's head short of full. There the head covers
+// each light for about a third of a second, as a sweep reaches extent lights either side and
+// crosses length - 1 of them a cycle, so the rise is 15% of however long it covers one. A chase's
+// flash lasts 0.2s at speed 1, window 0.4 and duty 0.5, so its rise is always a quarter of it
+export var RISE_OF_DWELL = 0.15;
+export var RISE_OF_FLASH = 0.25;
+
+export function numberIn(line, key, otherwise) {
+  var found = line.match(new RegExp(" " + key + "=(-?[\\d.]+)"));
+  return found ? Math.abs(Number(found[1])) : otherwise;
+}
+
+export function riseFor(seconds) {
+  return Math.max(0.01, r2(seconds));
+}
+
+// On and off at a pace, lit for a share of each beat, picofx's blink. Given several colours
+// it blinks through them in turn, one a beat, which is rgb_blink (see 02_blink.js)
+export function blinkSpeed(pace) { return lerp(0.3, 3, pace); }
+export function blinkDuty(mood) { return lerp(0.1, 0.9, mood); }
+
+// Lights taking turns in a repeating pattern, a cinema sign's marquee, picofx's blink_wave.
+// Its setting is how far apart the lit ones are, every second light to every sixth, and one
+// of each group is lit at a time
+export function marqueeGap(mood) { return Math.round(lerp(2, 6, mood)); }
+
+// Each slider is named for what it sets, short. The signals' Fade writes ease, a fade that slows
+// as it arrives, and its tip says so, since the file's own fade crosses evenly
+export var SETTING_NAMES = {"Rainbow": "Spread", "Wave": "Spread", "Campfire": "Intensity",
+                     "Pelican crossing": "Fade"};
+
+// A signal's timings are its own sliders, one for each part of its sequence in seconds, each
+// starting at a real signal's. They are the stretch's timings, which the lines read through the
+// stretch being written or played. Each part is its setting, its name, where it starts and the
+// slider's two ends, in seconds
+export var SIGNAL_TIMINGS = {
+  "Traffic light": [["red_interval", "Red", 12, 2, 60],
+                    ["red_amber_interval", "Red and amber", 2, 1, 10],
+                    ["green_interval", "Green", 12, 2, 60],
+                    ["amber_interval", "Amber", 3, 1, 10]],
+  "Pelican crossing": [["red_interval", "Red", 8, 2, 60],
+                       ["flashing_interval", "Flashing", 6, 1, 20],
+                       ["green_interval", "Green", 20, 2, 60],
+                       ["amber_interval", "Amber", 3, 1, 10]]
+};
+
+// The stretch whose lines are being written or played, for the looks that read more of it
+// than a look is handed
+var sectionNow = null;
+
+export function withSection(section, write) {
+  var had = sectionNow;
+  sectionNow = section;
+  try {
+    return write();
+  } finally {
+    sectionNow = had;
+  }
+}
+
+export function timingOf(name, key) {
+  var own = sectionNow && sectionNow.timings;
+  if (own && own[key] !== undefined) return own[key];
+  return SIGNAL_TIMINGS[name].filter(function (part) { return part[0] === key; })[0][2];
+}
+
+// Rainbow's and Wave's Spread is the length of one pass of the wave in lights, longer to the
+// right as every slider's setting rises to the right. It stops at whole lights, from a little
+// over half the stretch to twice it
+function spreadRange(count) {
+  return {low: Math.max(2, Math.round(count * 0.6)), high: Math.max(2, Math.round(count * 2))};
+}
+
+export function spreadLength(count, mood) {
+  var range = spreadRange(count);
+  return range.low + Math.round(mood * (range.high - range.low));
+}
+
+export function spreadStops(target) {
+  var range = spreadRange(target.count);
+  return range.high - range.low + 1;
+}
+
+// The looks shaped to separate lamps. They play on outputs, mono lamps and strips
+var BANKED_LOOKS = ["Emergency", "Traffic light", "Pelican crossing"];
+
+export function isBanked(look) {
+  return !!look && BANKED_LOOKS.indexOf(look.name) >= 0;
 }

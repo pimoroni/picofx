@@ -1,5 +1,5 @@
-import {escapeHtml} from "../../03_runs.js";
 import {state} from "../../04_scenes.js";
+import {escapeHtml} from "../../18_file_preview.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia} from "../../26_drive_files.js";
 import {openingString} from "../../26_drive_programs.js";
 import {
@@ -8,7 +8,8 @@ import {
   discoverThumbs
 } from "../28_discover.js";
 import {assetSteps, mediaNamed} from "../../screens/12_screens.js";
-import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_settings.js";
+import {drawingInk, drawingSaid} from "../../screens/13_screen_art.js";
+import {copyDrawing} from "../../screens/16_screen_settings.js";
 
 // ---- examples to discover, on the Screens tab ---------------------------------------------------
 // The Screens tab's examples line, where its example drawings and pictures start, and the rules

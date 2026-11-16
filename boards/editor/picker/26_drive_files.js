@@ -1,8 +1,9 @@
+import {banner} from "./00_banner.js";
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {draw} from "./03_runs.js";
 import {apply, driveParts, slotAt, state, store} from "./04_scenes.js";
 import {screenHooks} from "./07_board.js";
-import {CAN_REACH_A_DRIVE, banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {CAN_REACH_A_DRIVE, connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {OWN_FOLDER, folderAt, removePictures, sectionsFrom} from "./26_drive_programs.js";
 
 // ---- the drive's files ---------------------------------------------------------------------------
@@ -17,12 +18,6 @@ var scanBusy = false;
 // The folders a picture, a drawing and a sound are kept in, each added file going into its own.
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
-
-// Whether a name on the drive is hidden, such as the ._ file macOS writes beside each file it
-// copies, or its .Trashes and .fseventsd. A walk of the drive passes these by
-export function isHiddenName(name) {
-  return name.charAt(0) === ".";
-}
 
 // The folders of examples the walk reads, under examples/ on a board that carries them. Each file
 // is offered by its path from the top of the drive, which is how an effects line names it
@@ -56,11 +51,6 @@ function exampleSectionsFrom(text, root, kind) {
 // Whether a file or folder is one of the drive's examples
 export function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
-}
-
-// A file's name as the page shows it, without the folders it sits in
-export function nameShown(name) {
-  return name.slice(name.lastIndexOf("/") + 1);
 }
 
 // The group for whatever each example folder's sections do not name

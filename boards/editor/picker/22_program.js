@@ -1,12 +1,14 @@
+import {banner} from "./00_banner.js";
+import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {draw, drawSteps, escapeHtml, paintAll} from "./03_runs.js";
+import {spoken} from "./03_lines.js";
 import {state} from "./04_scenes.js";
-import {spoken} from "./05_effects.js";
 import {SCREEN_PORTS, screenHooks} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";
 import {tabSwatch} from "./11_tabs.js";
-import {CAN_REACH_A_DRIVE, banner, drive, driveTrouble} from "./18_drive.js";
-import {PROGRAMS, argsFor, boardSet, programNamed} from "./19_board_settings.js";
+import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./18_drive.js";
+import {escapeHtml} from "./18_file_preview.js";
+import {PROGRAMS, argsFor, boardSet, onProgramPage, programNamed} from "./19_board_settings.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
   programsReading, removeProgram
@@ -195,7 +197,7 @@ export function programTitle(path) {
 // frame or a drive program's own
 
 var THUMB_W = 160, THUMB_H = 120;
-var thumbImages = {};
+export var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
   var canvas = document.createElement("canvas");
@@ -547,10 +549,6 @@ function programThumb(path) {
 // ---- the program page ------------------------------------------------------------------------
 
 export var programView = null;
-
-// Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
-// with none chosen, and the file says program= only once one is
-export var onProgramPage = false;
 
 // A card's copy tile, in the bin's place on an example, which has none, or beside the bin on the
 // user's own. An example is customised and one of the user's own duplicated, into the folder named
@@ -993,22 +991,6 @@ drawSteps.after.push(function () {
   // The effects' live swatch in the tabs is made after the page painted, so it is painted now
   paintAll();
 });
-
-// Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
-// time and never fills in late. Once all are in, the page is drawn again for any already showing
-export function loadThumbs(sources) {
-  var waiting = 0;
-  sources.forEach(function (src) {
-    if (thumbImages[src]) return;
-    var image = thumbImages[src] = new Image();
-    waiting++;
-    image.onload = image.onerror = function () {
-      waiting--;
-      if (!waiting) draw();
-    };
-    image.src = src;
-  });
-}
 
 // The width of the page's column in rem. It must match the stylesheet's
 var COLUMN_REM = 57.2;

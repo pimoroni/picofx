@@ -1,5 +1,5 @@
+import {draw, drawSteps} from "../00_draw.js";
 import {BOARD} from "../01_looks.js";
-import {draw, drawSteps} from "../03_runs.js";
 import {firmwareHooks} from "../07_board.js";
 import {connectSteps} from "../18_drive.js";
 

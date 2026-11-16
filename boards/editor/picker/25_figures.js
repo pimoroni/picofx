@@ -1,7 +1,28 @@
+import {draw} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
-import {inkOf} from "./02_preview.js";
-import {chosenSteps, draw} from "./03_runs.js";
-import {sectionLines} from "./05_effects.js";
+import {sectionLines} from "./03_lines.js";
+import {chosenSteps} from "./03_runs.js";
+import {figureCells, paintPalette} from "./32_stretch_editor.js";
+
+// ---- the looks in groups ------------------------------------------------------------------
+// The gallery grouped by how the lights play together, each group a row of at most five, the
+// width a row of cards has. The showiest come first. The travelling looks lead, with Rainbow
+// among them as what the board opens playing, then the ready-made ones, each a base look
+// specialised or several of them together, then the plainest and the most specialised. The cards
+// are the flat gallery's own, moved into their groups with everything they do, so a look no group
+// names still shows, in a group of its own at the end. Nothing is no look of any group, so it is
+// a card made small at the end of the first heading, where there is always room for it.
+
+export var LOOK_GROUPS = [
+  {name: "Along the lights", says: "travelling from one end to the other",
+   looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
+  {name: "Ready-made", says: "combinations of other looks",
+   looks: ["Campfire", "Emergency", "Party"]},
+  {name: "All together", says: "every light shows the same",
+   looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
+  {name: "Individual", says: "each light plays its own part",
+   looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
+];
 
 // ---- the figure beside each slider --------------------------------------------------------
 // Each slider can show beside it the value the file writes, with its unit, in a box that takes
@@ -60,20 +81,6 @@ try {
   // Shut where the page may not keep anything
 }
 
-// The typed values of the stretch whose lines are being written, which linesFor applies
-export var exactNow = null;
-
-// Write a stretch's lines with its typed values, as both the file and the preview ask for them
-export function withExact(exact, write) {
-  var had = exactNow;
-  exactNow = exact || null;
-  try {
-    return write();
-  } finally {
-    exactNow = had;
-  }
-}
-
 // A setting's value in a stretch's lines, without its sign, or null where none names it. A
 // fade is read as its fall, the part after its bar, which is what a trail is
 export function settingIn(lines, key) {
@@ -123,41 +130,6 @@ export function placeFor(run, section, look, slider, key, value) {
     best = Math.abs(low - value) < Math.abs(high - value) ? 0 : 1;
   }
   return {place: best, off: nearest};
-}
-
-// A palette's colours, a swatch for each its lines name, drawn afresh as its slider moves
-function paintPalette(swatches, lines) {
-  swatches.textContent = "";
-  (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function (said) {
-    var chip = document.createElement("span");
-    chip.className = "palettechip";
-    chip.style.background = inkOf(said.slice(7));
-    chip.title = said.slice(7);
-    swatches.appendChild(chip);
-  });
-}
-
-// The box a figure is typed in and its unit, each a cell of the sliders' grid
-function figureCells(said, unit, title, take) {
-  var box = document.createElement("input");
-  box.type = "text";
-  box.inputMode = "decimal";
-  box.className = "figurebox";
-  box.value = said;
-  box.title = title;
-  box.onchange = function () {
-    var typed = parseFloat(box.value.replace(",", "."));
-    if (!(typed > 0)) {
-      box.value = said;
-      return;
-    }
-    take(typed);
-    draw();
-  };
-  var units = document.createElement("span");
-  units.className = "figureunit";
-  units.textContent = unit;
-  return [box, units];
 }
 
 chosenSteps.push(function (where, run) {

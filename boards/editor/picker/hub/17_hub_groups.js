@@ -1,14 +1,13 @@
-import {draw, drawSteps} from "../03_runs.js";
+import {draw, drawSteps} from "../00_draw.js";
+import {spoken} from "../03_lines.js";
 import {bodyParts, capture, frozen, namesOf, state} from "../04_scenes.js";
-import {spoken} from "../05_effects.js";
 import {
-  HUB_PLACES, hubHeadSteps, placeGroups, placePicked, placeThere, placeTurnForChosen, placeUnder,
-  placesSaid, placesThere
+  HUB_PLACES, hubHeadSteps, placePicked, placeThere, placeTurnForChosen, placeUnder, placesThere
 } from "./15_hub.js";
-import {assetSteps, kindOf} from "../screens/12_screens.js";
-import {
-  ANCHOR_NAMES, LOOK_START, freshLook, groundSaid, lightRow, pictureSaid, playingTokens
-} from "../screens/16_screen_settings.js";
+import {placeGroups, placesSaid} from "./18_hub_text.js";
+import {LOOK_START, assetSteps, freshLook, kindOf} from "../screens/12_screens.js";
+import {ANCHOR_NAMES, groundSaid, pictureSaid, playingTokens} from "../screens/14_screen_text.js";
+import {lightRow} from "../screens/16_screen_settings.js";
 
 // ---- the hub's positions in groups -----------------------------------------------------------
 // With a look beside every picture, two positions showing the same picture could differ in a
@@ -339,19 +338,9 @@ hubHeadSteps.push(function () {
   });
 });
 
-// Screens named in the note are bold, so "A plays" reads as the screen and not as a word. The
-// letters and their commas and dashes are all the markup holds
-function screensBold(places) { return "<b>" + placesSaid(places) + "</b>"; }
-
-export function namesSaid(sends) {
-  var names = sends.map(function (send) { return screensBold(send.places); });
-  return names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
-                          : names[0];
-}
-
 // What makes a send differ from another showing the same picture, in the words the settings
 // use, so it is plain why they are sent apart
-function differences(send, from) {
+export function differences(send, from) {
   var one = send.playing;
   var other = from.playing;
   var look = one.look || LOOK_START;
@@ -392,46 +381,13 @@ function differences(send, from) {
   return words;
 }
 
-function listSaid(words) {
+export function listSaid(words) {
   return words.length > 1 ? words.slice(0, -1).join(", ") + " and " + words[words.length - 1]
                           : words[0];
 }
 
 // How many ways a send differs from how a screen starts
-function plainness(send) {
+export function plainness(send) {
   return differences(send, {places: send.places,
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
-}
-
-// Where one picture goes out in several sends, which happens when some of its screens are set
-// differently, a sentence naming how against the plainest of them. The plainest is the one least
-// changed from how a screen starts, or the one on most screens where that is a tie
-export function apartSaid(sends) {
-  var byPicture = {};
-  sends.forEach(function (send) {
-    (byPicture[send.playing.shows] = byPicture[send.playing.shows] || []).push(send);
-  });
-  var told = [];
-  var bases = [];
-  Object.keys(byPicture).forEach(function (picture) {
-    var group = byPicture[picture];
-    if (group.length < 2) return;
-    var base = group.slice().sort(function (a, b) {
-      return plainness(a) - plainness(b) || b.places.length - a.places.length;
-    })[0];
-    group.forEach(function (send) {
-      if (send === base) return;
-      var words = differences(send, base);
-      if (words.length)
-        told.push(screensBold(send.places) + (send.places.length > 1 ? " are " : " is ") +
-                  listSaid(words));
-    });
-    bases.push(screensBold(base.places));
-  });
-  if (!told.length) return "";
-  var several = told.length > 1 || sends.some(function (send) {
-    return told[0].indexOf(screensBold(send.places) + " are ") === 0;
-  });
-  return listSaid(told) + ", so " + (told.length > 1 ? "each is" : several ? "they are" : "it is") +
-         " sent apart from " + listSaid(bases) + ".";
 }

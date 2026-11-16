@@ -1,21 +1,17 @@
-import {draw, drawSteps} from "../03_runs.js";
+import {draw, drawSteps} from "../00_draw.js";
 import {
-  allBodies, apply, bodyParts, capture, driveParts, frozen, otherScenes, slotAt, state, store
+  allBodies, apply, bodyParts, driveParts, otherScenes, slotAt, state, store
 } from "../04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
-import {boardIcon, setupOn} from "../08_setup.js";
 import {tabSwatches} from "../11_tabs.js";
-import {boardResidue, entryParts} from "../27_readback.js";
+import {breakingUp, sendTargets} from "./17_hub_groups.js";
 import {
-  GROUP_NUMBERS, apartSaid, breakingUp, inNumberedGroup, namesSaid, sendTargets
-} from "./17_hub_groups.js";
-import {
-  assetSteps, kindOf, mediaArt, offEntry, screenPlaying, screensHeadSteps
-} from "../screens/12_screens.js";
-import {
-  LOOK_START, chosenAfresh, freshLook, lookEntry, lookSections, panelPreview, pictureOffset,
-  pictureSaid, placingTokens, playingTokens
-} from "../screens/16_screen_settings.js";
+  hubEntry, offHubEntries, placeGroups, placesSaid, readHubBoard, readHubLines
+} from "./18_hub_text.js";
+import {hubSwitch, renderHubHead} from "./19_hub_view.js";
+import {assetSteps, screensHeadSteps} from "../screens/12_screens.js";
+import {mediaArt} from "../screens/13_screen_art.js";
+import {chosenAfresh} from "../screens/16_screen_settings.js";
 
 // ---- a Screen Hub in the Screens tab ----------------------------------------------------------
 // A hub takes both connectors. One carries the screens' SPI and the other gives its five pins
@@ -55,7 +51,7 @@ export function placesThere() { return HUB_PLACES.filter(placeThere); }
 
 // A position shown as a screen of its panel's size, which is what the module drawing asks for,
 // with its look and the hub's shared light
-function asScreen(place) {
+export function asScreen(place) {
   var held = state.places[place];
   return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows, off: held.off,
           look: Object.assign({}, held.look, {backlight: state.hubLight})};
@@ -79,14 +75,14 @@ export function placeUnder(place) {
 }
 
 // A position shown as a screen in Always on's settings and light, for one the scene leaves to it
-function asAlwaysScreen(place, held) {
+export function asAlwaysScreen(place, held) {
   return {size: state.hub.sizes[place], turn: held.turn || 0, shows: held.shows,
           look: Object.assign({}, held.look, {backlight: state.always.body.hubLight})};
 }
 
 // The connector's own colour, A blue and B purple, which the hub takes from the one its
 // screens come through
-function hubInk() { return state.hub.port === "A" ? "a" : "b"; }
+export function hubInk() { return state.hub.port === "A" ? "a" : "b"; }
 
 // A picture newly chosen on a position starts as chosenAfresh says
 export function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
@@ -135,83 +131,6 @@ bodyParts.push({
   read: readHubLines
 });
 
-// ---- what the file says ----------------------------------------------------------------------
-
-// Positions as the file names them, a run of neighbours as a range, such as "A-C,E"
-export function placesSaid(places) {
-  var said = [];
-  var at = 0;
-  while (at < places.length) {
-    var end = at;
-    while (end + 1 < places.length &&
-           HUB_PLACES.indexOf(places[end + 1]) === HUB_PLACES.indexOf(places[end]) + 1) end++;
-    said.push(end > at ? places[at] + "-" + places[end] : places[at]);
-    at = end + 1;
-  }
-  return said.join(",");
-}
-
-// What a position plays, as a key. Positions with the same key are one entry, and one stream.
-// Panels of different sizes are sent apart, so the size is part of it. They are one send where
-// the file would say the same for them, so a setting a picture does not take, such as a still's
-// pace, or one the page only remembers, such as the last custom colour, never splits them.
-//
-// One entry plays one drawing on every position it names, where entries of their own each run
-// it afresh, so a drawing joins others only in a numbered group
-function playingKey(playing, place) {
-  var look = playing.look || LOOK_START;
-  var size = state.hub.sizes[place];
-  var where = pictureOffset(look, playing.shows, size, playing.turn);
-  var kind = kindOf(playing.shows);
-  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
-  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
-    .concat(playingTokens(playing, look, kind, size)).join("|");
-}
-
-// The positions of one scene, gathered into what each different picture is sent to
-export function placeGroups(body) {
-  var groups = [];
-  var byKey = {};
-  placesThere().forEach(function (place) {
-    var playing = body.places && body.places[place];
-    if (!playing || !playing.shows) return;
-    var key = playingKey(playing, place);
-    if (!byKey[key]) {
-      byKey[key] = {playing: playing, places: []};
-      groups.push(byKey[key]);
-    }
-    byKey[key].places.push(place);
-  });
-  return groups;
-}
-
-// A group's entry. Every position is lit by the hub's one light, so each entry carries it
-function hubEntry(group) {
-  return lookEntry("hub" + placesSaid(group.places), group.playing,
-                   group.playing.look || freshLook(), state.hubLight,
-                   state.hub.sizes[group.places[0]]);
-}
-
-// The lines turning hub positions off in a scene, one for each group and one for each position on
-// its own, so the groups read back as they were written
-function offHubEntries(body) {
-  var byGroup = {};
-  var groups = [];
-  placesThere().forEach(function (place) {
-    var held = body.places && body.places[place];
-    if (!held || !held.off) return;
-    var group = held.group || place;
-    if (!byGroup[group]) {
-      byGroup[group] = [];
-      groups.push(group);
-    }
-    byGroup[group].push(place);
-  });
-  return groups.map(function (group) {
-    return {places: byGroup[group], line: offEntry("hub" + placesSaid(byGroup[group]), state.hubLight)};
-  });
-}
-
 bodyParts.push({
   entries: function (body, lines) {
     if (!state.hub.on) return lines;
@@ -235,103 +154,6 @@ boardLineSteps.after.push(function (line) {
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
 });
 
-// ---- reading the file back --------------------------------------------------------------------
-
-// Hub positions as a file names them, hubA-C,E, or null where the item is not one
-function hubPlacesNamed(selector) {
-  var match = selector.match(/^hub([a-f](?:-[a-f])?(?:,[a-f](?:-[a-f])?)*)$/i);
-  if (!match) return null;
-  var places = [];
-  match[1].toUpperCase().split(",").forEach(function (part) {
-    var ends = part.split("-");
-    var from = HUB_PLACES.indexOf(ends[0]);
-    var to = HUB_PLACES.indexOf(ends[1] || ends[0]);
-    var step = to >= from ? 1 : -1;
-    for (var at = from; at !== to + step; at += step) places.push(HUB_PLACES[at]);
-  });
-  return places;
-}
-
-// Read the hub the board line declares into the page, which writes those tokens itself from then
-// on. The hub is off where the line declares none
-function readHubBoard() {
-  var port = null;
-  var sizes = {};
-  var taken = [];
-  boardResidue.forEach(function (token) {
-    var wired = token.match(/^screen([ab])=hub$/i);
-    var sized = token.match(/^(hub[a-f\-,]+)=(2\.8|1\.54)$/i);
-    if (wired) {
-      port = wired[1].toUpperCase();
-      taken.push(token);
-    } else if (sized && hubPlacesNamed(sized[1])) {
-      hubPlacesNamed(sized[1]).forEach(function (place) { sizes[place] = sized[2]; });
-      taken.push(token);
-    }
-  });
-  state.hub.on = false;
-  if (!port) return;
-
-  state.hub.on = true;
-  state.hub.port = port;
-  HUB_PLACES.forEach(function (place) { state.hub.sizes[place] = sizes[place] || ""; });
-  boardResidue = boardResidue.filter(function (token) { return taken.indexOf(token) < 0; });
-}
-
-// Try each kept line of each body as a hub entry, moving those the hub's own writer gives back
-function readHubLines(bodies) {
-  if (!state.hub.on) return;
-
-  // Each scene lights the hub its own way, and the first of its lines to be read decides how
-  bodies.forEach(function (body) {
-    var numbered = 0;
-    var lightSet = false;
-    state.hubLight = 1;
-    body.kept = body.kept.filter(function (one) {
-      var parts = entryParts(one.text);
-      var places = parts && hubPlacesNamed(parts.selector);
-      if (!places || places.some(function (place) {
-        return !state.hub.sizes[place] || body.places[place].shows || body.places[place].off;
-      })) return true;
-
-      var playing = screenPlaying(parts, {screens: {X: {}}}, "X");
-      if (!playing) return true;
-      var light = playing.look.backlight;
-      if (lightSet && light !== state.hubLight) return true;
-
-      var trial = {places: JSON.parse(JSON.stringify(body.places))};
-      var group = places.length > 1 ? String(numbered + 1) : null;
-      places.forEach(function (place) {
-        trial.places[place] = Object.assign({}, trial.places[place], {
-          shows: playing.shows, turn: playing.turn || 0, pingpong: !!playing.pingpong,
-          hold: playing.hold || "", look: Object.assign({}, playing.look),
-          group: group || place, off: playing.off});
-      });
-      var wasLight = state.hubLight;
-      state.hubLight = light;
-      var named = places.slice().sort(function (a, b) {
-        return HUB_PLACES.indexOf(a) - HUB_PLACES.indexOf(b);
-      }).join();
-      var written = playing.off
-        ? offHubEntries(trial).filter(function (one) { return one.places.join() === named; })
-            .map(function (one) { return one.line; })[0]
-        : placeGroups(trial).filter(function (one) { return one.places.join() === named; })
-            .map(hubEntry)[0];
-      if (written !== one.text) {
-        state.hubLight = wasLight;
-        return true;
-      }
-
-      body.places = trial.places;
-      lightSet = true;
-      if (group) numbered++;
-      if (one.comments.length) body.notes[one.text] = one.comments;
-      return false;
-    });
-    body.hubLight = state.hubLight;
-  });
-}
-
 // ---- a picture deleted from the drive ---------------------------------------------------------
 
 driveParts.push({
@@ -349,222 +171,9 @@ driveParts.push({
   }
 });
 
-// ---- drawing the hub -------------------------------------------------------------------------
-
-// The choice of two screens or a hub, which takes both connectors. It is always shown, so it can
-// be seen to be a choice, and only changed while editing the board. It sits at the top of the
-// tab, where the outputs and strips have their board box, and at that box's size
-function hubSwitch() {
-  var row = document.createElement("div");
-  row.className = "hubswitch" + (setupOn ? "" : " locked");
-  row.title = setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it";
-  var lead = document.createElement("span");
-  lead.className = "hublead" + (state.hub.on ? "" : " on");
-  lead.appendChild(boardIcon());
-  row.appendChild(lead);
-  [[false, "A screen on each connector"], [true, "A Screen Hub across both"]]
-    .forEach(function (pair) {
-      var choice = document.createElement("button");
-      choice.type = "button";
-      choice.className = state.hub.on === pair[0] ? "on" : "";
-      choice.disabled = !setupOn;
-      choice.textContent = pair[1];
-      choice.onclick = function () {
-        state.hub.on = pair[0];
-        draw();
-      };
-      row.appendChild(choice);
-    });
-  return row;
-}
-
-function placeTile(place) {
-  var held = state.places[place];
-  var tile = document.createElement("div");
-  tile.className = "place" + (place === placePicked && placeThere(place) ? " picked" : "");
-  tile.dataset.place = place;
-  var top = document.createElement("div");
-  top.className = "placetop";
-  var letter = document.createElement("b");
-  letter.className = "placename";
-  letter.textContent = place;
-  top.appendChild(letter);
-  tile.appendChild(top);
-
-  if (!state.hub.sizes[place]) {
-    tile.classList.add("empty");
-    var none = document.createElement("span");
-    none.className = "placenone";
-    none.textContent = "no panel";
-    tile.appendChild(none);
-    if (setupOn) {
-      var fit = document.createElement("button");
-      fit.type = "button";
-      fit.className = "placefit";
-      fit.textContent = "add";
-      fit.title = "A panel is fitted at " + place;
-      fit.onclick = function (event) {
-        event.stopPropagation();
-        state.hub.sizes[place] = state.hub.was[place] || "2.8";
-        draw();
-      };
-      tile.appendChild(fit);
-    }
-    return tile;
-  }
-
-  // Which panel is here, shown in every mode and changed only while editing the board
-  var size = document.createElement("select");
-  size.className = "placesize";
-  SCREEN_SIZES.forEach(function (inches) {
-    var option = document.createElement("option");
-    option.value = inches;
-    option.textContent = inches + "\"";
-    if (state.hub.sizes[place] === inches) option.selected = true;
-    size.appendChild(option);
-  });
-  size.disabled = !setupOn;
-  size.title = "Panel at " + place + ", shared by every scene";
-  size.onclick = function (event) { event.stopPropagation(); };
-  size.onchange = function () {
-    state.hub.sizes[place] = size.value;
-    draw();
-  };
-  top.appendChild(size);
-
-  // A position the scene leaves to Always on shows Always on's picture in the striped frame
-  var under = placeUnder(place);
-  var drawing = panelPreview(under && under.always ? asAlwaysScreen(place, under.always)
-                                                   : asScreen(place));
-  if (under && under.always) drawing.classList.add("under");
-  tile.appendChild(drawing);
-  var says = document.createElement("small");
-  says.className = "placesays";
-  // A position in a scene's own group says Always on's, as the line under it names the group
-  says.textContent = held.off ? "off"
-                   : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") +
-                                             pictureSaid(under.always.shows)
-                   : under ? "off in this scene" : held.shows || "nothing";
-  tile.appendChild(says);
-  if (setupOn) {
-    var drop = document.createElement("button");
-    drop.type = "button";
-    drop.className = "placedrop";
-    drop.textContent = "\u00d7";
-    drop.title = "No panel at " + place + ", in every scene";
-    drop.onclick = function (event) {
-      event.stopPropagation();
-      state.hub.was[place] = state.hub.sizes[place];
-      state.hub.sizes[place] = "";
-      store();
-      allBodies().forEach(function (body) { body.places[place].shows = null; });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    tile.appendChild(drop);
-  }
-  tile.onclick = function () {
-    placePicked = place;
-    draw();
-  };
-  return tile;
-}
-
-// The picked position's settings, the same sections a screen has. What each position shows is
-// said under its module, and the position being set is the one filled, so the strip says neither
-function placeSettings() {
-  var settings = document.createElement("div");
-  settings.className = "hubsettings";
-  if (!placeThere(placePicked)) return settings;
-  var held = state.places[placePicked];
-  // A position showing Always on's picture shows Always on's settings, greyed
-  var under = placeUnder(placePicked);
-  var shown = under && under.always ? Object.assign({}, held, {shows: null, turn: under.always.turn || 0,
-                                                               look: under.always.look || held.look})
-                                    : held;
-  var sections = lookSections("place" + placePicked, shown, state.hub.sizes[placePicked]);
-  if (shown !== held) frozen(sections);
-  settings.appendChild(sections);
-  return settings;
-}
-
-// The note on how fast the hub plays what it shows. A still picture is sent once and costs nothing
-// after, so only the animations share the hub's speed. One plays as fast as a single screen, sent
-// at once to every screen of its group, and several each play slower than they would alone
-function hubPace() {
-  var sends = placeGroups(capture());
-  var moving = sends.filter(function (send) { return kindOf(send.playing.shows) !== "image"; });
-  var still = sends.filter(function (send) { return kindOf(send.playing.shows) === "image"; });
-  var said = [];
-  if (moving.length > 1) {
-    said.push(namesSaid(moving) + " share the hub's speed, so " +
-              "each animation plays slower than on its own.");
-  } else if (moving.length === 1) {
-    var together = moving[0].places.length;
-    said.push(namesSaid(moving) + (together > 1 ? (together === 2 ? " both" : " all") +
-              " play the same animation together, as fast as a single screen."
-                                                : " plays its animation at full speed."));
-  }
-  if (still.length)
-    said.push(namesSaid(still) + (still.length > 1 || still[0].places.length > 1 ? " show"
-                                                                                  : " shows") +
-              " a still picture, sent once" + (moving.length ? ", with no cost to the others."
-                                                             : ", so nothing slows down."));
-  var apart = apartSaid(sends);
-  if (apart) said.push(apart);
-  var pace = document.createElement("p");
-  pace.className = "hubpace" + (said.length ? "" : " quiet");
-  pace.innerHTML = said.join(" ");
-  return pace;
-}
-
 // What the parts after this one add to the hub's box, each after the one before, which are the
 // hub's light and then its groups
 export var hubHeadSteps = [];
-
-// Draw the hub's box in place of the screens'
-function renderHubHead() {
-  var box = document.getElementById("screensHead");
-  box.textContent = "";
-  box.classList.add("hubbed");
-
-  var side = document.createElement("div");
-  side.className = "screen-box " + hubInk() + " hubbox";
-  var head = document.createElement("h3");
-  head.appendChild(document.createTextNode("Screen Hub"));
-  // The hub is drawn for its screens through A, but may be wired the other way round
-  var port = document.createElement("select");
-  [["A", "SPI on A, Selects on B"], ["B", "SPI on B, Selects on A"]]
-    .forEach(function (pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if (state.hub.port === pair[0]) option.selected = true;
-      port.appendChild(option);
-    });
-  port.className = "inband";
-  port.title = "Which connectors the hub's SPI and Selects " +
-               "are plugged into, as labelled on the hub";
-  port.onchange = function () { state.hub.port = port.value; draw(); };
-  head.appendChild(port);
-  var fitted = document.createElement("small");
-  fitted.className = "hubcount";
-  fitted.textContent = placesThere().length + " of " + HUB_PLACES.length + " fitted";
-  head.appendChild(fitted);
-  side.appendChild(head);
-
-  var body = document.createElement("div");
-  body.className = "body";
-  var row = document.createElement("div");
-  row.className = "places";
-  HUB_PLACES.forEach(function (place) { row.appendChild(placeTile(place)); });
-  body.appendChild(row);
-  body.appendChild(placeSettings());
-  body.appendChild(hubPace());
-  side.appendChild(body);
-  box.appendChild(side);
-  hubHeadSteps.forEach(function (step) { step(); });
-}
 
 // The hub's box in the Screens tab's head where there is a hub, with the switch between it and
 // the screens' boxes above

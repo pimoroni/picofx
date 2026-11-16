@@ -1,58 +1,13 @@
-import {draw, escapeHtml, paintLine} from "./03_runs.js";
-import {currentText, state} from "./04_scenes.js";
-import {nameShown} from "./26_drive_files.js";
+import {banner} from "./00_banner.js";
+import {draw} from "./00_draw.js";
+import {state} from "./04_scenes.js";
 
-// ---- the drive, and what the board says back ------------------------------------------------
-// Saving to the drive and reading back errors.txt, with the banner and the saving lights,
-// remembering the drive and waiting on the board. Opening a drive takes its handles, and the
-// read-back part reads its effects.txt into the page. It works in Chrome and Edge only, where a
-// page can be handed a folder to write to.
+// ---- the drive, and what the board says back ----------------------------------------------------
+// Saving to the drive and reading back errors.txt, remembering the drive and waiting on the
+// board. Opening a drive takes its handles, and the read-back part reads its effects.txt into the
+// page. It works in Chrome and Edge only, where a page can be handed a folder to write to.
 
-var SPOT_STEP_MS = 120;
-
-var SAVING_TAIL_MS = 920;
-
-var spotTimer = null;
-
-function stopSpots() {
-  if (spotTimer !== null) clearInterval(spotTimer);
-  spotTimer = null;
-}
-
-function saving(text) {
-  banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
-  document.getElementById("banner").firstChild.appendChild(row);
-  var at = 0;
-  spotTimer = setInterval(function () {
-    for (var i = 0; i < row.children.length; i++)
-      row.children[i].className = i === at ? "lit" : "";
-    at = (at + 1) % row.children.length;
-  }, SPOT_STEP_MS);
-}
-
-// The parts that also show what banner() says, each given its text and warn as banner() is
-export var bannerSteps = [];
-
-export function banner(text, warn, detail) {
-  stopSpots();
-  bannerSteps.forEach(function (step) { step(text, warn); });
-  var box = document.getElementById("banner");
-  box.textContent = "";
-  if (!text) return;
-  var note = document.createElement("div");
-  // The warn argument may also be "hold", the amber of a save or check still under way
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var pre = document.createElement("pre");
-    pre.textContent = detail;
-    note.appendChild(pre);
-  }
-  box.appendChild(note);
-}
+export var SAVING_TAIL_MS = 920;
 
 function rememberDrive(handle) {
   try {
@@ -114,15 +69,15 @@ var BOARD_AWAY_MS = 30000;
 
 var BOARD_POLL_MS = 250;
 
-function playsItself(text) {
+export function playsItself(text) {
   return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
 // The marker a save writes into errors.txt for the board to clear. It must match the editor's, as
 // either page reads the marker the other wrote
-var CHECKING = "The board has not loaded the file yet.";
+export var CHECKING = "The board has not loaded the file yet.";
 
-async function markChecking() {
+export async function markChecking() {
   try {
     var handle = await state.dirHandle.getFileHandle("errors.txt", {create: true});
     var writable = await handle.createWritable();
@@ -156,7 +111,7 @@ export async function driveTrouble(e, name) {
   return e.message || e.name;
 }
 
-async function readErrors() {
+export async function readErrors() {
   try {
     var handle = await state.dirHandle.getFileHandle("errors.txt");
     return (await (await handle.getFile()).text()).trim();
@@ -166,7 +121,7 @@ async function readErrors() {
   }
 }
 
-async function waitForBoard(before, nothingYet) {
+export async function waitForBoard(before, nothingYet) {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var settled = Date.now() + BOARD_SETTLE_MS;
   var wentAway = false;
@@ -189,7 +144,7 @@ async function waitForBoard(before, nothingYet) {
   return before;
 }
 
-function sayWhatHappened(said, also) {
+export function sayWhatHappened(said, also) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot " +
            "once to play the save. If the lights have already changed, the " +
@@ -201,7 +156,7 @@ function sayWhatHappened(said, also) {
     banner("Playing on the board. No problems reported." + (also || ""));
 }
 
-async function openDrive(fresh) {
+export async function openDrive(fresh) {
   try {
     await connect(fresh);
     banner("");
@@ -225,22 +180,18 @@ export var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 export var drive = {dirHandle: null, fileHandle: null};
 
-// The board's answer as this page shows it: what errors.txt said, and the file it was about,
-// so a line is marked only while the page still writes it the same
-var answered = {said: null, about: null};
-
 // The localStorage key holding the file this page last wrote or read
 export var WROTE_KEY = "fx-picker-wrote";
 
 // What a save asks where the file on the board has changed since this page read it
-function overwriteQuestion() {
+export function overwriteQuestion() {
   return "The file on the board has changed since it was opened here. Overwrite those changes?";
 }
 
 // What the parts below read off a drive once it is open, each awaited in the order the parts come
 export var connectSteps = [];
 
-async function connect(fresh) {
+export async function connect(fresh) {
   var dir = await pickDrive(fresh);
   var file;
   try {
@@ -274,162 +225,13 @@ async function connect(fresh) {
   for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
 }
 
-// errors.txt read into the lines it names. autofx begins each problem "line N:", and anything
-// after it up to the next is that problem's, such as a program's traceback
-function problemsIn(said) {
-  var found = {};
-  var at = null;
-  (said || "").split("\n").forEach(function (line) {
-    var named = line.match(/^line (\d+): ?(.*)$/);
-    if (named) {
-      at = Number(named[1]);
-      (found[at] = found[at] || []).push(named[2]);
-    } else if (at !== null && line.trim()) {
-      found[at].push(line.trim());
-    }
-  });
-  return found;
+// Whether a name on the drive is hidden, such as the ._ file macOS writes beside each file it
+// copies, or its .Trashes and .fseventsd. A walk of the drive passes these by
+export function isHiddenName(name) {
+  return name.charAt(0) === ".";
 }
 
-// Takes the board's answer and the file it read, then marks the lines it named
-function takeAnswer(said, about) {
-  answered = {said: said || null, about: about};
-  renderPreview();
-}
-
-// Show the file as the page writes it. A line the board named is marked, with the board's words
-// after it, where the page still writes it as the board read it
-export function renderPreview() {
-  var problems = problemsIn(answered.said);
-  var lines = currentText().split("\n");
-  var read = (answered.about || "").split("\n");
-  var stale = 0;
-  var painted = lines.map(function (line, at) {
-    var said = problems[at + 1];
-    if (!said) return paintLine(line);
-    if (read[at] !== line) {
-      stale++;
-      return paintLine(line);
-    }
-    return "<span class='s-problem'>" + paintLine(line) + "</span>" +
-           "<span class='s-said'>  " + escapeHtml(said.join(" ")) + "</span>";
-  });
-  Object.keys(problems).forEach(function (at) {
-    if (Number(at) > lines.length) stale++;
-  });
-  document.getElementById("preview").innerHTML = painted.join("\n");
-  var note = document.getElementById("previewNote");
-  if (note) {
-    note.hidden = !stale;
-    note.textContent = stale === 1 ? "One reported line has since changed."
-                                   : stale + " reported lines have since changed.";
-  }
-}
-
-document.getElementById("save").onclick = async function () {
-  var button = this;
-  var check = document.getElementById("check");
-  try {
-    if (!drive.fileHandle) await connect();
-    button.disabled = true;
-    check.disabled = true;
-    var onBoard = await (await drive.fileHandle.getFile()).text();
-    var lastWritten = null;
-    try { lastWritten = localStorage.getItem(WROTE_KEY); } catch (e) {}
-    if (onBoard !== lastWritten && onBoard.trim() !== "" && !confirm(overwriteQuestion()))
-      return;
-    var text = currentText();
-    saving("Saving to the board...");
-    var errorsBefore = playsItself(onBoard) ? await readErrors() : undefined;
-    if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
-    var writable = await drive.fileHandle.createWritable();
-    await writable.write(text);
-    await writable.close();
-    var back = await (await drive.fileHandle.getFile()).text();
-    if (back !== text) {
-      var differs = new Error("effects.txt reads back different");
-      differs.name = "NotWhatWasSaved";
-      throw differs;
-    }
-    try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
-    // The marks were about the file the board had, which this one replaces
-    takeAnswer(null, text);
-    await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
-    // Said once, where this save is the first to hide the drive
-    var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
-      ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
-      : "";
-    // Check if the board is running a program
-    if (/\bprogram=/.test(onBoard)) {
-      // A program keeps the board busy, so neither an eject nor a press reaches it
-      banner("Saved. The board is running a program, so press Reset to play this change." + hides);
-      return;
-    }
-    // Check if a board that plays each save itself is given a program
-    if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
-      // The board restarts to run the program, so there is no answer to wait for
-      banner("Saved. The board is restarting to run the program." +
-             hides);
-      return;
-    }
-    if (errorsBefore === undefined) {
-      banner("Saved. " + (playsItself(text)
-             ? "Eject the FX drive or press Boot once to play " +
-               "it. Future saves will play automatically."
-             : "Eject the FX drive to play it. Then double-press " +
-               "Boot to show the drive again and press 'Check board'.") + hides);
-      return;
-    }
-    banner("Saved. Waiting for the board to load it...", "hold");
-    var was = errorsBefore === false ? null : errorsBefore;
-    var said = await waitForBoard(was, function () {
-      banner("Playing on the board. Checking for problems...", "hold");
-    });
-    sayWhatHappened(said, hides);
-    if (said !== CHECKING) takeAnswer(said, text);
-  } catch (e) {
-    if (e.name === "AbortError") return;
-    if (e.name === "QuotaExceededError") {
-      banner("The FX drive is full. Delete a picture, sound or program and try again.", true);
-      return;
-    }
-    drive.fileHandle = null;
-    drive.dirHandle = null;
-    if (e.name === "NotWhatWasSaved")
-      banner("The file on the drive did not match what was saved. Check the FX drive is " +
-             "showing, then try again.", true);
-    else
-      banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
-             "is showing, double-press Boot if it is not, then try again.", true);
-  } finally {
-    button.disabled = !drive.fileHandle;
-    check.disabled = !drive.fileHandle;
-  }
-};
-
-// The answer and the file it is about are read together, as the board has finished with both
-document.getElementById("check").onclick = async function () {
-  banner("Checking...", "hold");
-  await new Promise(function (settle) { setTimeout(settle, 350); });
-  try {
-    var about = await (await drive.fileHandle.getFile()).text();
-    var said = await readErrors();
-    if (said === false) throw {name: "NotReadable"};
-    if (said === CHECKING) {
-      banner("The board has not loaded the file yet. Eject the FX drive or press Boot once.", "hold");
-      return;
-    }
-    if (said) banner("The board reported problems:", true, said);
-    else banner("No problems reported.");
-    takeAnswer(said, about);
-  } catch (e) {
-    banner("Could not read the drive (" + e.name + "). Is it showing?", true);
-  }
-};
-
-document.getElementById("open").onclick = function () { openDrive(false); };
-
-if (!CAN_REACH_A_DRIVE) {
-  document.getElementById("open").disabled = true;
-  banner("This page needs Chrome or Edge to reach the drive.");
+// A file's name as the page shows it, without the folders it sits in
+export function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
 }

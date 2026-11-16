@@ -1,8 +1,8 @@
-import {draw, drawSteps} from "./03_runs.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";
-import {renderPreview} from "./18_drive.js";
+import {renderPreview} from "./18_file_preview.js";
 
 // ---- the board's own settings -----------------------------------------------------------------
 // Three settings belong to the board and to no section. They are whether a save plays without an
@@ -193,3 +193,7 @@ drawSteps.after.push(function () {
   document.body.classList.toggle("programmed", !!boardSet.program);
   programNote();
 });
+
+// Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
+// with none chosen, and the file says program= only once one is
+export var onProgramPage = false;

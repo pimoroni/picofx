@@ -1,5 +1,5 @@
-import {REMOTE_RAINBOW} from "../04_scenes.js";
-import {hexRgb} from "../05_effects.js";
+import {hexRgb} from "../01_colours.js";
+import {REMOTE_RAINBOW} from "../04_scene_tray.js";
 
 // ---- the Aye Arr Remote, drawn from its artwork -----------------------------------------------
 // The remote as its artwork draws it, in the artwork's own units, one element a line, for the

@@ -1,31 +1,9 @@
-import {chosenSteps, draw} from "./03_runs.js";
-import {wordFor} from "./05_effects.js";
+import {draw} from "./00_draw.js";
+import {BLINK, blinkNamed} from "./02_blink.js";
+import {chosenSteps} from "./03_runs.js";
 
-// ---- blinking through several colours -----------------------------------------------------
-// Blink takes one colour or several. With several it blinks through them in turn, one a beat,
-// which is picofx's rgb_blink. The list is the stretch's blinks, {colours, at}, where at is the
-// one the picker above is changing. A stretch with no list has the one colour it always had.
-// A list is written with the words and hexes at full and the stretch's brightness as level=,
-// since rgb_blink takes one level for all of them.
-
-export var BLINK = "Blink";
-
-// The colours a stretch blinks through, where it has more than one and plays them in colour
-export function blinkList(run, section) {
-  var first = run && run.lamps[section.from];
-  if (section.look !== BLINK || !section.blinks || section.blinks.colours.length < 2 ||
-      !first || !first.colour) return null;
-  return section.blinks.colours;
-}
-
-// A colour's word, black included, which a set of colours to blink through may hold
-function blinkNamed(hex) {
-  return hex.replace("#", "").toLowerCase() === "000000" ? "black" : wordFor(hex);
-}
-
-export function blinkWord(hex) {
-  return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
-}
+// ---- blinking through several colours, on the chosen stretch ------------------------------------
+// The chips of the colours Blink steps through, drawn among the chosen stretch's settings.
 
 // Above the swatches, the colours it blinks through, each a chip that the picker changes
 // while it is chosen, with a way to add another and to take one away

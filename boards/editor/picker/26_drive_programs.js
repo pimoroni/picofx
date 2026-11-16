@@ -1,9 +1,9 @@
+import {banner} from "./00_banner.js";
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {draw} from "./03_runs.js";
-import {banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {PROGRAMS, boardSet, programNamed} from "./19_board_settings.js";
-import {loadThumbs, renderProgramView} from "./22_program.js";
-import {isHiddenName} from "./26_drive_files.js";
+import {renderProgramView, thumbImages} from "./22_program.js";
 import {readWaitingProgram} from "./27_readback.js";
 
 // ---- the programs on the drive ------------------------------------------------------------------
@@ -19,6 +19,22 @@ import {readWaitingProgram} from "./27_readback.js";
 // what it does, and what it uses is read from its source. A picture is the one named, else
 // name.png beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT
 // orders the sections and says what each holds.
+
+// Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
+// time and never fills in late. Once all are in, the page is drawn again for any already showing
+export function loadThumbs(sources) {
+  var waiting = 0;
+  sources.forEach(function (src) {
+    if (thumbImages[src]) return;
+    var image = thumbImages[src] = new Image();
+    waiting++;
+    image.onload = image.onerror = function () {
+      waiting--;
+      if (!waiting) draw();
+    };
+    image.src = src;
+  });
+}
 
 // Where the drive keeps its examples, on a board that carries them
 export var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";

@@ -1,18 +1,18 @@
+import {banner} from "../00_banner.js";
+import {draw, drawSteps} from "../00_draw.js";
 import {BOARD} from "../01_looks.js";
-import {draw, drawSteps} from "../03_runs.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS, firmwareHooks} from "../07_board.js";
-import {banner, drive, driveTrouble} from "../18_drive.js";
+import {drive, driveTrouble, nameShown} from "../18_drive.js";
 import {PROGRAMS, boardSet, programNamed, programsElsewhere} from "../19_board_settings.js";
 import {
-  CHIPLESS, FEATURES, featureIcon, had, loadThumbs, passesFilter, programCard, programCardSteps,
-  programTitle, programView, programViewSteps, unhad, usesOf
+  CHIPLESS, FEATURES, featureIcon, had, passesFilter, programCard, programCardSteps, programTitle,
+  programView, programViewSteps, unhad, usesOf
 } from "../22_program.js";
+import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../26_drive_files.js";
 import {
-  OTHER_EXAMPLES, exampleSections, isExampleMedia, nameShown, scanMedia
-} from "../26_drive_files.js";
-import {
-  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, programFrom
+  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, loadThumbs,
+  programFrom
 } from "../26_drive_programs.js";
 
 // ---- examples to discover -----------------------------------------------------------------------

@@ -1,12 +1,104 @@
-import {BOARD} from "./01_looks.js";
+import {draw, drawHeld} from "./00_draw.js";
+import {BOARD, canPlay, keyOf, lookNamed} from "./01_looks.js";
+import {targetFor} from "./03_lines.js";
+import {OUTPUTS, order, outputSaid, placeLamp, wiring} from "./03_outputs.js";
 import {
-  OUTPUTS, acrossWiring, breakOutWiring, draw, drawHeld, mono, order, outputSaid, outs, placeLamp,
-  rejoinWiring, runs, wiring
+  acrossWiring, breakOutWiring, canEdit, copyBlinks, copyExact, mono, outs, pickOutput,
+  rejoinWiring, runs, sectionAt, settle
 } from "./03_runs.js";
-import {apply, capture, slotAt, state, store} from "./04_scenes.js";
-import {changeWiring, playsOf, stripLengthTail} from "./05_effects.js";
-import {canEdit} from "./08_setup.js";
+import {apply, capture, carried, slotAt, state, store} from "./04_scenes.js";
+import {stripLengthTail} from "./05_strips.js";
 import {plainOrder} from "./27_readback.js";
+import {playsOf} from "./31_stretch_bar.js";
+
+// ---- what an output's lamps play when its wiring changes ----------------------------------
+// The new lamps are carried what the output played, both ways, broken out into three mono
+// lamps or three put back as one colour lamp. The wiring change gives them a stretch of
+// their own, starting dark, and this fills it where the look plays on them
+
+// The stretch an output's lamps played. Put back from three that differ, it is the one
+// most of them played, and the first channel's where all three differ
+function playedBy(out) {
+  var lamps = [];
+  runs.forEach(function (run) {
+    run.lamps.forEach(function (lamp, at) {
+      if (lamp.out === out) lamps.push({channel: lamp.channel || 0,
+                                        section: run.sections[sectionAt(run, at)]});
+    });
+  });
+  // A channel can be dragged apart from its two, so they are counted in channel order
+  lamps.sort(function (a, b) { return a.channel - b.channel; });
+  var counted = [];
+  lamps.forEach(function (one) {
+    var seen = counted.filter(function (had) { return had.look === one.section.look; })[0];
+    if (seen) seen.many++;
+    else counted.push({look: one.section.look, section: one.section, many: 1});
+  });
+  var most = counted[0];
+  counted.forEach(function (one) { if (one.many > most.many) most = one; });
+  return most ? most.section : null;
+}
+
+// The nearest look for lamps a look cannot play on. Rainbow's colours travel along the
+// lamps, and on mono lamps the nearest is brightness travelling
+var STAND_INS = {"Rainbow": "Wave"};
+
+// What each output was carried from where a stand-in took its place, so putting the
+// output back gives the look it had. Held by output, not on the stretch, since every
+// settle makes the stretches afresh, and captured with the scene
+function carriedFrom() { return carried; }
+
+// The stand-in a stretch is playing, and what for, where it is one
+export function standingIn(run, section) {
+  var memo = null;
+  run.lamps.slice(section.from, section.to + 1).forEach(function (lamp) {
+    var had = carriedFrom()[lamp.out];
+    if (had && had.as === section.look) memo = had;
+  });
+  return memo;
+}
+
+function changeWiring(change, toColour) {
+  return function (out) {
+    if (!!wiring[out].broken !== toColour) return;
+    var played = playedBy(out);
+    played = played && {look: played.look, pace: played.pace, mood: played.mood,
+                        colour: played.colour, level: played.level,
+                        blinks: copyBlinks(played.blinks), exact: copyExact(played.exact),
+                        timings: copyExact(played.timings)};
+    var memo = carriedFrom()[out];
+    delete carriedFrom()[out];
+    change(out);
+    runs.some(function (run) {
+      var mine = run.sections.filter(function (section) {
+        return run.lamps.slice(section.from, section.to + 1).every(function (lamp) {
+          return lamp.out === out;
+        });
+      })[0];
+      if (!mine) return false;
+      if (played) {
+        var look = lookNamed(played.look);
+        var target = targetFor(run, mine);
+        var standIn = lookNamed(STAND_INS[played.look]);
+        if (toColour && memo && played.look === memo.as) {
+          // Back from a stand-in, it plays its old look at the stand-in's pace and level
+          Object.assign(mine, {look: memo.look, pace: played.pace, mood: memo.mood,
+                               colour: memo.colour, level: played.level});
+        } else if (look && canPlay(look, target)) {
+          Object.assign(mine, played);
+        } else if (standIn && canPlay(standIn, target)) {
+          Object.assign(mine, played, {look: keyOf(standIn)});
+          carriedFrom()[out] = {as: keyOf(standIn), look: played.look, mood: played.mood,
+                                colour: played.colour};
+        }
+      }
+      return true;
+    });
+    settle();
+    pickOutput(out);
+    draw();
+  };
+}
 
 // ---- the board, the same in every scene ------------------------------------------------
 // How the board is built is the same in every scene, which outputs have an adapter

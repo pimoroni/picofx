@@ -1,54 +1,17 @@
-import {BOARD, LOOKS, canPlay, lookNamed, rangify, whyNot} from "./01_looks.js";
-import {FRAME, beat, previewingStrip} from "./02_preview.js";
-import {lampUnder, namesOf, state} from "./04_scenes.js";
-import {
-  GLASS_IN, GLASS_OUT, START_MOODS, ZOOMS_OVER, isBanked, livePlay, middleOfView, paletteMark,
-  playsOf, sectionLines, spoken, startColour, stretchWash, stripSelector, takesColour, targetFor,
-  toolButton, zoomOf, zoomTo
-} from "./05_effects.js";
-import {lampsMovable} from "./07_board.js";
-import {canEdit, heldOutput, noArrow, setupOn} from "./08_setup.js";
-import {breakOut, bringForward, moveLamp, rejoin} from "./09_wiring.js";
-import {renderPreview} from "./18_drive.js";
-import {groupGallery} from "./24_gallery_groups.js";
-import {keptLights, keptNow} from "./27_readback.js";
+import {draw, drawSteps} from "./00_draw.js";
+import {BOARD, LOOKS, canPlay, lerp, lookNamed, r2, whyNot} from "./01_looks.js";
+import {keptLights, keptNow} from "./03_kept.js";
+import {sectionLines, startColour, targetFor} from "./03_lines.js";
+import {MONO_FIRST, OUTPUTS, OUTS, order, placeOf, placesOf, wiring} from "./03_outputs.js";
+import {renderScenes, spanTray} from "./04_scenes.js";
+import {START_MOODS} from "./05_strips.js";
+import {renderSceneSettings} from "./20_scene_row.js";
+import {playsOf} from "./31_stretch_bar.js";
+import {groupGallery, lookCard, spanning} from "./33_gallery.js";
 
-// ---- the board's outputs, inside the sections system ------------------------------------
-// A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
-// those three apart, the output is either one colour lamp or three mono ones, and a board is
-// a mix. A mono output is one light, always on the mono side. Everything below is the section
-// model over a run of lamps, and its only new idea is that the wiring decides the run's length.
-
-var OUTS = BOARD.outputs.length;
-export var CHANNELS = ["r", "g", "b"];
-export var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
-
-// Each output as the file names it, split into its prefix and number. out3 is out and 3, and
-// rgb, which has no number, is rgb alone
-export var OUTPUTS = BOARD.outputs.map(function (output) {
-  var named = output.name.match(/^([a-z]+)(\d*)$/);
-  return {name: output.name, prefix: named[1], number: named[2] ? Number(named[2]) : null,
-          mono: output.kind === "mono", breaks: !!output.breaks_out};
-});
-
-// Whether the mono side comes first, as on a board whose outputs start with its mono ones. The
-// file names the lamps in the same order
-export var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
-document.getElementById("sides").classList.toggle("monofirst", MONO_FIRST);
-document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
-
-// The corner cut into a broken-out lamp, saying which of an output's three drives it
-export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
-
-// Every lamp on the page, by the output it belongs to, so pointing at one reaches the
-// others without the page being drawn again
-var kinOf = {};
-
-// A colour output is one lamp or three, and nothing between, as the adapter brings all three
-// channels out or it is not fitted. Two channels playing the same thing are two lamps in
-// one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
-export var wiring = [];
-for (var n = 0; n < OUTS; n++) wiring.push({broken: OUTPUTS[n].mono});
+// ---- the runs and their stretches ---------------------------------------------------------------
+// The colour lamps and the mono ones, each a run of stretches over the lamps the wiring adds up
+// to, the one stretch being worked on, and the steps back and on through each run's changes.
 
 export function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
@@ -67,29 +30,7 @@ export var active = MONO_FIRST ? mono : outs;
 // Which kind of lamp the one set of looks is drawn for. It follows whatever was last
 // pointed at, so the cards are always the ones for the lights being worked on
 var showing = MONO_FIRST;
-
-// Where each lamp sits, which is the one thing about a board only its owner knows. It
-// is a lamp and not an output that is placed, since an output's three channels reach three
-// separate LEDs through the adapter, and those can be anywhere in a build
-export var order = [];
 for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
-
-// An output's places in the wiring order, which are a mono output's one light, a colour output
-// whole, or a colour output broken out as its three channels
-export function placesOf(out) {
-  if (OUTPUTS[out].mono) return [{out: out, channel: 0}];
-  if (!wiring[out].broken) return [{out: out, channel: null}];
-  return CHANNELS.map(function (letter, c) { return {out: out, channel: c}; });
-}
-
-function sameLamp(a, b) { return a.out === b.out && a.channel === b.channel; }
-
-function placeOf(lamp) {
-  for (var i = 0; i < order.length; i++) {
-    if (sameLamp(order[i], lamp)) return i;
-  }
-  return -1;
-}
 
 // ---- the lamps the wiring adds up to -----------------------------------------------------
 
@@ -108,99 +49,6 @@ function lampsFor(run) {
     found.push({out: place.out, colour: colour, channel: place.channel});
   });
   return found;
-}
-
-export function widthOf(section) { return section.to - section.from + 1; }
-
-// Whether a lamp is a channel of a colour output broken out, which the file names by its channel
-export function isChannel(lamp) { return !lamp.colour && !OUTPUTS[lamp.out].mono; }
-
-// What one lamp is called, in the words the file uses
-function selectorFor(lamp) {
-  if (lamp.run) return lamp.run.name + (lamp.at + 1);
-  var name = OUTPUTS[lamp.out].name;
-  return isChannel(lamp) ? name + "." + CHANNELS[lamp.channel] : name;
-}
-
-// Whether the output after this one, counting by step, is the next of the same name
-export function nextOutput(out, step) {
-  var here = OUTPUTS[out], there = OUTPUTS[out + step];
-  return !!there && here.number !== null && there.prefix === here.prefix &&
-         there.number === here.number + step;
-}
-
-// A set of items as the file joins them. An item's prefix carries on to a bare number after it,
-// so a numbered item says its prefix only where it differs from the one before, and an output
-// with no number always says its name
-export function joinedItems(items) {
-  var prefix = null;
-  return items.map(function (item) {
-    var output = OUTPUTS[item.out];
-    var said = output.number === null ? output.name + item.rest
-             : (output.prefix === prefix ? "" : output.prefix) + item.rest;
-    prefix = output.prefix;
-    return said;
-  }).join(",");
-}
-
-// An item naming outputs first to last of one name, with a channel suffix or none
-export function rangeItem(first, last, suffix) {
-  var from = OUTPUTS[first].number, to = OUTPUTS[last].number;
-  return {out: first,
-          rest: (from === null ? "" : first === last ? String(from) : from + "-" + to) +
-                (suffix ? "." + suffix : "")};
-}
-
-// The shortest way to name a set of lamps that the file still reads. Consecutive outputs taken
-// whole, and consecutive mono outputs, are a range, and an output's three channels in order
-// are named by its `.*`
-function nameThese(lamps) {
-  // An output's three channels, in order, starting here
-  function allThree(at) {
-    return at + 2 < lamps.length && isChannel(lamps[at]) &&
-           lamps[at].channel === 0 && lamps[at + 1].channel === 1 &&
-           lamps[at + 2].channel === 2 && lamps[at + 1].out === lamps[at].out &&
-           lamps[at + 2].out === lamps[at].out;
-  }
-
-  var items = [];
-  var at = 0;
-  while (at < lamps.length) {
-    if (!isChannel(lamps[at])) {
-      var last = at;
-      while (last + 1 < lamps.length && !isChannel(lamps[last + 1]) &&
-             lamps[last + 1].colour === lamps[at].colour &&
-             lamps[last + 1].out === lamps[last].out + 1 && nextOutput(lamps[last].out, 1)) {
-        last++;
-      }
-      items.push(rangeItem(lamps[at].out, lamps[last].out, null));
-      at = last + 1;
-    } else if (allThree(at)) {
-      var end = at;
-      var highest = lamps[at].out;
-      while (allThree(end + 3) && lamps[end + 3].out === highest + 1 && nextOutput(highest, 1)) {
-        end += 3;
-        highest++;
-      }
-      items.push(rangeItem(lamps[at].out, highest, "*"));
-      at = end + 3;
-    } else {
-      items.push(rangeItem(lamps[at].out, lamps[at].out, CHANNELS[lamps[at].channel]));
-      at++;
-    }
-  }
-  return joinedItems(items);
-}
-
-// A lamp's label on the page. It is the lamp's number and its channel where it is one, or for an
-// output with no number its name or its channel's letter
-export function shortName(lamp) {
-  if (lamp.run) return String(lamp.at + 1);
-  var output = OUTPUTS[lamp.out];
-  if (output.number === null) {
-    return isChannel(lamp) ? CHANNELS[lamp.channel].toUpperCase() : output.name.toUpperCase();
-  }
-  return isChannel(lamp) ? output.number + CHANNELS[lamp.channel] : String(output.number);
 }
 
 // ---- sections over those lamps -----------------------------------------------------------
@@ -314,7 +162,7 @@ function steppingWith(run, stack) {
 }
 
 // A step back or on is the scene's, so it changes the stretches and never the board
-function stepBack(run) {
+export function stepBack(run) {
   if (!run.was.length) return;
   var also = steppingWith(run, "was");
   [run].concat(also).forEach(function (one) {
@@ -326,7 +174,7 @@ function stepBack(run) {
   draw();
 }
 
-function stepOn(run) {
+export function stepOn(run) {
   if (!run.undone.length) return;
   var also = steppingWith(run, "undone");
   [run].concat(also).forEach(function (one) {
@@ -412,7 +260,7 @@ export function pick(run, at) {
   showing = kindAt(run, run.picked);
 }
 
-function cutAt(run, after) {
+export function cutAt(run, after) {
   if (after < 0 || after >= run.lamps.length - 1) return;
   var at = sectionAt(run, after);
   var section = run.sections[at];
@@ -457,7 +305,7 @@ function moveEdge(run, which, to) {
 }
 
 // Joined back into one, the run plays what the stretch picked was playing
-function joinAll(run) {
+export function joinAll(run) {
   var section = run.sections[run.picked];
   var had = section && playsOf(section);
   remember(run);
@@ -526,88 +374,6 @@ export function rejoinWiring(out) {
   draw();
 }
 
-// ---- what the file says ------------------------------------------------------------------
-
-// Some outputs by their place counted from one, as the file names them. Those of one name in a
-// row are a set of numbers, and an output with no number is named by its name
-function outputsNamed(places) {
-  var items = [];
-  var at = 0;
-  while (at < places.length) {
-    var output = OUTPUTS[places[at] - 1];
-    var last = at;
-    while (output.number !== null && last + 1 < places.length &&
-           OUTPUTS[places[last + 1] - 1].number !== null &&
-           OUTPUTS[places[last + 1] - 1].prefix === output.prefix) last++;
-    var numbers = places.slice(at, last + 1).map(function (place) {
-      return OUTPUTS[place - 1].number;
-    });
-    items.push({out: places[at] - 1, rest: output.number === null ? "" : rangify(numbers)});
-    at = last + 1;
-  }
-  return joinedItems(items);
-}
-
-// An output in words, such as output 3, or the RGB output for one with no number
-export function outputSaid(out) {
-  var output = OUTPUTS[out];
-  return output.number === null ? "the " + output.name.toUpperCase() + " output"
-                                : "output " + output.number;
-}
-
-// The board's colour outputs in words, as one where there is only one
-function colourOutputsSaid() {
-  var colour = [];
-  OUTPUTS.forEach(function (output, out) { if (!output.mono) colour.push(out); });
-  return colour.length === 1 ? outputSaid(colour[0]) : "the colour lights";
-}
-
-// What a stretch plays on, as though it ran from its near end
-export function forwardTargetFor(run, section) {
-  if (run.strip) {
-    // The stretch's lights by number, for the looks that deal them out themselves
-    var lights = [];
-    for (var at = section.from; at <= section.to; at++) lights.push(at + 1);
-    return {kind: "run", id: run.id, name: run.name, label: run.label, colour: true,
-            selector: stripSelector(run, section), count: widthOf(section), playing: [],
-            lights: lights};
-  }
-  var first = run.lamps[section.from];
-  if (!first) return {kind: "outputs", colour: false, selector: "out1", count: 1,
-                      label: "nothing", playing: []};
-  var mine = [];
-  for (var i = section.from; i <= section.to; i++) mine.push(run.lamps[i]);
-  // What a stretch plays on, in build order, which a look sharing its lamps out between
-  // sets of its own, as Party does, deals from. A colour stretch's are its outputs, and a mono
-  // stretch's are its lamps, which are channels, so it names each set itself
-  var target = {kind: first.colour && widthOf(section) === 1 ? "single" : "outputs",
-                name: "out", colour: first.colour, selector: nameThese(mine),
-                count: widthOf(section), playing: [],
-                label: first.colour ? colourOutputsSaid() : "the mono lights"};
-  if (first.colour) {
-    target.playing = mine.map(function (lamp) { return lamp.out + 1; });
-    target.nameSet = outputsNamed;
-  } else {
-    target.playing = mine.map(function (lamp, at) { return at; });
-    target.nameSet = function (set) {
-      return nameThese(set.map(function (at) { return mine[at]; }));
-    };
-  }
-  return target;
-}
-
-// A stretch below full brightness says so before the colon of each line it writes, as
-// level=, which scales whatever the effect plays. A line playing nothing is left alone
-export function levelled(lines, level) {
-  if (level === undefined || level >= 1) return lines;
-  var said = " level=" + Math.round(level * 100) + "%";
-  return lines.map(function (line) {
-    var at = line.indexOf(":");
-    if (at < 0 || /:\s*none\s*$/.test(line)) return line;
-    return line.slice(0, at) + said + line.slice(at);
-  });
-}
-
 // What the lamps play, a line or more for each stretch with a look
 export function lampLines() {
   var lines = [];
@@ -621,102 +387,6 @@ export function lampLines() {
   return lines;
 }
 
-// ---- lighting -----------------------------------------------------------------------------
-
-export var painters = [];
-var walks = {};
-
-// What each lamp of a run shows now. A strip's stretches are played in the strip's form
-function litRun(run) {
-  var out = [];
-  var store = walks[run.name] || (walks[run.name] = {});
-  previewingStrip = !!run.strip;
-  try {
-    run.sections.forEach(function (section) {
-      var look = lookNamed(section.look);
-      var wide = widthOf(section);
-      for (var i = 0; i < wide; i++) {
-        var which = section.from + i;
-        var lamp = run.lamps[which];
-        if (!lamp) continue;
-        var walk = store[which] || (store[which] = {});
-        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
-        out[which] = lit
-          ? {level: Math.max(0, Math.min(1, lit.level)),
-             ink: lamp.colour ? lit.ink : "#ffd9a0"}
-          : litUnder(run, which, lamp);
-      }
-    });
-  } finally {
-    previewingStrip = false;
-  }
-  return out;
-}
-
-// What a lamp the scene plays nothing on shows, marked unset= for its tile. As on the board, it
-// plays Always on's look where Always on has one there, and is off where another scene plays on it
-function litUnder(run, which, lamp) {
-  var under = lampUnder(run.name, which);
-  if (under && under.always) {
-    var section = under.always;
-    // Always on's lamps keep their own walks, so a scene's stretch never steps one on
-    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
-    var walk = store[which] || (store[which] = {});
-    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
-                       widthOf(section), walk);
-    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
-            always: true, unset: true};
-  }
-  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
-}
-
-// What a lamp's tip says after its name where the scene plays nothing on it
-function underSaid(run, which) {
-  var under = lampUnder(run.name, which);
-  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
-                                    " from Always on";
-  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
-  return ", playing Nothing";
-}
-
-// What a stretch the scene plays nothing on shows instead, or null where nothing plays on any of
-// its lamps. The result holds a short note to follow the cell's "Nothing", a tip, and what each
-// lamp shows, as "off", null or Always on's stretch and the lamp's place in it
-export function stretchUnder(run, section) {
-  var looks = [], scenes = [], lamps = [], played = 0;
-  for (var at = section.from; at <= section.to; at++) {
-    var under = lampUnder(run.name, at);
-    lamps.push(!under ? null : under.off ? "off"
-             : {section: under.always, at: at - under.always.from});
-    if (!under) continue;
-    played++;
-    if (under.always) {
-      var name = lookNamed(under.always.look).name;
-      if (looks.indexOf(name) < 0) looks.push(name);
-    } else {
-      namesOf(under.off).forEach(function (name) {
-        if (scenes.indexOf(name) < 0) scenes.push(name);
-      });
-    }
-  }
-  if (!played) return null;
-  var whole = played === widthOf(section);
-  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
-  var notes = [];
-  if (looks.length) notes.push("Always on's " + spoken(looks) +
-                               (showing < widthOf(section) ? " on " + showing : ""));
-  // The scenes are named for what uses the lights anywhere in the file, never for which came first
-  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
-                                ", lit only in " + spoken(scenes));
-  var tips = [];
-  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
-                              (whole && !scenes.length ? "here" : "on some of these lights") +
-                              " in this scene.");
-  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
-                               " and lit only in " + spoken(scenes) + ".");
-  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
-}
-
 export function inkAt(lit) {
   var hex = (lit.ink || "#ffd9a0").replace("#", "");
   var mix = 0.1 + lit.level * 0.9;
@@ -727,16 +397,16 @@ export function inkAt(lit) {
 
 // ---- the gallery, played on the chosen stretch --------------------------------------------
 
-var CARD_LIGHTS = 12;
+export var CARD_LIGHTS = 12;
 export var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
-var cardFaces = [];
-var cardWalks = {};
-var carrying_lamp = null;
+export var cardFaces = [];
+export var cardWalks = {};
+export var carrying_lamp = null;
 
 // The cut being dragged, and whether the pointer moved far enough for the release to be
 // the end of a drag rather than a click
 export var holding = null;
-var dragged = false;
+export var dragged = false;
 
 document.addEventListener("mousemove", function (event) {
   if (!holding) return;
@@ -771,7 +441,7 @@ document.addEventListener("mouseup", function () {
 // asked about first, since the board refuses a light set twice. Agreed, the kept lines go, and
 // declined, nothing changes. A strip not fitted takes no look, and a new look starts in its own
 // colour with its second setting afresh
-function landLook(run, at, name) {
+export function landLook(run, at, name) {
   var section = run.sections[at];
   if (section && name) {
     var named = keptLights(run);
@@ -807,46 +477,9 @@ function landLook(run, at, name) {
   draw();
 }
 
-function lookCard(isMono, look, on) {
-  var card = document.createElement("div");
-  card.className = "card" + (on ? " picked" : "") + (look.name ? "" : " nothing");
-  var face = document.createElement("div");
-  face.className = "face";
-  if (look.name) {
-    var cells = [];
-    for (var i = 0; i < CARD_LIGHTS; i++) {
-      var cell = document.createElement("span");
-      face.appendChild(cell);
-      cells.push(cell);
-    }
-    cardFaces.push({cells: cells, look: look, mono: isMono,
-                    key: (isMono ? "m" : "c") + "-" + look.name});
-  }
-  card.appendChild(face);
-  var name = document.createElement("div");
-  name.className = "name";
-  name.textContent = look.name || "Nothing";
-  card.appendChild(name);
-
-  // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
-  // so Nothing there is not the same as off
-  card.title = look.name ? look.name + ": apply it to the selected stretch"
-             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
-             : "turn a stretch off";
-  card.onclick = function () {
-    var run = galleryRun(isMono);
-    landLook(run, stretchFor(run, isMono), look.name);
-  };
-  if (!isMono && takesColour(lookNamed(look.name))) {
-    card.appendChild(paletteMark());
-    card.title += ". You can choose its colour";
-  }
-  return card;
-}
-
 // The run the cards are for. A strip is a run of its own kind and has the cards while it is
 // the one picked. Otherwise the cards follow the colour or mono side
-function galleryRun(isMono) {
+export function galleryRun(isMono) {
   if (active && active.strip) return active;
   return isMono ? mono : outs;
 }
@@ -866,7 +499,7 @@ function haveKind(isMono) {
   });
 }
 
-function stretchFor(run, isMono) {
+export function stretchFor(run, isMono) {
   var section = run.sections[run.picked];
   var lamp = section && run.lamps[section.from];
   if (lamp && lamp.colour === !isMono) return run.picked;
@@ -879,7 +512,7 @@ function stretchFor(run, isMono) {
 
 // The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
 // stretch can play
-function renderGalleries() {
+export function renderGalleries() {
   // A kind the board has none of cannot be worked on, so the set goes back to the one it
   // has. Without this the cards would be for lights that are not there
   if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
@@ -921,639 +554,87 @@ function renderGalleries() {
   groupGallery();
 }
 
-// The looks a run of several lamps can play, a banked one dealing its banks along it
-function spanning() {
-  return LOOKS.filter(function (look) { return look.spans || isBanked(look); });
-}
-
-function paintCards() {
-  cardFaces.forEach(function (one) {
-    var store = cardWalks[one.key] || (cardWalks[one.key] = {});
-    one.cells.forEach(function (cell, i) {
-      var walk = store[i] || (store[i] = {});
-      var lit = livePlay(one.look, MIDDLING, beat, i, CARD_LIGHTS, walk);
-      cell.style.background = lit
-        ? inkAt({level: lit.level, ink: one.mono ? "#ffd9a0" : lit.ink})
-        : "#3a3f44";
-    });
-  });
-}
-
-// ---- the lamps, lit and put in place -------------------------------------------------------
-
-// Light each lamp's face as it plays, faces[at] being the face of the run's lamp at `at`. A lamp
-// playing nothing of its own is marked unset, which its holder shows
-function paintFaces(faces, all) {
-  faces.forEach(function (face, at) {
-    var one = all[at] || {level: 0, ink: "#e4e0d9"};
-    face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
-    face.parentNode.classList.toggle("unset", !!one.unset);
-    face.style.boxShadow = one.level > 0.05
-      ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
-        "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
-      : "inset 0 0 0 1px rgba(0,0,0,.2)";
-  });
-}
-
-// A lamp is dragged to where it sits on the build. A colour output is one lamp so it
-// moves whole, and a broken-out one moves a channel at a time, since its three LEDs are
-// three separate things once the adapter is on
-function takesPlace(node, lamp) {
-  var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
-  node.draggable = true;
-  node.addEventListener("dragstart", function (event) {
-    carrying_lamp = me;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", shortName(lamp));
-    node.classList.add("carried");
-  });
-  node.addEventListener("dragend", function () {
-    carrying_lamp = null;
-    draw();
-  });
-  // Put down on a lamp's right half, the carried one goes after it, which is the only way
-  // to reach the far end of the run
-  function after(event) {
-    var box = node.getBoundingClientRect();
-    return event.clientX > box.left + box.width / 2;
-  }
-  node.addEventListener("dragover", function (event) {
-    if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
-    event.preventDefault();
-    node.classList.add("landing");
-    node.classList.toggle("after", after(event));
-  });
-  node.addEventListener("dragleave", function () { node.classList.remove("landing", "after"); });
-  node.addEventListener("drop", function (event) {
-    event.preventDefault();
-    node.classList.remove("landing", "after");
-    if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
-    var carried = carrying_lamp;
-    carrying_lamp = null;
-    moveLamp({from: carried, to: me, after: after(event)});
-  });
-  if (!lampsMovable()) node.draggable = false;
-  // Every lamp can be found by what it is, which is what the lines and the slide go by
-  var key = lampKey(me);
-  node.dataset.key = key;
-  node.addEventListener("mouseenter", function () { bringForward([key], true); });
-  node.addEventListener("mouseleave", function () { bringForward([key], false); });
-}
-
-// A lamp put down beside another, before it or after it, taking that place in the build
-export function placeLamp(move) {
-  var moved = order.splice(placeOf(move.from), 1)[0];
-  order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
-}
-
-// Light an output's three channels, each at its own edge and in its own colour, so what the
-// arrow would rejoin is visible before it is pressed
-function showKin(out, on) {
-  (kinOf[out] || []).forEach(function (node) { node.classList.toggle("kin", on); });
-}
-
-// ---- the bar, one cell per stretch, cut between them --------------------------------------
-
-// What a stretch's cell is washed in, the colours it plays
-export function washFor(run, section, look) {
-  var first = run.lamps[section.from];
-  return stretchWash(look, section, run, !!first && !first.colour);
-}
-
-// A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
-// window onto Always on's own band where Always on plays there and over dark where it is off
-export function washOf(run, section, look, under) {
-  var wash = document.createElement("span");
-  if (look || !under) {
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    return wash;
-  }
-  wash.className = "lit through";
-  // Each run of lamps that show one thing is one pane
-  var wide = under.lamps.length;
-  var start = 0;
-  while (start < wide) {
-    var end = start + 1;
-    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
-    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
-    start = end;
-  }
-  return wash;
-}
-
-// Whether two lamps under a scene show the same thing, nothing, off or one Always on stretch
-function sameShowing(one, other) {
-  return one === other ||
-         !!(one && other && one.section && other.section && one.section === other.section);
-}
-
-// A pane over lamps start to end of a stretch wide lamps across. Over Always on's stretch it holds
-// that stretch's whole band, moved so the lamps under the pane line up with their own part of it
-function paneOnto(run, shows, start, end, wide) {
-  var pane = document.createElement("span");
-  pane.style.left = (start * 100 / wide) + "%";
-  pane.style.width = ((end - start) * 100 / wide) + "%";
-  if (!shows) pane.className = "empty";
-  else if (shows === "off") pane.className = "off";
-  else {
-    var band = document.createElement("span");
-    band.style.width = (widthOf(shows.section) * 100 / (end - start)) + "%";
-    band.style.left = (-shows.at * 100 / (end - start)) + "%";
-    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
-    pane.appendChild(band);
-  }
-  return pane;
-}
-
-// The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
-// the stretch shows nothing at all
-export function beneath(under) {
-  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
-}
-
-// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
-// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
-function carded(run) {
-  return !run.strip;
-}
-
-// A stretch's lamps, one for each light it holds, each face kept in faces by the lamp's place
-// in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
-// to drag to its place on the build, and an output that breaks out has its arrow on its tiles
-function cardLamps(run, section, faces) {
-  var row = document.createElement("span");
-  row.className = "cardlamps";
-  var wiring = canEdit("outPanel");
-  for (var at = section.from; at <= section.to; at++) {
-    var lamp = run.lamps[at];
-    var one = document.createElement("span");
-    var channel = !lamp.colour && isChannel(lamp);
-    // A broken-out channel is marked in its channel's colour
-    one.className = "cardlamp" + (channel ? " chan" : "");
-    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-    var playing = lookNamed(section.look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces[at] = face;
-    if (wiring) setUpLamp(one, lamp, channel);
-    row.appendChild(one);
-  }
-  return row;
-}
-
-// Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
-// arrow. Pointing at one channel shows the other two of its output
-function setUpLamp(one, lamp, channel) {
-  takesPlace(one, lamp);
-  one.appendChild(crossing(lamp.out, lamp.colour));
-  if (!channel) return;
-  (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-  one.addEventListener("mouseenter", function () { showKin(lamp.out, true); });
-  one.addEventListener("mouseleave", function () { showKin(lamp.out, false); });
-}
-
-function renderBar(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar" + (carded(run) ? " carded" : "");
-  var faces = [];
-
-  run.sections.forEach(function (section, at) {
-    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
-    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
-    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
-    cell.style.flex = widthOf(section) + " 1 0";
-    var first = run.lamps[section.from];
-    cell.title = (first && first.colour ? "colour" : "mono") + ", " +
-                 targetFor(run, section).selector;
-    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
-
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title = under.tip;
-
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
-                     beneath(under);
-    cell.appendChild(says);
-
-    // Where this stretch can be cut, one place between two lamps
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var i = section.from; i < section.to; i++) {
-      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
-    }
-    cell.appendChild(inside);
-
-    cell.onclick = function () {
-      if (dragged) return;
-      pick(run, at);
-      draw();
-    };
-    bar.appendChild(cell);
-
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click \u00d7 to remove it";
-      edge.onmousedown = function (event) {
-        event.preventDefault();
-        remember(run);
-        // The stretch being resized is the one being worked on, whichever side it is on
-        pick(run, at);
-        // The bar is rebuilt on every move, so what is held onto is where the bar lives
-        // and not the bar itself, which would be a node already thrown away
-        holding = {run: run, which: at, where: where, had: run.sections.length};
-        edge.classList.add("holding");
-      };
-      // Taking the cut out is its own target, so it is never confused with moving it
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\u00d7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function (event) { event.stopPropagation(); };
-      drop.onclick = function (event) {
-        event.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
-}
-
-export function cutPoint(run, after, wide, from) {
-  var snip = document.createElement("i");
-  snip.className = "cut";
-  snip.style.left = ((after - from + 1) / wide * 100) + "%";
-  snip.style.width = "min(11px, " + (55 / wide) + "%)";
-  snip.dataset.says = shortName(run.lamps[after]) + " | " +
-                      shortName(run.lamps[after + 1]);
-  snip.title = "cut between " + snip.dataset.says.replace(" | ", " and ");
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    cutAt(run, after);
-  };
-  return snip;
-}
-
 // ---- crossing from one side to the other ---------------------------------------------------
 
-var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
-var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
+export var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
+export var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
 
-// The one act there is, said as a direction. A colour output crosses to the mono side and
-// becomes three mono lights, and those three cross back as one colour output. It shows only
-// where the wiring can be changed, in the board's colour, and only on an output that breaks out
-function crossing(out, colour) {
-  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
-  var made = document.createElement("button");
-  made.className = "cross boardarrow";
-  var says = colour
-    ? "split " + outputSaid(out) + " into three mono lights"
-    : "rejoin " + outputSaid(out) + " as one colour light";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
-  made.onclick = function (event) {
-    event.stopPropagation();
-    if (colour) breakOut(out); else rejoin(out);
-  };
-  return made;
-}
-
-// ---- the rows around the bar ---------------------------------------------------------------
-
-// Add the run's controls at the right of its header row, the box naming its wiring or its strip.
-// A long strip zooms first, then come the steps back and on, then Join all as a quick reset
-export function headSteps(row, run) {
-  var steps = document.createElement("span");
-  steps.className = "headsteps";
-
-  // Zooming is only any use where there are more lights than a panel can show. The
-  // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.strip && run.count > ZOOMS_OVER) {
-    steps.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                                 function () {
-                                   zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                                 }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    steps.appendChild(said);
-    steps.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                                 function () {
-                                   zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                                 }));
-  }
-
-  steps.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                               function () { stepBack(run); }));
-  steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                               function () { stepOn(run); }));
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  steps.appendChild(join);
-  row.appendChild(steps);
-}
-
-var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
+export var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
            "<path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";
-var ON = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/>" +
+export var ON = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/>" +
          "<path d='M13.5 8 H6.5 A4 4 0 0 0 6.5 15'/>";
-
-function iconButton(drawing, says, off, done) {
-  var made = document.createElement("button");
-  made.className = "round";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.disabled = off;
-  made.innerHTML = "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.5' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + drawing + "</svg>";
-  made.onclick = done;
-  return made;
-}
-
-// A strip's count of stretches, said after its chip. Zoomed in, the bar shows only some of them
-export function stretchCount(run) {
-  var says = document.createElement("span");
-  says.className = "stretchcount";
-  says.textContent = "Cut into " + run.sections.length +
-                     (run.sections.length === 1 ? " stretch" : " stretches");
-  return says;
-}
 
 // The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
 export var chosenSteps = [];
 
-export function renderChosen(where, run) {
-  renderChosenPanel(where, run);
-  chosenSteps.forEach(function (step) { step(where, run); });
-  pointFrom(where, run);
-}
-
 // ---- the chosen stretch's panel, pointing at its stretch -------------------------------------
 
 // How far the point stays from the panel's corners, and the least of a stretch it points at
-var NOTCH_INSET = 14;
-
-// Make the chosen stretch's panel point up at its stretch in the bar above. The panel is pointed
-// again whenever its size changes, which is also when a hidden tab is shown, and when a long
-// strip's bar scrolls under it
-function pointFrom(where, run) {
-  var box = document.getElementById(where);
-  var panel = box && box.querySelector(".chosen");
-  var bar = document.getElementById((run.id || run.name) + "Bar");
-  if (!panel || !bar) return;
-  function point() { pointAt(panel, bar.querySelectorAll(".sec")[run.picked]); }
-  point();
-  if (window.ResizeObserver) new ResizeObserver(point).observe(panel);
-  var scroller = bar.querySelector(".scroller");
-  if (scroller) scroller.addEventListener("scroll", point);
-}
-
-// Point a panel at the middle of the part of a stretch's cell in view. It points at nothing where
-// the cell is scrolled out of view, or is not picked since another run is being worked on
-function pointAt(panel, cell) {
-  if (cell && !cell.classList.contains("picked")) cell = null;
-  var from = panel.getBoundingClientRect();
-  var shown = cell ? cell.getBoundingClientRect() : null;
-  var view = cell && cell.closest(".scroller") ? cell.closest(".scroller").getBoundingClientRect()
-                                                : shown;
-  var left = shown ? Math.max(shown.left, view.left) : 0;
-  var right = shown ? Math.min(shown.right, view.right) : 0;
-  var pointing = !!shown && from.width > 0 && right - left >= NOTCH_INSET;
-  panel.classList.toggle("pointing", pointing);
-  if (!pointing) return;
-  // A stretch at either end of the bar is pointed at as near its middle as the corners allow
-  var middle = Math.min(Math.max((left + right) / 2, from.left + NOTCH_INSET),
-                        from.right - NOTCH_INSET);
-  panel.style.setProperty("--notch", (middle - from.left) + "px");
-}
-
-function renderChosenPanel(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  var section = run.sections[run.picked];
-  if (!section) return;
-  var wrap = document.createElement("div");
-  wrap.className = "chosen";
-  var who = document.createElement("div");
-  who.className = "who";
-  var first = run.lamps[section.from];
-  who.innerHTML = "<b>" + targetFor(run, section).selector + "</b>, " +
-                  widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") +
-                  ", " + (first && first.colour ? "colour" : "mono");
-  wrap.appendChild(who);
-
-  var look = lookNamed(section.look);
-  if (look) {
-    var tuning = document.createElement("div");
-    tuning.className = "tuning";
-    tuning.appendChild(labelled(look.solid ? "Brightness" : "Speed"));
-    tuning.appendChild(slider(look.solid ? "mood" : "pace"));
-    if (!look.solid) {
-      tuning.appendChild(labelled(look.mood));
-      tuning.appendChild(slider("mood"));
-    }
-    wrap.appendChild(tuning);
-  }
-  box.appendChild(wrap);
-
-  function labelled(words) {
-    var label = document.createElement("label");
-    label.textContent = words;
-    return label;
-  }
-  function slider(key) {
-    var range = document.createElement("input");
-    range.type = "range";
-    range.min = 0;
-    range.max = 1;
-    range.step = 0.01;
-    range.value = section[key];
-    range.dataset.focus = where + "-" + key;
-    // Through the run, as a page that makes the stretches afresh leaves this one behind
-    range.oninput = function () {
-      run.sections[run.picked][key] = Number(range.value);
-      renderPreview();
-    };
-    return range;
-  }
-}
-
-// Size the two sides, each as wide as the lamps it holds, so the divide between them moves as
-// outputs are broken out and put back and every lamp has the same room. The sides carry no names,
-// so breaking an output out never adds or takes away a row above the cards. The lamps' labels,
-// the board's box and the board's edge already say which lights are which
-function renderSides() {
-  [{run: outs, side: "sideA"}, {run: mono, side: "sideB"}].forEach(function (set) {
-    var box = document.getElementById(set.side);
-    var count = set.run.lamps.length;
-    // A side with nothing on it is not there at all. An output comes back from the arrow
-    // on one of its channels, so nothing is reached by keeping an empty column open, and
-    // the side that holds every lamp gets the whole width
-    box.style.display = count ? "" : "none";
-    box.style.flex = count + " 1 0";
-    box.className = "side";
-  });
-}
-
-// ---- the file, painted -----------------------------------------------------------------------
-
-export function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-export function paintLine(line) {
-  var plain = escapeHtml(line);
-  // A scene heading carries a colon, which would read as the one dividing a channel from its
-  // effect, so headings are taken first
-  if (line.charAt(0) === "[") return "<span class='s-scene'>" + plain + "</span>";
-  if (/^\s*#/.test(line)) return "<span class='s-comment'>" + plain + "</span>";
-  var at = line.indexOf(":");
-  if (at < 0) return plain;
-  function settings(text) {
-    return (text.match(/"[^"]*"|\S+|\s+/g) || []).map(function (token) {
-      var pair = token.match(/^([^=\s]+)(=)(.*)$/);
-      if (!pair) return escapeHtml(token);
-      return "<span class='s-name'>" + escapeHtml(pair[1]) + "</span>" +
-             "<span class='s-punc'>=</span>" +
-             "<span class='s-value'>" + escapeHtml(pair[3]) + "</span>";
-    }).join("");
-  }
-  var left = line.slice(0, at), right = line.slice(at + 1);
-  var selector = left.match(/^(\s*)(\S+)(.*)$/);
-  var head = selector
-    ? escapeHtml(selector[1]) + "<span class='s-target'>" + escapeHtml(selector[2]) +
-      "</span>" + settings(selector[3])
-    : escapeHtml(left);
-  var effect = right.match(/^(\s*)(\S+)(.*)$/);
-  var tail = effect
-    ? escapeHtml(effect[1]) + "<span class='s-effect'>" + escapeHtml(effect[2]) +
-      "</span>" + settings(effect[3])
-    : escapeHtml(right);
-  return head + "<span class='s-colon'>:</span>" + tail;
-}
-
-// ---- drawing --------------------------------------------------------------------------------
-// The parts below add their own steps to a draw, what each readies before the page is drawn and
-// what each draws after the outputs, both in the order the parts come
-
-export var drawSteps = {before: [], after: []};
-
-// Whether drawing waits, while the page is changed in a way a draw would store half done
-export var drawHeld = false;
-
-export function draw() {
-  if (drawHeld) return;
-  // A draw empties and refills much of the page, and reads its layout part way through, and a
-  // browser may move the scroll to hold something in view while it is half drawn, seen in Chrome
-  // as a jump of the whole page when a tab was chosen. So the page ends a draw scrolled where it
-  // began. A scroll a page means, such as holding a pressed button still, is made after the draw
-  var across = window.scrollX;
-  var down = window.scrollY;
-  var focused = focusPlace();
-  drawSteps.before.forEach(function (step) { step(); });
-
-  painters = [];
-  cardFaces = [];
-  kinOf = {};
-  renderGalleries();
-  renderBar("outBar", outs);
-  renderBar("monoBar", mono);
-
-  // Both sides are in the one panel, so one stretch's settings serve whichever was last worked
-  // on rather than a set under each
-  renderSides();
-  renderChosen("outChosen", active);
-
-  renderPreview();
-  paintAll();
-
-  drawSteps.after.forEach(function (step) { step(); });
-  refocus(focused);
-  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
-}
-
-// The fields a draw gives focus back to, those typed in or chosen from, so a pressed button is left
-// as the browser leaves it
-var FIELDS = "input, select, textarea";
-
-// Where the focused field is, as {field, key, box, index, caret}, or null where none is. A draw
-// makes most fields afresh, and a load that ends while someone types draws too, as each of the
-// drive's pictures does once read. The field is found again by its data-focus, or by its place
-// among the fields of the nearest box with an id
-function focusPlace() {
-  var field = document.activeElement;
-  if (!field || field === document.body || !field.matches(FIELDS)) return null;
-  var place = {field: field, key: field.dataset.focus || null, box: null, index: -1, caret: null};
-  if (!place.key) {
-    var box = field.parentElement ? field.parentElement.closest("[id]") : null;
-    if (!box) return null;
-    place.box = box.id;
-    place.index = Array.prototype.indexOf.call(box.querySelectorAll(FIELDS), field);
-  }
-  // Only text fields have a caret, and asking another type for one throws
-  try {
-    if (typeof field.selectionStart === "number") place.caret = [field.selectionStart, field.selectionEnd];
-  } catch (e) {
-    place.caret = null;
-  }
-  return place;
-}
-
-// Focus the field made where the focused one was, if the draw took that one away. A field still on
-// the page keeps or loses focus as it would have
-function refocus(place) {
-  if (!place || place.field.isConnected || document.activeElement !== document.body) return;
-  var field = null;
-  if (place.key) {
-    field = document.querySelector("[data-focus='" + place.key + "']");
-  } else {
-    var box = document.getElementById(place.box);
-    field = box ? box.querySelectorAll(FIELDS)[place.index] || null : null;
-  }
-  if (!field || field.disabled) return;
-  field.focus({preventScroll: true});
-  if (place.caret) {
-    try {
-      field.setSelectionRange(place.caret[0], place.caret[1]);
-    } catch (e) {
-      // A field made as another type has no caret to place
-    }
-  }
-}
-
-export function paintAll() {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-  paintCards();
-}
-
-export function step() {
-  beat += FRAME;
-  paintAll();
-  window.setTimeout(step, FRAME * 1000);
-}
+export var NOTCH_INSET = 14;
 
 settle();
+window.addEventListener("resize", spanTray);
+
+// What the parts below write above the scenes, lines straight under the file's header and then,
+// after a blank line, lines above the board line. Each is a list of functions giving lines
+export var fileHead = {under: [], above: []};
+
+drawSteps.after.push(function () {
+  renderScenes();
+  renderSceneSettings();
+});
+
+// The board opens as it ships, every colour output one colour lamp, each side whole and playing
+// the look the board's description opens it with. The strips play nothing, since what is wired
+// to them is unknown
+export var OPENING_LOOK = BOARD.opening.colour;
+
+// Every lamp of a stretch cycling through the same hue together, picofx's rainbow, which
+// Rainbow plays only on a single lamp. It sits beside Rainbow in the gallery
+LOOKS.splice(LOOKS.indexOf(lookNamed("Rainbow")) + 1, 0, {
+  name: "Colour cycle", mood: "Saturation", spans: true, onMono: false,
+  strip: ["#e33", "#ea3", "#3a5", "#3cc", "#36c", "#a3c", "#e33"],
+  entries: function (target, pace, mood) {
+    return [target.selector + ": rainbow speed=" + lerp(0.05, 0.8, pace) +
+            " sat=" + lerp(0.2, 1, mood)];
+  },
+  alone: function (target, pace, mood) {
+    return this.entries(target, pace, mood);
+  }
+});
+
+// The same, stepping between evenly spaced hues, picofx's hue_step
+LOOKS.splice(LOOKS.indexOf(lookNamed("Colour cycle")) + 1, 0, {
+  name: "Colour steps", mood: "Steps", detents: 10, spans: true, onMono: false,
+  strip: ["#e33", "#e33", "#ee3", "#ee3", "#3c5", "#3c5", "#36c"],
+  entries: function (target, pace, mood) {
+    return [target.selector + ": hue_step interval=" + r2(lerp(2, 0.25, pace)) +
+            " steps=" + Math.round(lerp(3, 12, mood))];
+  },
+  alone: function (target, pace, mood) {
+    return this.entries(target, pace, mood);
+  }
+});
+
+// ---- where the board is set up ----------------------------------------------------------
+// Every fact about the board stays beside what it is about, the wiring on the outputs, a
+// strip's length on the strip, a screen's type on the screen. Each reads as a box in its
+// section's own colour, and the whole board is set up at once in a setup mode.
+
+// Whether the whole page is in its setup mode
+export var setupOn = false;
+
+// The panels that hold a board fact, and the colour each one's box takes
+export var BOARD_CHIP_CLASSES = {outPanel: "outs"};
+
+// Whether the board facts in this panel can be changed just now
+export function canEdit(panel) { return setupOn; }
+
+// ---- selection waits while the board is set up ------------------------------------------------
+// A stretch is picked to give it a look, which setup does not do, so a tap there picks
+// nothing and nothing looks picked. What was picked is held by its lamp, since the wiring
+// is free to move it, and is picked again when setup ends. An output broken out or put
+// back meanwhile is picked instead, as it would have been outside setup
+
+export var heldPick = null;
+export var heldOutput = null;
