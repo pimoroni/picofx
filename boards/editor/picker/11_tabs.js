@@ -9,7 +9,7 @@
 // The tabs sit in the scene's body and not with the scene tabs, and are drawn as a row of
 // names with a line under the chosen one, so they read as parts of one board and not as
 // another row of scenes. Setting up the board is one button at the end of the tabs, and
-// keeps to them: the whole board is being set up, a section at a time, and the tabs stay
+// keeps to them, as the whole board is being set up, a section at a time, and the tabs stay
 // live to move between sections while it is.
 
 var TAB_NAMES = {outPanel: BOARD.output_words.tab};
@@ -59,7 +59,7 @@ function showChosen() {
 
 // With the looks in the box of the section they are for, the shared place is held at the tallest
 // box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
-// Run after every part has drawn, the boxes then being their full height
+// It runs after every part has drawn, when the boxes are at their full height
 function holdTabsPlace() {
   if (!document.body.classList.contains("looksbelow")) return;
   var stack = document.getElementById("tabStack");
@@ -134,7 +134,7 @@ function renderLedTabs() {
   }));
 }
 
-// A section shown as a tab is not folded away, the tab being how it is left
+// A section shown as a tab is not folded away, since the tab is how it is left
 function keptOpen(panel) {
   var node = document.getElementById(panel);
   node.addEventListener("toggle", function () {

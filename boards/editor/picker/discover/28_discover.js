@@ -25,9 +25,9 @@ var DISCOVER_FIRMWARE = "__VERSION__".split(" ")[0];
 
 // A check of one tab's examples
 function discoverFreshCheck() {
-  // status is idle, checking, done or failed. progress is [files read, of] while the drive is read,
-  // refreshing the same while it is read again quietly, updating [updated, of] while Update all
-  // runs, and notice what the last download said, as [text, warn]
+  // The status is idle, checking, done or failed. progress is [files read, of] while the drive
+  // is read, refreshing the same while it is read again quietly, updating [updated, of] while
+  // Update all runs, and notice what the last download said, as [text, warn]
   return {status: "idle", progress: null, refreshing: null, updating: null, error: null,
           index: null, notice: null};
 }
@@ -44,8 +44,7 @@ async function discoverTrouble(e) {
   return await driveTrouble(e);
 }
 
-// Say how a download went, where the gallery's examples start and in the banner at the top of the
-// page
+// Say how a download went, where the gallery's examples start and in the page's banner
 function discoverSay(kind, text, warn) {
   var notice = discover[kind].notice = [text, warn];
   banner(text, warn);
@@ -131,10 +130,10 @@ function discoverFinder() {
   };
 }
 
-// How a drive file compares with the index's: same, old where it matches an earlier version, or
-// changed. A file that is not text is compared by its size, as reading every picture was most of a
-// check's time, and a text file by its hash, also taken without Windows line endings, as a build
-// from a Windows clone writes them
+// How a drive file compares with the index's, as same, old where it matches an earlier version, or
+// changed. A file that is not text is compared by its size, since reading every picture would take
+// most of a check's time. A text file is compared by its hash, also taken without Windows line
+// endings, as a build from a Windows clone writes them
 async function discoverCompare(file, handle) {
   var got = await handle.getFile();
   if (!/\.(py|txt)$/i.test(file.path)) {
@@ -174,11 +173,10 @@ async function discoverIndex() {
   return await answer.json();
 }
 
-// Check every example of one tab against the drive, then fetch what the missing ones need to be
-// shown.
+// Check one tab's examples against the drive, then fetch what the missing ones need to be shown.
 //
 // With quiet, after a check has been done, only the drive is read again, against the index already
-// fetched, and what the last check found stays shown while it reads, its progress in refreshing
+// fetched. What the last check found stays shown while it reads, and its progress is in refreshing
 async function discoverCheck(kind, quiet) {
   var check = discover[kind];
   if (check.status === "checking" || check.refreshing || !drive.dirHandle) return;
@@ -235,8 +233,8 @@ async function discoverCheck(kind, quiet) {
   draw();
 }
 
-// An example's state from its files': missing where its own file is, moved where the drive has
-// it where it used to be kept, changed where the user changed any file, an update where any is
+// An example's state from its files'. It is missing where its own file is, moved where the drive
+// has it where it used to be kept, changed where the user changed any file, an update where any is
 // old or missing, and current where every one is GitHub's
 function discoverStateOf(entry) {
   var own = discover.files[entry.files[0].path];
@@ -250,7 +248,7 @@ function discoverStateOf(entry) {
 }
 
 // Fetch each missing example's source and thumbnail, four at a time, so it can be listed. With
-// same, the index being the one the last check read, one it listed is kept as it was
+// same, which says the index is the one the last check read, one it listed is kept as it was
 async function discoverFetchMissing(kind, offered, same) {
   var missing = offered.filter(function (entry) { return discover.states[entry.path] === "missing"; });
   var listed = {};
@@ -325,8 +323,7 @@ async function discoverFetchMissing(kind, offered, same) {
   }
 }
 
-// A missing program's pictures, as the program tab holds a program's: its own, and a second
-// screen's after it
+// A missing program's pictures as the program tab holds them, its own then a second screen's
 function discoverPicturesOf(path) {
   return discoverThumbs[path] ? [discoverThumbs[path]].concat(discoverSecondThumbs[path] || []) : [];
 }
@@ -348,14 +345,15 @@ function discoverWavSeconds(head, size) {
   return 0;
 }
 
-// The tab an example is offered on and checked from: a program on the program tab, a sound on the
-// Sound tab, and a drawing or a picture on the Screens tab, as "drawing"
+// The tab an example is offered on and checked from. A program is on the program tab, a sound on
+// the Sound tab, and a drawing or a picture on the Screens tab, as "drawing"
 function discoverTab(entry) {
   return entry.kind === "program" || entry.kind === "sound" ? entry.kind : "drawing";
 }
 
-// Every tab with examples to offer, and what each calls them
+// Every tab with examples to offer
 var DISCOVER_TABS = ["program", "drawing", "sound"];
+// What each tab calls its examples
 var DISCOVER_WORDS = {program: "programs", drawing: "pictures and drawings", sound: "sounds"};
 
 // What a tab's examples are called, "more" before them only where the drive holds some already
@@ -411,8 +409,8 @@ async function discoverRemove(path) {
 
 // Download an example, or its update, writing only the files that differ from the index's, and
 // deleting those left where it used to be kept. A program downloaded new is chosen, as a tapped
-// card is. Returns false where it failed, else where the user's changed copy was kept or true.
-// With quiet, one of several, only a failure is said and nothing is chosen
+// card is. Returns false where it failed, the path of the user's changed copy where one was kept,
+// else true. With quiet, one of several, only a failure is said and nothing is chosen
 async function discoverDownload(path, quiet) {
   var entry = discoverEntry(path);
   if (!entry || discover.busy[path] || discover.newer[path]) return false;
@@ -463,9 +461,9 @@ async function discoverDownload(path, quiet) {
   return done;
 }
 
-// List a downloaded example as the drive's own: a program from the source just written, without
-// reading every program again, and a drawing by reading the drive until the gallery has it. A
-// program moved from where it was kept takes its place, chosen where that was
+// List a downloaded example as the drive's own. A program is read from the source just written,
+// without reading every program again, and a drawing by reading the drive until the gallery has
+// it. A program moved from where it was kept takes its place, chosen where that was
 async function discoverListed(entry, written, fresh, was) {
   var path = entry.path;
   if (entry.kind === "program") {
@@ -573,8 +571,8 @@ function discoverElement(tag, className, text) {
   return made;
 }
 
-// What a check found of one kind: the examples to download, the updates, and how many need newer
-// firmware
+// What a check of one kind found, as the examples to download and the updates, and how many of
+// its examples need firmware newer than the board's
 function discoverFound(kind) {
   var listed = discoverListedOn(kind);
   return {
@@ -610,7 +608,7 @@ function discoverNotice(check) {
   return notice;
 }
 
-// A missing example's thumbnail, taken away where it will not load, so its dark ground shows
+// A missing example's thumbnail, taken away where it will not load, so the dark background shows
 function discoverThumbImage(path) {
   var img = document.createElement("img");
   img.alt = "";
@@ -636,15 +634,17 @@ function discoverPlaceBar(box, kind) {
   else box.appendChild(bar);
 }
 
-// ---- the gallery: the examples the drive lacks, over the page ----------------------------------
+// ---- the gallery of the examples the drive lacks, over the page --------------------------------
 
-// The kind of example whose gallery is open, or null, the examples chosen in it, the one a Shift
-// press counts a run from, the section it shows, "" for all of them, and how far downloading the
-// chosen has got, as [downloaded, of], while it runs
+// The kind of example whose gallery is open, or null
 var discoverBrowsing = null;
+// The examples chosen in the gallery
 var discoverChosen = [];
+// The example a Shift press counts a run from
 var discoverAnchor = null;
+// The section the gallery shows, or "" for all of them
 var discoverSection = "";
+// How far downloading the chosen examples has got, as [downloaded, of], while it runs
 var discoverFetching = null;
 
 // The colour of each kind's gallery, its tab's own
@@ -669,10 +669,10 @@ function discoverPanel(kind) {
   return panel;
 }
 
-// The line under Discover for the examples on the drive, one height whatever it says: what the
-// check found, or what a download says while it runs and a while after, a progress bar right of
-// it while anything runs, and Update all and Check for updates always in place, greyed where they
-// cannot be pressed. The examples on the drive are checked for updates without opening the gallery
+// The line under Discover for the examples on the drive, one height whatever it says. It says what
+// the check found, or what a download says while it runs and a while after, with a progress bar
+// right of it while anything runs. Update all and Check for updates are always in place, greyed
+// where they cannot be pressed. The drive's examples are checked without opening the gallery
 function discoverUpdateRow(kind, check, found) {
   var row = discoverElement("div", "discoverupdaterow");
   var said = discoverElement("span", "discoverrowsaid");
@@ -730,7 +730,7 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && discoverBrowsing) discoverCloseBrowser();
 });
 
-// The examples a gallery offers, as [path, name, what it does, section], in name order
+// The examples a gallery offers, as [path, name, what it does, section, kind], in name order
 function discoverOffers(kind) {
   var listed = discoverListedOn(kind);
   return Object.keys(listed).map(function (path) {
@@ -754,8 +754,8 @@ function discoverOffers(kind) {
   });
 }
 
-// A rule with words in it: "Examples" in its middle where a tab's examples start, and with minor,
-// a kind's name at its left where the Screens tab's drawings or pictures start within them
+// A rule with words in it, "Examples" in its middle where a tab's examples start. With minor, it
+// has a kind's name at its left where the Screens tab's drawings or pictures start within them
 function discoverDivider(words, minor) {
   var rule = discoverElement("div", "discoverdivide" + (minor ? " minor" : ""));
   rule.appendChild(discoverElement("span", "", words));
@@ -768,8 +768,8 @@ function discoverSectionKind(offers, section) {
     ? "picture" : "drawing";
 }
 
-// Whether a gallery section is shown under the filter chosen: every section, one section, or
-// with "kind:" every section of one kind
+// Whether a gallery section is shown under the filter chosen, which shows every section, one
+// section, or every section of one kind for a value beginning "kind"
 function discoverShows(offers, section) {
   if (!discoverSection) return true;
   if (discoverSection.indexOf("kind:") === 0)
@@ -862,8 +862,8 @@ async function discoverDownloadChosen(kind) {
 
 drawSteps.after.push(discoverRenderBrowser);
 
-// The gallery over the page: a way back, the section shown, a card for each example under its
-// section's name, and a bar at its foot saying what is chosen, with Download
+// The gallery over the page, with a way back, the section shown, a card for each example under
+// its section's name, and a bar at its foot saying what is chosen beside Download
 function discoverRenderBrowser() {
   var old = document.getElementById("discoverbrowser");
   var scrolled = old ? old.querySelector(".discoverscroll").scrollTop : 0;
@@ -1111,8 +1111,7 @@ function discoverSoundFace(path) {
   return card;
 }
 
-// Play a sound from GitHub, or stop it where it is playing, one sound at a time as the Sound tab
-// plays them
+// Play a sound from GitHub, or stop it where it is playing, one at a time as the Sound tab does
 async function discoverHear(path, url) {
   var was = hearing.name;
   stopHearing();
@@ -1137,7 +1136,7 @@ async function discoverHear(path, url) {
 }
 
 // An example as a card in the gallery, looking as it does in its own tab, its box ticked while it
-// is chosen. shown is every card's path in the order shown, a Shift press counting a run along it
+// is chosen. shown is every card's path in the order shown, which a Shift press counts a run along
 function discoverOfferCard(offer, shown) {
   var path = offer[0];
   var chosen = discoverChosen.indexOf(path) >= 0;
@@ -1178,7 +1177,7 @@ function discoverOfferCard(offer, shown) {
   return card;
 }
 
-// A small mark in a card's corner: a download arrow, Update, or the firmware it needs
+// A small mark in a card's corner, as a download arrow, Update, or the firmware it needs
 function discoverPill(cardPath) {
   var path = discoverTarget(cardPath);
   var entry = discoverEntry(path);
@@ -1283,7 +1282,7 @@ function discoverChips(offers) {
 }
 
 // ---- deleting an example ------------------------------------------------------------------------
-// An example can now be downloaded again, so each on the drive has a bin as the user's own do. A
+// An example can be downloaded again, so each on the drive has a bin as the user's own do. A
 // Python file goes with the thumbnails named after it, and a slideshow with its folder. Any picture
 // it shares with others is left. The galleries are read again so it is offered at once
 
@@ -1344,7 +1343,7 @@ async function discoverDelete(path, kind) {
   draw();
 }
 
-// The copy tile sits in the bin's place on an example, which had none, so it moves beside it
+// The copy tile sits in the bin's place on an example, which has none, so it moves beside the bin
 function discoverBinBeside(card, bin) {
   var copy = card.querySelector(".copytile");
   if (copy) copy.classList.remove("alone");

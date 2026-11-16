@@ -2,15 +2,15 @@
 // ---- the hub's positions in groups -----------------------------------------------------------
 // With a look beside every picture, two positions showing the same picture could differ in a
 // setting no drawing makes plain, and so be sent apart. So positions are put in groups, and a
-// group is set as one: one picture, one turn, one look, sent once to all of it. A group is the
-// scene's, as what it shows is, so each scene can group the hub its own way.
+// group is set as one, with one picture, one turn and one look sent once to all of it. A group is
+// the scene's, as what it shows is, so each scene can group the hub its own way.
 //
-// Groups are numbered 1 to 3, six positions holding at most three groups of two or more, and
-// each has its colour. Under every position are the three numbers and which group it is in:
-// pressing a number puts the position in that group, taking what the group shows, and pressing
+// Groups are numbered 1 to 3, since six positions hold at most three groups of two or more, and
+// each has its colour. Under every position are the three numbers and which group it is in.
+// Pressing a number puts the position in that group, taking what the group shows, and pressing
 // it again leaves the position on its own, keeping what it shows. Pressing a position picks its
 // group for the strip, and a picture goes to a group or a position on its own, never to one
-// member of a group. A group holds one panel size only, the two sizes being sent apart.
+// member of a group. A group holds one panel size only, since the two sizes are sent apart.
 
 var GROUP_NUMBERS = ["1", "2", "3"];
 var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
@@ -31,8 +31,8 @@ function membersOfGroup(number) {
   return placesThere().filter(function (place) { return groupOf(place) === number; });
 }
 
-// What a picture or the strip is sent to: each group with a member, in number order, then each
-// position on its own, in the hub's order
+// What a picture or the strip is sent to, each group with a member in number order and then each
+// position on its own in the hub's order
 function sendTargets() {
   var targets = GROUP_NUMBERS.filter(function (number) {
     return membersOfGroup(number).length;
@@ -139,8 +139,8 @@ drawSteps.before.push(settleGroups);
 // ---- pictures go to groups ---------------------------------------------------------------------
 
 // Whether a group of the scene being edited, left showing nothing, would show different things on
-// its members, Always on showing on some of them. A group showing nothing writes nothing, so only
-// such a group is broken up when it is emptied, and elsewhere it is kept for its next picture
+// its members, since Always on shows on some of them. A group showing nothing writes nothing, so
+// only such a group is broken up when it is emptied, and elsewhere it is kept for its next picture
 function splitsOverAlways(places) {
   var always = state.at >= 0 && state.always.body.places;
   return !!always && places.some(function (place) { return always[place] && always[place].shows; });
@@ -187,8 +187,8 @@ assetSteps.push(function () {
       };
       pick.appendChild(button);
     });
-    // Every group and every position on its own at once, the groups left as they are, or off
-    // every one where it shows on all
+    // Every group and every position on its own at once, keeping the groups, or off every one
+    // where it shows on all
     var everywhere = placesThere().length && placesThere().every(function (place) {
       return state.places[place].shows === name;
     });
@@ -311,8 +311,8 @@ hubHeadSteps.push(function () {
     var inherited = !!(under && under.always);
     if (inherited && !ink) frozen(numbers);
     // Which screens it shares a group with, as a range the way the file names them, so a full
-    // group still fits: "grouped with B-F". A group of one says so, its number being lit. A
-    // position on its own says which it matches, being sent with them until a setting differs
+    // group still fits, such as "grouped with B-F". A group of one says so, as its number is lit.
+    // A position on its own names those it matches, which go out with it until a setting differs
     var others = membersOf(place).filter(function (other) { return other !== place; });
     var matching = (sentWith[place] || []).filter(function (other) { return other !== place; });
     var said = document.createElement("small");
@@ -328,10 +328,6 @@ hubHeadSteps.push(function () {
   });
 });
 
-// How fast the hub plays what it shows. A still picture is sent once and costs nothing after, so
-// only the animations share the frames between them: one plays as fast as a single screen,
-// sent at once to every screen of its group, and several share the speed, each slower than
-// it would be alone. A group showing nothing costs nothing and is not named
 // Screens named in the note are bold, so "A plays" reads as the screen and not as a word. The
 // letters and their commas and dashes are all the markup holds
 function screensBold(places) { return "<b>" + placesSaid(places) + "</b>"; }
@@ -360,7 +356,7 @@ function differences(send, from) {
                ? "placed " + ANCHOR_NAMES[look.anchor]
                : "placed at " + (look.x === "" ? "centre" : look.x) + ", " +
                  (look.y === "" ? "centre" : look.y));
-  // Tiling said for the sides it fills: across, down, or both
+  // Tiling is said for the sides it fills, which are across, down or both
   var across = look.tile;
   var down = look.tileDown || "off";
   if (across !== base.tile || down !== (base.tileDown || "off")) {
@@ -390,14 +386,15 @@ function listSaid(words) {
                           : words[0];
 }
 
-// Where one picture goes out in several sends, which happens when some of its screens are set
-// differently, a sentence naming how, against the plainest of them: the one least changed from
-// how a screen starts, the one on most screens where that is a tie
+// How many ways a send differs from how a screen starts
 function plainness(send) {
   return differences(send, {places: send.places,
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
 }
 
+// Where one picture goes out in several sends, which happens when some of its screens are set
+// differently, a sentence naming how against the plainest of them. The plainest is the one least
+// changed from how a screen starts, or the one on most screens where that is a tie
 function apartSaid(sends) {
   var byPicture = {};
   sends.forEach(function (send) {

@@ -1,10 +1,10 @@
 
 // ---- blinking through several colours -----------------------------------------------------
 // Blink takes one colour or several. With several it blinks through them in turn, one a beat,
-// which is picofx's rgb_blink. The list is the stretch's blinks, {colours, at}, at being the
-// one the picker above is changing; a stretch with no list has the one colour it always had.
+// which is picofx's rgb_blink. The list is the stretch's blinks, {colours, at}, where at is the
+// one the picker above is changing. A stretch with no list has the one colour it always had.
 // A list is written with the words and hexes at full and the stretch's brightness as level=,
-// rgb_blink taking one level for all of them.
+// since rgb_blink takes one level for all of them.
 
 var BLINK = "Blink";
 

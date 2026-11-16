@@ -1,6 +1,6 @@
 
 // ---- where the board is set up ----------------------------------------------------------
-// Every fact about the board stays beside what it is about: the wiring on the outputs, a
+// Every fact about the board stays beside what it is about, the wiring on the outputs, a
 // strip's length on the strip, a screen's type on the screen. Each reads as a box in its
 // section's own colour, and the whole board is set up at once in a setup mode.
 
@@ -16,9 +16,9 @@ function canEdit(panel) { return setupOn; }
 
 // ---- selection waits while the board is set up ------------------------------------------------
 // A stretch is picked to give it a look, which setup does not do, so a tap there picks
-// nothing and nothing looks picked. What was picked is held by its lamp, the wiring
-// being free to move it, and is picked again when setup ends; an output broken out or
-// put back meanwhile is picked instead, as it would have been outside setup
+// nothing and nothing looks picked. What was picked is held by its lamp, since the wiring
+// is free to move it, and is picked again when setup ends. An output broken out or put
+// back meanwhile is picked instead, as it would have been outside setup
 
 var heldPick = null;
 var heldOutput = null;
@@ -46,7 +46,7 @@ function setSetup(on) {
   showChosen();
 }
 
-// Nothing looks picked while setup is on: the marks are drawn by the pages below, so they
+// Nothing looks picked while setup is on. The marks are drawn by the pages below, so they
 // are taken off once drawn
 function unmark() {
   document.querySelectorAll(".lamp.ringed, .sec.picked, .card.picked").forEach(function (one) {
@@ -129,7 +129,7 @@ function stripThere(run, there) { stripSet(run, {there: there}); }
 
 function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
 
-// Why a strip cannot be fitted just now, or nothing where it can: a strip taking other strips'
+// Why a strip cannot be fitted just now, or nothing where it can. A strip taking other strips'
 // terminals cannot be fitted beside them, nor they beside it
 function stripBlockedBy(run) {
   if (run.there) return "";

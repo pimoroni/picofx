@@ -1,12 +1,12 @@
 
 // ---- the looks in groups ------------------------------------------------------------------
 // The gallery grouped by how the lights play together, each group a row of at most five, the
-// width a row of cards has. The showiest come first: the travelling looks, Rainbow among them
-// being what the board opens playing, then the ready-made ones, each a base look specialised
-// or several of them together, then the plainest and the most specialised. The cards are the
-// flat gallery's own, moved into their groups with everything they do, so a look no group
-// names still shows, in a group of its own at the end. Nothing is no look of any group, so it
-// is a card made small at the end of the first heading, where there is always room for it.
+// width a row of cards has. The showiest come first. The travelling looks lead, with Rainbow
+// among them as what the board opens playing, then the ready-made ones, each a base look
+// specialised or several of them together, then the plainest and the most specialised. The cards
+// are the flat gallery's own, moved into their groups with everything they do, so a look no group
+// names still shows, in a group of its own at the end. Nothing is no look of any group, so it is
+// a card made small at the end of the first heading, where there is always room for it.
 
 var LOOK_GROUPS = [
   {name: "Along the lights", says: "travelling from one end to the other",
@@ -19,7 +19,7 @@ var LOOK_GROUPS = [
    looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
 ];
 
-// The gallery's cards gathered under the groups' headings, in the groups' order
+// Gather the gallery's cards under the groups' headings, in the groups' order
 function groupGallery() {
   var flat = document.querySelector("#looks .gallery");
   if (!flat) return;

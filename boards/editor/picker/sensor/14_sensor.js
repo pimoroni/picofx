@@ -6,7 +6,7 @@
 // Two buttons are the board's in every scene: OK / Stop puts it in standby and wakes it, so there
 // is always a way to stop it, and Play / Pause holds the effects where they stand.
 
-// What the sensor connector can have on it: [kind, as the choice says it, under the tab's name,
+// What the sensor connector can have on it, as [kind, as the choice says it, under the tab's name,
 // where it sits]
 var SENSOR_KINDS = [["none", "nothing", "none", ""],
                     ["ir", "an Aye Arr Remote", "Aye Arr",
@@ -43,10 +43,10 @@ function fittedTriggers() {
 }
 
 // ---- what each button does --------------------------------------------------------------------
-// A choice is a word: nothing, order (a number's scene by place), next, previous, first, restart,
-// or scene: and a scene's own mark, which keeps the button on that scene when it moves. The board's
-// own two buttons are standby and pause. A number is bound to the scene in its place, as the
-// scene's colour is its button's, so a number only goes there or does nothing
+// A choice is a word, one of nothing, order (a number's scene by place), next, previous, first,
+// restart, or "scene:" and a scene's own mark, which keeps the button on that scene when it moves.
+// The board's own two buttons are standby and pause. A number is bound to the scene in its place,
+// as the scene's colour is its button's, so a number only goes there or does nothing
 
 function isNumber(button) { return /^\d_/.test(button); }
 
@@ -54,7 +54,7 @@ function isNumber(button) { return /^\d_/.test(button); }
 var REMOTE_FIXED = {OK_STOP: ["standby", "Standby and wake, in every scene"],
                     PLAY_PAUSE: ["pause", "Pause the effects where they stand, in every scene"]};
 
-// A scene can wait for a button while a remote is fitted
+// A scene can wait for a button while a remote is fitted, or for motion while a PIR Stick is
 sceneCanWait = function () { return remoteFitted() || pirFitted(); };
 sceneWaitsFor = function () { return pirFitted() ? "motion" : "a button"; };
 
@@ -81,7 +81,7 @@ sceneTriggerLeads = function (at) {
   return leads;
 };
 
-// What a button does where Always on chooses nothing else: a number goes to the scene in its
+// What a button does where Always on chooses nothing else. A number goes to the scene in its
 // place, 0 to the tenth, and the side arrows step back and on. With no scenes none of them has
 // anywhere to go
 function remoteDefault(button) {
@@ -185,8 +185,8 @@ function remoteInk(name) {
   return number ? REMOTE_COLOURS[Number(number[1]) - 1] : "#808285";
 }
 
-// A row's choice of what its button does. On a scene's tab the first choice leaves it to
-// Always on, saying what that does, its row's stripes saying whose it is
+// Add a row's choice of what its button does. On a scene's tab the first choice leaves the button
+// to Always on and says what Always on makes it do
 function remoteRowChoice(row, button) {
   var resolved = remoteResolved(button);
   var choice = document.createElement("select");
@@ -261,9 +261,9 @@ function remoteRowChoice(row, button) {
 }
 
 // ---- the remote with a row for each button ----------------------------------------------------
-// The remote in the middle, its buttons' rows down either side, each joined to its button by a
-// leader in the button's colour while it does something. The art is drawn at REMOTE_SCALE pixels
-// to its unit, the leaders taking REMOTE_REACH units beyond its body on each side
+// The remote sits in the middle and its buttons' rows down either side. A leader in the button's
+// colour joins each row to its button while it does something. The art is drawn at REMOTE_SCALE
+// pixels to its unit, and the leaders reach REMOTE_REACH units beyond its body on each side
 
 var REMOTE_SCALE = 4.3;
 var REMOTE_REACH = 16;
@@ -422,7 +422,7 @@ function sensorSaid(words, dim) {
   return said;
 }
 
-// The box saying what is on the sensor connector, a choice while the board is being set up
+// Fill the box saying what is on the sensor connector, a choice while the board is being set up
 function sensorBox() {
   var facts = document.getElementById("sensorFacts");
   facts.textContent = "";
@@ -473,9 +473,9 @@ var PIR_SENSOR = {left: 0.703, right: 21.989};
 var PIR_HEAD_PX = 34;
 
 // A figure beside each row's name, someone running with speed streaks behind them for motion
-// starting, and standing still for it stopping, the two built alike. The streaks step left down
-// the runner's back, past the 16 unit square, so the figures' box reaches further left. Each head
-// is classed as a filled part, so a part icon can draw the figure too
+// starting and someone standing still for it stopping. The streaks step left down the runner's
+// back, past the 16 unit square, so the figures' box reaches further left. Each head is classed as
+// a filled part, so a part icon can draw the figure too
 var MOTION_FIGURES = {
   MOTION_STARTS: "<circle class='f' cx='10' cy='2.6' r='1.9'/><path d='M9.4 5.6 7.8 10.4 6 13.5 " +
                  "2.8 14.6M7.8 10.4l3.3 1.7 1.2 3.4M9.4 5.6 5.7 7.6 4.4 10M9.4 5.6l2.5 2.8 3 .6' " +
@@ -510,12 +510,11 @@ state.motionTiming = {};
 
 var MOTION_TIMING_DEFAULT = {after: 0, cancel: true};
 
-// The question a delay asks of the opposite edge, which "cancel this" or "finish this first"
-// answers
+// The question a delay asks of the opposite edge, answered by "cancel this" or "finish this first"
 var MOTION_CANCELLED_BY = {MOTION_STARTS: "If motion stops first?",
                            MOTION_STOPS: "If motion starts again first?"};
 
-// A trigger's delay on the tab being edited: the tab's own where the row is its own, or Always
+// A trigger's delay on the tab being edited, the tab's own where the row is its own, or Always
 // on's where a scene leaves the row to it
 function motionTiming(trigger) {
   var own = state.at < 0 || state.remote[trigger] !== undefined;
@@ -524,8 +523,8 @@ function motionTiming(trigger) {
   return held[trigger] || MOTION_TIMING_DEFAULT;
 }
 
-// Change a trigger's delay on the tab being edited, a scene taking the row as its own with what it
-// did as Always on
+// Change a trigger's delay on the tab being edited. A scene takes the row as its own, starting
+// from what the row did as Always on
 function setMotionTiming(trigger, change) {
   // Read before the scene takes the row, which would hide Always on's delay behind its own
   var timing = JSON.parse(JSON.stringify(motionTiming(trigger)));
@@ -555,8 +554,8 @@ function settleSceneRow(trigger) {
   delete state.motionTiming[trigger];
 }
 
-// A PIR box's two lines: "Trigger [what it does] after [3] s", then the question of the opposite
-// edge, greyed while there is no wait, so the box keeps its size
+// Add a PIR box's two lines, "Trigger [what it does] after [3] s" and the question of the opposite
+// edge. The question is greyed while there is no wait, so the box keeps its size
 function motionLines(trigger, box) {
   var timing = motionTiming(trigger);
   var line = document.createElement("div");
@@ -685,7 +684,7 @@ function renderSensor() {
   box.appendChild(words);
 }
 
-// The warnings under the sensor's diagram, for what the file gave that the page cannot use as it is
+// Add the warnings under the sensor's diagram, for what the file gave that the page cannot use
 function sensorNotes(words) {
   // A trigger going to the scene showing, which waits and does not restart
   var idle = triggerDoingNothing();
@@ -697,7 +696,7 @@ function sensorNotes(words) {
     nothing.className = "warn";
     words.appendChild(nothing);
   }
-  // A button the file gave twice in this tab, whose second line is kept as written
+  // Check if the file gave a trigger twice in this tab, whose second line is kept as written
   if (fittedTriggers().length && state.remoteRepeats.length) {
     var repeated = sensorSaid((state.remoteRepeats.length === 1 ? "" : "Each of ") +
       state.remoteRepeats.map(remoteWords).join(", ") + " is given twice in the file here. The " +
@@ -709,11 +708,12 @@ function sensorNotes(words) {
 
 // ---- what the file says ---------------------------------------------------------------------------
 // What is fitted is the board line's sensor=ir or sensor=pir. A remote: line holds buttons as the
-// remote names them, each with what it does: nothing, a step, or scene and the scene's name. Like
-// board: lines, remote: lines add up, and a button given twice in one tab is a repeat. The page
-// writes a line for each button, so a name needs no quotes, and reads several to a line, where a
-// name runs on to the next button or is quoted. Always on's lines are above the first heading and a
-// scene's under its own (proposed, which autofx does not read yet)
+// remote names them, each with what it does, which is nothing, a step, or scene and the scene's
+// name. A motion: line holds starts= and stops= the same way, each with its after= and cancel=
+// delay where it has one. Like board: lines, these lines add up, and a trigger given twice in one
+// tab is a repeat. The page writes a line for each trigger, so a name needs no quotes, and reads
+// several to a line, where a name runs on to the next trigger or is quoted. Always on's lines are
+// above the first heading and a scene's under its own
 
 var REMOTE_STEPS = ["nothing", "next", "previous", "first", "restart"];
 
@@ -849,8 +849,8 @@ function readRemoteLines(bodies) {
   });
 }
 
-// A scene keeps its own choices of what buttons do, as it keeps its looks. A scene's card shows
-// the remote's icon where it changes any button, and Always on's where a remote is fitted
+// A scene keeps its own choices of what triggers do, as it keeps its looks. Its card shows the
+// remote's or PIR Stick's icon where it changes any trigger, and Always on's whenever one is fitted
 bodyParts.push({
   capture: function (body) {
     body.remote = JSON.parse(JSON.stringify(state.remote));
@@ -874,12 +874,12 @@ bodyParts.push({
     return always || changed ? [pirFitted() ? "pir" : "remote", "Sensor"] : null;
   },
   // A tab's remote: or motion: lines come after its other lines, in the order of the triggers
-  // A trigger with a delay but no choice of its own does what its default does
   entries: function (body, lines) {
     if (!body.remote) return lines;
     var timings = body.motionTiming || {};
     fittedTriggers().forEach(function (trigger) {
       var choice = body.remote[trigger];
+      // A trigger with a delay but no choice of its own does what its default does
       if (choice === undefined && timings[trigger]) choice = remoteDefault(trigger);
       var line = choice === undefined ? null : triggerLine(trigger, choice, timings[trigger]);
       if (line) lines.push(line);
@@ -897,7 +897,7 @@ bodyParts.push({
   read: readRemoteLines
 });
 
-// The tab has no swatch, its name and what is fitted under it saying all there is
+// The tab has no swatch, since its name and what is fitted under it say all there is
 tabSwatches.sensorPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch sensorswatch";

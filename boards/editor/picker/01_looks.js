@@ -1,15 +1,14 @@
 <script>
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
 // the numbered parts in this folder and any of the board's own, joined in number order, those in
-// the screens, hub and sound folders only for a board that has them. This first part holds the
-// looks.
+// a feature folder only for a board with that feature. This first part holds the looks.
 
-// The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports,
-// whether it has a hub, sound and the network looks, and the examples it offers
+// The board the page is for, from its editor/fx_board.json. It holds the board's outputs, strips
+// and screen ports, whether it has a hub, sound and the network looks, and the examples it offers
 var BOARD = __BOARD__;
 
-// The catalogue is generated beside this page; without it the screen sizes and ports
-// cannot be known, so say so instead of failing silently
+// The catalogue is generated beside this page. Without it the screen sizes and ports cannot
+// be known, so the page says so in a banner and assumes the ports the board describes
 if (typeof CATALOGUE === "undefined") {
   var assumedPorts = BOARD.screens ? BOARD.screens.ports.map(function (port) { return port.id; }) : [];
   window.CATALOGUE = {board_settings: {}, screen_ports: assumedPorts,
@@ -46,8 +45,8 @@ function quoted(name) {
   return name.indexOf(" ") >= 0 ? '"' + name + '"' : name;
 }
 
-// A run of numbers as the file writes them: climbing or falling by one closes up
-// into a range, a pair stays a pair, and anything else is listed
+// A run of numbers as the file writes them. Three or more climbing or falling by one close
+// up into a range, a pair stays a pair, and anything else is listed
 function rangify(list) {
   var parts = [];
   var i = 0;
@@ -123,8 +122,8 @@ function toggle(icon, words, on, flip, title, refused) {
 }
 
 // ---- the looks -----------------------------------------------------------------
-// Each look writes real entries for whatever target it is handed: a bank of outputs
-// in the order they are to play, or a run of any length. alone() is the form it
+// Each look writes real entries for whatever target it is handed, a bank of outputs
+// in the order they are to play or a run of any length. alone() is the form it
 // takes on a target of one light, and false where it has no such form.
 
 var BREATHE_TONES = ["blue", "cool", "cyan", "green", "warm"];
@@ -264,7 +263,7 @@ var LOOKS = [
   },
   {
     // Five lamps in the crossing's own colours, landed on the first five playing
-    // outputs; any beyond them are told to stay dark, and fewer take fewer lamps
+    // outputs. Any beyond them are told to stay dark, and fewer take fewer lamps
     name: "Pelican crossing", mood: "Fade", spans: false, onMono: true,
     strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
     entries: function (target, pace, mood) {
@@ -285,7 +284,7 @@ var LOOKS = [
     alone: false
   },
   {
-    // Three colours chase each other across whatever plays it: the lights split into
+    // Three colours chase each other across whatever plays it. The lights split into
     // three sets, each flashing in its own colour a third of a beat apart. The slider picks
     // one of five sets of three colours, stopping at each
     name: "Party", mood: "Palette", detents: 5, spans: true, onMono: true,
@@ -296,8 +295,8 @@ var LOOKS = [
                      tone(PARTY_THIRD, mood)];
       var groups;
       if (target.kind === "outputs") {
-        // A target whose lamps are not whole outputs, broken-out channels say, names its
-        // own sets of them
+        // A target whose lamps are not whole outputs, such as broken-out channels, names
+        // its own sets of them, and nameSet() asks it for them
         groups = roundRobin(target.playing, Math.min(3, target.playing.length))
                  .map(function (group) {
                    return nameSet(target, group);
@@ -328,28 +327,7 @@ function lookNamed(id) {
 // What a look is kept as, which is its own id where it has one and its name otherwise
 function keyOf(look) { return look.id || look.name; }
 
-function luminance(colour) {
-  var hex = colour.replace("#", "");
-  return (0.299 * parseInt(hex.slice(0, 2), 16) + 0.587 * parseInt(hex.slice(2, 4), 16) +
-          0.114 * parseInt(hex.slice(4, 6), 16)) / 255;
-}
-
-// The brightest a look ever asks for, which is the lamp a mono run drives at full
-function peakOf(look) {
-  if (!look || !look.strip.length) return 1;
-  return Math.max.apply(null, look.strip.map(luminance)) || 1;
-}
-
-// What a colour comes to on a lamp that has none: the brightness it would drive, in
-// the warm white a mono output actually lights. Scaled against the look's own
-// brightest, so a look made of deep colours is not drawn as a row of dark lamps
-function asMono(colour, peak) {
-  var lit = Math.min(1, luminance(colour) / (peak || 1));
-  return "rgb(" + Math.round(255 * lit) + "," + Math.round(226 * lit) + "," +
-         Math.round(178 * lit) + ")";
-}
-
-// Whether a look has anything to give a target: a colour look cannot land on a mono lamp, a
+// Whether a look has anything to give a target. A colour look cannot land on a mono lamp, a
 // look that does not span cannot land on a run, and some have no single-light form. A banked
 // look deals its banks along a run, so it needs more than one lamp or a single-light form
 function canPlay(look, target) {
@@ -361,7 +339,7 @@ function canPlay(look, target) {
   return true;
 }
 
-// Why not, in the words of the thing that cannot happen
+// A card's tip on a target, which says why the look cannot play there or where it would play
 function whyNot(look, target) {
   if (!target.colour && !look.onMono) return "this look needs colour, and " +
                                              target.label.toLowerCase() + " is mono";

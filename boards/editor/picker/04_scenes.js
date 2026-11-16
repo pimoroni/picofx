@@ -1,8 +1,8 @@
 
 // ---- scenes ---------------------------------------------------------------------------
 // The scene tabs, adding, removing and reordering them, and a scene's own settings. A scene's
-// body is how the outputs are wired and placed, and every run's cuts, what each stretch plays
-// and its steps to undo.
+// body is every run's cuts, what each stretch plays and its steps to undo, and the parts below
+// add their own share to it.
 
 var state = {at: -1, always: {body: null}, scenes: []};
 
@@ -51,11 +51,12 @@ function mostPlayedOn(among) {
 
 // A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
 // length are the board's, so they sit outside the body and are not captured. The parts below
-// keep their own share of a scene in the body too, each registering how it captures, applies
-// and blanks that share, whether the share has content, how it adds to the scene's lines, how
-// it reads them back from a file's board line and kept lines, the names of what it plays, and
-// the icon and name its scene tab shows where the scene sets it. Each runs after the runs' own,
-// in the order the parts come
+// keep their own share of a scene in the body too, and each runs after the runs' own, in the
+// order the parts come. A part registers how it captures, applies and blanks that share,
+// whether the share has content, and how it adds to the scene's lines. It also registers how
+// it reads its share back from a file's board line and kept lines, and the names of what it
+// plays. A scene's tab shows the icon and name a part gives where the scene sets it, and when
+// the first scene is made, a part keeps back for Always on what is meant for every scene
 var bodyParts = [];
 
 // The parts that keep files on the FX drive, each registering how a walk of the drive finds
@@ -117,8 +118,7 @@ function allBodies() {
 // ---- what a scene leaves to Always on -------------------------------------------------------
 // The board plays Always on under every scene. Where a scene plays nothing of its own on a lamp,
 // the board plays Always on's look there, and where Always on plays nothing either, it turns the
-// lamp off if another scene plays on it. A scene tab shows the same, so its lamps look as the
-// board will light them
+// lamp off if another scene plays on it. A scene tab shows each lamp as the board will light it
 
 // The scenes other than the one being edited, whose bodies are as they were last stored
 function otherScenes() {
@@ -237,8 +237,7 @@ function renderScenes() {
   spanTray();
 
   // The frame is what says these belong to the picked card, so it appears with the cards, in
-  // the picked card's colour. Its tab holds the scene's settings, beside what the page says
-  // about the scene
+  // the picked card's colour. Its tab holds the scene's settings beside what the page says about it
   var frame = document.getElementById("sceneBody");
   frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
   var tabRow = document.getElementById("sceneTabRow");
@@ -289,8 +288,7 @@ function renderSceneAside() {
   }
   var picked = state.scenes[state.at];
   var after = sceneAfter(picked);
-  // While the name being typed breaks a rule, the place says why instead, as it does for a scene
-  // that never shows
+  // The place says why while the name being typed breaks a rule, or why a scene never shows
   var problem = sceneNameProblem(picked, picked.name);
   var unreached = unreachedScenes();
   if (!problem && unreached.scenes.indexOf(picked) >= 0) {
@@ -322,8 +320,7 @@ function bodyAt(which) { return state.at === which ? capture() : slotAt(which).b
 // changes it. The scene after is the next in order unless the scene names another with then=, so
 // a timed run of scenes need not follow the order the remote's numbers take
 
-// A scene's mark, given once and kept while the scene is moved or renamed, by which another
-// part names it
+// A scene's mark, given once and kept while it is moved or renamed, by which other parts name it
 var sceneMarks = 0;
 function sceneMark(scene) {
   if (!scene.mark) scene.mark = "s" + (++sceneMarks);
@@ -438,8 +435,8 @@ function freeSceneName() {
   }
 }
 
-// What a scene's card says under its name: its time, or that it waits. The scene after is named
-// only where it is chosen, the next in order being what a time implies
+// What a scene's card says under its name, its time or that it waits. The scene after is named
+// only where it is chosen, since a time implies the next in order
 function sceneTurn(scene) {
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
@@ -504,12 +501,6 @@ function sceneShade(scene) {
   return "color-mix(in srgb, " + sceneColour(scene) + " 65%, #2b2a28)";
 }
 
-// A scene's name in its colour, for a sentence the page writes as markup
-function sceneNameHtml(scene) {
-  return "<b class='scenename' style='color:" + sceneShade(scene) + "'>" +
-         escapeHtml(scene.name) + "</b>";
-}
-
 // Each part's icon, the drawing the programs page gives the same thing, so the two pages agree.
 // A part the programs page has no drawing for gives its own in PART_DRAWINGS, on the same grid
 var PART_FEATURES = {lights: "outputs", strip: "strip", screens: "screen", hub: "hub",
@@ -538,7 +529,7 @@ function partsSet(body, always) {
   }
   var outputs = runs.filter(function (run) { return !run.strip && run.lamps.length; });
   if (outputs.length && plays(outputs)) parts.push(["lights", BOARD.output_words.tab]);
-  // One icon for the strips, as nothing in it could say which, its tip naming those that play
+  // One icon for the strips, as nothing in it could say which. Its tip names those that play
   var strips = runs.filter(function (run) { return run.strip && run.there && plays([run]); });
   if (strips.length) {
     parts.push(["strip", strips.map(function (run) {
@@ -584,7 +575,7 @@ function sceneTab(which, slot, name, says) {
   }
   if (which < 0) says = alwaysSays(body);
 
-  // A scene's card is three rows: its name, what it sets, and how it ends beside its remote
+  // A scene's card is three rows, its name, what it sets, and how it ends beside its remote
   // number. Always on's is its name, what it is for and what it plays, then what it sets
   var title = document.createElement("b");
   // The name is cut short where it is long, and the whole of it is in the card's tip
@@ -816,8 +807,8 @@ function entriesOf(body) {
 // A scene's heading. One read from a file with no time waits, and is written back without one.
 // A heading read from a file is written back as it was while the scene still says the same
 function sceneHeading(scene) {
-  // A scene after other than the next in order is named after "then", a proposed word autofx does
-  // not read yet. "then" comes last, as the rest of the heading after it is the name
+  // A scene after other than the next in order is named after "then", which comes last, as the
+  // rest of the heading after it is the name
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
   var named = after && after !== inOrder ? after.name.trim() || "Scene" : null;
@@ -838,7 +829,7 @@ function sceneHeading(scene) {
          "]";
 }
 
-// What the parts below write above the scenes: lines straight under the file's header, then,
+// What the parts below write above the scenes, lines straight under the file's header and then,
 // after a blank line, lines above the board line. Each is a list of functions giving lines
 var fileHead = {under: [], above: []};
 

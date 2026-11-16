@@ -1,6 +1,6 @@
 
 // ---- a Screen Hub in the Screens tab ----------------------------------------------------------
-// A hub takes both connectors: one carries the screens' SPI and the other gives its five pins
+// A hub takes both connectors. One carries the screens' SPI and the other gives its five pins
 // up as chip selects, so one hub reaches six panels, lettered A to F as on the hub itself.
 // The hub is drawn for its SPI on A and its selects on B, but nothing stops it being wired
 // the other way round. Whether the board has two screens or a hub, which way the hub is wired,
@@ -12,8 +12,8 @@
 // the tab says when moving pictures will slow for it. The positions share one backlight, which
 // the board lights for them all.
 //
-// The file names a position by the hub's own letter, as outputs are named by number: hubB, or
-// hubA-C,E for several, with the hub and its panels declared on the board line.
+// The file names a position by the hub's own letter, as outputs are named by number, such as hubB,
+// or hubA-C,E for several, with the hub and its panels declared on the board line.
 
 var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 
@@ -112,14 +112,14 @@ bodyParts.push({
     });
     return set ? ["hub", "Screen Hub"] : null;
   },
-  // The hub is read off the board line before any screen's line, a screen through it writing none
+  // The board line's hub is read before any scene's lines, since screens write none through a hub
   readBoard: readHubBoard,
   read: readHubLines
 });
 
 // ---- what the file says ----------------------------------------------------------------------
 
-// Positions as the file names them, a run of neighbours as a range: "A-C,E"
+// Positions as the file names them, a run of neighbours as a range, such as "A-C,E"
 function placesSaid(places) {
   var said = [];
   var at = 0;
@@ -133,7 +133,7 @@ function placesSaid(places) {
   return said.join(",");
 }
 
-// What a position plays, as a key: positions with the same key are one entry, and one stream.
+// What a position plays, as a key. Positions with the same key are one entry, and one stream.
 // Panels of different sizes are sent apart, so the size is part of it. They are one send where
 // the file would say the same for them, so a setting a picture does not take, such as a still's
 // pace, or one the page only remembers, such as the last custom colour, never splits them.
@@ -206,7 +206,7 @@ bodyParts.push({
 boardLineSteps.after.push(function (line) {
   if (!state.hub.on) return line;
   var rest = line.replace(/^board: ?/, "").replace(/\bscreen[ab]=\S+ ?/g, "").trim();
-  // The connector the screens come through, then each size fitted and where: hubA-D=2.8
+  // The connector the screens come through, then each size fitted and where, such as hubA-D=2.8
   var tokens = ["screen" + state.hub.port + "=hub"];
   SCREEN_SIZES.forEach(function (inches) {
     var places = placesThere().filter(function (place) {
@@ -234,8 +234,8 @@ function hubPlacesNamed(selector) {
   return places;
 }
 
-// The hub the board line declares, read into the page, which writes those tokens itself from
-// then on. Turned off where the line declares none
+// Read the hub the board line declares into the page, which writes those tokens itself from then
+// on. The hub is off where the line declares none
 function readHubBoard() {
   var port = null;
   var sizes = {};
@@ -264,7 +264,7 @@ function readHubBoard() {
 function readHubLines(bodies) {
   if (!state.hub.on) return;
 
-  // Each scene lights the hub its own way, the first of its lines to be read deciding
+  // Each scene lights the hub its own way, and the first of its lines to be read decides how
   bodies.forEach(function (body) {
     var numbered = 0;
     var lightSet = false;
@@ -317,8 +317,7 @@ function readHubLines(bodies) {
 // ---- a picture deleted from the drive ---------------------------------------------------------
 
 driveParts.push({
-  // A picture still listed did not go, the drive saying so. One that did is also taken off
-  // every hub position showing it
+  // A picture still listed was not deleted. One that was comes off every hub position showing it
   gone: function (name) {
     if (state.media.some(function (one) { return one.name === name; })) return;
     store();
@@ -334,9 +333,9 @@ driveParts.push({
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
-// Two screens or a hub, the hub taking both connectors. It is always shown, so it can be seen
-// to be a choice, and only changed while editing the board. It sits at the top of the tab,
-// where the outputs and strips have their board box, and at that box's size
+// The choice of two screens or a hub, which takes both connectors. It is always shown, so it can
+// be seen to be a choice, and only changed while editing the board. It sits at the top of the
+// tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
   var row = document.createElement("div");
   row.className = "hubswitch" + (setupOn ? "" : " locked");
@@ -423,7 +422,7 @@ function placeTile(place) {
   tile.appendChild(drawing);
   var says = document.createElement("small");
   says.className = "placesays";
-  // One in a group of the scene's own says it is Always on's here, the line under it naming the group
+  // A position in a scene's own group says Always on's, as the line under it names the group
   says.textContent = held.off ? "off"
                    : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") +
                                              pictureSaid(under.always.shows)
@@ -471,8 +470,9 @@ function placeSettings() {
   return settings;
 }
 
-// Whether moving pictures slow here: the sends share the hub's speed, a still picture sent once
-// costing the rest nothing
+// The note on how fast the hub plays what it shows. A still picture is sent once and costs nothing
+// after, so only the animations share the hub's speed. One plays as fast as a single screen, sent
+// at once to every screen of its group, and several each play slower than they would alone
 function hubPace() {
   var sends = placeGroups(capture());
   var moving = sends.filter(function (send) { return kindOf(send.playing.shows) !== "image"; });
@@ -500,10 +500,11 @@ function hubPace() {
   return pace;
 }
 
-// The hub's box, in place of the screens'. The parts below add to it, each after the one before:
-// the hub's light, its groups
+// What the parts after this one add to the hub's box, each after the one before, which are the
+// hub's light and then its groups
 var hubHeadSteps = [];
 
+// Draw the hub's box in place of the screens'
 function renderHubHead() {
   var box = document.getElementById("screensHead");
   box.textContent = "";
@@ -661,9 +662,9 @@ assetSteps.push(function () {
   pick.appendChild(all);
 });
 
-// The tab's swatch is the hub's six positions, each showing what it shows, where a hub is on
 var screensSwatch = tabSwatches.screensPanel;
 
+// The tab's swatch is the hub's six positions, each showing what it shows, where a hub is on
 tabSwatches.screensPanel = function (swatch) {
   if (!state.hub.on) return screensSwatch(swatch);
   swatch.textContent = "";

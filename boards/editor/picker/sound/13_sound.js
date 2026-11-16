@@ -28,7 +28,7 @@ function soundUnder() {
 // Whether the scene being edited can silence Always on's sound, there being one to silence
 function canSilence() { return state.at >= 0 && !!state.always.body.sound; }
 
-// The Sound tab's row of sounds and its setting, which renderSound below puts in the page's style
+// Draw the Sound tab's settings and row of sounds, which renderSound puts in the page's style
 function renderSoundTab() {
   var box = document.getElementById("sound");
   box.textContent = "";
@@ -51,8 +51,7 @@ function renderSoundTab() {
       ? "plays in any scene without its own sound"
       : "plays while this scene shows, resuming where it left off";
 
-  // How the sound is played rather than which one it is, so it sits above them,
-  // where a screen keeps its settings
+  // How the sound plays sits above the tiles, where a screen keeps its settings
   var again = document.createElement("button");
   again.className = "again" + (state.soundLoop && state.sound ? " on" : "");
   again.textContent = "on repeat";
@@ -84,7 +83,7 @@ function renderSoundTab() {
   groups = groups.concat(exampleGroups("sounds", files));
   groups.forEach(function (group, at) {
     if (at && !group[2].length) return;
-    // Kept apart from the Screens tab's groups, the user's own sharing its name
+    // Keyed apart from the Screens tab's groups, since both tabs have a group of the user's own
     var kept = ["sound:" + group[0]].concat(group.slice(1));
     var open = groupOpen(kept);
     if (grouped) {
@@ -218,8 +217,7 @@ function soundLine(body) {
   return body.soundKept;
 }
 
-// How many points a sound's outline is drawn from, enough for it to look smooth at the
-// pictures' size
+// How many points a sound's outline is drawn from, enough for it to look smooth on a tile
 var SOUND_SAMPLES = 96;
 
 // ---- each scene keeps its own sound -------------------------------------------------------------
@@ -324,7 +322,7 @@ driveParts.push({
   }
 });
 
-// A wav's length and outline, the outline read at SOUND_SAMPLES points
+// Read a wav's length and its outline at SOUND_SAMPLES points into state.soundInfo
 async function profileSound(name, handle) {
   soundHandles[name] = handle;
   if (state.soundInfo[name] !== undefined) return;
@@ -440,10 +438,10 @@ function withHearButton(tile, name) {
 
 // ---- drawing the tab ---------------------------------------------------------------------------
 
-// A sound's outline, filled edge to edge and mirrored about the middle. Each moment of it is
-// coloured by how loud it is, blue when quiet through violet and pink to red when loud, the
-// violet keeping the middle of the run clear where blue straight to red goes muddy
+// The colours a sound's outline runs through, blue when quiet through violet and pink to red when
+// loud. The violet keeps the middle of the run clear, where blue straight to red goes muddy
 var LOUDNESS = ["#3a6fd8", "#8a4fd0", "#d0449a", "#e5443a"];
+// A count that gives each outline's gradient an id of its own
 var outlinesMade = 0;
 
 // The colour for a loudness from 0 to 1, between the two nearest of LOUDNESS
@@ -466,6 +464,7 @@ function silentBars() {
   return bars;
 }
 
+// A sound's outline, filled edge to edge, mirrored about the middle and coloured by loudness
 function soundOutline(bars) {
   var wide = 100, high = 40, middle = high / 2, last = bars.length - 1;
   var id = "loudness" + (outlinesMade++);
@@ -484,7 +483,7 @@ function soundOutline(bars) {
   return outline;
 }
 
-// The Sound section's tiles draw their sound the same way, each with a way to hear it here
+// A sound's tile, its plain tile with the sound's outline drawn on it and a way to hear it here
 function soundTile(name) {
   var tile = plainSoundTile(name);
   var info = name ? state.soundInfo[name] : null;
@@ -504,11 +503,10 @@ function soundTile(name) {
 // name, null for silence
 var soundTileSteps = [];
 
-// The tab in the page's style. What the scene does with its sound is the row's tip, no other
-// tab opening on a sentence; the sentence stays only where there are no sounds to show, since
-// it is then all there is. Repeat is a toggle with its icon, as the screens' Loop is, the
-// volume a slider beside it, and silence the small card Nothing is in the gallery, at the end
-// of that line
+// Put the tab in the page's style. A sentence that only says what the scene does with its sound
+// becomes the row's tip, since no other tab opens on a sentence, and any other sentence stays.
+// Repeat becomes a Loop toggle as the screens' is, beside the volume slider, and Nothing and
+// Silence become small cards as Nothing and Off are in the screens' gallery
 function renderSound() {
   renderSoundTab();
   soundSteps.forEach(function (step) { step(); });
@@ -612,7 +610,7 @@ tabSwatches.soundPanel = function (swatch) {
     return;
   }
   swatch.appendChild(soundOutline(info.bars));
-  // On repeat, the Sound section's one setting, as a loop in the preview's corner
+  // Check if the sound is on repeat, which shows as a loop in the swatch's corner
   if (state.soundLoop) {
     var mark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     mark.setAttribute("viewBox", "0 0 16 16");
@@ -628,8 +626,7 @@ tabSwatches.soundPanel = function (swatch) {
                  (state.soundVolume < 100 ? ", " + state.soundVolume + "% volume" : "");
 };
 
-// Under the tab's name, the kind of sound playing, which a tone will join once the board
-// plays one. The file's name is the Sound section's to say
+// Put the kind of sound playing under the tab's name. The file's name is the Sound section's to say
 function kindUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=soundPanel]");
   if (!tab || tab.querySelector(".tabname")) return;

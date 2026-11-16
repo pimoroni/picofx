@@ -2,7 +2,7 @@
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
 // own settings or kept word for word in its scene, so a file comes back without loss. This first
-// step reads the board line and the scenes, and keeps every entry; the steps after it read
+// step reads the board line and the scenes, and keeps every entry. The steps after it read
 // screens, sound and the lights out of the kept lines.
 
 // The lines this page writes of its own accord, which a file read back does not keep
@@ -13,9 +13,9 @@ var boardResidue = [];
 // The comments written above the board line
 var boardComments = [];
 
-// The kept entries of the scene on show, each its text and the comments written above it, and
-// the comments of the lines it read, by the line they sit above
+// The kept entries of the scene on show, each its text and the comments written above it
 var keptNow = [];
+// The comments of the lines the scene on show read, by the line they sit above
 var notesNow = {};
 
 // Where a quote does not hide it, the first colon, which divides an entry's lights from its effect
@@ -60,7 +60,7 @@ function boardTokens(text) {
 // A scene heading, as autofx reads one. Where a word is neither a time nor restart, the heading
 // is kept as written, since writing it again would lose it. "then" ends the settings, and the
 // rest of the heading after it is the name of the scene after, whatever words it holds, so a
-// scene called "then" or "restart" can be named there (proposed, which autofx does not read yet)
+// scene called "then" or "restart" can be named there
 function readHeading(line) {
   var inner = line.slice(1, -1);
   var colon = inner.indexOf(":");
@@ -77,8 +77,8 @@ function readHeading(line) {
   }
   settings.split(/\s+/).forEach(function (word) {
     if (!word) return;
-    // A time in seconds or in minutes, held as seconds. Minutes are kept as written, the page
-    // writing seconds, until the scene's time is changed
+    // A time in seconds or in minutes, held as seconds. Minutes are kept as written until the
+    // scene's time is changed, as the page writes seconds
     var time = word.match(/^(\d+(?:\.\d+)?)([sm])$/i);
     if (time) {
       heading.seconds = Number(time[1]) * (time[2].toLowerCase() === "m" ? 60 : 1);
@@ -90,7 +90,7 @@ function readHeading(line) {
   return heading;
 }
 
-// The file in parts: the board line's tokens and the comments above it, then each scene's
+// The file in parts, as the board line's tokens and the comments above it, then each scene's
 // kept entries, the always-on section first. A line with no colon after an entry carries it
 // on, as autofx reads one, and a comment goes with the entry or heading below it
 function readEffects(text) {
@@ -168,7 +168,7 @@ function argsRead(value) {
 
 // The program a file runs, opening the program tab with it chosen, where the page knows the
 // program and writes its arguments back as the file has them. Otherwise both stay on the board
-// line as written, and the page opens on the effects. A file running no program leaves the tab open
+// line as written, and the page opens on the effects. A file running no program changes no tab
 function readProgram(named, argued) {
   boardSet.program = null;
   if (!named) {
@@ -209,7 +209,7 @@ function readWaitingProgram() {
   if (!boardSet.program) onProgramPage = page;
 }
 
-// Take a file into the page: the board line, the scenes, and every entry kept in its scene
+// Take a file into the page, with its board line, its scenes and every entry kept in its scene
 function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
@@ -276,7 +276,7 @@ function absorbFile(text) {
 // writer then gives back exactly the line. So a setting read wrongly leaves the line kept, never
 // changed. A read line's comments are written above it again while it says the same
 
-// An entry's two sides, the lights and their settings before the colon, the effect and its after
+// An entry's lights and their settings before the colon, and its effect and settings after it
 function entryParts(text) {
   if (text === null || text.indexOf("\n") >= 0) return null;
   var colon = unquotedColon(text);
@@ -304,9 +304,8 @@ function unquoted(value) {
 // ---- the lights -------------------------------------------------------------------------------
 // A line, or the lines a look writes together, is read as a stretch where some look, its sliders
 // solved back from the line, writes exactly those lines again for exactly those lights. The
-// sliders are solved as the figures drawer solves a typed figure, a value past a slider's end
-// held as typed. Whole outputs and strips are read; channels broken out, a signal's own timings
-// and a Blink's several colours stay kept for now
+// sliders are solved as the figures drawer solves a typed figure, and a value past a slider's
+// end is kept exactly as the line gives it
 
 // The lamps of a run a line's selector names, in the order it names them, or null
 function lampsNamed(run, selector) {
@@ -416,7 +415,7 @@ function outputsBrokenOut(bodies) {
   return broken;
 }
 
-// The wiring the file implies: the outputs it names by channel broken out, in the plain order
+// Set the wiring the file implies, with the outputs it names by channel broken out, in plain order
 function wireAsRead(broken) {
   wiring = wiring.map(function (one, out) {
     return {broken: OUTPUTS[out].mono || !!broken[out]};
@@ -432,7 +431,7 @@ function plainOrder() {
 }
 
 // ---- the wiring, in a comment of the page's own -------------------------------------------------
-// The file's lines cannot say how the lamps are wired: a range counting down is a stretch reversed
+// The file's lines cannot say how the lamps are wired. A range counting down is a stretch reversed
 // or lamps wired that way round, and both write the same line. So where the order is not plain
 // number order the page says it in a comment of its own, which autofx passes over, and reads it
 // back before any stretch
@@ -456,7 +455,7 @@ function wiringLine() {
 }
 
 // A wiring said as a file names outputs, as an order the page holds, or null where it does not
-// name every output exactly once: a mono output's one light, or a colour output whole or as its
+// name every output exactly once, as a mono output's one light or a colour output whole or as its
 // three channels. One starting with a bare number is of the first output's name
 function orderSaid(said) {
   var placed = placesNamed(/^\d/.test(said) ? OUTPUTS[0].prefix + said : said);
@@ -480,8 +479,8 @@ function orderSaid(said) {
 }
 
 // Where a file has no wiring comment, a line naming whole outputs out of number order can only have
-// been written for lamps wired that way, so the always-on lines, then each scene's, say the order
-// in the order they name them, the outputs they leave out following in number order
+// been written for lamps wired that way. So the always-on lines, then each scene's, say the order
+// in the order they name them, and the outputs they leave out follow in number order
 function orderImplied(bodies) {
   var named = [];
   var needed = false;
@@ -633,7 +632,7 @@ function solveSliders(run, section, look, texts) {
   });
 }
 
-// The groups of kept lines from one place that could be one stretch: consecutive lines naming
+// The groups of kept lines from one place that could be one stretch, as consecutive lines naming
 // one run's lights, together an unbroken run with no light named twice, clear of the stretches
 // already read. The most lines first, so a look that deals its lights out over several lines, or
 // writes its spare ones as none, is read whole rather than as its first line alone
@@ -665,7 +664,7 @@ function readLights(bodies) {
     var named = token.match(/^(\w+)=(\d+)(?:\|(\S+))?$/i);
     var run = named && stripNamed(named[1]);
     if (!run) return;
-    // What follows the length, as the page holds it, the board's own being held as nothing so
+    // What follows the length, as the page holds it. The board's own is held as nothing, so
     // writing it back changes nothing. One the page does not offer stays as written, for the
     // board to answer
     var values = readStripTail(run, named[3] || "");
@@ -803,8 +802,7 @@ function stripOfToken(token) {
   return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
 }
 
-// The strip or screen port a board token sets, such as stripl for stripl=30 or screena for
-// screena=2.8, or null
+// The strip or screen port a board token sets, such as screena for screena=2.8, or null
 function heldOfToken(token) {
   var named = token.match(/^(\w+)=/);
   var name = named && named[1].toLowerCase();
@@ -892,7 +890,7 @@ function keptLights(run) {
   return named;
 }
 
-// Lights a kept line plays are taken, marked on the run and on a strip's bar
+// Mark the lights a kept line plays as taken, on the run and on a strip's bar
 function markKeptLights() {
   runs.forEach(function (run) {
     var named = keptLights(run);

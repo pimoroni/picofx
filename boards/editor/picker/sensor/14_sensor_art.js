@@ -4,7 +4,7 @@
 // Sensor tab to lay its buttons' rows beside. Its three bitmaps, the rotate buttons' rainbows and
 // the 0 button's ring, are drawn as arcs in their places, which stay sharp at any size.
 
-// Every button: its name as aye_arr's PimoroniRemote names it, its column, its row in the
+// Every button, with its name as aye_arr's PimoroniRemote names it, its column, its row in the
 // remote's own layout, and what its face is
 var REMOTE_BUTTONS = [
   ["ANTICLOCK", 0, 320, "turn"], ["UP", 1, 320, "up"], ["CLOCKWISE", 2, 320, "turn"],
@@ -231,7 +231,7 @@ function remoteArtAt(name) {
   return {x: REMOTE_ART_COLUMNS[button[1]], y: REMOTE_ART_ROWS[button[2]]};
 }
 
-// The rainbow blended across this many slices, so a ring sweeps where ten colours would band
+// The rainbow blended across steps= slices, so a ring sweeps where ten colours would band
 function remoteBlend(steps, closed) {
   var ends = closed ? REMOTE_RAINBOW.concat([REMOTE_RAINBOW[0]]) : REMOTE_RAINBOW;
   var blended = [];
@@ -261,8 +261,7 @@ function remoteArtZero() {
   return remoteRainbow(zero.x, zero.y, 4.5, REMOTE_ART_RADIUS, 0, 360, remoteBlend(72, true));
 }
 
-// The joins the art runs between numbers, found by where each path starts, and the two buttons
-// each joins
+// Each join the art runs between numbers, as where its path starts and the two buttons it joins
 var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
                         ["M104.493,86.774", "2_GREEN", "5_MAGENTA"],
                         ["M120.438,86.774", "3_BLUE", "6_YELLOW"],
@@ -275,8 +274,8 @@ function remoteArtJoin(start) {
   return line.match(/d='([^']*)'/)[1];
 }
 
-// The art as svg markup, each rainbow where the artwork has its bitmap: the rotate buttons' after
-// the remote's body, the 0 ring after the 9 button's ring
+// The art as svg markup, each rainbow where the artwork has its bitmap. The rotate buttons' come
+// after the remote's body, and the 0 ring after the 9 button's ring
 function remoteArt() {
   var body = REMOTE_ART.indexOf("</g>") + 1;
   var nine = remoteArtAt("9_COOL");
@@ -296,7 +295,7 @@ function remoteArt() {
 var PIR_ART = [
   // The board, with its mounting hole
   "<path d='M19.85,0H2.842C1.277,0,.008,1.269.008,2.835v71.008c-.117,1.683,1.152,3.142,2.835,3.26,0,0,17.008,0,17.008,0,1.683-.117,2.952-1.577,2.835-3.26,0,0,0-71.008,0-71.008,0-1.565-1.269-2.835-2.835-2.835ZM11.346,35.291c-1.957,0-3.543-1.586-3.543-3.543s1.586-3.543,3.543-3.543,3.543,1.586,3.543,3.543-1.586,3.543-3.543,3.543Z'/>",
-  // The silkscreen: minus, plus, OUT, the adjuster's arc and the arrows under the sensor
+  // The silkscreen of minus, plus, OUT, the adjuster's arc and the arrows under the sensor
   "<rect fill='#fff' x='18.802' y='57.835' width='1.417' height='4.11' transform='translate(79.4 40.38) rotate(90)'/>",
   "<polygon fill='#fff' points='5.266 59.181 3.92 59.181 3.92 57.835 2.502 57.835 2.502 59.181 1.156 59.181 1.156 60.599 2.502 60.599 2.502 61.945 3.92 61.945 3.92 60.599 5.266 60.599 5.266 59.181'/>",
   "<path fill='#fff' d='M8.347,54.892c-.824,0-1.297.517-1.297,1.417v1.553c0,.896.473,1.411,1.297,1.411s1.292-.515,1.292-1.411v-1.553c0-.9-.471-1.417-1.292-1.417ZM7.731,56.309c0-.496.207-.748.615-.748.405,0,.61.252.61.748v1.553c0,.492-.206.742-.61.742-.408,0-.615-.25-.615-.742v-1.553Z'/>",

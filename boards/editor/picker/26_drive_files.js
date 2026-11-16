@@ -1,7 +1,7 @@
 
 // ---- the drive's files ---------------------------------------------------------------------------
-// The files on the FX drive: a walk of the drive that each part's own files are found in, adding
-// files to it from this computer and deleting them from it.
+// The files on the FX drive. A walk of the drive finds each part's own files, and files are added
+// to it from this computer and deleted from it.
 
 state.fileHandle = null;
 state.scanned = false;
@@ -61,7 +61,8 @@ function nameShown(name) {
 var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",
                       sounds: "Example sounds"};
 
-// Whether each group of the drive's files is open, by name, for those folded or opened
+// Whether each group of the drive's files is open, by name, for those folded or opened. The looks'
+// groups keep theirs here too, under names that begin "looks"
 var groupsOpen = {};
 
 // Whether a group, as [name, what it holds, files, whether it starts folded], is open, each
@@ -70,9 +71,9 @@ function groupOpen(group) {
   return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
 }
 
-// An example folder's files by group, as [name, what it holds, files, whether it starts folded]:
-// its sections in its sections.txt's order, any other a drawing names, and those none of them
-// holds. Each file is as the walk lists it, with its name and, for a drawing, what it says
+// An example folder's files by group, as [name, what it holds, files, whether it starts folded].
+// Its sections come in its sections.txt's order, then any other a drawing names, then those none
+// of them holds. Each file is as the walk lists it, with its name and, for a drawing, what it says
 function exampleGroups(kind, files) {
   var root = "examples/" + kind + "/";
   var left = files.filter(function (one) { return one.name.indexOf(root) === 0; });
@@ -91,8 +92,8 @@ function exampleGroups(kind, files) {
   return groups;
 }
 
-// Whether a section holds a drawing that names it, or a picture its members name, itself or as
-// one of a folder's files
+// Whether a section holds a drawing that names it, or a picture or sound its members name
+// itself or as one of a folder's files
 function sectionHolds(section, media) {
   if (media.drawing) return media.drawing.section === section[0];
   var folder = media.name.slice(0, media.name.lastIndexOf("/") + 1);
@@ -119,7 +120,7 @@ async function scanMedia(dir) {
   var kept = Object.keys(MEDIA_FOLDERS).concat([OWN_FOLDER, "examples",
                                                 "System Volume Information"]);
   var sections = {};
-  // Whether a part takes the entry, the first that does keeping it
+  // Whether a part takes the entry. The first part that takes it keeps it
   async function taken(name, handle) {
     for (var at = 0; at < driveParts.length; at++) {
       var part = driveParts[at];
@@ -245,8 +246,7 @@ async function addFiles(kinds, what, takes) {
   for (var i = 0; i < picked.length; i++) {
     var file;
     try {
-      // The dialog filters, and this holds where a platform's does not: a kind
-      // the board cannot play never reaches the drive
+      // Check if the file is a kind the board cannot play, as not every platform's dialog filters
       if (!takes.test(picked[i].name)) {
         refused.push(picked[i].name + " (not a kind the board plays)");
         continue;
@@ -329,7 +329,7 @@ async function removeFromDrive(name, kind) {
   driveParts.forEach(function (part) { if (part.gone) part.gone(name); });
 }
 
-// The file starts folded, there for anyone who opens it
+// The file's preview starts folded, there for anyone who opens it
 (function () {
   var file = document.getElementById("preview").closest("details");
   if (file) file.open = false;

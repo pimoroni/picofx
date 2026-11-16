@@ -1,9 +1,9 @@
 
 // ---- the drive, and what the board says back ------------------------------------------------
-// Saving and the read-back of errors.txt: the banner and the saving lights, remembering the
-// drive, and waiting on the board. Opening a drive takes its handles, the read-back part
-// reading its effects.txt into the page. Chrome and Edge only, where a page can be handed a
-// folder to write to.
+// Saving to the drive and reading back errors.txt, with the banner and the saving lights,
+// remembering the drive and waiting on the board. Opening a drive takes its handles, and the
+// read-back part reads its effects.txt into the page. It works in Chrome and Edge only, where a
+// page can be handed a folder to write to.
 
 var SPOT_STEP_MS = 120;
 
@@ -40,7 +40,7 @@ function banner(text, warn, detail) {
   box.textContent = "";
   if (!text) return;
   var note = document.createElement("div");
-  // warn may also be "hold", the amber of a check still running
+  // The warn argument may also be "hold", the amber of a save or check still under way
   note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
   note.textContent = text;
   if (detail) {
@@ -141,9 +141,8 @@ async function driveAnswers() {
 }
 
 // The reason a change to the drive failed, as a sentence to follow one saying what failed. The
-// drive may be full, or gone, such as when the board is unplugged while the page holds it, or the
-// file named may be gone from a drive still showing. Any other error is given as the browser
-// words it
+// drive may be full or gone, such as when the board is unplugged while the page holds it. The
+// file named may also be gone from a drive still showing. Any other error is in the browser's words
 async function driveTrouble(e, name) {
   if (e.name === "QuotaExceededError")
     return "The FX drive is full. Delete something from it and try again.";
@@ -227,7 +226,7 @@ var drive = {dirHandle: null, fileHandle: null};
 // so a line is marked only while the page still writes it the same
 var answered = {said: null, about: null};
 
-// What this page last wrote or read
+// The localStorage key holding the file this page last wrote or read
 var WROTE_KEY = "fx-picker-wrote";
 
 // What a save asks where the file on the board has changed since this page read it
@@ -256,8 +255,8 @@ async function connect(fresh) {
   // The wait on the board reads the drive through the page's state
   state.dirHandle = dir;
   document.getElementById("check").disabled = false;
-  // Open, the drive button goes quiet and narrower, saying in its tip which drive is open, and
-  // saving takes the colour as the next thing to do
+  // Once a drive is open, the drive button goes quiet and narrower and its tip names the drive.
+  // The save button takes the colour as the next thing to do
   var openButton = document.getElementById("open");
   openButton.className = "";
   openButton.textContent = "Change drive";
@@ -295,8 +294,8 @@ function takeAnswer(said, about) {
   renderPreview();
 }
 
-// The file as the page writes it. A line the board named is marked where the page still writes
-// it as the board read it, the board's words after it
+// Show the file as the page writes it. A line the board named is marked, with the board's words
+// after it, where the page still writes it as the board read it
 function renderPreview() {
   var problems = problemsIn(answered.said);
   var lines = currentText().split("\n");
@@ -357,14 +356,15 @@ document.getElementById("save").onclick = async function () {
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
-    // A program running keeps the board busy, so neither an eject nor a press reaches it
+    // Check if the board is running a program
     if (/\bprogram=/.test(onBoard)) {
+      // A program keeps the board busy, so neither an eject nor a press reaches it
       banner("Saved. The board is running a program, so press Reset to play this change." + hides);
       return;
     }
-    // A board saving on its own that is given a program restarts to run it, so there is no
-    // answer to wait for
+    // Check if a board that plays each save itself is given a program
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
+      // The board restarts to run the program, so there is no answer to wait for
       banner("Saved. The board is restarting to run the program." +
              hides);
       return;
@@ -404,7 +404,7 @@ document.getElementById("save").onclick = async function () {
   }
 };
 
-// The answer and the file it is about are read together, the board having finished with both
+// The answer and the file it is about are read together, as the board has finished with both
 document.getElementById("check").onclick = async function () {
   banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });

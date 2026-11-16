@@ -4,19 +4,19 @@
 // band, the module as it is mounted and which way up it is turned, and under them one set of
 // pictures, each able to go to A, to B, or to both.
 //
-// The drawing asks of its page the board's two screens, the pictures on the drive, and each
-// scene keeping what its screens show. The size and whether a screen is fitted are the board's,
-// so they are changed while the board is set up, the band being the screen's coloured box;
-// what a screen shows is the scene's, and chosen at any time.
+// The tab asks of its page the board's two screens, the pictures on the drive, and each scene
+// keeping what its screens show. The size and whether a screen is fitted are the board's, so
+// they are changed while the board is set up, in the band of the screen's coloured box. What a
+// screen shows is the scene's, and chosen at any time.
 //
 // Which way up a picture is drawn goes with the picture a scene shows, depending on how the
-// screen is mounted, how the picture was made, and what the scene wants of it: a picture
+// screen is mounted, how the picture was made, and what the scene wants of it. A picture
 // made symmetric can be turned from one scene to the next. So it is the scene's, kept with
 // what the screen shows. A picture newly chosen starts at the turn it was last given on
 // that screen, which saves setting it again and binds nothing.
 
 // The picker keeps each screen port by a letter, A then B. A file writes it as the board names
-// it: screenA and screenB on a board with two, or screen on a board with one
+// it, as screenA and screenB on a board with two, or screen on a board with one
 var SCREEN_NAMES = {};
 var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
   var letter = "AB".charAt(index);
@@ -32,13 +32,13 @@ function screenLetter(name) {
   return null;
 }
 
-// A screen as the page shows it: by its letter where there are two, and plainly where there is one
+// A screen as the page shows it, by its letter where there are two and plainly where there is one
 function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
 }
 
-// The button under a picture that puts it on a screen: which screen where there are two, and with
-// one, only whether it is shown
+// The words on the button under a picture that puts it on a screen, the screen's letter where
+// there are two and Show where there is one
 function screenButton(letter) {
   return SCREENS.length > 1 ? letter : "Show";
 }
@@ -52,7 +52,7 @@ SCREENS.forEach(function (letter) {
 });
 
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
-// last looked at says whether it is newly chosen, a scene coming round bringing its own turn
+// last looked at says whether it is newly chosen, and a scene coming round brings its own turn
 function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
@@ -200,10 +200,10 @@ function panelDrawing(screen) {
     "'><g transform='rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) + ")'>" +
     parts.join("") + "</g></svg>";
 
-  // The picture as the board will draw it: its own pixels, centred, cropped by the
-  // lit window, black around it. The window sits on the drawing's exact centre, so
-  // a turned module swaps its width and height and nothing else moves; the picture
-  // itself stays upright, which is what a viewer of a mounted screen sees
+  // The picture as the board will draw it, its own pixels centred and cropped by the lit window
+  // with black around it. The window sits on the exact centre of the drawn module, so a turned
+  // module swaps its width and height and nothing else moves. The picture itself stays upright,
+  // which is what a viewer of a mounted screen sees
   if (art) {
     var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
     var scale = (DRAWN / extent) * (litW / px[0]);
@@ -269,8 +269,8 @@ function renderScreenBoxes() {
       return;
     }
 
-    // Taking the screen out is the only way to have none: a screen showing
-    // nothing says the same thing twice
+    // Taking the screen out is the only way to have none, as a screen showing nothing would
+    // say the same thing twice
     var drop = document.createElement("button");
     drop.className = "drop";
     drop.textContent = "\u00d7";
@@ -364,8 +364,8 @@ function previewInScene(screen, letter) {
   return drawing;
 }
 
-// The pictures on the drive, each with what it is on. The parts below add to them, each after the
-// one before: the hub's positions, the whole pictures, the hub's groups
+// What the parts after this one add to the pictures on the drive, each after the one before, such
+// as the hub's positions, the whole pictures and the hub's groups
 var assetSteps = [];
 
 // The gallery's pictures by group: the user's own, then the example drawings' groups and the
@@ -505,11 +505,10 @@ function renderAssets() {
       button.disabled = !state.screens[letter].there;
       if (button.disabled) button.style.opacity = ".3";
       button.onclick = function () {
-        // Tapping the lit one again takes the picture off this scene's screen,
-        // falling back to what the file said where there is something to go back
-        // to. A scene showing nothing on a screen leaves it as the scene before
-        // left it, which the cross in the header cannot say for one scene alone. A pair's
-        // second screen shows what its first does, so either button changes the first
+        // Tapping the lit one again takes the picture off this scene's screen, falling back to
+        // what the file said where there is something to go back to. The screen then shows
+        // what Always on shows there, or goes dark where another scene uses it. A pair's second
+        // screen shows what its first does, so either button changes the first
         var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
         screen.shows = screen.shows !== name ? name
                      : screen.kept ? "keep" : null;
@@ -539,7 +538,7 @@ function kindOf(shows) {
        : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
 }
 
-// What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub
+// What a screen's entry says in a scene, its look or the line kept as the file had it. A hub
 // writes its positions' entries in place of the screens', and a pair writes one entry for both
 // where the first screen's would go
 function screenEntry(letter, body) {
@@ -617,9 +616,8 @@ bodyParts.push({
   read: readScreens
 });
 
-// The board line gives a screen's size only where some scene shows something on it. The board
-// reserves for a pair wherever two screens are named, which
-// slows the one in use
+// The board line gives a screen's size only where some scene shows something on it or turns it
+// off. The board reserves for a pair wherever two screens are named, which slows the one in use
 boardLineSteps.before.push(function () {
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
@@ -761,8 +759,8 @@ function readScreens(bodies) {
 }
 
 // ---- the pictures on the drive ------------------------------------------------------------------
-// What a screen can show: gifs and stills, PNG or JPEG, folders of them, which play as a
-// slideshow, and drawings
+// A screen can show gifs and stills, PNG or JPEG, folders of them, which play as a slideshow,
+// and drawings
 
 var mediaFound = [];
 
@@ -797,8 +795,8 @@ driveParts.push({
     mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
     // A drawing's thumbnail is the PNG of its name beside it, as a program's is, and is no picture
     // of its own. Each of its other styles may have one too, its name with a dash and the style
-    // word added, such as rings-blue-wide.png. Only in a drawings folder, a PNG at the top of the
-    // drive being a picture
+    // word added, such as rings-blue-wide.png. This holds only in a drawings folder, since a PNG
+    // at the top of the drive is a picture
     function inDrawings(one) {
       return isExampleMedia(one.name) || (mediaHome[one.name] || {}).name === "drawings";
     }
@@ -825,8 +823,8 @@ driveParts.push({
     Object.keys(state.art).forEach(function (key) {
       if (state.art[key].gone) delete state.art[key];
     });
-    // A drawing given its face before its thumbnail was found, a read catching it part way
-    // through being copied, takes the thumbnail now
+    // A drawing given its face before its thumbnail was found, as when a read catches it part
+    // way through being copied, takes the thumbnail now
     mediaFound.forEach(function (one) {
       if (one.kind !== "drawing" || !one.thumbHandle || !(state.art[one.name] || {}).face) return;
       delete state.art[one.name];
@@ -868,7 +866,7 @@ driveParts.push({
 var pictureQueue = [];
 var pictureReading = null;
 
-// The pictures any scene puts on a screen or a hub position, worked out once a draw
+// The pictures any scene puts on a screen or a hub position, calculated once a draw
 var shownThisDraw = null;
 
 drawSteps.before.push(function () { shownThisDraw = null; });
@@ -970,8 +968,7 @@ tabSwatches.screensPanel = function (swatch) {
     var screen = state.screens[letter];
     var cell = document.createElement("span");
     cell.className = "screencell " + letter.toLowerCase();
-    // A screen the scene turns off is black, and one showing Always on's picture shows it in the
-    // broken line the lamps and previews wear
+    // A screen showing nothing of the scene's own shows Always on's picture where it has one
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
     var shown = screen.shows || (under && under.always) || null;
     var art = screen.there && shown && shown !== "keep"
@@ -995,8 +992,7 @@ tabSwatches.screensPanel = function (swatch) {
   }).join(", ");
 };
 
-// Under the tab's name, where the others have their swatch, the size fitted to each screen,
-// A then B, the pictures beside it no longer saying which is which
+// Put the size fitted to each screen, A then B, under the tab's name
 function sizesUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
@@ -1037,8 +1033,7 @@ drawSteps.after.push(function () {
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 
-// A board that finds it has no screen ports keeps the panel out of sight, for the parts that draw
-// into it
+// A board with no screen ports keeps the panel out of sight, for the parts that draw into it
 if (SCREENS.length) {
   TAB_NAMES.screensPanel = "Screens";
   TAB_PANELS.push("screensPanel");

@@ -2,14 +2,13 @@
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
 // those three apart, the output is either one colour lamp or three mono ones, and a board is
 // a mix. A mono output is one light, always on the mono side. Everything below is the section
-// model over a run of lamps: the only new idea is that the run's own length is something the
-// wiring decides.
+// model over a run of lamps, and its only new idea is that the wiring decides the run's length.
 
 var OUTS = BOARD.outputs.length;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
 
-// Each output as the file names it, split into its prefix and number: out3 is out and 3, and
+// Each output as the file names it, split into its prefix and number. out3 is out and 3, and
 // rgb, which has no number, is rgb alone
 var OUTPUTS = BOARD.outputs.map(function (output) {
   var named = output.name.match(/^([a-z]+)(\d*)$/);
@@ -30,7 +29,7 @@ var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 // others without the page being drawn again
 var kinOf = {};
 
-// A colour output is one lamp or three, and nothing between: the adapter brings all three
+// A colour output is one lamp or three, and nothing between, as the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
 // one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
 var wiring = [];
@@ -55,13 +54,13 @@ var active = MONO_FIRST ? mono : outs;
 var showing = MONO_FIRST;
 
 // Where each lamp sits, which is the one thing about a board only its owner knows. It
-// is a lamp and not an output that is placed: an output's three channels reach three
+// is a lamp and not an output that is placed, since an output's three channels reach three
 // separate LEDs through the adapter, and those can be anywhere in a build
 var order = [];
 for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
 
-// An output's places in the wiring order: a mono output's one light, a colour output whole, or
-// broken out as its three channels
+// An output's places in the wiring order, which are a mono output's one light, a colour output
+// whole, or a colour output broken out as its three channels
 function placesOf(out) {
   if (OUTPUTS[out].mono) return [{out: out, channel: 0}];
   if (!wiring[out].broken) return [{out: out, channel: null}];
@@ -115,7 +114,7 @@ function nextOutput(out, step) {
          there.number === here.number + step;
 }
 
-// A set of items as the file joins them: an item's prefix carries on to a bare number after it,
+// A set of items as the file joins them. An item's prefix carries on to a bare number after it,
 // so a numbered item says its prefix only where it differs from the one before, and an output
 // with no number always says its name
 function joinedItems(items) {
@@ -138,8 +137,8 @@ function rangeItem(first, last, suffix) {
 }
 
 // The shortest way to name a set of lamps that the file still reads. Consecutive outputs taken
-// whole, and consecutive mono outputs, are a range, and an output's three channels in order are
-// its `.*`
+// whole, and consecutive mono outputs, are a range, and an output's three channels in order
+// are named by its `.*`
 function nameThese(lamps) {
   // An output's three channels, in order, starting here
   function allThree(at) {
@@ -178,8 +177,8 @@ function nameThese(lamps) {
   return joinedItems(items);
 }
 
-// A lamp's label on the page: its number, and its channel where it is one, or for an output with
-// no number its name, or its channel's letter
+// A lamp's label on the page. It is the lamp's number and its channel where it is one, or for an
+// output with no number its name or its channel's letter
 function shortName(lamp) {
   if (lamp.run) return String(lamp.at + 1);
   var output = OUTPUTS[lamp.out];
@@ -198,8 +197,8 @@ function sectionAt(run, which) {
   return 0;
 }
 
-// A stretch playing nothing yet. One on a strip starts at three quarters brightness, a strip or
-// LED panel at full being glaring up close
+// A stretch playing nothing yet. One on a strip starts at three quarters brightness, since a
+// strip or LED panel at full is glaring up close
 function blank(from, to, run) {
   return {from: from, to: to, look: null, pace: 0.45, mood: 0.5, colour: "#ffffff",
           level: run && run.strip ? 0.75 : 1};
@@ -260,7 +259,7 @@ function putStretchesBack(run, was) {
                          level: had.level, custom: had.custom,
                          blinks: copyBlinks(had.blinks), exact: copyExact(had.exact),
                          timings: copyExact(had.timings)}
-                      : Object.assign(blank(at, to, run), {}));
+                      : blank(at, to, run));
     at = to + 1;
   }
   if (sections.length) run.sections = sections;
@@ -276,8 +275,8 @@ function acrossWiring(change) {
   settle();
 }
 
-// A cut is one run's step. A change to the wiring is every run's, both of them holding
-// lamps that moved, so the snapshots it takes share a mark and are stepped over together
+// A cut is one run's step. A change to the wiring is every run's, since each holds lamps
+// that moved, so the snapshots it takes share a mark and are stepped over together
 var thisStep = 0;
 
 function remember(run) {
@@ -325,7 +324,7 @@ function stepOn(run) {
 }
 
 // Every lamp is in exactly one section, and no section spans a colour lamp and a mono
-// one: they do not play the same looks, so a stretch over both could not be given one
+// one. They do not play the same looks, so a stretch over both could not be given one
 function settle() {
   runs.forEach(function (run) {
     run.lamps = lampsFor(run);
@@ -459,8 +458,8 @@ function joinAll(run) {
 }
 
 // ---- the wiring itself -------------------------------------------------------------------
-// One output broken out or put back, in the scene on show. The wiring part does it to every
-// scene and slides the lamps
+// One output broken out or put back, in the scene on show. The board part does it to every
+// scene, and the wiring part slides the lamps to their new places
 
 function breakOutWiring(out) {
   if (wiring[out].broken) return;
@@ -514,8 +513,8 @@ function rejoinWiring(out) {
 
 // ---- what the file says ------------------------------------------------------------------
 
-// Some outputs by their place counted from one, as the file names them: those of one name in a
-// row as a set of numbers, an output with no number by its name
+// Some outputs by their place counted from one, as the file names them. Those of one name in a
+// row are a set of numbers, and an output with no number is named by its name
 function outputsNamed(places) {
   var items = [];
   var at = 0;
@@ -534,7 +533,7 @@ function outputsNamed(places) {
   return joinedItems(items);
 }
 
-// An output in words: output 3, or the RGB output for one with no number
+// An output in words, such as output 3, or the RGB output for one with no number
 function outputSaid(out) {
   var output = OUTPUTS[out];
   return output.number === null ? "the " + output.name.toUpperCase() + " output"
@@ -564,7 +563,7 @@ function forwardTargetFor(run, section) {
   var mine = [];
   for (var i = section.from; i <= section.to; i++) mine.push(run.lamps[i]);
   // What a stretch plays on, in build order, which a look sharing its lamps out between
-  // sets of its own, as Party does, deals from. A colour stretch's are its outputs; a mono
+  // sets of its own, as Party does, deals from. A colour stretch's are its outputs, and a mono
   // stretch's are its lamps, which are channels, so it names each set itself
   var target = {kind: first.colour && widthOf(section) === 1 ? "single" : "outputs",
                 name: "out", colour: first.colour, selector: nameThese(mine),
@@ -639,9 +638,8 @@ function litRun(run) {
   return out;
 }
 
-// What a lamp the scene plays nothing on shows, marked unset= for its tile. It plays Always on's
-// look where Always on has one there, and is off where another scene plays on it, as the board
-// has it
+// What a lamp the scene plays nothing on shows, marked unset= for its tile. As on the board, it
+// plays Always on's look where Always on has one there, and is off where another scene plays on it
 function litUnder(run, which, lamp) {
   var under = lampUnder(run.name, which);
   if (under && under.always) {
@@ -755,9 +753,9 @@ document.addEventListener("mouseup", function () {
 });
 
 // A look given to a stretch. A line kept as written that already plays some of its lights is
-// asked about first, since the board refuses a light set twice: agreed, the kept lines go;
-// declined, nothing changes. A strip not fitted takes no look, and a new look starts in its
-// own colour, its second setting afresh
+// asked about first, since the board refuses a light set twice. Agreed, the kept lines go, and
+// declined, nothing changes. A strip not fitted takes no look, and a new look starts in its own
+// colour with its second setting afresh
 function landLook(run, at, name) {
   var section = run.sections[at];
   if (section && name) {
@@ -831,8 +829,8 @@ function lookCard(isMono, look, on) {
   return card;
 }
 
-// The run the cards are for. A run of another kind, a strip say, is its own kind and is
-// worked on while it is the one picked; otherwise the cards follow the colour or mono side
+// The run the cards are for. A strip is a run of its own kind and has the cards while it is
+// the one picked. Otherwise the cards follow the colour or mono side
 function galleryRun(isMono) {
   if (active && active.strip) return active;
   return isMono ? mono : outs;
@@ -846,7 +844,7 @@ function kindAt(run, at) {
 }
 
 // Whether the board has any lamp of a kind. With none, its looks are worth offering but
-// not worth landing: there is nothing for them to land on until an output is broken out
+// not worth landing, as there is nothing for them to land on until an output is broken out
 function haveKind(isMono) {
   return runs.some(function (run) {
     return run.lamps.some(function (lamp) { return lamp.colour === !isMono; });
@@ -884,7 +882,7 @@ function renderGalleries() {
 
   // What the stretch being worked on could actually be given. A look shaped to several
   // lamps has nothing to say on a stretch of one, and the model would clear it the moment
-  // it landed: better to say so on the card than to take it and quietly drop it
+  // it landed, so the card says so and does not take it only to quietly drop it
   var target = section ? targetFor(run, section) : null;
 
   var shelf = document.createElement("div");
@@ -926,7 +924,7 @@ function paintCards() {
   });
 }
 
-// ---- the run: lamps left to right, an output's own kept together --------------------------
+// ---- the run, lamps left to right, an output's own kept together --------------------------
 
 function renderRun(where, run) {
   var box = document.getElementById(where);
@@ -990,7 +988,7 @@ function renderRun(where, run) {
 }
 
 // One output's lamps, kept together. Every lamp already says which output and channel
-// it is, so the group carries no number of its own: it is a space in the run and the
+// it is, so the group carries no number of its own. It is a space in the run and the
 // place the arrow appears when the output is pointed at
 function outputGroup(lamp) {
   var group = document.createElement("div");
@@ -1000,7 +998,7 @@ function outputGroup(lamp) {
 }
 
 // A lamp is dragged to where it sits on the build. A colour output is one lamp so it
-// moves whole; a broken-out one moves a channel at a time, since its three LEDs are
+// moves whole, and a broken-out one moves a channel at a time, since its three LEDs are
 // three separate things once the adapter is on
 function takesPlace(node, lamp) {
   var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
@@ -1060,7 +1058,7 @@ function showKin(out, on) {
   });
 }
 
-// ---- the bar: one cell per stretch, cut between them --------------------------------------
+// ---- the bar, one cell per stretch, cut between them --------------------------------------
 
 // What a stretch's cell is washed in, the colours it plays
 function washFor(run, section, look) {
@@ -1090,7 +1088,7 @@ function washOf(run, section, look, under) {
   return wash;
 }
 
-// Whether two lamps show the same thing under a scene: nothing, off, or one Always on stretch
+// Whether two lamps under a scene show the same thing, nothing, off or one Always on stretch
 function sameShowing(one, other) {
   return one === other ||
          !!(one && other && one.section && other.section && one.section === other.section);
@@ -1214,7 +1212,7 @@ function cutPoint(run, after, wide, from) {
 var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
 var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
 
-// The one act there is, said as a direction: a colour output crosses to the mono side and
+// The one act there is, said as a direction. A colour output crosses to the mono side and
 // becomes three mono lights, and those three cross back as one colour output. It shows only
 // where the wiring can be changed, in the board's colour, and only on an output that breaks out
 function crossing(out, colour) {
@@ -1283,8 +1281,7 @@ function renderCutting(where, run) {
   if (where === (right === mono ? "monoCut" : "outCut")) zoomAndSteps(box, active);
 }
 
-// The chosen stretch's panel. The parts below add to it, each after the one before, whatever the
-// panel drew
+// The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
 var chosenSteps = [];
 
 function renderChosen(where, run) {
@@ -1344,7 +1341,7 @@ function renderChosenPanel(where, run) {
   }
 }
 
-// The two sides: each as wide as what it holds, so the divide between them moves as
+// The two sides, each as wide as what it holds, so the divide between them moves as
 // outputs are broken out and put back
 function renderSides() {
   var words = BOARD.output_words;
@@ -1358,7 +1355,7 @@ function renderSides() {
     // Each output is a space in the run as well as its lamps, so the spaces are counted
     // too or the last output wraps onto a row of its own
     var room = count + Object.keys(groups).length;
-    // A side with nothing on it is not there at all: an output comes back from the arrow
+    // A side with nothing on it is not there at all. An output comes back from the arrow
     // on one of its channels, so nothing is reached by keeping an empty column open, and
     // the side that holds every lamp gets the whole width
     box.style.display = count ? "" : "none";
@@ -1422,7 +1419,7 @@ function paintLine(line) {
 }
 
 // ---- drawing --------------------------------------------------------------------------------
-// The parts below add their own steps to a draw: what each readies before the page is drawn, and
+// The parts below add their own steps to a draw, what each readies before the page is drawn and
 // what each draws after the outputs, both in the order the parts come
 
 var drawSteps = {before: [], after: []};

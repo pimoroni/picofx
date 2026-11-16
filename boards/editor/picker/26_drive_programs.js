@@ -5,14 +5,13 @@
 // file whose opening string has a "Drawing:" line is a drawing for a screen, not a program, so it
 // is left out, as is the WiFi credentials file at the top level.
 //
-// Every program is read the same way. Lines in its opening string say how to show it: "Program:"
-// its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
-// program tab's section it is offered in, "Thumbnail:" what its thumbnail draws where it has no
-// picture, and "Firmware:" the lowest firmware it runs on. The first sentence of the rest says what
-// it does. What it uses is read from its source,
-// and an example's folder says what it needs attached. A picture is the one named, else name.png
-// beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT orders
-// the sections and says what each holds.
+// Every program is read the same way. Lines in its opening string say how to show it. "Program:"
+// gives its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:"
+// the program tab's section it is offered in, "Thumbnail:" what its thumbnail draws where it has
+// no picture, and "Firmware:" the lowest firmware it runs on. The first sentence of the rest says
+// what it does, and what it uses is read from its source. A picture is the one named, else
+// name.png beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT
+// orders the sections and says what each holds.
 
 // Where the drive keeps its examples, on a board that carries them
 var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
@@ -20,8 +19,7 @@ var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
 // The folder at the top of the drive for the user's own programs, where a customised example goes
 var OWN_FOLDER = "programs";
 
-// The program tab's sections, as [name, what it holds, whether it starts folded], in sections.txt's
-// order
+// The program tab's sections in sections.txt's order, as [name, what it holds, starts folded]
 var SECTIONS = [];
 
 // Each program's pictures as object URLs, by its path: its own, and a second screen's after it
@@ -34,13 +32,8 @@ var programsReading = null;
 // top level, so the programs that go online are offered
 var driveHasCredentials = false;
 
-// What each examples folder needs attached, as the manual says
-var EXAMPLE_NEEDS = {screens: "a screen", audio: "a speaker", motors: "motors", servos: "a servo",
-                     strips: "a strip"};
-
-// What a program uses beyond the board, read from its source, {board} standing for the name the
-// program gives the board. Every example exits on Boot, so Boot counts only where its opening
-// string gives the button another job
+// What a program uses, read from its source. {board} stands for the name the program gives the
+// board. Every example exits on Boot, so Boot counts only where the program gives it another job
 var PROGRAM_USES = [["outputs", "{board}\\.(outputs|monos)\\b|ColourPlayer|MonoPlayer"],
                     ["rgb", "{board}\\.rgb\\b"],
                     ["screen", "^from screens import|SPCE\\.SCREEN"],
@@ -89,7 +82,7 @@ function usesInSource(source) {
   } else if (/spce_b=SPCE\.SCREEN/.test(source) && found.indexOf("pair") < 0) {
     found.push("pair");
   }
-  // Two screens or a hub are more than one screen, so they say it for it
+  // Two screens or a hub include a screen, so the screen is not listed beside them
   if (found.some(function (name) { return ["pair", "hub", "either"].indexOf(name) >= 0; }))
     found = found.filter(function (name) { return name !== "screen"; });
   return found;
@@ -123,7 +116,7 @@ function programFrom(path, folder, source) {
   var program = {path: path, folder: folder,
                  example: isExample(path),
                  name: null, does: "", args: null, picture: null, section: null, thumbnail: null,
-                 needs: EXAMPLE_NEEDS[folder.split("/")[0]] || null, uses: usesInSource(source)};
+                 uses: usesInSource(source)};
   var said = opening.split("\n").filter(function (line) {
     var told = line.match(PROGRAM_LINE);
     if (!told) return true;
@@ -198,7 +191,7 @@ async function filesIn(dir, path, folder, deep, files, pictures) {
   }
 }
 
-// A program's pictures: the one it names or name.png beside it, and name-2.png beside it
+// A program's pictures, as the one it names or name.png beside it, then name-2.png beside it
 async function picturesOf(program, pictures) {
   var stem = program.path.replace(/\.py$/i, "");
   var beside = stem.slice(0, stem.lastIndexOf("/") + 1);
@@ -220,7 +213,7 @@ function isExample(path) {
   return !!EXAMPLES_ROOT && path.indexOf(EXAMPLES_ROOT) === 0;
 }
 
-// Every program on the drive, the program tab counting them in as they are read. With ownOnly
+// Every program on the drive, which the program tab counts in as they are read. With ownOnly
 // only the user's own are read again and the examples kept as they were
 async function drivePrograms(dir, ownOnly) {
   var files = [], pictures = {}, found = [];
@@ -300,9 +293,11 @@ function forgetMissingPrograms() {
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
 }
 
+// Whether rescanPrograms() is reading the drive
+var programsBusy = false;
+
 // Read the user's own programs again where they have changed on the drive, as the effects' media
 // are, so a program saved from an editor shows without opening the drive again
-var programsBusy = false;
 async function rescanPrograms() {
   // Not until every program has been read once, as the examples are kept from that read
   if (!drive.dirHandle || programsBusy || !programsKnown) return;
@@ -351,8 +346,7 @@ async function copyToOwn(from, name, into, own, suffixes) {
   return copy + ".py";
 }
 
-// Copy a program into OWN_FOLDER for the user to change, its pictures with it. Returns the copy's
-// path
+// Copy a program and its pictures into OWN_FOLDER for the user to change. Returns the copy's path
 async function copyProgram(path) {
   var parts = path.split("/");
   var name = parts.pop();

@@ -1,7 +1,7 @@
 
 // The board opens as it ships, every colour output one colour lamp, each side whole and playing
-// the look the board's description opens it with. The strips play nothing, what is wired to them
-// being unknown
+// the look the board's description opens it with. The strips play nothing, since what is wired
+// to them is unknown
 var OPENING_LOOK = BOARD.opening.colour;
 
 // Every lamp of a stretch cycling through the same hue together, picofx's rainbow, which
@@ -34,15 +34,14 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Colour cycle")) + 1, 0, {
 // Scanner and Chase light each output as the light reaches it and let it go slowly, a fade
 // split into its rise and its fall, as one fade both ways rises too slowly to reach full before
 // the light moves on. The fall is the Trail the light leaves, a slider of its own, so Speed sets
-// only how fast it moves: Scanner's runs long, as sweep_trail.py has it, and Chase's short, a
-// runway light's
+// only how fast it moves. Scanner's trail runs long, as sweep_trail.py has it, and Chase's runs
+// short, as a runway light's does
 //
-// The rise is sweep_trail.py's 0.05s in proportion, that being tuned to its one speed and
-// spacing, as a fixed rise leaves a fast scanner's head short of full. There the
-// head covers each light for about a third of a second, a sweep reaching extent lights either
-// side and crossing length - 1 of them a cycle, so the rise is 15% of however long it covers
-// one. A chase's flash lasts 0.2s at speed 1, window 0.4 at duty 0.5, so its rise is a quarter
-// of the flash at whatever speed
+// The rise is sweep_trail.py's 0.05s in proportion, since that is tuned to its one speed and
+// spacing, and a fixed rise leaves a fast scanner's head short of full. There the head covers
+// each light for about a third of a second, as a sweep reaches extent lights either side and
+// crosses length - 1 of them a cycle, so the rise is 15% of however long it covers one. A chase's
+// flash lasts 0.2s at speed 1, window 0.4 and duty 0.5, so its rise is always a quarter of it
 var RISE_OF_DWELL = 0.15;
 var RISE_OF_FLASH = 0.25;
 
@@ -121,9 +120,9 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Chase")) + 1, 0, {
   }
 });
 
-// Red, red and amber, green, amber on three lamps, as Pelican crossing takes its five: the
-// first three playing lights, any beyond them told to stay dark. The intervals keep a real
-// signal's proportions, the pace scaling them all
+// Red, red and amber, green, amber on three lamps, as Pelican crossing takes its five. It lands
+// on the first three playing lights, and any beyond them are told to stay dark. The intervals
+// keep a real signal's proportions, and the pace scales them all
 LOOKS.splice(LOOKS.indexOf(lookNamed("Pelican crossing")), 0, {
   name: "Traffic light", mood: "Fade", spans: false, onMono: true,
   strip: ["#ff0000", "#ff7800", "#00d28c", "#111111", "#111111", "#111111", "#111111"],
@@ -144,9 +143,8 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Pelican crossing")), 0, {
   alone: false
 });
 
-// Each slider is named for what it sets, short. The signals' Fade writes ease, a fade that
-// slows as it arrives, and its tip says so, the file having a fade of its own that crosses
-// evenly
+// Each slider is named for what it sets, short. The signals' Fade writes ease, a fade that slows
+// as it arrives, and its tip says so, since the file's own fade crosses evenly
 var SETTING_NAMES = {"Rainbow": "Spread", "Wave": "Spread", "Campfire": "Intensity",
                      "Pelican crossing": "Fade"};
 LOOKS.forEach(function (look) {
@@ -154,8 +152,9 @@ LOOKS.forEach(function (look) {
 });
 
 // A signal's timings are its own sliders, one for each part of its sequence in seconds, each
-// starting at a real signal's. They are the stretch's timings, which the lines read through the stretch being written or played
-// Each part is its setting, its name, where it starts and the slider's two ends, in seconds
+// starting at a real signal's. They are the stretch's timings, which the lines read through the
+// stretch being written or played. Each part is its setting, its name, where it starts and the
+// slider's two ends, in seconds
 var SIGNAL_TIMINGS = {
   "Traffic light": [["red_interval", "Red", 12, 2, 60],
                     ["red_amber_interval", "Red and amber", 2, 1, 10],
@@ -209,7 +208,8 @@ Object.keys(SIGNAL_TIMINGS).forEach(function (name) {
 });
 
 // Rainbow's and Wave's Spread is the length of one pass of the wave in lights, longer to the
-// right as every slider's setting rises to the right. It stops at whole lights, from about a little over half the stretch to twice it
+// right as every slider's setting rises to the right. It stops at whole lights, from a little
+// over half the stretch to twice it
 function spreadRange(count) {
   return {low: Math.max(2, Math.round(count * 0.6)), high: Math.max(2, Math.round(count * 2))};
 }
@@ -237,8 +237,8 @@ function spreadStops(target) {
   wave.detents = spreadStops;
 }(lookNamed("Rainbow"), lookNamed("Wave")));
 
-// Campfire's intensity is how far its flicker dips, the effect's own brightness held at full so
-// the stretch's Brightness is the one that sets how bright it is. Its pace is the model's
+// Campfire's intensity is how far its flicker dips. The effect's own brightness is held at full
+// so the stretch's Brightness is the one that sets how bright it is. Its pace is the model's
 (function (campfire) {
   campfire.entries = function (target, pace, mood) {
     return [target.selector + " colour=ff5a00: flicker_each dimness=" + lerp(0.15, 0.8, mood) +
@@ -256,15 +256,15 @@ if (mono.lamps.length && BOARD.opening.mono) {
 settle();
 
 // ---- the strips ---------------------------------------------------------------------------
-// A strip is a run like the outputs: cut into stretches, each playing its own look, and
-// cut per scene as everything else is. What it does not have is wiring, an output's three
-// channels being the only thing that breaks out, so it takes the run model and leaves the
-// breaking out alone.
+// A strip is a run like the outputs, cut into stretches, each playing its own look, and cut
+// per scene as everything else is. It takes the run model without the wiring, since an
+// output's three channels are the only thing that breaks out.
 
 // The board's strips. A strip's order is the one it takes its colours in, empty for the board's
-// own, and it is there as the board describes it until added or removed while the board is edited.
-// A strip the description gives a brightness takes that after its length in place of an order,
-// the description's being the board's own, and one it says takes other strips takes their terminals
+// own. It is there as the board describes it until added or removed while the board is edited,
+// and one the description says takes other strips takes their terminals. A strip given a
+// brightness by the description takes that after its length in place of an order, and the
+// description's brightness is the board's own
 var STRIPS = BOARD.strips.map(function (strip) {
   var brightness = strip.brightness === undefined ? null : strip.brightness;
   return {id: strip.name, name: strip.name, label: strip.label, leds: strip.leds, order: "",
@@ -311,7 +311,8 @@ function stripSelector(run, section) {
 }
 
 // ---- drawing one -----------------------------------------------------------------------
-// Beads on a wire that runs between them, a bead at the lead in and a ring at the tail, and a whole stretch taking the click rather than only the lights in it
+// Beads on a wire that runs between them, a bead at the lead in and a ring at the tail. A whole
+// stretch takes the click, not only the lights in it
 
 var SVG = "http://www.w3.org/2000/svg";
 
@@ -492,8 +493,7 @@ function splitSection(run, ways) {
   draw();
 }
 
-// The run's stretches after the picked one and the many after it made again, those many
-// repeated to the run's end
+// The picked stretch and the ones after it, many in all, repeated over the rest of the run
 function repeatSections(run, many) {
   var pattern = run.sections.slice(run.picked, run.picked + many);
   if (!pattern.length) return;
@@ -536,9 +536,9 @@ function renderStripBar(where, run) {
     cell.title = "lights " + (section.from + 1) + " to " + (section.to + 1);
 
     // The bar says where the cuts are and what each stretch was given. Showing the
-    // effect here as well would be the same picture twice and, now the lights move,
-    // a still palette does not stand for one anyway. So a stretch is washed in a
-    // colour of its look and named, and the run below is where it is watched
+    // effect here as well would be the same picture twice, and a still palette does not
+    // stand for a moving one anyway. So a stretch is washed in a colour of its look and
+    // named, and the run above is where it is watched
     var look = lookNamed(section.look);
     var under = look ? null : stretchUnder(run, section);
     cell.appendChild(washOf(run, section, look, under));
@@ -560,7 +560,7 @@ function renderStripBar(where, run) {
     cell.onclick = function () { pick(run, at); draw(); };
     bar.appendChild(cell);
 
-    // The cut this section shares with the next: dragged to move it, clicked to take it
+    // The cut this section shares with the next, dragged to move it or clicked to take it
     // out, which joins the two either side
     if (at < run.sections.length - 1) {
       var edge = document.createElement("div");
@@ -598,7 +598,7 @@ function renderStripBar(where, run) {
   scroller.onwheel = function (e) {
     if (run.count <= ZOOMS_OVER) return;
     e.preventDefault();
-    // The wheel holds the light under the pointer; the buttons hold the middle of what
+    // The wheel holds the light under the pointer, and the buttons hold the middle of what
     // is on screen, since a button press has no place on the run to hold onto
     var box2 = scroller.getBoundingClientRect();
     var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
@@ -750,13 +750,13 @@ function renderStrip(where, run) {
 var STRIP_FEWEST = 1;
 var STRIP_MOST = 300;
 
-// The orders a strip can take its colours in, as the file writes them after its length,
-// the board's own being written as nothing
+// The orders a strip can take its colours in, as the file writes them after its length.
+// The board's own is written as nothing
 var STRIP_ORDERS = [["", "GRB (most strips)"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
 // The brightnesses a strip with one of its own can be given, as the file writes them after its
-// length, the board's own being written as nothing
+// length. The board's own is written as nothing
 var STRIP_BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
 function stripPercent(brightness) { return Math.round(brightness * 100) + "%"; }
@@ -826,7 +826,7 @@ function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
 }
 
-// A strip's chip, its length and its order to set, which the board's setup shows while it is on
+// A strip's chip, its length and its order or brightness to set, shown while the board is set up
 function renderStripChip(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
@@ -859,8 +859,7 @@ function renderStripChip(where, run) {
 }
 
 // ---- zooming a strip's bar --------------------------------------------------------------------
-// The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
-// own id, so these stand in for those two
+// A strip's bar is found by the strip's own id
 
 // The most lights a strip can have and not be zoomed, which the zoom buttons are hidden at
 var ZOOMS_OVER = 12;
@@ -873,10 +872,10 @@ function middleOfView(run) {
 }
 
 // Zooming keeps whatever was under the pointer under the pointer, which is the only way a
-// zoom on a long run is any use: otherwise the thing being aimed at runs away
+// zoom on a long run is any use, as otherwise the thing being aimed at runs away
 function zoomTo(run, want, at, from) {
   // Held to three places, and to exactly 1 near it, since the buttons step by 1.6 each way and
-  // coming back out left 1.0000000000000002, a bar a hair wider than its box that scrolls
+  // coming back out leaves 1.0000000000000002, a bar a hair wider than its box that scrolls
   want = Math.round(want * 1000) / 1000;
   if (Math.abs(want - 1) < 0.01) want = 1;
   run.zoom = Math.max(1, Math.min(24, want));
@@ -891,8 +890,8 @@ function zoomTo(run, want, at, from) {
 
 // ---- what a stretch plays, carried through the tools -----------------------------------------
 // Everything a stretch holds besides where it is, copied, so splitting, filling and joining it
-// all back keep what it played. The drawing's own split and fill copy only its look, pace,
-// setting and colour, and its join makes one stretch playing nothing
+// all back keep what it played. splitSection() and repeatSections() copy only its look, pace,
+// setting and colour, and joinAll() starts from one stretch playing nothing
 function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,
@@ -925,9 +924,9 @@ function fill(run, many) {
 }
 
 // ---- the tools under a run -------------------------------------------------------------------
-// One row for the outputs, the mono lights and the strips alike, in the screens' button style:
-// split the stretch picked, into a number of parts or into lengths of a number of lights, join
-// them all back, and repeat the stretches from the picked one to the end of the run. Each is
+// One row for the outputs, the mono lights and the strips alike, in the screens' button style.
+// It splits the stretch picked into a number of parts or into lengths of a number of lights, joins
+// them all back, and repeats the stretches from the picked one to the end of the run. Each is
 // one outlined group read as a sentence, its words first, then its number, then the buttons
 // that act, so a number is never apart from what it is for.
 
@@ -1049,7 +1048,7 @@ function barCells(run) {
   return Array.prototype.slice.call(document.querySelectorAll("#" + bar + " .bar > .sec"));
 }
 
-// One outlined group: its icon and words, then what is put inside it
+// One outlined group, its icon and words, then what is put inside it
 function toolGroup(icon, words) {
   var group = document.createElement("span");
   group.className = "toolset";
@@ -1071,8 +1070,6 @@ function toolAct(words, off, act, title) {
   button.dataset.act = act;
   return button;
 }
-
-// The strips' row and the outputs' are one
 
 // ---- joining them to the page below -----------------------------------------------------
 
@@ -1143,9 +1140,9 @@ drawSteps.after.push(function () {
 });
 
 // A cut's label, which lights it falls between, is centred on the cut, so near either end of a
-// bar it overhung the bar and, hidden until pointed at but still taking its room, made an
-// unzoomed bar scroll: a strip of 300 LEDs was 888px wide in an 866px box. A label within its
-// own width of an end is turned inward, and a bar at its whole width does not scroll at all
+// bar it would overhang the bar. Though hidden until pointed at, it still takes its room, and
+// would make an unzoomed bar scroll. A label within its own width of an end is turned inward,
+// and a bar at its whole width does not scroll at all
 function fitBars() {
   document.querySelectorAll(".scroller").forEach(function (scroller) {
     var bar = scroller.querySelector(".bar");
@@ -1164,8 +1161,8 @@ function fitBars() {
 }
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
-// The new lamps are carried what the output played, both ways: broken out into three mono
-// lamps, and three put back as one colour lamp. The wiring change gives them a stretch of
+// The new lamps are carried what the output played, both ways, broken out into three mono
+// lamps or three put back as one colour lamp. The wiring change gives them a stretch of
 // their own, starting dark, and this fills it where the look plays on them
 
 // The stretch an output's lamps played. Put back from three that differ, it is the one
@@ -1233,8 +1230,7 @@ function changeWiring(change, toColour) {
         var target = targetFor(run, mine);
         var standIn = lookNamed(STAND_INS[played.look]);
         if (toColour && memo && played.look === memo.as) {
-          // Back from a stand-in, it plays what it was carried from, at the pace it was
-          // given since
+          // Back from a stand-in, it plays its old look at the stand-in's pace and level
           Object.assign(mine, {look: memo.look, pace: played.pace, mood: memo.mood,
                                colour: memo.colour, level: played.level});
         } else if (look && canPlay(look, target)) {
@@ -1254,13 +1250,13 @@ function changeWiring(change, toColour) {
 }
 
 // ---- choosing a colour ---------------------------------------------------------------------
-// Under the stretch it is for, twelve swatches and a custom one
-// that opens a hue and saturation field with a hex box beside it. Brightness is not in
-// any of it. A swatch is written as its word, since every one is now a word autofx names,
-// and the field writes hex.
+// Under the stretch it is for, twelve swatches and a custom one that opens a hue and
+// saturation field with a hex box beside it. The field holds no brightness, and the hex box
+// shows and sets the colour at the stretch's brightness. A swatch is written as its word, since
+// every one is a word autofx names, and the field writes hex.
 
 // The words the file names and their values, which are picofx's own. A swatch is drawn in
-// its true value, the round trip from a written word to a swatch being the point of them
+// its true value, since the round trip from a written word to a swatch is the point of them
 var WORDS = {
   red: [255, 0, 0], orange: [255, 128, 0], yellow: [255, 255, 0], green: [0, 255, 0],
   cyan: [0, 255, 255], blue: [0, 0, 255], purple: [128, 0, 255], magenta: [255, 0, 255],
@@ -1290,16 +1286,16 @@ function wordFor(hex) {
   return SWATCHES.filter(function (name) { return hexOf(WORDS[name]) === lower; })[0] || null;
 }
 
-// Looks whose colour setting steps through sets of several colours, not one: Party plays
+// Looks whose colour setting steps through sets of several colours, not one. Party plays
 // three at once, and its setting picks which three. They keep their setting and their own
-// colours, one chosen colour in all three places being no longer Party
+// colours, since one chosen colour in all three places would no longer be Party
 var SET_LOOKS = ["Party"];
 
 // Base effects written in one fixed colour, which take a colour beside their own settings
 var FIXED_COLOUR_LOOKS = ["Wave", "Blink", "Marquee", "Scanner", "Chase"];
 
 // Whether a look is given its colour here. Solid takes one already, the looks whose second
-// slider stepped a table of tones take one instead of that slider, and the fixed colour
+// slider steps a table of tones take one instead of that slider, and the fixed colour
 // ones take one as well
 function takesColour(look) {
   if (!look || SET_LOOKS.indexOf(look.name) >= 0) return false;
@@ -1307,12 +1303,11 @@ function takesColour(look) {
 }
 
 // ---- what a stretch is drawn in wherever it is shown in small -------------------------------
-// The colours it plays, never only the colour of its look's card: three Solid stretches
-// set red, blue and yellow were all drawn in Solid's card green. They are read from the
-// lines the stretch writes, so they cannot disagree with the file: one colour is drawn
+// The colours it plays, never only the colour of its look's card. They are read from the
+// lines the stretch writes, so they cannot disagree with the file. One colour is drawn
 // whole, several across the stretch's width, and a look that writes none, as Rainbow does,
 // in its card's colours. A mono stretch is drawn in the warm white its lamps give. The bars
-// under the lamps and the tabs' swatches all ask here
+// under the lamps and the Repeat tool's chips all ask here
 var MONO_WASH = "#f3c98b";
 
 // Each colour a stretch's lines name, in the order they name them, once each. A blink through
@@ -1334,8 +1329,8 @@ function coloursWritten(look, section, run) {
 }
 
 // A look given a colour is drawn in it, and one playing several, as Party does, in those.
-// Any other look is drawn in its card's colours, one colour in its line being no picture
-// of what it plays: Campfire's single flame colour is not the flicker its card shows
+// Any other look is drawn in its card's colours, since one colour in its line is no picture
+// of what it plays. Campfire's single flame colour is not the flicker its card shows
 function stretchWash(look, section, run, mono) {
   if (mono) return MONO_WASH;
   var inks = run && section ? coloursWritten(look, section, run) : [];
@@ -1345,9 +1340,9 @@ function stretchWash(look, section, run, mono) {
 }
 
 // ---- the colour a look starts with -------------------------------------------------------------
-// A look given a stretch starts in its own colour, the one its tone setting gave at the
-// stretch's setting, and not whatever the stretch was left holding, which left every look
-// starting orange. Solid, having no tone setting, starts in SOLID_COLOUR
+// A look given a stretch starts in its own colour, the one its tone setting gives at the
+// stretch's setting, and not whatever colour the stretch was left holding. Solid has no tone
+// setting, so it starts in SOLID_COLOUR
 function ownColourFor(look, target, pace, mood, colour) {
   var lines = target.count === 1 && look.alone
     ? look.alone(target, pace, mood, colour)
@@ -1370,20 +1365,20 @@ var cardSettings = {};
 
 // The second setting a look starts at, on its card and on a stretch given it, where middling
 // does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
-// steps at picofx's six, and Pelican crossing's lamps fade in about a tenth of a second, as a
-// crossing's do
+// steps at picofx's six, and the signals' lamps fade in about a tenth of a second, as a real
+// signal's do. Marquee starts with every third light lit
 var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
                    "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
 
 // Solid's own colour, which a stretch given it starts in and its card shows, still and at full
-// brightness. Stepping through the swatches, the card read as Colour steps, and its palette
-// mark says a colour is chosen
+// brightness. A card stepping through the swatches would read as Colour steps, and its palette
+// mark already says a colour is chosen
 var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
 
 // What a look lights, a card's middling settings made its own
 function cardLit(look, holder, t, slot, count, sim) {
   if (holder === MIDDLING && look && look.solid) {
-    // Drawn in the swatch's value, the word it writes taking the lamps' softer shade
+    // Drawn in the swatch's value, since the word it writes would take the lamps' softer shade
     var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
                                   colour: SOLID_COLOUR}, t, slot, count, sim);
     return solid && {level: solid.level, ink: SOLID_COLOUR};
@@ -1426,7 +1421,7 @@ function bankedLines(look, target, pace, mood, colour) {
 // On a strip, Emergency deals out the stretch's lights as it does outputs. A signal takes a
 // set number of lamps, five for a crossing and three for a traffic light, so the stretch is
 // cut into that many blocks, the longer ones first, and one entry is written per place
-// within a block: its lights, one from each block, take the signal's parts in order, and a
+// within a block. Its lights, one from each block, take the signal's parts in order, and a
 // block too short for a place drops off the end
 function stripLines(look, target, pace, mood) {
   function dealt(playing) {
@@ -1483,19 +1478,19 @@ function startColour(run, section, look) {
   });
 });
 
-// Every draw settles the model and settling makes the stretches afresh, so a handler
-// that kept the stretch it was made with would write onto one the run no longer holds.
-// Each reaches the live one through the run when it fires
 // The last custom colour of each stretch and its own brightness, by its run and first lamp,
 // kept while a swatch is chosen so custom comes back to both, as a screen's background does.
-// Kept here, the stretches being made afresh on every draw
+// It is kept here, since the stretches are made afresh on every draw
 var customColours = {};
 
-// The picker is the one a screen's background has: one row of swatches spanning the stretch's
-// width, named under them when there is room, the custom field under the row with the hex
-// beside it over the colour itself
+// The picker is the one a screen's background has. It is one row of swatches spanning the
+// stretch's width, named under them when there is room, and the custom field under the row
+// with the hex beside it over the colour itself
 function renderColourPick(box, run) {
   var section = run.sections[run.picked];
+  // Every draw settles the model and settling makes the stretches afresh, so a handler
+  // that kept the stretch it was made with would write onto one the run no longer holds.
+  // Each reaches the live one through the run when it fires
   function live() { return run.sections[run.picked]; }
   var remembered = run.id + ":" + section.from;
   var wrap = document.createElement("div");
@@ -1597,7 +1592,7 @@ function renderColourPick(box, run) {
 
   // A hex is how a colour arrives from somewhere else, so it is typed rather than hunted
   // for. It is the colour as written, at the stretch's brightness, as a screen's background
-  // has it: one typed in sets the colour and the brightness both
+  // has it, so one typed in sets the colour and the brightness both
   var typed = document.createElement("div");
   typed.className = "hexline";
   var label = document.createElement("label");
@@ -1669,7 +1664,7 @@ function detented(box, where, count) {
   range.setAttribute("list", ticks.id);
 }
 
-// The stretch's settings, with the colour choice in place of a slider that stepped tones
+// The stretch's settings, with the colour choice in place of a slider that steps tones
 chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var section = run && run.sections[run.picked];
@@ -1695,13 +1690,13 @@ chosenSteps.push(function (where, run) {
     tuning.className = "tuning";
     wrap.appendChild(tuning);
   }
-  // Solid's own slider was its brightness, which the one every look has now is
+  // Solid's own slider is its brightness, so it gives way to the Brightness slider every look has
   if (look.solid) tuning.textContent = "";
   // A mono lamp has no colour to be given
   var first = run.lamps[section.from];
   var coloured = takesColour(look) && !!first && first.colour;
-  // The second slider stepped a table of tones for these looks, and the swatches take
-  // its place. On mono lights it has nothing to set, a mono light having no colour
+  // The second slider steps a table of tones for these looks, and the swatches take
+  // its place. On mono lights it has nothing to set, since a mono light has no colour
   var mono = !!first && !first.colour;
   var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
   if ((coloured || mono) && toneless && tuning.children.length >= 4) {
@@ -1783,7 +1778,7 @@ function brightnessSlider(tuning, run, where) {
 function linesFor(look, target, pace, mood, colour) {
   var lines;
   if (look && look.solid) {
-    // Solid is written at full, its brightness being the stretch's own
+    // Solid is written at full, since its brightness is the stretch's own
     lines = bankedLines(look, target, pace, 1, colour).map(function (line) {
       return line.replace(/ brightness=1(?=\s|$)/, "");
     });
@@ -1791,7 +1786,7 @@ function linesFor(look, target, pace, mood, colour) {
     lines = bankedLines(look, target, pace, mood, colour);
   }
 
-  // The colour it was given. Solid already writes it. The looks whose slider stepped tones
+  // The colour it was given. Solid already writes it. The looks whose slider steps tones
   // write a tone, so the colour they wrote is replaced with the chosen one, as a word where it
   // is a swatch and as hex from the field
   if (takesColour(look) && target.colour && colour) {
@@ -1844,7 +1839,7 @@ var TRAVELLING = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence", 
 var WAVES = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence"];
 
 // Party flashes its three sets a third of a beat apart, and the phases it was given, 0, 0.33
-// and 0.67, lit the first set, then the third, then the second: a step back toward the start
+// and 0.67, light the first set, then the third, then the second, a step back toward the start
 // each time. Swapped, its sets light in order, away from the start as every look goes
 (function (party) {
   var partyLines = party.entries;
@@ -1933,7 +1928,7 @@ function targetFor(run, section) {
   return target;
 }
 
-// What a look lights at slot of count lamps playing, as the board will play it: with the
+// What a look lights at slot of count lamps playing, as the board will play it. That is with the
 // stretch's typed values, a blink through several colours as its list, a reversed stretch from
 // its far end, and a stretch at its brightness. A card plays at full
 function livePlay(look, holder, t, slot, count, sim) {
@@ -1955,9 +1950,8 @@ function livePlay(look, holder, t, slot, count, sim) {
   });
 }
 
-// A light at the end the stretch starts from and an arrow the way it runs
-// A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are,
-// the light in its icon at the end the stretch starts from
+// A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are.
+// Its icon has a light at the end the stretch starts from and an arrow the way it runs
 function directionToggle(run, section) {
   var button = document.createElement("button");
   button.type = "button";
@@ -1989,17 +1983,17 @@ function directionToggle(run, section) {
 }
 
 // ---- what heads a stretch's settings ------------------------------------------------------------
-// The look's name, the panel being its settings, then where it plays in words: outputs
-// 1 to 7, LEDs 11 to 20 of the left strip, output 3's red and green. The file's selector is the
-// file view's to show, and whether the lights are colour or mono the tab's
+// The look's name, since the panel is its settings, then where it plays in words, such as
+// outputs 1 to 7, LEDs 11 to 20 of the left strip or output 3's red and green. The file's
+// selector is the file view's to show, and whether the lights are colour or mono the tab's
 
-// A list said as English does: one, two and three
+// A list said as English does, such as "one, two and three"
 function spoken(items) {
   if (items.length < 2) return items.join("");
   return items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
 }
 
-// Numbers as English says them: three or more climbing or falling by one are "a to b", and the
+// Numbers as English says them. Three or more climbing or falling by one are "a to b", and the
 // rest are listed, so 1-7 is "1 to 7" and 5,6 is "5 and 6"
 function numbersSaid(numbers) {
   var said = [];
@@ -2060,13 +2054,13 @@ function wherePlays(run, section, reversed) {
 }
 
 // ---- a signal's states, drawn ----------------------------------------------------------------
-// Each timing is named by the state it holds, drawn as the signal shows it: a head of three
+// Each timing is named by the state it holds, drawn as the signal shows it, as a head of three
 // lamps, red, amber and green top to bottom, with those lit in their colour, and for a
 // crossing the two figures beside it, the red one standing and the green one walking. Its
 // slider takes the state's colour. The word stays beside the drawing
 var SIGNAL_INK = {red: "#e8392c", amber: "#f5a623", green: "#20b35c", dark: "#3b3f44"};
 
-// The lamps each state lights: 1 lit, 0 dark, "f" flashing
+// The lamps each state lights, 1 for lit, 0 for dark and "f" for flashing
 var SIGNAL_STATES = {
   "Traffic light": {red_interval: [1, 0, 0], red_amber_interval: [1, 1, 0],
                     green_interval: [0, 0, 1], amber_interval: [0, 1, 0]},
@@ -2074,8 +2068,8 @@ var SIGNAL_STATES = {
                        green_interval: [0, 0, 1, 1, 0], amber_interval: [0, 1, 0, 1, 0]}
 };
 
-// A slider's tint, amber and green a shade deeper than the lamps: a browser gives a light
-// accent a dark track, which read as a slider filled to its end
+// A slider's tint, amber and green a shade deeper than the lamps. A browser gives a light
+// accent a dark track, which reads as a slider filled to its end
 var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
                    green_interval: "#16894a", amber_interval: "#a86600",
                    flashing_interval: "#a86600"};
@@ -2162,7 +2156,7 @@ chosenSteps.push(function (where, run) {
 // ---- an icon for each setting ------------------------------------------------------------------
 // Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
 // have theirs, so a panel reads at a glance. A signal's states keep their coloured
-// drawings, colour being what they are about. The word stays, the icon only hinting
+// drawings, since colour is what they are about. The word stays, and the icon only hints
 var SETTING_ICONS = {
   "Brightness": "<circle cx='8' cy='8' r='2.8'/><path d='M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8" +
                 "M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3'/>",
@@ -2191,9 +2185,9 @@ chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var tuning = box && box.querySelector(".chosen .tuning");
   if (!tuning) return;
-  // Every slider keeps the picked stretch's colours on the bar with it as it moves, a slider
-  // that picks colours as Palette does changing them, and redraws the panel once let go. The
-  // sliders only played the preview as they moved, so the bar kept what was there before
+  // Every slider keeps the picked stretch's colours on the bar in step as it moves, since one
+  // such as Palette changes them, and redraws the panel once let go. A slider's own handler
+  // plays only the preview, which would leave the bar showing the colours from before
   var section = run && run.sections[run.picked];
   var look = section && lookNamed(section.look);
   Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function (range) {

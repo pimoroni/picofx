@@ -1,9 +1,9 @@
 
 // ---- the wiring, while the board is set up ------------------------------------------------
-// In the outputs' own panel and only while the board is set up, the board's connectors along the
-// bottom, each colour output one pin and each broken-out one three, a faint line from every pin to
-// the lamp it feeds, brought forward by pointing at the lamp or the connector, a moved lamp sliding
-// to its new place, and the lamps out of the order they are wired in with their numbers in bold.
+// The outputs' own panel shows the wiring while the board is set up. The board's connectors run
+// along the bottom, each colour output one pin and each broken-out one three. A faint line runs
+// from every pin to the lamp it feeds, brought forward by pointing at the lamp or connector. A
+// moved lamp slides to its new place, and a lamp out of wiring order has its number in bold.
 
 var SLIDE_MS = 420;
 
@@ -15,7 +15,7 @@ var SLIDE_MS = 420;
   sides.parentNode.insertBefore(row, sides.nextSibling);
 }());
 
-// Every lamp in the order the board wires them: an output's own lamp, or its three channels
+// Every lamp in the order the board wires them, an output's own lamp or its three channels
 function wiredLamps() {
   var lamps = [];
   wiring.forEach(function (one, out) { lamps = lamps.concat(placesOf(out)); });
@@ -116,15 +116,15 @@ function renderConnectors() {
       "order, numbered in bold. Hover over a light or connector to highlight its wire."
     : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
   box.appendChild(said);
-  // The connectors sit lower by whatever the cutting and the bar took beyond them, the
-  // lines running on down, so setting up leaves the section its size
+  // The connectors sit lower by whatever the cutting and the bar took beyond them, and the
+  // lines run on down to them, so setting up leaves the section its size
   row.style.marginTop = "";
   var short = unwiredSpan === null ? 0 : unwiredSpan - sidesSpan();
   if (short > 0) row.style.marginTop = (parseFloat(getComputedStyle(row).marginTop) + short) + "px";
   drawLines();
 }
 
-// Faint lines, never none: with no line at all, the lamps over a connector read as the ones
+// Faint lines, never none. With no line at all, the lamps over a connector read as the ones
 // it feeds, which a rearranged build is not
 function drawLines() {
   var panel = document.getElementById("outPanel");
@@ -207,7 +207,7 @@ function playSlide() {
 }
 
 // Breaking an output out, its three lamps open out of where its one stood, each sliding
-// from there to its own place; putting one back, the lamp it becomes closes in from the
+// from there to its own place. Putting one back, the lamp it becomes closes in from the
 // middle of the three. The other lamps make way as they do for a move
 function breakOut(out) {
   slideFrom(null);

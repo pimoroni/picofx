@@ -1,16 +1,16 @@
 
 // ---- the board's own settings -----------------------------------------------------------------
-// Three settings belong to the board and to no section: whether a save plays without an eject,
-// which reload=manual turns off, whether the drive stays hidden at start (drive=manual), and a
-// program run in place of the effects (program= and args=). They are the board's, so no scene
-// keeps them. The pages built on this one each put them somewhere different, using what is here.
+// Three settings belong to the board and to no section. They are whether a save plays without an
+// eject, which reload=manual turns off, whether the drive stays hidden at start (drive=manual),
+// and a program run in place of the effects (program= and args=). They are the board's, so no
+// scene keeps them. The pages built on this one each place them differently, using what is here.
 
 // Saving without an eject starts on
 var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
-// The programs on the drive, read once a drive is open, its own and the examples alike: each one's
-// path, name, what it does, the arguments it takes, its section and thumbnail, and what it uses and
-// needs. drivePrograms() in 26_drive_programs.js reads them
+// The programs on the drive, read once a drive is open, its own and the examples alike. Each holds
+// its path, name, what it does, the arguments it takes, its section and thumbnail, and what it
+// uses. drivePrograms() in 26_drive_programs.js reads them
 var PROGRAMS = [];
 
 // Lookups for programs the page shows that the drive does not hold, each given a path and
@@ -26,7 +26,7 @@ function programNamed(path) {
 
 // A program's arguments as the file takes them, each one quoted where a space or a colon would
 // otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. A
-// program given only what it would take anyway is given nothing, so its line stays as short
+// program given only what it would take anyway is given nothing, so its line stays short
 function argsWritten(path) {
   var program = programNamed(path);
   if (program && program.args && program.args.length && program.args.every(function (argument, at) {
@@ -40,7 +40,7 @@ function argsWritten(path) {
               .join("|");
 }
 
-// Whether keeping the drive hidden means anything, a program having it shown while it runs
+// Whether keeping the drive hidden means anything, as a program has it shown while it runs
 function driveMeansSomething() { return !boardSet.program; }
 
 boardLineSteps.after.push(function (line) {
@@ -59,7 +59,7 @@ boardLineSteps.after.push(function (line) {
 
 // ---- a program's arguments --------------------------------------------------------------------
 
-// The screen size a program is first given: the size set for screen A, else the program's own
+// The screen size a program is first given, which is the size set for screen A, else its own
 function sizeOffered(argument) {
   var screen = state.screens && state.screens.A;
   return screen && screen.there && screen.size ? screen.size : argument.default;
@@ -78,9 +78,9 @@ var ARGUMENT_CHOICES = {
   }
 };
 
-// The picked program's arguments: a box for each it names, a screen size chosen from those the
-// firmware knows and a rotation from the four, or where it names none but reads sys.argv, plain
-// boxes to add and take away
+// The picked program's arguments, as a box for each it names. A screen size is chosen from those
+// the firmware knows and a rotation from the four. A program that names none but reads sys.argv
+// gets plain boxes to add and take away
 function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
@@ -126,7 +126,7 @@ function argsFor(path, locked) {
     };
     field.onchange = function () { draw(); };
     label.appendChild(field);
-    // An argument added by hand can be taken away again, the rest moving up
+    // Check if the argument was added by hand, so it can be taken away again and the rest move up
     if (!named) {
       var gone = document.createElement("button");
       gone.type = "button";

@@ -1,16 +1,16 @@
 
 // ---- the figure beside each slider --------------------------------------------------------
 // Each slider can show beside it the value the file writes, with its unit, in a box that takes
-// one typed in. Typed within the slider's reach, the slider moves to it; typed past an end,
-// the slider sits at that end and the value is kept as typed, so the file writes exactly it.
+// one typed in. A value typed within the slider's reach moves the slider to it. Typed past an
+// end, the slider sits at that end and the value is kept as typed, so the file writes exactly it.
 // The figures are in a drawer at the right of the sliders, shut until opened, one for the
 // whole panel, and a viewer's page remembers which way they left it.
 //
-// Every figure rises as its slider goes right, as the setting does. So a speed set as
-// an interval between steps is shown as how many times a second, and a signal's as how fast
-// it runs against a real one. A slider moving several settings shows the first of its keys it
-// changes, the rest following it. A wave's speed is shown without its sign, which way it runs
-// being Reverse's to say.
+// Every figure rises as its slider goes right, as the setting does. So a speed set as an
+// interval between steps is shown as how many times a second, and a signal's as how fast it
+// runs against a real one. A slider moving several settings shows the first of its keys it
+// changes, and the rest follow it. A wave's speed is shown without its sign, since Reverse
+// says which way it runs.
 
 document.body.classList.add("figures");
 
@@ -45,19 +45,21 @@ function figureWay(key, look) {
   return same("");
 }
 
-// Whether the drawer is open, which a viewer's page keeps between visits
+// The localStorage key that keeps whether the drawer is open between visits
 var FIGURES_KEPT = "fx-picker-figures-open";
+
+// Whether the drawer is open
 var figuresOpen = false;
 try {
   figuresOpen = window.localStorage.getItem(FIGURES_KEPT) === "1";
 } catch (e) {
-  figuresOpen = false;
+  // Shut where the page may not keep anything
 }
 
 // The typed values of the stretch whose lines are being written, which linesFor applies
 var exactNow = null;
 
-// Both ways a stretch's lines are asked for carry its typed values: the file and the preview
+// Write a stretch's lines with its typed values, as both the file and the preview ask for them
 function withExact(exact, write) {
   var had = exactNow;
   exactNow = exact || null;
@@ -223,14 +225,15 @@ chosenSteps.push(function (where, run) {
     } else {
       return;
     }
-    // A slider with no one figure keeps its row's cells, empty, so the columns stay whole
+    // Check if the slider has no one figure
     if (!cells) {
+      // Keep the row's cells, empty, so the columns stay whole
       cells = [document.createElement("span"), document.createElement("span")];
       cells[0].className = "figurebox";
       cells[1].className = "figureunit";
     }
-    // A figure typed past the slider's end, wider than any it reaches, widens it to fit
     if (cells[0].tagName === "INPUT") {
+      // A figure typed past the slider's end, wider than any it reaches, widens the box to fit
       boxes.push({box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length)});
     }
     if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);

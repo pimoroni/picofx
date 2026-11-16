@@ -1,25 +1,24 @@
 
 // ---- the board, the same in every scene ------------------------------------------------
-// How the board is built is the same in every scene: which outputs have an adapter
+// How the board is built is the same in every scene, which outputs have an adapter
 // fitted, how long each strip is, and which screen is plugged into each port. The pages
 // built on this one differ only in where those are shown and when they can be changed.
 
-// Which panel is plugged into each screen port, or none. Only the size is the board's:
-// which way up it is mounted is left for when screens are settled
+// Which panel is plugged into each screen port, or none. Only the panel's size is the board's
 var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The catalogue is the board's own, so a board that finds it has no screen ports offers none
 SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
   return CATALOGUE.screen_ports.indexOf(port.id) >= 0;
 });
-// The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
+// The sizes a panel can be, as the firmware takes them. The catalogue's hub is not a panel size
 var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
   .filter(function (inches) { return inches !== "hub"; });
 var screensFitted = {};
 SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
 // Breaking an output out, or putting it back, is done to every scene in turn, each carrying
-// its own looks across. A scene's steps to undo end there, being about
-// lamps that have since moved: putting the output back is the way to undo it
+// its own looks across. A scene's steps to undo end there, since they are about lamps that
+// have since moved. Putting the output back is the way to undo it
 function acrossScenes(change) {
   return function (out) {
     store();
@@ -97,8 +96,8 @@ function brokenSaid() {
 }
 
 // ---- what the file says about the board -------------------------------------------------
-// The parts below add their own steps to the board line: what each readies before it is
-// written, and what each makes of the line written so far, both in the order the parts come
+// The parts below add their own steps to the board line, what each readies before it is
+// written and what each makes of the line written so far, both in the order the parts come
 
 var boardLineSteps = {before: [], after: []};
 
@@ -135,7 +134,7 @@ var NOT_FITTED = "# Not fitted: ";
 // The names the file listed as not fitted, in lower case, or null where it had no such comment
 var notFittedRead = null;
 
-// The names of what the board fits by default and has been taken off, each part adding a step
+// The names of what the board fits by default and has been taken off, as a step from each part
 var notFittedSteps = [];
 
 // A strip as the board describes it, with its tab's name and whether it is fitted by default

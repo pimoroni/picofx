@@ -1,12 +1,11 @@
 // ---- the lamps, lit by the line the look writes ---------------------------------------
-// A card can say what a look is made of; only a lamp actually running it can say what it
+// A card can say what a look is made of, but only a lamp actually running it can say what it
 // looks like. A lamp here plays the entry its look would write, read back and run through
-// the same shapes picofx uses, so the page cannot show one thing and save another. A look
-// whose effect the board does not have yet falls back to its palette, drawn still.
+// the same shapes picofx uses, so the page cannot show one thing and save another. A lamp
+// whose entry names an effect this page cannot play is drawn as playing nothing.
 
-// The colour words an entry may use, as the page has to draw them. These are the words
-// autofx names, drawn a little softer than their constants so a screen full of them is
-// not glaring
+// The colour words an entry may use, as the page draws them. These are the words autofx
+// names, drawn a little softer than their constants so a screen full of them is not glaring
 var NAMED = {
   black: "#000000", blue: "#2b5cff", cool: "#cfe4ff", cyan: "#28e0e0",
   green: "#22c65a", magenta: "#ff36c8", orange: "#ff9022", pink: "#ff9a9a",
@@ -24,8 +23,8 @@ function inkOf(word) {
 
 // ---- reading an entry back ------------------------------------------------------------
 
-// The lights a selector names, as numbers. A name carries ranges and single numbers,
-// "out1-3,7", and a bare name is the whole run
+// The lights a selector names, as numbers. A name carries ranges and single numbers, such
+// as "out1-3,7", and a bare name is the whole run
 function lightsOf(selector, count) {
   var parts = /^([a-z_]+)(.*)$/.exec(selector.trim());
   if (!parts) return [];
@@ -74,7 +73,7 @@ function parseEntry(line, count) {
 
 // ---- the effects, at the settings the entry carries ------------------------------------
 // Each is picofx's own shape at the same settings. The board steps its cycle in whole
-// milliseconds and wraps at a thousand, which the page does not reproduce: an effect slow
+// milliseconds and wraps at a thousand, which the page does not reproduce. An effect slow
 // enough that a frame adds nothing stands still there and drifts on here.
 
 var TAU = Math.PI * 2;
@@ -206,7 +205,7 @@ function flashing(at, s) {
 // The phases a crossing steps through, and how long each lasts. A real crossing is long
 // enough that a page showing it truthfully would look broken, so the whole sequence is
 // shown in SEQUENCE seconds with its phases kept in proportion. Only the drawing is
-// hurried; the entry keeps the intervals the sliders set
+// hurried, and the entry keeps the intervals the sliders set
 var SEQUENCE = 8;
 var FLASHING_CYCLE = 0.25;   // the amber and the figure, which flash at their real rate
 
@@ -267,10 +266,10 @@ var COLOURED = {
 };
 
 // ---- the curve a channel follows --------------------------------------------------------
-// fade crosses at a steady rate and ease settles in as a bulb does, both of them the
+// fade= crosses at a steady rate and ease= settles in as a bulb does, both of them the
 // seconds a change takes to arrive. What they leave behind is the trail under anything
-// travelling a run. A split fade or ease, rise|fall, goes up at its rise and comes down at its
-// fall, and one number is both
+// travelling a run. A split fade or ease, written rise|fall, goes up at its rise and comes
+// down at its fall, and a single number sets both
 
 function curved(sim, given, channel) {
   function parts(value) {
@@ -300,7 +299,7 @@ function curved(sim, given, channel) {
 var previewingStrip = false;
 
 // The target a look writes for, built from what the lamp knows. Colour is always asked
-// for, so an entry naming one says what to draw the lamp in; a caller showing mono lamps
+// for, so an entry naming one says what to draw the lamp in, and a caller showing mono lamps
 // draws it its own way. The preview plays a stretch as that many lamps of its own
 function lampTarget(count) {
   var playing = [];

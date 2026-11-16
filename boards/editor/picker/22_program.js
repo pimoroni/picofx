@@ -1,20 +1,21 @@
 
 // ---- the effects page, or a program page ------------------------------------------------------
 // Only program= and args= reach a program, which takes the whole board, so the page is one of
-// two: the effects, as it opens, or a program run in their place. The program page replaces the
-// effects view whole, scenes and all, since none of it plays while a program runs. Saving and
-// the drive are on the save button's menu.
+// two. It shows the effects, as it opens, or a program run in their place. The program page
+// replaces the effects view whole, scenes and all, since none of it plays while a program runs.
+// The settings for saving and the drive are on the save button's menu.
 //
-// The programs offered are those on the drive that name a section, and those at its top level,
-// which the page learns only once the drive is open, less any going online where the drive holds
-// no WiFi credentials. Each has a small thumbnail at a screen's shape: its picture where one sits
-// beside it, drawn here where there is not.
+// The programs offered are the user's own, at the drive's top level or in its programs folder,
+// and the examples that name a section. The page learns them only once the drive is open, and
+// leaves out any going online where the drive holds no WiFi credentials. Each has a small
+// thumbnail at a screen's shape, which is the picture beside it or else one drawn here.
 
-// The programs at the top of the drive that name no section, the group they make
+// The name of the group for the user's own programs that name no section
 var OWN_GROUP = "On the drive";
 
-// The offered programs by group, as [name, paths]: the drive's own, always, then sections.txt's
-// sections in its order, then any other a program names, each group's programs by title
+// The offered programs by group, as [name, paths]. The drive's own group comes first and is
+// always kept, then sections.txt's sections in its order, then any other a program names. Each
+// group's programs are sorted by title
 function offeredGroups() {
   var runnable = PROGRAMS.filter(function (one) {
     return driveHasCredentials || one.uses.indexOf("wifi") < 0;
@@ -37,8 +38,8 @@ function offeredGroups() {
   }).filter(function (group, at) { return !at || group[1].length; });
 }
 
-// What a group's heading says after its name, as the looks' groups do, a section's from
-// sections.txt
+// What a group's heading says after its name, as the looks' groups do. A section takes its words
+// from sections.txt, and the drive's own group has words of its own
 function groupSays(title) {
   if (title === OWN_GROUP) return "your own programs";
   var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
@@ -48,14 +49,14 @@ function groupSays(title) {
 // Whether each of the program tab's groups is folded, by name, for those folded or opened
 var programsFolded = {};
 
-// Whether a group is folded, a section sections.txt marks folded starting so and every other open
+// Whether a group is folded. Each starts open unless sections.txt marks its section folded
 function programGroupFolded(title) {
   if (title in programsFolded) return programsFolded[title];
   var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
   return !!(listed && listed[2]);
 }
 
-// A group's heading, pressed to fold or open it, its name and what the group holds beside it
+// A group's heading, pressed to fold or open it. It shows the group's name and what it holds
 function foldHead(title, says, open, toggle) {
   var head = document.createElement("button");
   head.type = "button";
@@ -83,9 +84,9 @@ function holes(points, radius) {
   }).join("");
 }
 
-// What a program can use beyond the board, each with its name, the shorter one its chip in the
-// filter takes, and a drawing on a 24 grid, in the order they are shown. A part classed "f" is
-// filled, "fs" filled and outlined, and the rest outlined, so each reads as a silhouette at 18px
+// What a program can use, in the order they are shown. Each has its key, its name, the shorter
+// name its chip in the filter takes, and a drawing on a 24 grid. A part classed "f" is filled,
+// "fs" filled and outlined, and the rest outlined, so each reads as a silhouette at 18px
 var FEATURES = [
   ["outputs", "the outputs", "outputs",
    "<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' r='3'/>" +
@@ -94,8 +95,8 @@ var FEATURES = [
   ["rgb", "the RGB output", "RGB",
    "<circle class='f' cx='12' cy='8' r='5'/><circle cx='8' cy='15' r='5' stroke-width='2'/>" +
    "<circle cx='16' cy='15' r='5' stroke-width='2'/>"],
-  // One panel filled, two apart for a pair, the second outlined where it is optional, six for a hub
   ["screen", "a screen", "screen", "<rect class='f' x='3' y='5' width='18' height='14' rx='2'/>"],
+  // Two panels apart, the second outlined as it is optional
   ["either", "one screen or two", "1 or 2 screens",
    "<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
    "<rect x='15' y='7' width='7.5' height='10' rx='1.2' stroke-width='2'/>"],
@@ -110,7 +111,7 @@ var FEATURES = [
    "<rect class='f' x='8.85' y='13' width='6.3' height='7' rx='1.2'/>" +
    "<rect class='f' x='16.7' y='13' width='6.3' height='7' rx='1.2'/>"],
   // The strip folded back on itself, along the top, back along the middle and out along the foot,
-  // as the effects page draws a strip, its LEDs cut out of it
+  // as the effects page draws a strip. Its LEDs are holes cut out of it
   ["strip", "an LED strip", "strip",
    "<path class='f' fill-rule='evenodd' d='M1 2.5H17.5A6 6 0 0 1 17.5 14.5H6.5A1 1 0 0 0 6.5 " +
    "16.5H23V21.5H6.5A6 6 0 0 1 6.5 9.5H17.5A1 1 0 0 0 17.5 7.5H1Z" +
@@ -353,8 +354,8 @@ function paintThumb(g, kind, seed, canvas, uses) {
     g.fillStyle = ink;
     for (i = 0; i < count; i++) g.fillRect(3 + i * (size + gap), top, size, size);
   }
-  // A pair's two pictures side by side, each whole in its half, as the two panels stand
   if (kind.indexOf("pair:") === 0) {
+    // A pair's two pictures side by side, each whole in its half, as the two panels stand
     fill("#111");
     PICTURES[kind.slice("pair:".length)].forEach(function (src, side) {
       var panel = thumbImages[src];
@@ -374,8 +375,8 @@ function paintThumb(g, kind, seed, canvas, uses) {
     });
     return;
   }
-  // A program's picture, read from beside it on the drive
   if (kind.indexOf("shot:") === 0) {
+    // A program's picture, read from beside it on the drive
     fill("#111");
     var src = PICTURES[kind.slice("shot:".length)][0];
     var image = thumbImages[src];
@@ -433,8 +434,8 @@ function paintThumb(g, kind, seed, canvas, uses) {
     });
     return;
   }
-  // A servo, sweeping, in a pair or driving a wheel
   if (/^servo(:|$)/.test(kind)) {
+    // A servo, sweeping, in a pair or driving a wheel
     fill("#16181b");
     if (kind === "servo:pair") {
       // Two sweeping, the second mirrored so its horn and sweep run the other way
@@ -466,8 +467,8 @@ function paintThumb(g, kind, seed, canvas, uses) {
     }
     return;
   }
-  // A gearmotor driving a wheel, or under notes for one that plays
   if (/^motor(:|$)/.test(kind)) {
+    // A gearmotor driving a wheel, or under notes for one that plays
     fill("#16181b");
     if (kind === "motor:song") {
       drawMotor(g, 72);
@@ -493,7 +494,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
   }
   switch (kind) {
   case "shot":
-    // A captured frame not yet read from the drive, as the ground it is drawn on
+    // A captured frame not yet read from the drive, shown as the dark background it is drawn on
     fill("#111");
     break;
   case "stars":
@@ -519,9 +520,10 @@ function paintThumb(g, kind, seed, canvas, uses) {
   }
 }
 
+// A program's thumbnail, as its picture where it has one, else what its Thumbnail line draws. A
+// program with neither has a plain tile, dark for an example whose picture is still to be
+// captured, or a prompt for the drive's own
 function programThumb(path) {
-  // A picture where it has one, else what its Thumbnail line draws, else a plain tile: dark for an
-  // example, whose picture is still to be captured, and a prompt for the drive's own
   var program = programNamed(path) || {};
   var shown = PICTURES[path] || [];
   var kind = shown.length > 1 ? "pair:" + path : shown.length ? "shot:" + path
@@ -537,8 +539,8 @@ var programView = null;
 // with none chosen, and the file says program= only once one is
 var onProgramPage = false;
 
-// A tile's copy, in the bin's place on an example, which has none, or beside the bin on the user's
-// own. An example is customised and one of the user's own duplicated, into the folder named
+// A card's copy tile, in the bin's place on an example, which has none, or beside the bin on the
+// user's own. An example is customised and one of the user's own duplicated, into the folder named
 function copyTile(example, file, folder, copy) {
   var tile = document.createElement("span");
   tile.className = "bin copytile" + (example ? " alone" : "");
@@ -593,7 +595,7 @@ function programCard(path) {
     }
     draw();
   }));
-  // The user's own can be deleted from the drive, as the effects' pictures and sounds can
+  // Check if the program is the user's own, which can be deleted as the effects' media can
   if (!example) {
     var bin = document.createElement("span");
     bin.className = "bin";
@@ -623,7 +625,8 @@ function sizeShown(path) {
   return (size && size.default) || "2.8";
 }
 
-// One captured frame on a module at the program's screen size, turned as the program turns it
+// One captured frame on a module at the program's screen size, turned as the program turns it.
+// A frame taller than wide was taken from a panel upright
 function framedPanel(path, url) {
   var image = thumbImages[url];
   var upright = image && image.height > image.width;
@@ -632,17 +635,17 @@ function framedPanel(path, url) {
                              pixelated: true}});
 }
 
-// The picked program's picture: a screen program's captured frame on the panel it would play on,
-// as the Screens tab draws one, turned as the program turns it, and anything else its thumbnail
-// large. A frame taller than wide was taken from a panel upright
+// The picked program's picture. A screen program shows its captured frame on the panel it
+// would play on, as the Screens tab draws one, turned as the program turns it. Any other
+// program shows its thumbnail large
 function programPicture(path) {
   var shown = PICTURES[path] || [];
   var onScreen = usesOf(path).some(function (key) {
     return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
   });
   if (onScreen && shown.length) {
-    // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
     if (shown.length < 2) return framedPanel(path, shown[0]);
+    // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
     var both = document.createElement("div");
     both.className = "twopanels";
     both.appendChild(framedPanel(path, shown[0]));
@@ -654,8 +657,8 @@ function programPicture(path) {
   return big;
 }
 
-// The picture before a program is chosen: an empty panel upright, so its words read across, or on
-// a board without screens its lamps unlit
+// The picture before a program is chosen, as an empty panel upright so its words read across, or
+// on a board without screens its lamps unlit
 function emptyPicture() {
   if (SCREEN_PORTS.length) return panelPreview({size: "2.8", turn: 0});
   var big = thumbCanvas("outputs:off", 1);
@@ -738,7 +741,7 @@ function renderProgramView() {
   programView.textContent = "";
   if (!onProgramPage) return;
   programView.appendChild(programHero(boardSet.program));
-  // The programs are the drive's, so none is listed until it is open
+  // Check if the drive is not open. The programs are the drive's, so none is listed until it is
   if (!drive.dirHandle) {
     var closed = document.createElement("p");
     closed.className = "prognone";
@@ -748,8 +751,8 @@ function renderProgramView() {
     programView.appendChild(closed);
     return;
   }
-  // Each Python file is read off the drive in turn, which takes a while, so the count is shown
-  // once the files are counted
+  // Check if the drive's Python files are still being read. Each is read in turn, which takes a
+  // while, so the count is shown once the files are counted
   if (programsReading || !programsKnown) {
     var reading = document.createElement("p");
     reading.className = "prognone";
@@ -802,9 +805,8 @@ var programViewSteps = [];
 // ---- choosing by what is to hand ----------------------------------------------------------------
 // A chip for each thing an offered program can use, all on to begin with. A chip turned off is
 // something not to hand, so every program needing it goes, and a program stays only while all it
-// uses is on. One screen or two is had with either a screen or two, so it has no chip of its own,
-// and every board has its outputs and its Boot button, and an RGB output where it has one, so
-// none of those has one
+// uses is on. One screen or two is had with either a screen or two, so it has no chip of its own.
+// Every board has its outputs and its Boot button, and any RGB output, so none of those has one
 
 var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
@@ -858,8 +860,8 @@ function featureFilter() {
     };
     row.appendChild(chip);
   });
-  // Every chip on, or every chip off for ticking what is to hand, the two kept together where the
-  // row wraps
+  // Buttons to turn every chip on, or every chip off for ticking what is to hand. They are kept
+  // together in one box where the row wraps
   var clears = document.createElement("div");
   clears.className = "featureclears";
   row.appendChild(clears);
@@ -882,7 +884,7 @@ function featureFilter() {
 // ---- moving between the two pages ---------------------------------------------------------------
 // Two tabs split under the header, the effects tab holding the way into scenes until there are some
 
-// Back to the effects, the file running them again
+// Go back to the effects, so the file runs them again
 function toEffects() {
   onProgramPage = false;
   boardSet.program = null;
@@ -895,8 +897,8 @@ function toProgram() {
   draw();
 }
 
-// The effects summed up small: a live swatch of the outputs, as their own tab's is, painted every
-// frame from what the lamps play, so it never stops on whichever frame a redraw caught
+// The effects summed up small in a live swatch of the outputs, as their own tab has. It is painted
+// every frame from what the lamps play, so it never stops on whichever frame a redraw caught
 function effectsFace() {
   var face = document.createElement("span");
   face.className = "effectsface";
@@ -913,8 +915,8 @@ function renderPageSwitch() {
   var program = boardSet.program;
   // Split under the header, the tabs are drawn as the tabs off its foot are
   inHeader.className = "headswitch headsplit headtabs";
-  // Two tabs, what runs picked, each showing what it would run, small in the header where the
-  // page's name is, taking no room from the page
+  // Two tabs, each showing what it would run, with the page shown marked. They sit small in the
+  // header where the page's name is, taking no room from the page
   [["effects", "Effects"],
    ["program", "Programs", program ? programTitle(program) : ""]].forEach(function (one) {
     // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
@@ -995,11 +997,12 @@ function loadThumbs(sources) {
   });
 }
 
+// The width of the page's column in rem. It must match the stylesheet's
+var COLUMN_REM = 57.2;
+
 // Split under the header, the tabs stand over the page's column. Where the window is wide
 // enough for the name to fit left of that column and the rest right of it, all three share one
 // line, measured, since what fits depends on the name and on which buttons show
-var COLUMN_REM = 57.2;
-
 function headerOnOneLine() {
   var header = document.querySelector("header");
   header.classList.remove("oneline");
@@ -1034,7 +1037,7 @@ function headerOnOneLine() {
 window.addEventListener("resize", headerOnOneLine);
 
 // Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
-// kept above the gallery for it. Once there are scenes their cards take that place, as they did
+// kept above the gallery for it. Once there are scenes their cards take that place
 function scenesInTheTab() {
   var into = !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");

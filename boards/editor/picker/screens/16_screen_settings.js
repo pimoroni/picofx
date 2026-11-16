@@ -1,15 +1,15 @@
 
 // ---- every setting a screen takes -------------------------------------------------------------
-// A screen takes more than its picture and turn: how brightly it is lit, where
-// a picture is put and what fills round it, and how a moving picture is paced and looped. All of
+// A screen takes more than its picture and turn. It also takes how brightly it is lit, where a
+// picture is put and what fills round it, and how a moving picture is paced and looped. All of
 // them go with what a screen shows in a scene, as the turn does, so each screen and each hub
 // position keeps a look beside its picture and each scene keeps its own.
 //
-// Under the module is what it shows, then four sections that fold: orientation, placement,
-// background, and playback last, being there only for a moving picture, so the three above it
-// never move. Labels are the settings' own names, a choice a row of buttons drawn as what it
-// does, and anything on or off a toggle. The module drawings show every setting as the board
-// would draw it.
+// Under the module is what it shows, then four sections that fold. They are orientation,
+// placement, background, and last playback or a drawing's own section, which is there only for a
+// moving picture or a drawing, so the three above it never move. Labels are the settings' own
+// names, a choice a row of buttons drawn as what it does, and anything on or off a toggle. The
+// module drawings show every setting as the board would draw it.
 //
 // The backlight is the screen's, a row across the top of its box. The hub's positions share one
 // backlight, so the hub has one for all six, in each scene.
@@ -17,8 +17,8 @@
 // anchor is which of nine places the picture sits at, left to right and top to bottom, the
 // middle being centred, and null where x and y are typed. tile is across and tileDown down, each
 // "off", "repeat" or "mirror". customBg is the last custom background, kept while a swatch is
-// chosen so custom comes back to it. canvas is a drawing's: "whole", "half" or "set", its size
-// then canvasW by canvasH
+// chosen so custom comes back to it. canvas is a drawing's, one of "whole", "half" or "set", and
+// its size is then canvasW by canvasH
 var LOOK_START = {backlight: 1, mirror: false, anchor: 4, x: "", y: "", bg: "#000000",
                   customBg: "", double: false, tile: "off", tileDown: "off", pace: "saved",
                   every: 5, loop: true, whole: false, holdBack: "", canvas: "whole",
@@ -33,7 +33,7 @@ var BG_NAMES = {};
 Object.keys(WORDS).forEach(function (name) { BG_NAMES["#" + hexOf(WORDS[name])] = name; });
 
 // ---- where a picture sits ---------------------------------------------------------------------
-// The nine places are worked out from the picture's size against the panel's, turned and doubled
+// The nine places are calculated from the picture's size against the panel's, turned and doubled
 // as it is drawn, and written as the pixels the file takes. A picture of another size put in the
 // same file later sits where those pixels say, not at the edge chosen
 
@@ -45,7 +45,7 @@ function panelPixels(size, turn) {
   return Number(turn || 0) % 180 === 90 ? [panel[1], panel[0]] : [panel[0], panel[1]];
 }
 
-// A drawing's canvas in pixels: the screen's as it is turned, half that, or a size set by hand
+// A drawing's canvas in pixels, the screen's as it is turned, half that, or a size set by hand
 function canvasPixels(look, size, turn) {
   var panel = panelPixels(size, turn);
   if (look.canvas === "set") return [Number(look.canvasW), Number(look.canvasH)];
@@ -86,10 +86,10 @@ function pictureOffset(look, shows, size, turn) {
 // and Section:, the gallery section an example drawing is listed in. The first sentence of the
 // rest describes it. A Python file without a Drawing: line is not listed, whether drawing or
 // program. The page cannot run one, so a drawing is shown by its icon on its colour, or its
-// initial where it names no icon, the colour where it names none coming from its name
+// initial where it names no icon. A drawing that names no colour takes one from its name
 
-// A number from a name, the same each time, past the first draws which barely move between
-// names of one length
+// A hue from a name, the same each time. The hash is mixed again after its first pass, which
+// barely moves between names of one length
 function nameHue(name) {
   var hash = 2166136261;
   for (var at = 0; at < name.length; at++) {
@@ -136,7 +136,7 @@ function drawingSaid(docstring) {
   return said;
 }
 
-// A drawing's colour as a CSS colour: a word the board knows, a hex, or one from its name
+// A drawing's colour as a CSS colour, from a word the board knows, a hex, or its name
 function drawingInk(drawing, name) {
   var word = WORDS[drawing.colour.toLowerCase()];
   if (word) return rgbInk(word);
@@ -146,8 +146,8 @@ function drawingInk(drawing, name) {
 
 var drawingArts = {};
 
-// A drawing's face at a canvas's size, for where a picture's pixels are drawn: its colour filling
-// the canvas and its icon or initial in the middle, the canvas the size the drawing draws at
+// A drawing at a canvas's size, for where a picture's pixels are drawn. Its thumbnail covers the
+// canvas, or where it has none its colour fills the canvas with its icon or initial in the middle
 function drawingArt(name, wide, high, style) {
   // Kept by the thumbnail it is made from, so a style's found on a later read of the drive
   // replaces the drawing's that stood in for it. One still loading is stood in for, and not kept
@@ -190,8 +190,8 @@ function drawingArt(name, wide, high, style) {
   return face;
 }
 
-// Its face as a square, for the tab's swatch. Made afresh each time the drive is read, since the
-// opening string it comes from may have changed
+// Make a drawing's face as a square, for the gallery and the tab's swatch. It is made afresh each
+// time the drive is read, since the opening string it comes from may have changed
 function madeDrawing(name) {
   Object.keys(drawingArts).forEach(function (key) {
     if (key.indexOf(name + "|") === 0) delete drawingArts[key];
@@ -204,7 +204,7 @@ function madeDrawing(name) {
 
 var loadedArt = {};
 
-// A picture's pixels, loaded once. Until it arrives the drawing waits a frame
+// A picture's pixels, loaded once. Until they arrive this is null, and the page draws again then
 function artImage(art) {
   if (loadedArt[art.url]) return loadedArt[art.url].complete ? loadedArt[art.url] : null;
   var image = new Image();
@@ -216,7 +216,7 @@ function artImage(art) {
 
 var composed = {};
 
-// The panel as the board would draw it: the background, then the picture where the look puts
+// The panel as the board would draw it, with the background, then the picture where the look puts
 // it, doubled, flipped or tiled, under the light's dimming. Sized to the panel as it is turned,
 // so the module drawing shows it whole
 function composedArt(screen, look, art) {
@@ -259,8 +259,8 @@ function composeOnto(g, screen, look, art, image, wide, high) {
     g.restore();
   }
 
-  // Copies laid out from where the first sits, along each side that tiles, every other one
-  // turned round on a side that mirrors
+  // Lay copies out from where the first sits along each side that tiles, and turn every other one
+  // round on a side that mirrors
   var tileDown = look.tileDown || "off";
   var firstX = look.tile === "off" ? left : left - Math.ceil(left / pictureW) * pictureW;
   var firstY = tileDown === "off" ? top : top - Math.ceil(top / pictureH) * pictureH;
@@ -285,7 +285,7 @@ function composeOnto(g, screen, look, art, image, wide, high) {
 // A canvas given a gif always draws its first frame, so a composed picture of one is a still. Where
 // the browser can decode a gif itself (ImageDecoder, in Chrome and Edge), the preview is a canvas
 // stepping through the gif's frames at its own timings, each composed as the board draws it.
-// Elsewhere the still stays
+// Any other browser keeps showing the still
 
 // Each gif's decoder, shared by every preview showing it, and the frames it has already given
 var gifDecoders = {};
@@ -344,7 +344,7 @@ function nextGifFrame(playing, gif) {
 // What each file last showed on a screen, composed with its look, by name
 var shownBefore = {};
 
-// A screen module drawn with its picture composed with its look, a gif playing in it
+// A screen module drawn showing its picture composed with its look, and a gif playing in it
 function panelPreview(screen) {
   var style = screen.look ? screen.look.style : "";
   var art = screen.look && screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows, style)
@@ -392,7 +392,7 @@ bodyParts.push({
 
 // ---- what the file says -----------------------------------------------------------------------
 
-// The settings before the colon: how the screen is turned and lit, and how its picture is placed
+// The settings before the colon, for how the screen is turned and lit and its picture is placed
 function placingTokens(turn, look, light, where) {
   var tokens = [];
   if (Number(turn)) tokens.push("rotation=" + turn);
@@ -410,14 +410,14 @@ function placingTokens(turn, look, light, where) {
   return tokens;
 }
 
-// What playback allows, as the players do: a hold needs somewhere to turn around, which a loop
-// or ping pong gives; two holds need both, one for each end; and first as last needs an end to
-// play the first frame at, which a forward loop does not have
+// What playback allows, as the players do. A hold needs somewhere to turn around, which a loop
+// or ping pong gives. Two holds need both, one for each end. First as last needs an end to play
+// the first frame at, which a forward loop does not have
 function holdAllowed(playing, look) { return look.loop || playing.pingpong; }
 function secondHoldAllowed(playing, look) { return look.loop && playing.pingpong; }
 function firstAsLastAllowed(playing, look) { return playing.pingpong || !look.loop; }
 
-// The settings after the file: how a moving picture is paced, looped and held, leaving out
+// The settings after the file, for how a moving picture is paced, looped and held, leaving out
 // whatever playback would refuse
 function playingTokens(playing, look, kind, size) {
   if (kind === "image") return [];
@@ -457,7 +457,7 @@ function lookEntry(selector, playing, look, light, size) {
 
 // ---- the settings, drawn ----------------------------------------------------------------------
 // Each section folds, saying its values beside its name while closed. Orientation and playback
-// start open, placement and background folded, a picture made for its screen needing neither
+// start open, placement and background folded, since a picture made for its screen needs neither
 
 var foldOpen = {};
 var FOLDS_START_OPEN = {Orientation: true, Placement: false, Background: false, Playback: true,
@@ -643,7 +643,7 @@ function placementFold(key, held, size) {
   y.title = "Pixels from the top. Leave empty to centre";
   x.className = y.className = "sxy";
   // Tiling is set for each side, so a picture can be spread across and left alone down. Both
-  // sides share one line, each named by its arrow, the choices in words
+  // sides share one line, each named by its arrow, and the choices are in words
   function tiling(down) {
     var side = down ? "tileDown" : "tile";
     var seg = segment([["off", "Off"], ["repeat", "Repeat"], ["mirror", "Mirror"]],
@@ -657,7 +657,7 @@ function placementFold(key, held, size) {
   var double = toggle(DOUBLE_GLYPH, "Pixel double", look.double,
                       function (on) { look.double = on; },
                       "Draw each pixel at double size");
-  // Where it sits, then how it fills: a line each, or two halves where the section is wide
+  // Where it sits, then how it fills, in a line each or two halves where the section is wide
   var body = document.createElement("div");
   body.className = "ssplit";
   body.appendChild(sline(anchor, named("x"), x, named("y"), y, double));
@@ -694,10 +694,10 @@ function groundSaid(bg) {
   return parts.value < 1 ? name + " at " + Math.round(parts.value * 100) + "%" : name;
 }
 
-// The colour round a picture, chosen from the looks' swatches in one row across the section,
-// black first since every screen starts there, the custom ring last with the chosen colour in
-// its middle. Then a brightness of its own, apart from the backlight. A typed hex is taken as
-// written, its brightness read from it
+// The colour round a picture, chosen from the looks' swatches in one row across the section.
+// Black is first, since every screen starts there, and the custom ring is last with the chosen
+// colour in its middle. Then comes a brightness of its own, apart from the backlight. A typed hex
+// is taken as written, and its brightness is read from it
 function backgroundFold(key, held) {
   var look = held.look;
   var body = document.createElement("div");
@@ -732,7 +732,7 @@ function backgroundFold(key, held) {
   custom.type = "button";
   custom.className = "custom" + (open ? " on" : "");
   // A colour that is no swatch's is the custom one, and the ring keeps showing it while a
-  // swatch is chosen, custom coming back to it
+  // swatch is chosen, so custom comes back to it
   if (open) look.customBg = look.bg;
   if (look.customBg) custom.style.setProperty("--picked", look.customBg);
   custom.title = "custom: pick a colour or type a hex code";
@@ -836,8 +836,8 @@ function backgroundFold(key, held) {
 
 // ---- playback ----
 
-// The folded line is kept short, so a hold still fits it, the units written in full on the
-// controls themselves
+// The folded line is kept short, so a hold still fits it, and the units are written in full on
+// the controls themselves
 function playbackSaid(held, look) {
   var said = [look.pace === "fps" ? look.every + " fps"
             : look.pace === "interval" ? "frame every " + look.every + " s"
@@ -852,7 +852,7 @@ function playbackSaid(held, look) {
   return said.join(", ");
 }
 
-// The speed's line, kept to one line: its choices, the figure, and what the figure counts
+// The speed's line, kept to one line, with its choices, the figure and what the figure counts
 function speedLine(speed, every, look) {
   var line = sline(named("Speed"), speed, every,
                    every ? unit(look.pace === "fps" ? "frames per second" : "seconds per frame")
@@ -861,8 +861,8 @@ function speedLine(speed, every, look) {
   return line;
 }
 
-// A drawing's own section, in playback's place: how often it draws, and its canvas, the whole
-// screen, half of it, or a size set by hand, placed as a small picture is
+// A drawing's own section, in playback's place. It sets how often the drawing draws and its
+// canvas, which is the whole screen, half of it, or a size set by hand placed as a small picture is
 function drawingFold(key, held) {
   var look = held.look;
   var speed = segment([["fps", "fps"], ["interval", "interval"], ["saved", "every frame"]],
@@ -885,7 +885,7 @@ function drawingFold(key, held) {
     "Half the screen's width and height, using a quarter " +
     "of the memory. With Pixel double it fills the screen";
   canvas.querySelector("[data-value=set]").title = "A custom size in pixels, positioned like a small picture";
-  // The speed, then the canvas: stacked, or two halves where the section is wide
+  // The speed, then the canvas, stacked or in two halves where the section is wide
   var body = document.createElement("div");
   body.className = "ssplit";
   body.appendChild(speedLine(speed, every, look));
@@ -1067,7 +1067,7 @@ function playbackFold(key, held, media) {
     // Nothing, zero or less is no pace, so the figure there stays
     if (Number(value) > 0) look.every = Number(value);
   }, look.pace === "interval" ? 0.05 : 1);
-  // The pace, then how it loops and holds: stacked, or two halves where the section is wide
+  // The pace, then how it loops and holds, stacked or in two halves where the section is wide
   var body = document.createElement("div");
   body.className = "ssplit";
   body.appendChild(speedLine(speed, every, look));
@@ -1107,8 +1107,7 @@ function playbackFold(key, held, media) {
 
 // ---- what is showing, and every section under it ----
 
-// A picture's name as a person reads it, a slideshow being a folder named as a path from the
-// drive's top
+// A picture's name as a person reads it, or a drawing's title
 function pictureSaid(name) {
   var media = mediaNamed(name);
   if (media && media.kind === "drawing") return media.drawing.title;
@@ -1196,8 +1195,8 @@ function lightRow(value, change, words, title) {
   return row;
 }
 
-// The chip goes beside what is the board's and not before a box's name: a screen's panel size in
-// its band, and on the hub which way it is wired, in its band, and each position's panel size
+// Put the board's chip beside what is the board's, not before a box's name. That is a screen's
+// panel size in its band, the way the hub is wired in its band, and each position's panel size
 function renderScreensTab() {
   renderScreensParts();
   if (state.hub.on) {
@@ -1245,10 +1244,10 @@ function chosenAfresh(held) {
 }
 
 // ---- the pictures, whole ------------------------------------------------------------------------
-// Each picture is drawn whole in its tile, never cropped: the tiles keep the row's fixed width,
-// and a picture wider than its tile is scaled down to that width, the tile as tall as its shape
-// needs; a narrower one is drawn at its true size, never scaled up, in a square tile at least,
-// so a small picture looks as small as it is. The rows line up at the bottom, keeping the pick
+// Each picture is drawn whole in its tile, never cropped. The tiles keep the row's fixed width,
+// and a picture wider than its tile is scaled down to that width in a tile as tall as its shape
+// needs. A narrower one is drawn at its true size, never scaled up, in a square tile at least, so
+// a small picture looks as small as it is. The rows line up at the bottom, which keeps the pick
 // rows in line. The name, a still's type and the size show over the picture on hover
 assetSteps.push(function () {
   document.getElementById("assets").classList.add("wholeassets");
@@ -1257,12 +1256,11 @@ assetSteps.push(function () {
     var art = media && mediaArt(media.name);
     var face = cell.querySelector(".face");
     var img = face && face.querySelector("img");
-    // A drawing's description is its tooltip, as a program's is, too long to show over its tile
+    // A drawing's description is its tooltip, as a program's is, since it is too long for its tile
     if (media && media.kind === "drawing" && media.drawing.description) {
       cell.title = media.drawing.description;
     }
-    // A drawing is its icon on its colour, or its initial, square, tagged as a drawing, its name
-    // on hover
+    // A drawing with no thumbnail shows its icon or initial on its colour, square, named on hover
     if (media && media.kind === "drawing" && !media.thumbHandle && face) {
       var drawing = media.drawing;
       face.className = "face drawingface";
@@ -1277,7 +1275,7 @@ assetSteps.push(function () {
     }
     if (!art || !art.w || !img) return;
     var wide = face.getBoundingClientRect().width;
-    // A drawing's thumbnail fills the tile, being a stand-in at no size of its own
+    // A drawing's thumbnail fills the tile, since it is a stand-in at no size of its own
     var small = art.w < wide && media.kind !== "drawing";
     var high = small ? Math.max(wide, art.h) : wide * art.h / art.w;
     face.classList.add("wholeface");
@@ -1291,8 +1289,8 @@ assetSteps.push(function () {
     // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
               : dot > 0 ? file.slice(0, dot) : file;
-    // A drawing shown by its thumbnail is named as its opening string says, the thumbnail's size
-    // not being the canvas it draws on
+    // A drawing shown by its thumbnail is named as its opening string says, since the thumbnail's
+    // size is not the canvas it draws on
     if (label && media.kind === "drawing") {
       label.innerHTML = "<b>" + media.drawing.title + "</b>";
     } else if (label) {
@@ -1319,8 +1317,8 @@ function styleChoices(drawing, style) {
   });
 }
 
-// The style word for these choices, in the lines' order, a line's first left out, so a drawing
-// drawn as it is unchosen writes no style
+// The style word for these choices, in the lines' order. A line's first choice is left out, so a
+// drawing drawn as it is unchosen writes no style
 function styleWord(drawing, choices) {
   return choices.filter(function (choice, at) { return choice !== drawing.styles[at][0]; }).join("-");
 }

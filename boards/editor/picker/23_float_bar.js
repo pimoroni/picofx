@@ -9,12 +9,12 @@ var FLOAT_MOVED = ["open", "save", "saveArrow", "check", "saveMenu"];
 
 var floatBar = null;
 
-// Whether the bar is showing, the header being out of view
+// Whether the bar is showing, as it is while the header is out of view
 var floatShown = false;
 
 var floatSaidTimer = null;
 
-// How long a plain note stays in the bar, a warning staying until the next
+// How long a plain note stays in the bar. A warning stays until the next
 var FLOAT_SAID_MS = 8000;
 
 (function () {

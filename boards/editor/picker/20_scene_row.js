@@ -6,8 +6,8 @@
 
 function renderSceneSettings() {
   renderSceneRow();
-  // Always on has no settings of its own, so its row says what it is for, the gallery staying
-  // where it was as the tabs are switched. Only once there are scenes for it to be under
+  // Check if Always on is shown with scenes for it to play under. It has no settings of its own,
+  // so its row says what it is for, which keeps the gallery where it was as the tabs are switched
   if (state.at < 0 && state.scenes.length) {
     var note = document.createElement("div");
     note.className = "sceneset alwaysnote";
