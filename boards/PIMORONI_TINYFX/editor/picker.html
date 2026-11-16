@@ -289,6 +289,9 @@ body.setupall .bar.carded .sec{pointer-events:none}
 body.setupall .bar.carded .cardlamp{pointer-events:auto}
 body.setupall .bar.carded .sec>:not(.cardlamps),
 body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
+/* Cutting is the scene's, so no place to cut is offered while the board is set up. A place takes
+   the pointer of its own, which the card's standing back does not take from it */
+body.setupall .bar.carded .sec .cut{display:none}
 .cardlamp.carried{opacity:.35}
 .cardlamp.landing{box-shadow:-3px 0 0 var(--accent)}
 .cardlamp.landing.after{box-shadow:3px 0 0 var(--accent)}
