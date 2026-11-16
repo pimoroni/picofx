@@ -50,9 +50,13 @@ then joins the parts into one script in number order, without the import and exp
 A part's top-level statements run in that order, so a statement may only use what a part before
 it has made.
 
+A variable is written only by the part that declares it. Other parts call that part's function
+to change it, such as `activate()`, `setLayout()` or `setPrograms()`.
+
 A part for every board never imports from a feature folder. It reaches a feature's code through
-a hook the feature fills in: `screenHooks` and `firmwareHooks` in `07_board.js`, and
-`discoverKinds` in `discover/28_discover.js` for each kind of example other than a program.
+a hook the feature fills in: `screenHooks` and `firmwareHooks` in `07_board.js`, `sceneHooks`
+in `04_scenes.js` for the sensor part, and `discoverKinds` in `discover/28_discover.js` for each
+kind of example other than a program.
 
 After moving code between parts, rewrite the imports and check them:
 

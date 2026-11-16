@@ -1,7 +1,7 @@
-import {draw, drawHeld} from "./00_draw.js";
+import {draw, holdDrawing} from "./00_draw.js";
 import {BOARD, canPlay, keyOf, lookNamed} from "./01_looks.js";
 import {targetFor} from "./03_lines.js";
-import {OUTPUTS, order, outputSaid, placeLamp, wiring} from "./03_outputs.js";
+import {OUTPUTS, order, outputSaid, placeLamp, setLayout, wiring} from "./03_outputs.js";
 import {
   acrossWiring, breakOutWiring, canEdit, copyBlinks, copyExact, mono, outs, pickOutput,
   rejoinWiring, runs, sectionAt, settle
@@ -135,11 +135,10 @@ function acrossScenes(change) {
     var before = {wiring: JSON.stringify(wiring), order: JSON.stringify(order)};
     // Each scene is changed with the page held still, since drawing would store what is
     // being changed into the scene being edited
-    drawHeld = true;
+    holdDrawing(true);
     try {
       [state.always].concat(state.scenes).forEach(function (slot) {
-        wiring = JSON.parse(before.wiring);
-        order = JSON.parse(before.order);
+        setLayout(JSON.parse(before.wiring), JSON.parse(before.order));
         apply(slot.body);
         change(out);
         runs.forEach(function (run) {
@@ -149,7 +148,7 @@ function acrossScenes(change) {
         slot.body = capture();
       });
     } finally {
-      drawHeld = false;
+      holdDrawing(false);
     }
     state.at = editing;
     apply(slotAt(editing).body);
@@ -174,7 +173,7 @@ var rejoinOne = changeWiring(rejoinWiring, true);
 
 export var resetWiringInScenes = acrossScenes(function () {
   breakingOutputs().forEach(rejoinOne);
-  acrossWiring(function () { order = plainOrder(); });
+  acrossWiring(function () { setLayout(wiring, plainOrder()); });
   [outs, mono].forEach(joinAlike);
 });
 
@@ -273,6 +272,11 @@ export var NOT_FITTED = "# Not fitted: ";
 
 // The names the file listed as not fitted, in lower case, or null where it had no such comment
 export var notFittedRead = null;
+
+// Set the names the file listed as not fitted
+export function setNotFittedRead(names) {
+  notFittedRead = names;
+}
 
 // The names of what the board fits by default and has been taken off, as a step from each part
 export var notFittedSteps = [];

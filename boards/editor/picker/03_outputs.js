@@ -31,6 +31,11 @@ export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 // others without the page being drawn again
 export var kinOf = {};
 
+// Empty the lamps by output, which a draw finds afresh
+export function clearKin() {
+  kinOf = {};
+}
+
 // A colour output is one lamp or three, and nothing between, as the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
 // one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
@@ -41,6 +46,12 @@ for (var n = 0; n < OUTS; n++) wiring.push({broken: OUTPUTS[n].mono});
 // is a lamp and not an output that is placed, since an output's three channels reach three
 // separate LEDs through the adapter, and those can be anywhere in a build
 export var order = [];
+
+// Set the wiring and where each lamp sits, which change together
+export function setLayout(wired, ordered) {
+  wiring = wired;
+  order = ordered;
+}
 
 // An output's places in the wiring order, which are a mono output's one light, a colour output
 // whole, or a colour output broken out as its three channels

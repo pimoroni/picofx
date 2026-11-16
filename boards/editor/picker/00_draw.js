@@ -1,6 +1,6 @@
-import {litRun, painters} from "./02_preview.js";
-import {kinOf} from "./03_outputs.js";
-import {active, cardFaces, mono, outs, renderGalleries, runs} from "./03_runs.js";
+import {clearPainters, litRun, painters} from "./02_preview.js";
+import {clearKin} from "./03_outputs.js";
+import {active, clearCardFaces, mono, outs, renderGalleries, runs} from "./03_runs.js";
 import {renderChosen, renderSides} from "./04_led_panels.js";
 import {renderPreview} from "./18_file_preview.js";
 import {renderBar} from "./31_stretch_bar.js";
@@ -13,7 +13,12 @@ import {paintCards} from "./33_gallery.js";
 export var drawSteps = {before: [], after: []};
 
 // Whether drawing waits, while the page is changed in a way a draw would store half done
-export var drawHeld = false;
+var drawHeld = false;
+
+// Hold drawing while the page is changed, or let it draw again
+export function holdDrawing(on) {
+  drawHeld = on;
+}
 
 export function draw() {
   if (drawHeld) return;
@@ -26,9 +31,9 @@ export function draw() {
   var focused = focusPlace();
   drawSteps.before.forEach(function (step) { step(); });
 
-  painters = [];
-  cardFaces = [];
-  kinOf = {};
+  clearPainters();
+  clearCardFaces();
+  clearKin();
   renderGalleries();
   renderBar("outBar", outs);
   renderBar("monoBar", mono);

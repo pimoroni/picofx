@@ -2,7 +2,7 @@ import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {WORDS, detented, hexOf} from "./01_colours.js";
 import {BOARD, SIGNAL_TIMINGS, lookNamed, timingOf, withSection} from "./01_looks.js";
 import {directionToggle} from "./02_preview.js";
-import {boardResidue, keptNow} from "./03_kept.js";
+import {filterKept, filterResidue} from "./03_kept.js";
 import {
   brightnessSlider, forwardTargetFor, runsAWay, startColour, takesColour, targetFor, wherePlays
 } from "./03_lines.js";
@@ -197,7 +197,7 @@ export var ZOOMS_OVER = 12;
 
 // The strips are runs of the page below from here on. Each scene keeps its own cutting of
 // them in its body, which captures every run
-runs = runs.concat(STRIPS.map(stripRun));
+runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
 // ---- drawing the page -------------------------------------------------------------------
@@ -579,7 +579,7 @@ function forgetKeptFor(run) {
     var lamps = parts && lampsNamed(run, parts.selector);
     return !(lamps && lamps.length);
   }
-  keptNow = keptNow.filter(elsewhere);
+  filterKept(elsewhere);
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  boardResidue = boardResidue.filter(function (token) { return stripOfToken(token) !== run.name; });
+  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
 }

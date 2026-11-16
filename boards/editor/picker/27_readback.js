@@ -2,9 +2,11 @@ import {draw, drawSteps} from "./00_draw.js";
 import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {BLINK} from "./02_blink.js";
-import {boardResidue, copyKept, keptLights, keptNow} from "./03_kept.js";
+import {
+  boardResidue, clearResidue, copyKept, filterResidue, keptLights, keptNow, setKept
+} from "./03_kept.js";
 import {sectionLines, targetFor} from "./03_lines.js";
-import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, wiring} from "./03_outputs.js";
+import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, setLayout, wiring} from "./03_outputs.js";
 import {
   argsRead, boardTokens, entryParts, itemsNamed, lampsNamed, placesNamed, spanOf, unquotedColon
 } from "./03_reading.js";
@@ -15,10 +17,12 @@ import {
 import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./05_strips.js";
 import {
   NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
-  stripDescribed
+  setNotFittedRead, stripDescribed
 } from "./07_board.js";
 import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
-import {argsWritten, boardSet, onProgramPage, programNamed} from "./19_board_settings.js";
+import {
+  argsWritten, boardSet, onProgramPage, programNamed, setProgramPage
+} from "./19_board_settings.js";
 import {figureKey, placeFor, settingIn} from "./25_figures.js";
 import {programsKnown} from "./26_drive_programs.js";
 
@@ -139,10 +143,10 @@ function readProgram(named, argued) {
   boardSet.args[path] = given;
   if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
     boardSet.program = path;
-    onProgramPage = true;
+    setProgramPage(true);
     return;
   }
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.args[path] = kept;
   boardResidue.push(named);
   if (argued) boardResidue.push(argued);
@@ -159,23 +163,23 @@ export function readWaitingProgram() {
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
   if (boardSet.program) return;
-  boardResidue = boardResidue.filter(function (token) {
+  filterResidue(function (token) {
     return token !== named && token !== argued;
   });
   var page = onProgramPage;
   readProgram(named, argued);
-  if (!boardSet.program) onProgramPage = page;
+  if (!boardSet.program) setProgramPage(page);
 }
 
 // Take a file into the page, with its board line, its scenes and every entry kept in its scene
 function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
-  notFittedRead = parsed.notFitted || null;
+  setNotFittedRead(parsed.notFitted || null);
 
   boardSet.reload = true;
   boardSet.driveHidden = false;
-  boardResidue = [];
+  clearResidue();
   var named = null, argued = null;
   parsed.tokens.forEach(function (token) {
     var lowered = token.toLowerCase();
@@ -248,10 +252,11 @@ function outputsBrokenOut(bodies) {
 
 // Set the wiring the file implies, with the outputs it names by channel broken out, in plain order
 function wireAsRead(broken) {
-  wiring = wiring.map(function (one, out) {
+  setLayout(wiring.map(function (one, out) {
     return {broken: OUTPUTS[out].mono || !!broken[out]};
-  });
-  order = plainOrder();
+  }), order);
+  // The plain order is of the wiring just set
+  setLayout(wiring, plainOrder());
 }
 
 // Every lamp in number order, an output broken out as its red, green and blue
@@ -521,16 +526,15 @@ function readLights(bodies) {
     apply(body);
     // The wiring the page said, else the one the lines imply, else number order
     if (said) {
-      wiring = wiring.map(function (one, out) {
+      setLayout(wiring.map(function (one, out) {
         return {broken: said.some(function (place) {
           return place.out === out && place.channel !== null;
         })};
-      });
-      order = said.map(function (place) { return {out: place.out, channel: place.channel}; });
+      }), said.map(function (place) { return {out: place.out, channel: place.channel}; }));
     } else {
       wireAsRead(broken);
       var implied = !Object.keys(broken).length && orderImplied(bodies);
-      if (implied) order = implied;
+      if (implied) setLayout(wiring, implied);
     }
     runs.forEach(function (run) { run.sections = []; });
     settle();
@@ -590,7 +594,7 @@ bodyParts.push({
     body.notes = JSON.parse(JSON.stringify(notesNow));
   },
   apply: function (body) {
-    keptNow = copyKept(body.kept);
+    setKept(copyKept(body.kept));
     notesNow = JSON.parse(JSON.stringify(body.notes || {}));
   },
   // A body with nothing in it keeps nothing either, whatever the scene on show kept

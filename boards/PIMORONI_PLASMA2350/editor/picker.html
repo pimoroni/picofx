@@ -2105,6 +2105,11 @@ var drawSteps = {before: [], after: []};
 // Whether drawing waits, while the page is changed in a way a draw would store half done
 var drawHeld = false;
 
+// Hold drawing while the page is changed, or let it draw again
+function holdDrawing(on) {
+  drawHeld = on;
+}
+
 function draw() {
   if (drawHeld) return;
   // A draw empties and refills much of the page, and reads its layout part way through, and a
@@ -2116,9 +2121,9 @@ function draw() {
   var focused = focusPlace();
   drawSteps.before.forEach(function (step) { step(); });
 
-  painters = [];
-  cardFaces = [];
-  kinOf = {};
+  clearPainters();
+  clearCardFaces();
+  clearKin();
   renderGalleries();
   renderBar("outBar", outs);
   renderBar("monoBar", mono);
@@ -3260,6 +3265,11 @@ function lookLit(look, holder, t, slot, count, sim) {
 var FRAME = 1 / 40;
 var beat = 0;
 
+// Set the beat the lights are painted at
+function setBeat(at) {
+  beat = at;
+}
+
 var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -3267,6 +3277,11 @@ var HOLDING_STILL = window.matchMedia &&
 
 var painters = [];
 var walks = {};
+
+// Empty the painters, which a draw makes afresh
+function clearPainters() {
+  painters = [];
+}
 
 // What each lamp of a run shows now. A strip's stretches are played in the strip's form
 function litRun(run) {
@@ -3416,8 +3431,28 @@ function directionToggle(run, section) {
 // The tokens on the board line that this page does not hold itself, kept as written
 var boardResidue = [];
 
+// Keep only the board line's tokens that keep says to
+function filterResidue(keep) {
+  boardResidue = boardResidue.filter(keep);
+}
+
+// Forget the board line's tokens, before a file is read
+function clearResidue() {
+  boardResidue = [];
+}
+
 // The kept entries of the scene on show, each its text and the comments written above it
 var keptNow = [];
+
+// Keep only the kept entries that keep says to
+function filterKept(keep) {
+  keptNow = keptNow.filter(keep);
+}
+
+// Set the scene on show's kept entries
+function setKept(list) {
+  keptNow = list;
+}
 
 function copyKept(kept) {
   return (kept || []).map(function (one) {
@@ -3908,6 +3943,11 @@ var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 // others without the page being drawn again
 var kinOf = {};
 
+// Empty the lamps by output, which a draw finds afresh
+function clearKin() {
+  kinOf = {};
+}
+
 // A colour output is one lamp or three, and nothing between, as the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
 // one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
@@ -3918,6 +3958,12 @@ for (var n = 0; n < OUTS; n++) wiring.push({broken: OUTPUTS[n].mono});
 // is a lamp and not an output that is placed, since an output's three channels reach three
 // separate LEDs through the adapter, and those can be anywhere in a build
 var order = [];
+
+// Set the wiring and where each lamp sits, which change together
+function setLayout(wired, ordered) {
+  wiring = wired;
+  order = ordered;
+}
 
 // An output's places in the wiring order, which are a mono output's one light, a colour output
 // whole, or a colour output broken out as its three channels
@@ -4290,10 +4336,15 @@ var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 // One set of looks can only be for one stretch, so the other run shows no mark at all
 var active = MONO_FIRST ? mono : outs;
 
+// Make a run the one worked on
+function activate(run) {
+  active = run;
+}
+
 // Which kind of lamp the one set of looks is drawn for. It follows whatever was last
 // pointed at, so the cards are always the ones for the lights being worked on
 var showing = MONO_FIRST;
-for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
+for (var m = 0; m < OUTS; m++) setLayout(wiring, order.concat(placesOf(m)));
 
 // ---- the lamps the wiring adds up to -----------------------------------------------------
 
@@ -4626,11 +4677,11 @@ function rejoinWiring(out) {
     wiring[out] = {broken: false};
     // Wherever its three ended up, the one lamp takes the place of the first of them
     var first = -1;
-    order = order.filter(function (place) {
+    setLayout(wiring, order.filter(function (place) {
       if (place.out !== out) return true;
       if (first < 0) first = placeOf(place);
       return false;
-    });
+    }));
     order.splice(Math.max(0, first), 0, {out: out, channel: null});
   });
   pickOutput(out);
@@ -4666,10 +4717,25 @@ var cardFaces = [];
 var cardWalks = {};
 var carrying_lamp = null;
 
+// Empty the cards' faces, which a draw makes afresh
+function clearCardFaces() {
+  cardFaces = [];
+}
+
+// Set the lamp being carried to a new place, or null when none is
+function setCarryingLamp(lamp) {
+  carrying_lamp = lamp;
+}
+
 // The cut being dragged, and whether the pointer moved far enough for the release to be
 // the end of a drag rather than a click
 var holding = null;
 var dragged = false;
+
+// Set the cut being dragged
+function setHolding(held) {
+  holding = held;
+}
 
 document.addEventListener("mousemove", function (event) {
   if (!holding) return;
@@ -4721,7 +4787,7 @@ function landLook(run, at, name) {
                     "edit already use some of these lights:") + "\n\n" + lines + "\n\nRemove " +
                    (clashing.length === 1 ? "it" : "them") + " from the file and play " +
                    name + " instead?")) return;
-      keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
+      filterKept(function (one) { return clashing.indexOf(one) < 0; });
     }
   }
   if (run.strip && !run.there) return;
@@ -4902,6 +4968,29 @@ function canEdit(panel) { return setupOn; }
 var heldPick = null;
 var heldOutput = null;
 
+// Turn setup on or off. Turned off, the stretch held while it was on is picked
+function setSetupMode(on) {
+  if (on && !setupOn) {
+    var section = active.sections[active.picked];
+    heldPick = section ? lampKey(active.lamps[section.from]) : null;
+    heldOutput = null;
+  }
+  setupOn = on;
+  if (!on) {
+    if (heldOutput !== null) {
+      pickOutput(heldOutput);
+    } else if (heldPick) {
+      runs.some(function (run) {
+        var at = run.lamps.map(lampKey).indexOf(heldPick);
+        if (at >= 0) pick(run, sectionAt(run, at));
+        return at >= 0;
+      });
+    }
+    heldPick = null;
+    heldOutput = null;
+  }
+}
+
 // ---- the LED panels -----------------------------------------------------------------------------
 // The panel of settings under the chosen stretch, pointing up at it, and the two sides of the
 // Outputs panel sized to the lamps they hold.
@@ -5066,10 +5155,6 @@ var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a651", "#0
 var ALWAYS_COLOUR = "#8f8a82";
 var UNNUMBERED_COLOUR = "#b9b3a9";
 
-// The remote's number buttons that go to a scene, which its card wears. None on a board with no
-// sensor part, which replaces this with its own
-var sceneNumbers = function (scene) { return []; };
-
 // A scene's colour, its number button's, which moves with the scene's place in the order
 function sceneColour(scene) {
   if (!scene) return ALWAYS_COLOUR;
@@ -5229,7 +5314,7 @@ function sceneTab(which, slot, name, says) {
     turn.className = "cardturn";
     turn.appendChild(under);
     // Each of the remote's number buttons that goes to the scene, drawn as the remote draws it
-    var numbers = sceneNumbers(scene);
+    var numbers = sceneHooks.numbers(scene);
     if (numbers.length) {
       var badges = document.createElement("span");
       badges.className = "irbadges";
@@ -5528,7 +5613,7 @@ function apply(body) {
     run.was = was.was;
     run.undone = was.undone;
   });
-  active = runs.filter(function (run) { return run.name === body.active; })[0] || outs;
+  activate(runs.filter(function (run) { return run.name === body.active; })[0] || outs);
   settle();
   bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
@@ -5630,9 +5715,9 @@ function addScene() {
   } else {
     var before = state.scenes[state.scenes.length - 1];
     made = {name: freeSceneName(), seconds: before.seconds,
-            restart: before.restart, waits: sceneCanWait(), body: copyBody(before.body)};
+            restart: before.restart, waits: sceneHooks.canWait(), body: copyBody(before.body)};
     // A scene that stayed alone takes its time again, without a sensor to move it on
-    if (state.scenes.length === 1 && !sceneCanWait()) before.waits = false;
+    if (state.scenes.length === 1 && !sceneHooks.canWait()) before.waits = false;
   }
   state.scenes.push(made);
   state.at = state.scenes.length - 1;
@@ -5742,7 +5827,8 @@ function renderSceneAside() {
                                 : "Never shows, as no scene goes on to it";
   }
   where.classList.toggle("warn", !!problem);
-  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
+  var ends = picked.waits ? "waits " + (sceneHooks.canWait() ? "for " + sceneHooks.waitsFor()
+                                                             : "forever")
            : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
   where.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
   where.title = where.textContent;
@@ -5773,16 +5859,17 @@ function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
-// Whether something fitted can change scenes, so a scene can wait for it, which a board's sensor
-// part answers. Without it a waiting scene waits forever
-var sceneCanWait = function () { return false; };
-
-// The places of the scenes a scene in place `at` goes to on a button or motion, which the sensor
-// part gives for what is fitted
-var sceneTriggerLeads = function (at) { return []; };
-
-// What a waiting scene waits for, in words, which the sensor part says for what is fitted
-var sceneWaitsFor = function () { return "a button"; };
+// What the sensor part says about scenes for what is fitted, filled in by sensor/ where the board
+// has one. canWait says whether something fitted can change scenes, so a scene can wait for it,
+// and without it a waiting scene waits forever. triggerLeads gives the places of the scenes a
+// scene in place `at` goes to on a button or motion, waitsFor says in words what a waiting scene
+// waits for, and numbers gives the remote's number buttons that go to a scene, which its card wears
+var sceneHooks = {
+  canWait: function () { return false; },
+  triggerLeads: function (at) { return []; },
+  waitsFor: function () { return "a button"; },
+  numbers: function (scene) { return []; }
+};
 
 // The scene a timed scene goes to when its time is up, or null for one that waits
 function sceneAfter(scene) {
@@ -5809,7 +5896,7 @@ function sceneRestarts(scene) {
 // The places of the scenes the scene in place `at` goes on to, by its time and by what is fitted
 function sceneLeads(at) {
   var after = sceneAfter(state.scenes[at]);
-  return sceneTriggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
+  return sceneHooks.triggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
 }
 
 // Which scenes can show from the places in `starts`, by place, those included
@@ -5846,7 +5933,7 @@ function settleLoneScene() {
 function unreachedScenes() {
   var reached = scenesReachedFrom(state.scenes.length ? [0] : []);
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
-  if (!unreached.length || sceneCanWait()) return {scenes: unreached, stopper: null};
+  if (!unreached.length || sceneHooks.canWait()) return {scenes: unreached, stopper: null};
 
   // Without a sensor the turns are one line from the first scene, which a waiting scene ends
   var stop = state.scenes[0];
@@ -6188,7 +6275,7 @@ var ZOOMS_OVER = 12;
 
 // The strips are runs of the page below from here on. Each scene keeps its own cutting of
 // them in its body, which captures every run
-runs = runs.concat(STRIPS.map(stripRun));
+runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
 // ---- drawing the page -------------------------------------------------------------------
@@ -6570,9 +6657,9 @@ function forgetKeptFor(run) {
     var lamps = parts && lampsNamed(run, parts.selector);
     return !(lamps && lamps.length);
   }
-  keptNow = keptNow.filter(elsewhere);
+  filterKept(elsewhere);
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  boardResidue = boardResidue.filter(function (token) { return stripOfToken(token) !== run.name; });
+  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
 }
 
 // ---- blinking through several colours, on the chosen stretch ------------------------------------
@@ -6774,11 +6861,10 @@ function acrossScenes(change) {
     var before = {wiring: JSON.stringify(wiring), order: JSON.stringify(order)};
     // Each scene is changed with the page held still, since drawing would store what is
     // being changed into the scene being edited
-    drawHeld = true;
+    holdDrawing(true);
     try {
       [state.always].concat(state.scenes).forEach(function (slot) {
-        wiring = JSON.parse(before.wiring);
-        order = JSON.parse(before.order);
+        setLayout(JSON.parse(before.wiring), JSON.parse(before.order));
         apply(slot.body);
         change(out);
         runs.forEach(function (run) {
@@ -6788,7 +6874,7 @@ function acrossScenes(change) {
         slot.body = capture();
       });
     } finally {
-      drawHeld = false;
+      holdDrawing(false);
     }
     state.at = editing;
     apply(slotAt(editing).body);
@@ -6813,7 +6899,7 @@ var rejoinOne = changeWiring(rejoinWiring, true);
 
 var resetWiringInScenes = acrossScenes(function () {
   breakingOutputs().forEach(rejoinOne);
-  acrossWiring(function () { order = plainOrder(); });
+  acrossWiring(function () { setLayout(wiring, plainOrder()); });
   [outs, mono].forEach(joinAlike);
 });
 
@@ -6912,6 +6998,11 @@ var NOT_FITTED = "# Not fitted: ";
 
 // The names the file listed as not fitted, in lower case, or null where it had no such comment
 var notFittedRead = null;
+
+// Set the names the file listed as not fitted
+function setNotFittedRead(names) {
+  notFittedRead = names;
+}
 
 // The names of what the board fits by default and has been taken off, as a step from each part
 var notFittedSteps = [];
@@ -7548,27 +7639,9 @@ function workOn(panel) {
 // keeps to them, as the whole board is being set up, a section at a time, and the tabs stay
 // live to move between sections while it is.
 
-// Turn setting up the board on or off. Turned off, the stretch held while it was on is picked
+// Turn setting up the board on or off, and show the tab chosen
 function setSetup(on) {
-  if (on && !setupOn) {
-    var section = active.sections[active.picked];
-    heldPick = section ? lampKey(active.lamps[section.from]) : null;
-    heldOutput = null;
-  }
-  setupOn = on;
-  if (!on) {
-    if (heldOutput !== null) {
-      pickOutput(heldOutput);
-    } else if (heldPick) {
-      runs.some(function (run) {
-        var at = run.lamps.map(lampKey).indexOf(heldPick);
-        if (at >= 0) pick(run, sectionAt(run, at));
-        return at >= 0;
-      });
-    }
-    heldPick = null;
-    heldOutput = null;
-  }
+  setSetupMode(on);
   showChosen();
 }
 
@@ -7937,7 +8010,7 @@ notFittedSteps.push(function () {
 });
 
 driveParts.push({
-  begin: function () { mediaFound = []; },
+  begin: function () { setMediaFound([]); },
   file: async function (name, handle) {
     if (/\.gif$/i.test(name)) mediaFound.push({ name: name, kind: "gif", handle: handle });
     else if (/\.(png|jpe?g)$/i.test(name)) mediaFound.push({ name: name, kind: "image", handle: handle });
@@ -7990,7 +8063,7 @@ driveParts.push({
         styled.taken = true;
       });
     });
-    mediaFound = mediaFound.filter(function (one) { return !one.taken; });
+    setMediaFound(mediaFound.filter(function (one) { return !one.taken; }));
     state.media = mediaFound;
     Object.keys(state.art).forEach(function (key) {
       if (state.art[key].gone) delete state.art[key];
@@ -9068,6 +9141,11 @@ function readScreens(bodies) {
 // and drawings
 
 var mediaFound = [];
+
+// Set the pictures and drawings found on the drive
+function setMediaFound(list) {
+  mediaFound = list;
+}
 
 // Colours the file can say by name, the words the board knows, the rest written as hex
 var BG_NAMES = {};
@@ -10990,6 +11068,11 @@ var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 // uses. drivePrograms() in 26_drive_programs.js reads them
 var PROGRAMS = [];
 
+// Set the programs on the drive
+function setPrograms(list) {
+  PROGRAMS = list;
+}
+
 // Lookups for programs the page shows that the drive does not hold, each given a path and
 // returning its program or null
 var programsElsewhere = [];
@@ -11169,6 +11252,11 @@ drawSteps.after.push(function () {
 // Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
 // with none chosen, and the file says program= only once one is
 var onProgramPage = false;
+
+// Open or close the program tab
+function setProgramPage(on) {
+  onProgramPage = on;
+}
 
 // ---- a scene's own settings, in the screens' style ---------------------------------------
 // Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
@@ -11854,7 +11942,7 @@ function programCard(path) {
   if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function () {
     try {
       var copy = await copyProgram(path);
-      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      setPrograms(await drivePrograms(drive.dirHandle, true));
       if (boardSet.program === path) boardSet.program = copy;
       banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
              "change it.");
@@ -12080,6 +12168,11 @@ var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
 var unhad = [];
 
+// Set the parts the program filter takes as not to hand
+function setUnhad(list) {
+  unhad = list;
+}
+
 function had(key) { return unhad.indexOf(key) < 0; }
 
 function passesFilter(path) {
@@ -12154,14 +12247,14 @@ function featureFilter() {
 
 // Go back to the effects, so the file runs them again
 function toEffects() {
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.program = null;
   draw();
 }
 
 // Over to the programs with none chosen, until one is picked
 function toProgram() {
-  onProgramPage = true;
+  setProgramPage(true);
   draw();
 }
 
@@ -13370,7 +13463,7 @@ async function rescanPrograms() {
   programsBusy = true;
   try {
     if (await ownState(drive.dirHandle) !== ownSeen) {
-      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      setPrograms(await drivePrograms(drive.dirHandle, true));
       forgetMissingPrograms();
       draw();
     }
@@ -13450,7 +13543,7 @@ async function removeProgram(path) {
     banner("Could not delete " + name + ". " + await driveTrouble(e, name), true);
     return;
   }
-  PROGRAMS = await drivePrograms(drive.dirHandle, true);
+  setPrograms(await drivePrograms(drive.dirHandle, true));
   forgetMissingPrograms();
   draw();
 }
@@ -13481,7 +13574,7 @@ async function readNamedProgram() {
     var below = isExample(path) ? path.slice(EXAMPLES_ROOT.length) : "";
     var program = programFrom(path, below.slice(0, Math.max(below.lastIndexOf("/"), 0)), source);
     if (!program) return;
-    PROGRAMS = [program];
+    setPrograms([program]);
     // Its pictures with it, found beside it as the walk would find them
     var beside = parts.length ? parts.join("/") + "/" : "";
     var stem = name.replace(/\.py$/i, "");
@@ -13504,7 +13597,7 @@ async function readNamedProgram() {
 }
 
 async function readDrivePrograms() {
-  PROGRAMS = await drivePrograms(drive.dirHandle);
+  setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
   readWaitingProgram();
@@ -13628,10 +13721,10 @@ function readProgram(named, argued) {
   boardSet.args[path] = given;
   if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
     boardSet.program = path;
-    onProgramPage = true;
+    setProgramPage(true);
     return;
   }
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.args[path] = kept;
   boardResidue.push(named);
   if (argued) boardResidue.push(argued);
@@ -13648,23 +13741,23 @@ function readWaitingProgram() {
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
   if (boardSet.program) return;
-  boardResidue = boardResidue.filter(function (token) {
+  filterResidue(function (token) {
     return token !== named && token !== argued;
   });
   var page = onProgramPage;
   readProgram(named, argued);
-  if (!boardSet.program) onProgramPage = page;
+  if (!boardSet.program) setProgramPage(page);
 }
 
 // Take a file into the page, with its board line, its scenes and every entry kept in its scene
 function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
-  notFittedRead = parsed.notFitted || null;
+  setNotFittedRead(parsed.notFitted || null);
 
   boardSet.reload = true;
   boardSet.driveHidden = false;
-  boardResidue = [];
+  clearResidue();
   var named = null, argued = null;
   parsed.tokens.forEach(function (token) {
     var lowered = token.toLowerCase();
@@ -13737,10 +13830,11 @@ function outputsBrokenOut(bodies) {
 
 // Set the wiring the file implies, with the outputs it names by channel broken out, in plain order
 function wireAsRead(broken) {
-  wiring = wiring.map(function (one, out) {
+  setLayout(wiring.map(function (one, out) {
     return {broken: OUTPUTS[out].mono || !!broken[out]};
-  });
-  order = plainOrder();
+  }), order);
+  // The plain order is of the wiring just set
+  setLayout(wiring, plainOrder());
 }
 
 // Every lamp in number order, an output broken out as its red, green and blue
@@ -14010,16 +14104,15 @@ function readLights(bodies) {
     apply(body);
     // The wiring the page said, else the one the lines imply, else number order
     if (said) {
-      wiring = wiring.map(function (one, out) {
+      setLayout(wiring.map(function (one, out) {
         return {broken: said.some(function (place) {
           return place.out === out && place.channel !== null;
         })};
-      });
-      order = said.map(function (place) { return {out: place.out, channel: place.channel}; });
+      }), said.map(function (place) { return {out: place.out, channel: place.channel}; }));
     } else {
       wireAsRead(broken);
       var implied = !Object.keys(broken).length && orderImplied(bodies);
-      if (implied) order = implied;
+      if (implied) setLayout(wiring, implied);
     }
     runs.forEach(function (run) { run.sections = []; });
     settle();
@@ -14079,7 +14172,7 @@ bodyParts.push({
     body.notes = JSON.parse(JSON.stringify(notesNow));
   },
   apply: function (body) {
-    keptNow = copyKept(body.kept);
+    setKept(copyKept(body.kept));
     notesNow = JSON.parse(JSON.stringify(body.notes || {}));
   },
   // A body with nothing in it keeps nothing either, whatever the scene on show kept
@@ -14845,7 +14938,7 @@ function renderBar(where, run) {
         pick(run, at);
         // The bar is rebuilt on every move, so what is held onto is where the bar lives
         // and not the bar itself, which would be a node already thrown away
-        holding = {run: run, which: at, where: where, had: run.sections.length};
+        setHolding({run: run, which: at, where: where, had: run.sections.length});
         edge.classList.add("holding");
       };
       // Taking the cut out is its own target, so it is never confused with moving it
@@ -15024,7 +15117,7 @@ function renderStripBar(where, run) {
         e.preventDefault();
         // The bar is rebuilt on every move, so what is held onto is where it lives and
         // not the bar itself, which would be a node that has already been thrown away
-        holding = {run: run, which: at, where: where, had: run.sections.length};
+        setHolding({run: run, which: at, where: where, had: run.sections.length});
         edge.classList.add("holding");
       };
       // Taking the cut out is its own target, so it is never confused with moving it
@@ -15565,13 +15658,13 @@ function takesPlace(node, lamp) {
   var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
   node.draggable = true;
   node.addEventListener("dragstart", function (event) {
-    carrying_lamp = me;
+    setCarryingLamp(me);
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", shortName(lamp));
     node.classList.add("carried");
   });
   node.addEventListener("dragend", function () {
-    carrying_lamp = null;
+    setCarryingLamp(null);
     draw();
   });
   // Put down on a lamp's right half, the carried one goes after it, which is the only way
@@ -15592,7 +15685,7 @@ function takesPlace(node, lamp) {
     node.classList.remove("landing", "after");
     if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
     var carried = carrying_lamp;
-    carrying_lamp = null;
+    setCarryingLamp(null);
     moveLamp({from: carried, to: me, after: after(event)});
   });
   if (!lampsMovable()) node.draggable = false;
@@ -15670,7 +15763,7 @@ state.always.body = capture();
 workOn(chosenTab);
 showChosen();
 draw();
-if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
+if (HOLDING_STILL) { setBeat(0.37); paintAll(); } else { step(); }
 </script>
 </body>
 </html>

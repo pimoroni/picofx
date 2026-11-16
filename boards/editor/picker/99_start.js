@@ -1,5 +1,5 @@
 import {draw, drawSteps, paintAll} from "./00_draw.js";
-import {HOLDING_STILL, beat, step} from "./02_preview.js";
+import {HOLDING_STILL, setBeat, step} from "./02_preview.js";
 import {capture, state} from "./04_scenes.js";
 import {workOn} from "./10_led_sections.js";
 import {chosenTab, holdTabsPlace, showChosen} from "./11_tabs.js";
@@ -15,4 +15,4 @@ state.always.body = capture();
 workOn(chosenTab);
 showChosen();
 draw();
-if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
+if (HOLDING_STILL) { setBeat(0.37); paintAll(); } else { step(); }

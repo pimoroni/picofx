@@ -8,7 +8,9 @@ import {boardIcon} from "./08_setup.js";
 import {tabSwatch} from "./11_tabs.js";
 import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./18_drive.js";
 import {escapeHtml} from "./18_file_preview.js";
-import {PROGRAMS, argsFor, boardSet, onProgramPage, programNamed} from "./19_board_settings.js";
+import {
+  PROGRAMS, argsFor, boardSet, onProgramPage, programNamed, setProgramPage, setPrograms
+} from "./19_board_settings.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
   programsReading, removeProgram
@@ -597,7 +599,7 @@ export function programCard(path) {
   if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function () {
     try {
       var copy = await copyProgram(path);
-      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      setPrograms(await drivePrograms(drive.dirHandle, true));
       if (boardSet.program === path) boardSet.program = copy;
       banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
              "change it.");
@@ -823,6 +825,11 @@ export var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
 export var unhad = [];
 
+// Set the parts the program filter takes as not to hand
+export function setUnhad(list) {
+  unhad = list;
+}
+
 export function had(key) { return unhad.indexOf(key) < 0; }
 
 export function passesFilter(path) {
@@ -897,14 +904,14 @@ function featureFilter() {
 
 // Go back to the effects, so the file runs them again
 function toEffects() {
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.program = null;
   draw();
 }
 
 // Over to the programs with none chosen, until one is picked
 function toProgram() {
-  onProgramPage = true;
+  setProgramPage(true);
   draw();
 }
 

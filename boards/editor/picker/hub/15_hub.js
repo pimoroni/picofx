@@ -44,6 +44,11 @@ HUB_PLACES.forEach(function (place) {
 // The position whose settings are shown under the hub
 export var placePicked = "A";
 
+// Show a position's settings under the hub
+export function pickPlace(place) {
+  placePicked = place;
+}
+
 // Whether a position has a panel to show on, its size being "" where it has none
 export function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 

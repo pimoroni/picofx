@@ -1,11 +1,10 @@
 import {draw, drawSteps} from "../00_draw.js";
-import {boardResidue} from "../03_kept.js";
+import {filterResidue} from "../03_kept.js";
 import {boardTokens, unquoted} from "../03_reading.js";
 import {BOARD_CHIP_CLASSES, canEdit} from "../03_runs.js";
-import {PART_DRAWINGS, REMOTE_COLOURS, sceneNumbers} from "../04_scene_tray.js";
+import {PART_DRAWINGS, REMOTE_COLOURS} from "../04_scene_tray.js";
 import {
-  addScene, bodyParts, sceneCanWait, sceneMark, sceneMarked, sceneRestarts, sceneTriggerLeads,
-  sceneWaitsFor, state
+  addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
 import {boardBox, small} from "../08_setup.js";
@@ -71,13 +70,13 @@ var REMOTE_FIXED = {OK_STOP: ["standby", "Standby and wake, in every scene"],
                     PLAY_PAUSE: ["pause", "Pause the effects where they stand, in every scene"]};
 
 // A scene can wait for a button while a remote is fitted, or for motion while a PIR Stick is
-sceneCanWait = function () { return remoteFitted() || pirFitted(); };
-sceneWaitsFor = function () { return pirFitted() ? "motion" : "a button"; };
+sceneHooks.canWait = function () { return remoteFitted() || pirFitted(); };
+sceneHooks.waitsFor = function () { return pirFitted() ? "motion" : "a button"; };
 
 // The scenes a scene goes to on what is fitted, from each trigger's choice in that scene: its
 // own, then Always on's, then the trigger's default. The tab being edited holds its choices in
 // state.remote rather than its body
-sceneTriggerLeads = function (at) {
+sceneHooks.triggerLeads = function (at) {
   var count = state.scenes.length;
   var always = state.at < 0 ? state.remote : state.always.body && state.always.body.remote || {};
   var body = state.scenes[at].body;
@@ -170,7 +169,7 @@ function remoteDoes(button) {
 
 // The number button bound to a scene by its place, which its card wears while a remote is fitted
 // and Always on leaves the number going there. None past the tenth scene
-sceneNumbers = function (scene) {
+sceneHooks.numbers = function (scene) {
   var at = state.scenes.indexOf(scene);
   if (!remoteFitted() || at > 9) return [];
   var button = REMOTE_BUTTONS.filter(function (one) {
@@ -797,7 +796,7 @@ boardLineSteps.after.push(function (line) {
 // Read what is fitted from the board line, the token taken so it is not written twice
 function readSensorBoard() {
   state.sensorKind = "none";
-  boardResidue = boardResidue.filter(function (token) {
+  filterResidue(function (token) {
     var fitted = /^sensor=(ir|pir)$/i.exec(token);
     if (fitted) state.sensorKind = fitted[1].toLowerCase();
     return !fitted;

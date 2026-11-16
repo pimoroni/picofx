@@ -4,10 +4,12 @@ import {BOARD} from "../01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS, firmwareHooks} from "../07_board.js";
 import {drive, driveTrouble, nameShown} from "../18_drive.js";
-import {PROGRAMS, boardSet, programNamed, programsElsewhere} from "../19_board_settings.js";
+import {
+  PROGRAMS, boardSet, programNamed, programsElsewhere, setPrograms
+} from "../19_board_settings.js";
 import {
   CHIPLESS, FEATURES, featureIcon, had, passesFilter, programCard, programCardSteps, programTitle,
-  programView, programViewSteps, unhad, usesOf
+  programView, programViewSteps, setUnhad, unhad, usesOf
 } from "../22_program.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../26_drive_files.js";
 import {
@@ -495,7 +497,7 @@ async function discoverListed(entry, written, fresh, was) {
           .getFileHandle(nameShown(path))).getFile()).text();
     var folder = path.slice(EXAMPLES_ROOT.length, path.lastIndexOf("/"));
     var program = programFrom(path, folder, source);
-    PROGRAMS = PROGRAMS.filter(function (one) { return one.path !== path && one.path !== was; });
+    setPrograms(PROGRAMS.filter(function (one) { return one.path !== path && one.path !== was; }));
     if (program) PROGRAMS.push(program);
     delete discoverPrograms[path];
     var shown = [stem + ".png", stem + "-2.png"].filter(function (name) { return written[name]; })
@@ -1227,7 +1229,7 @@ function discoverChips(offers) {
    ["none", function () { return unhad.concat(used.map(function (feature) { return feature[0]; })); }]]
     .forEach(function (one) {
       var choice = discoverButton(one[0], function () {
-        unhad = one[1]();
+        setUnhad(one[1]());
         draw();
       });
       choice.className = "featureclear";
@@ -1277,7 +1279,7 @@ async function discoverDelete(path, kind) {
     return;
   }
   if (kind === "program") {
-    PROGRAMS = PROGRAMS.filter(function (program) { return program.path !== path; });
+    setPrograms(PROGRAMS.filter(function (program) { return program.path !== path; }));
     delete PICTURES[path];
     forgetMissingPrograms();
   } else {

@@ -4,7 +4,9 @@ import {isHiddenName} from "../18_drive.js";
 import {isExampleMedia, mediaHome} from "../26_drive_files.js";
 import {openingString} from "../26_drive_programs.js";
 import {drawingArts, drawingSaid, madeDrawing, shownBefore, styleWords} from "./13_screen_art.js";
-import {mediaFound, pictureSaid, readScreens, screenEntry} from "./14_screen_text.js";
+import {
+  mediaFound, pictureSaid, readScreens, screenEntry, setMediaFound
+} from "./14_screen_text.js";
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -201,7 +203,7 @@ notFittedSteps.push(function () {
 });
 
 driveParts.push({
-  begin: function () { mediaFound = []; },
+  begin: function () { setMediaFound([]); },
   file: async function (name, handle) {
     if (/\.gif$/i.test(name)) mediaFound.push({ name: name, kind: "gif", handle: handle });
     else if (/\.(png|jpe?g)$/i.test(name)) mediaFound.push({ name: name, kind: "image", handle: handle });
@@ -254,7 +256,7 @@ driveParts.push({
         styled.taken = true;
       });
     });
-    mediaFound = mediaFound.filter(function (one) { return !one.taken; });
+    setMediaFound(mediaFound.filter(function (one) { return !one.taken; }));
     state.media = mediaFound;
     Object.keys(state.art).forEach(function (key) {
       if (state.art[key].gone) delete state.art[key];

@@ -5,7 +5,7 @@ import {painters} from "./02_preview.js";
 import {coloursWritten, takesColour, targetFor} from "./03_lines.js";
 import {CHANNEL_INKS, isChannel, kinOf, selectorFor, shortName, widthOf} from "./03_outputs.js";
 import {
-  active, canEdit, copyBlinks, copyExact, cutAt, dragged, holding, inkAt, mono, pick, remember,
+  active, canEdit, copyBlinks, copyExact, cutAt, dragged, inkAt, mono, pick, remember, setHolding,
   settle, uncut
 } from "./03_runs.js";
 import {stretchUnder, underSaid} from "./04_scenes.js";
@@ -175,7 +175,7 @@ export function renderBar(where, run) {
         pick(run, at);
         // The bar is rebuilt on every move, so what is held onto is where the bar lives
         // and not the bar itself, which would be a node already thrown away
-        holding = {run: run, which: at, where: where, had: run.sections.length};
+        setHolding({run: run, which: at, where: where, had: run.sections.length});
         edge.classList.add("holding");
       };
       // Taking the cut out is its own target, so it is never confused with moving it
@@ -354,7 +354,7 @@ export function renderStripBar(where, run) {
         e.preventDefault();
         // The bar is rebuilt on every move, so what is held onto is where it lives and
         // not the bar itself, which would be a node that has already been thrown away
-        holding = {run: run, which: at, where: where, had: run.sections.length};
+        setHolding({run: run, which: at, where: where, had: run.sections.length});
         edge.classList.add("holding");
       };
       // Taking the cut out is its own target, so it is never confused with moving it

@@ -6,8 +6,28 @@ import {entryParts, lampsNamed} from "./03_reading.js";
 // The tokens on the board line that this page does not hold itself, kept as written
 export var boardResidue = [];
 
+// Keep only the board line's tokens that keep says to
+export function filterResidue(keep) {
+  boardResidue = boardResidue.filter(keep);
+}
+
+// Forget the board line's tokens, before a file is read
+export function clearResidue() {
+  boardResidue = [];
+}
+
 // The kept entries of the scene on show, each its text and the comments written above it
 export var keptNow = [];
+
+// Keep only the kept entries that keep says to
+export function filterKept(keep) {
+  keptNow = keptNow.filter(keep);
+}
+
+// Set the scene on show's kept entries
+export function setKept(list) {
+  keptNow = list;
+}
 
 export function copyKept(kept) {
   return (kept || []).map(function (one) {

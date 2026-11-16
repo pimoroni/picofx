@@ -2,7 +2,8 @@ import {draw, drawSteps} from "../00_draw.js";
 import {spoken} from "../03_lines.js";
 import {bodyParts, capture, frozen, namesOf, state} from "../04_scenes.js";
 import {
-  HUB_PLACES, hubHeadSteps, placePicked, placeThere, placeTurnForChosen, placeUnder, placesThere
+  HUB_PLACES, hubHeadSteps, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder,
+  placesThere
 } from "./15_hub.js";
 import {placeGroups, placesSaid} from "./18_hub_text.js";
 import {LOOK_START, assetSteps, freshLook, kindOf} from "../screens/12_screens.js";
@@ -108,13 +109,13 @@ function sizeFits(place, number) {
 function joinOrLeave(place, number) {
   if (groupOf(place) === number) {
     state.places[place].group = place;
-    placePicked = place;
+    pickPlace(place);
     return;
   }
   var others = membersOfGroup(number).filter(function (other) { return other !== place; });
   state.places[place].group = number;
   var groupShows = others.length && state.places[others[0]].shows;
-  placePicked = others.length && (groupShows || !state.places[place].shows) ? others[0] : place;
+  pickPlace(others.length && (groupShows || !state.places[place].shows) ? others[0] : place);
 }
 
 // What the picked position was given goes to the rest of its group before anything is drawn
@@ -185,7 +186,7 @@ assetSteps.push(function () {
       button.title = target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
                                 : target.name + ", on its own";
       button.onclick = function () {
-        placePicked = target.places[0];
+        pickPlace(target.places[0]);
         var breaking = shown ? breakingUp(target.places) : [];
         state.places[placePicked].shows = shown ? null : name;
         state.places[placePicked].off = false;

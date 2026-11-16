@@ -18,6 +18,11 @@ export var boardSet = {reload: true, driveHidden: false, program: null, args: {}
 // uses. drivePrograms() in 26_drive_programs.js reads them
 export var PROGRAMS = [];
 
+// Set the programs on the drive
+export function setPrograms(list) {
+  PROGRAMS = list;
+}
+
 // Lookups for programs the page shows that the drive does not hold, each given a path and
 // returning its program or null
 export var programsElsewhere = [];
@@ -197,3 +202,8 @@ drawSteps.after.push(function () {
 // Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
 // with none chosen, and the file says program= only once one is
 export var onProgramPage = false;
+
+// Open or close the program tab
+export function setProgramPage(on) {
+  onProgramPage = on;
+}

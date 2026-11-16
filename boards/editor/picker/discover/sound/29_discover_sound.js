@@ -6,7 +6,9 @@ import {
   discoverBin, discoverElement, discoverKinds, discoverPill, discoverPlaceBar, discoverSay,
   discoverSounds
 } from "../28_discover.js";
-import {hearing, soundSteps, soundTileSteps, stopHearing} from "../../sound/13_sound.js";
+import {
+  hearing, setHearing, soundSteps, soundTileSteps, stopHearing
+} from "../../sound/13_sound.js";
 
 // ---- examples to discover, on the Sound tab -----------------------------------------------------
 // The Sound tab's examples line, where its example sounds start. An example sound on the drive
@@ -60,7 +62,7 @@ async function discoverHear(path, url) {
     return;
   }
   var audio = new Audio(url);
-  hearing = {name: path, audio: audio, url: null};
+  setHearing(path, audio, null);
   audio.onended = function () {
     if (hearing.audio === audio) stopHearing();
     draw();

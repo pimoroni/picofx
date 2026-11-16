@@ -1,8 +1,6 @@
 import {draw, drawSteps} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {
-  active, heldOutput, heldPick, lampKey, outs, pick, pickOutput, runs, sectionAt, setupOn
-} from "./03_runs.js";
+import {active, outs, runs, setSetupMode, setupOn} from "./03_runs.js";
 import {renderChosen} from "./04_led_panels.js";
 import {STRIPS, stripBlockedBy} from "./05_strips.js";
 import {setupButton} from "./08_setup.js";
@@ -21,27 +19,9 @@ import {LED_PANELS, runsOfPanel, workOn} from "./10_led_sections.js";
 // keeps to them, as the whole board is being set up, a section at a time, and the tabs stay
 // live to move between sections while it is.
 
-// Turn setting up the board on or off. Turned off, the stretch held while it was on is picked
+// Turn setting up the board on or off, and show the tab chosen
 function setSetup(on) {
-  if (on && !setupOn) {
-    var section = active.sections[active.picked];
-    heldPick = section ? lampKey(active.lamps[section.from]) : null;
-    heldOutput = null;
-  }
-  setupOn = on;
-  if (!on) {
-    if (heldOutput !== null) {
-      pickOutput(heldOutput);
-    } else if (heldPick) {
-      runs.some(function (run) {
-        var at = run.lamps.map(lampKey).indexOf(heldPick);
-        if (at >= 0) pick(run, sectionAt(run, at));
-        return at >= 0;
-      });
-    }
-    heldPick = null;
-    heldOutput = null;
-  }
+  setSetupMode(on);
   showChosen();
 }
 

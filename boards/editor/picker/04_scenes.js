@@ -2,7 +2,7 @@ import {draw} from "./00_draw.js";
 import {BOARD, lookNamed} from "./01_looks.js";
 import {spoken} from "./03_lines.js";
 import {widthOf} from "./03_outputs.js";
-import {active, copyBlinks, copyExact, mono, outs, runs, settle} from "./03_runs.js";
+import {activate, active, copyBlinks, copyExact, mono, outs, runs, settle} from "./03_runs.js";
 import {sceneBand, sceneEdge, sceneTab, sceneTurn} from "./04_scene_tray.js";
 
 // ---- scenes ---------------------------------------------------------------------------
@@ -135,7 +135,7 @@ export function apply(body) {
     run.was = was.was;
     run.undone = was.undone;
   });
-  active = runs.filter(function (run) { return run.name === body.active; })[0] || outs;
+  activate(runs.filter(function (run) { return run.name === body.active; })[0] || outs);
   settle();
   bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
@@ -237,9 +237,9 @@ export function addScene() {
   } else {
     var before = state.scenes[state.scenes.length - 1];
     made = {name: freeSceneName(), seconds: before.seconds,
-            restart: before.restart, waits: sceneCanWait(), body: copyBody(before.body)};
+            restart: before.restart, waits: sceneHooks.canWait(), body: copyBody(before.body)};
     // A scene that stayed alone takes its time again, without a sensor to move it on
-    if (state.scenes.length === 1 && !sceneCanWait()) before.waits = false;
+    if (state.scenes.length === 1 && !sceneHooks.canWait()) before.waits = false;
   }
   state.scenes.push(made);
   state.at = state.scenes.length - 1;
@@ -349,7 +349,8 @@ function renderSceneAside() {
                                 : "Never shows, as no scene goes on to it";
   }
   where.classList.toggle("warn", !!problem);
-  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
+  var ends = picked.waits ? "waits " + (sceneHooks.canWait() ? "for " + sceneHooks.waitsFor()
+                                                             : "forever")
            : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
   where.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
   where.title = where.textContent;
@@ -380,16 +381,17 @@ export function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
-// Whether something fitted can change scenes, so a scene can wait for it, which a board's sensor
-// part answers. Without it a waiting scene waits forever
-export var sceneCanWait = function () { return false; };
-
-// The places of the scenes a scene in place `at` goes to on a button or motion, which the sensor
-// part gives for what is fitted
-export var sceneTriggerLeads = function (at) { return []; };
-
-// What a waiting scene waits for, in words, which the sensor part says for what is fitted
-export var sceneWaitsFor = function () { return "a button"; };
+// What the sensor part says about scenes for what is fitted, filled in by sensor/ where the board
+// has one. canWait says whether something fitted can change scenes, so a scene can wait for it,
+// and without it a waiting scene waits forever. triggerLeads gives the places of the scenes a
+// scene in place `at` goes to on a button or motion, waitsFor says in words what a waiting scene
+// waits for, and numbers gives the remote's number buttons that go to a scene, which its card wears
+export var sceneHooks = {
+  canWait: function () { return false; },
+  triggerLeads: function (at) { return []; },
+  waitsFor: function () { return "a button"; },
+  numbers: function (scene) { return []; }
+};
 
 // The scene a timed scene goes to when its time is up, or null for one that waits
 export function sceneAfter(scene) {
@@ -416,7 +418,7 @@ export function sceneRestarts(scene) {
 // The places of the scenes the scene in place `at` goes on to, by its time and by what is fitted
 function sceneLeads(at) {
   var after = sceneAfter(state.scenes[at]);
-  return sceneTriggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
+  return sceneHooks.triggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
 }
 
 // Which scenes can show from the places in `starts`, by place, those included
@@ -453,7 +455,7 @@ export function settleLoneScene() {
 function unreachedScenes() {
   var reached = scenesReachedFrom(state.scenes.length ? [0] : []);
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
-  if (!unreached.length || sceneCanWait()) return {scenes: unreached, stopper: null};
+  if (!unreached.length || sceneHooks.canWait()) return {scenes: unreached, stopper: null};
 
   // Without a sensor the turns are one line from the first scene, which a waiting scene ends
   var stop = state.scenes[0];

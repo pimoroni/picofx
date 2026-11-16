@@ -164,6 +164,11 @@ export function readScreens(bodies) {
 
 export var mediaFound = [];
 
+// Set the pictures and drawings found on the drive
+export function setMediaFound(list) {
+  mediaFound = list;
+}
+
 // Colours the file can say by name, the words the board knows, the rest written as hex
 export var BG_NAMES = {};
 

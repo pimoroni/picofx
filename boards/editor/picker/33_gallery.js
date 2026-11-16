@@ -5,7 +5,7 @@ import {paletteMark, takesColour} from "./03_lines.js";
 import {sameLamp, shortName} from "./03_outputs.js";
 import {
   CARD_LIGHTS, MIDDLING, cardFaces, cardWalks, carrying_lamp, galleryRun, inkAt, lampKey, landLook,
-  stretchFor
+  setCarryingLamp, stretchFor
 } from "./03_runs.js";
 import {state} from "./04_scenes.js";
 import {lampsMovable} from "./07_board.js";
@@ -95,13 +95,13 @@ export function takesPlace(node, lamp) {
   var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
   node.draggable = true;
   node.addEventListener("dragstart", function (event) {
-    carrying_lamp = me;
+    setCarryingLamp(me);
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", shortName(lamp));
     node.classList.add("carried");
   });
   node.addEventListener("dragend", function () {
-    carrying_lamp = null;
+    setCarryingLamp(null);
     draw();
   });
   // Put down on a lamp's right half, the carried one goes after it, which is the only way
@@ -122,7 +122,7 @@ export function takesPlace(node, lamp) {
     node.classList.remove("landing", "after");
     if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
     var carried = carrying_lamp;
-    carrying_lamp = null;
+    setCarryingLamp(null);
     moveLamp({from: carried, to: me, after: after(event)});
   });
   if (!lampsMovable()) node.draggable = false;

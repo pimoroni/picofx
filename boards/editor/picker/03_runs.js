@@ -1,8 +1,10 @@
 import {draw, drawSteps} from "./00_draw.js";
 import {BOARD, LOOKS, canPlay, lerp, lookNamed, r2, whyNot} from "./01_looks.js";
-import {keptLights, keptNow} from "./03_kept.js";
+import {filterKept, keptLights} from "./03_kept.js";
 import {sectionLines, startColour, targetFor} from "./03_lines.js";
-import {MONO_FIRST, OUTPUTS, OUTS, order, placeOf, placesOf, wiring} from "./03_outputs.js";
+import {
+  MONO_FIRST, OUTPUTS, OUTS, order, placeOf, placesOf, setLayout, wiring
+} from "./03_outputs.js";
 import {renderScenes, spanTray} from "./04_scenes.js";
 import {START_MOODS} from "./05_strips.js";
 import {renderSceneSettings} from "./20_scene_row.js";
@@ -27,10 +29,15 @@ export var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 // One set of looks can only be for one stretch, so the other run shows no mark at all
 export var active = MONO_FIRST ? mono : outs;
 
+// Make a run the one worked on
+export function activate(run) {
+  active = run;
+}
+
 // Which kind of lamp the one set of looks is drawn for. It follows whatever was last
 // pointed at, so the cards are always the ones for the lights being worked on
 var showing = MONO_FIRST;
-for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
+for (var m = 0; m < OUTS; m++) setLayout(wiring, order.concat(placesOf(m)));
 
 // ---- the lamps the wiring adds up to -----------------------------------------------------
 
@@ -363,11 +370,11 @@ export function rejoinWiring(out) {
     wiring[out] = {broken: false};
     // Wherever its three ended up, the one lamp takes the place of the first of them
     var first = -1;
-    order = order.filter(function (place) {
+    setLayout(wiring, order.filter(function (place) {
       if (place.out !== out) return true;
       if (first < 0) first = placeOf(place);
       return false;
-    });
+    }));
     order.splice(Math.max(0, first), 0, {out: out, channel: null});
   });
   pickOutput(out);
@@ -403,10 +410,25 @@ export var cardFaces = [];
 export var cardWalks = {};
 export var carrying_lamp = null;
 
+// Empty the cards' faces, which a draw makes afresh
+export function clearCardFaces() {
+  cardFaces = [];
+}
+
+// Set the lamp being carried to a new place, or null when none is
+export function setCarryingLamp(lamp) {
+  carrying_lamp = lamp;
+}
+
 // The cut being dragged, and whether the pointer moved far enough for the release to be
 // the end of a drag rather than a click
-export var holding = null;
+var holding = null;
 export var dragged = false;
+
+// Set the cut being dragged
+export function setHolding(held) {
+  holding = held;
+}
 
 document.addEventListener("mousemove", function (event) {
   if (!holding) return;
@@ -458,7 +480,7 @@ export function landLook(run, at, name) {
                     "edit already use some of these lights:") + "\n\n" + lines + "\n\nRemove " +
                    (clashing.length === 1 ? "it" : "them") + " from the file and play " +
                    name + " instead?")) return;
-      keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
+      filterKept(function (one) { return clashing.indexOf(one) < 0; });
     }
   }
   if (run.strip && !run.there) return;
@@ -636,5 +658,28 @@ export function canEdit(panel) { return setupOn; }
 // is free to move it, and is picked again when setup ends. An output broken out or put
 // back meanwhile is picked instead, as it would have been outside setup
 
-export var heldPick = null;
-export var heldOutput = null;
+var heldPick = null;
+var heldOutput = null;
+
+// Turn setup on or off. Turned off, the stretch held while it was on is picked
+export function setSetupMode(on) {
+  if (on && !setupOn) {
+    var section = active.sections[active.picked];
+    heldPick = section ? lampKey(active.lamps[section.from]) : null;
+    heldOutput = null;
+  }
+  setupOn = on;
+  if (!on) {
+    if (heldOutput !== null) {
+      pickOutput(heldOutput);
+    } else if (heldPick) {
+      runs.some(function (run) {
+        var at = run.lamps.map(lampKey).indexOf(heldPick);
+        if (at >= 0) pick(run, sectionAt(run, at));
+        return at >= 0;
+      });
+    }
+    heldPick = null;
+    heldOutput = null;
+  }
+}

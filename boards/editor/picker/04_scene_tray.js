@@ -2,7 +2,7 @@ import {draw} from "./00_draw.js";
 import {BOARD, lookNamed} from "./01_looks.js";
 import {runs} from "./03_runs.js";
 import {
-  bodyParts, capture, renderScenes, sceneAfter, sceneLoops, sceneMark, sceneMarked,
+  bodyParts, capture, renderScenes, sceneAfter, sceneHooks, sceneLoops, sceneMark, sceneMarked,
   sceneNameProblem, sceneRestarts, state, store, stretchPlaying, switchTo
 } from "./04_scenes.js";
 import {TAB_NAMES} from "./11_tabs.js";
@@ -37,10 +37,6 @@ export var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a65
                       "#0072bc", "#2e3192", "#92278f", "#ec008c"];
 var ALWAYS_COLOUR = "#8f8a82";
 var UNNUMBERED_COLOUR = "#b9b3a9";
-
-// The remote's number buttons that go to a scene, which its card wears. None on a board with no
-// sensor part, which replaces this with its own
-export var sceneNumbers = function (scene) { return []; };
 
 // A scene's colour, its number button's, which moves with the scene's place in the order
 function sceneColour(scene) {
@@ -201,7 +197,7 @@ export function sceneTab(which, slot, name, says) {
     turn.className = "cardturn";
     turn.appendChild(under);
     // Each of the remote's number buttons that goes to the scene, drawn as the remote draws it
-    var numbers = sceneNumbers(scene);
+    var numbers = sceneHooks.numbers(scene);
     if (numbers.length) {
       var badges = document.createElement("span");
       badges.className = "irbadges";

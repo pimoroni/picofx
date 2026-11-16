@@ -394,6 +394,11 @@ async function profileSound(name, handle) {
 var soundHandles = {};
 export var hearing = {name: null, audio: null, url: null};
 
+// Set the sound playing here, its name, its audio and the URL it plays from, if any
+export function setHearing(name, audio, url) {
+  hearing = {name: name, audio: audio, url: url};
+}
+
 export function stopHearing() {
   if (hearing.audio) hearing.audio.pause();
   if (hearing.url) URL.revokeObjectURL(hearing.url);

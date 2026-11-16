@@ -4,8 +4,8 @@ import {allBodies, apply, capture, frozen, slotAt, state, store} from "../04_sce
 import {SCREEN_SIZES} from "../07_board.js";
 import {boardIcon} from "../08_setup.js";
 import {
-  HUB_PLACES, asAlwaysScreen, asScreen, hubHeadSteps, hubInk, placePicked, placeThere, placeUnder,
-  placesThere
+  HUB_PLACES, asAlwaysScreen, asScreen, hubHeadSteps, hubInk, pickPlace, placePicked, placeThere,
+  placeUnder, placesThere
 } from "./15_hub.js";
 import {inNumberedGroup} from "./17_hub_groups.js";
 import {apartSaid, namesSaid, placeGroups} from "./18_hub_text.js";
@@ -129,7 +129,7 @@ function placeTile(place) {
     tile.appendChild(drop);
   }
   tile.onclick = function () {
-    placePicked = place;
+    pickPlace(place);
     draw();
   };
   return tile;

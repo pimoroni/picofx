@@ -1,4 +1,4 @@
-import {boardResidue} from "../03_kept.js";
+import {boardResidue, filterResidue} from "../03_kept.js";
 import {entryParts} from "../03_reading.js";
 import {state} from "../04_scenes.js";
 import {HUB_PLACES, placesThere} from "./15_hub.js";
@@ -126,7 +126,7 @@ export function readHubBoard() {
   state.hub.on = true;
   state.hub.port = port;
   HUB_PLACES.forEach(function (place) { state.hub.sizes[place] = sizes[place] || ""; });
-  boardResidue = boardResidue.filter(function (token) { return taken.indexOf(token) < 0; });
+  filterResidue(function (token) { return taken.indexOf(token) < 0; });
 }
 
 // Try each kept line of each body as a hub entry, moving those the hub's own writer gives back

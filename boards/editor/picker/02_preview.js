@@ -363,6 +363,11 @@ function lookLit(look, holder, t, slot, count, sim) {
 var FRAME = 1 / 40;
 export var beat = 0;
 
+// Set the beat the lights are painted at
+export function setBeat(at) {
+  beat = at;
+}
+
 export var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -370,6 +375,11 @@ export var HOLDING_STILL = window.matchMedia &&
 
 export var painters = [];
 var walks = {};
+
+// Empty the painters, which a draw makes afresh
+export function clearPainters() {
+  painters = [];
+}
 
 // What each lamp of a run shows now. A strip's stretches are played in the strip's form
 export function litRun(run) {
