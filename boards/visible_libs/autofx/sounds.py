@@ -14,6 +14,15 @@ from .checks import check_settings, find_file
 from .shows import report_stop, REPORTING_TO
 
 
+def __why_unplayable(error):
+    # Say why a sound cannot play, turning a failed read into what to do about it
+    if isinstance(error, OSError):
+        code = getattr(error, "errno", None)
+        return ("the drive could not read it{}. Copy it onto the drive "
+                "again".format(" (error {})".format(code) if code else ""))
+    return str(error)
+
+
 class Sound:
     """
     One WAV playing beside the effects, with the player it runs on, the file it reads
@@ -62,8 +71,9 @@ class Sound:
             self.live = False
             report_stop(REPORTING_TO[0], self.__name,
                         "line {}: {} stopped playing, and stays silent until the next "
-                        "reload: {}".format(self.__line, self.__name, e),
-                        "line {}: {} stopped playing: {}".format(self.__line, self.__name, e))
+                        "reload: {}".format(self.__line, self.__name, __why_unplayable(e)),
+                        "line {}: {} stopped playing: {}".format(self.__line, self.__name,
+                                                                 __why_unplayable(e)))
             return
         self.__from = 0
         self.live = True
@@ -289,7 +299,8 @@ def build_sounds(entries, fx, problems, volume=None):
         try:
             handle = __open_sound(path, stream)
         except OSError as e:
-            problems.append("line {}: {} could not be opened: {}".format(at, target, e))
+            problems.append("line {}: {} could not be opened: {}".format(
+                at, target, __why_unplayable(e)))
             continue
         except MemoryError:
             problems.append("line {}: {} is too large to load. A sound has to fit "
@@ -300,7 +311,8 @@ def build_sounds(entries, fx, problems, volume=None):
         try:
             WavReader(handle)
         except (OSError, ValueError) as e:
-            problems.append("line {}: {} cannot be played: {}".format(at, target, e))
+            problems.append("line {}: {} cannot be played: {}".format(
+                at, target, __why_unplayable(e)))
             try:
                 handle.close()
             except OSError:

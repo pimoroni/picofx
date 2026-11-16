@@ -935,6 +935,24 @@ def wants_full_size(entries, board):
     return False
 
 
+def __start_refused(shown, error):
+    # Sort a screen's start-up error as absent, memory or firmware, with the file's own
+    # message for the last two. Any other error gives (None, None)
+    said = str(error)
+    if "no screen answered" in said:
+        return "absent", None
+    if isinstance(error, MemoryError) or any(
+            clue in said for clue in ("display workspace", "display region", "from the heap",
+                                      "PSRAM", "SRAM")):
+        return "memory", ("{} could not start, as there was not enough memory left for it. "
+                          "Turn the board off and on, and if this comes back, play fewer or "
+                          "smaller pictures at once".format(shown))
+    if "this wire reached" in said or "no measured recipe" in said:
+        return "firmware", ("{} could not start at the speed it needs. The fault is in the "
+                            "board, not the file".format(shown))
+    return None, None
+
+
 def __screen_on(fx, name, line, problems, size, full_size=False):
     # The panel a selector name reaches, built once and kept since construction resets
     # the glass. It is built the first time it is asked for, at the board entry's size
@@ -976,7 +994,14 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
             port, reserve=Reserve.FULL_SIZE_IMAGES if full_size
             else Reserve.CANVAS_SPACE)
     except Exception as e:      # noqa: BLE001
-        problems.append("line {}: {} could not start: {}".format(line, shown, e))
+        kind, said = __start_refused(shown, e)
+        if kind == "absent":
+            problems.append("line {}: {} was not found. Check a screen is plugged "
+                            "into SP/CE {}".format(line, shown, port_name))
+        elif said is not None:
+            problems.append("line {}: {}".format(line, said))
+        else:
+            problems.append("line {}: {} could not start: {}".format(line, shown, e))
         return None
 
     BUILT_SCREENS[name] = (screen, size)
@@ -1080,13 +1105,15 @@ def __hub_panel(fx, place, size, problems, absent):
         port = getattr(fx.hub, place[len(HUB):])
         screen = SCREEN_TYPES[size](port)
     # A position with no panel refuses a screen, and claims nothing in doing so
-    except ValueError:
-        problems.append("{} is on the board entry but no panel answered there. Check it is "
-                        "seated, or take it off the board entry".format(shown))
-        absent.add(place)
-        return None
     except Exception as e:      # noqa: BLE001
-        problems.append("{} could not start: {}".format(shown, e))
+        kind, said = __start_refused(shown, e)
+        if said is not None:
+            problems.append(said)
+        elif kind == "absent" or isinstance(e, ValueError):
+            problems.append("{} is on the board entry but no panel answered there. Check it "
+                            "is seated, or take it off the board entry".format(shown))
+        else:
+            problems.append("{} could not start: {}".format(shown, e))
         absent.add(place)
         return None
 
@@ -1115,9 +1142,19 @@ def __hub_stream(fx, places, board, line, problems, absent):
                 continue
             try:
                 groups[size] = ScreenGroup(*panels)
+            # The group's own error names settings a file cannot set, so it goes to the console
             except Exception as e:      # noqa: BLE001
-                problems.append("the hub's {} panels could not be driven together: "
-                                "{}".format(size, e))
+                print("the hub's {} panels could not be driven together: {}".format(size, e))
+                # __hub_panel has already reported the positions with no panel
+                answered = hub_shown([place for place in fitted if place in BUILT_SCREENS])
+                if isinstance(e, MemoryError):
+                    problems.append("{} could not start, as there was not enough memory "
+                                    "left for them. Turn the board off and on, and if this "
+                                    "comes back, play fewer or smaller pictures at "
+                                    "once".format(answered))
+                else:
+                    problems.append("{} could not be set up, so nothing shows there. The "
+                                    "fault is in the board, not the file".format(answered))
         built = {place: BUILT_SCREENS[place][0] for place in sizes if place in BUILT_SCREENS}
         if built:
             BUILT_HUB["light"] = HubLight(built, sizes, groups)
@@ -1188,6 +1225,49 @@ def build_deferred_shows(problems):
     shows = build_shows(entries, fx, board, found)
     problems.extend(problem for problem in found if problem not in problems)
     return shows
+
+
+def __player_faults(entry, settings, problems):
+    # Check if a player takes a gif or sequence entry's pace and turnarounds, reporting
+    # each fault in the file's terms against the line that wrote it
+    fine = True
+    fps = settings.get("fps")
+    interval = settings.get("interval")
+    if fps is not None and (fps <= 0 or fps > 1000):
+        problems.append("line {}: {}'s fps is {}, expected frames a second above 0 and up "
+                        "to 1000, such as fps=10".format(
+                            entry.lines.get("fps", entry.line), entry.effect,
+                            value_shown(fps)))
+        fine = False
+    elif fps is None and interval and interval < 0.001:
+        problems.append("line {}: {}'s interval is {}, expected at least 0.001 seconds "
+                        "between frames".format(
+                            entry.lines.get("interval", entry.line), entry.effect,
+                            value_shown(interval)))
+        fine = False
+
+    loop = settings.get("loop", True)
+    ping_pong = settings.get("ping_pong", False)
+    hold = settings.get("hold", 0)
+    if settings.get("first_as_last") and loop and not ping_pong:
+        problems.append("line {}: first_as_last shows the first frame again at the end, "
+                        "and a loop has no end. Add ping_pong=true to play there and back, "
+                        "or loop=false to stop on it".format(
+                            entry.lines.get("first_as_last", entry.line)))
+        fine = False
+    if isinstance(hold, tuple) and not (loop and ping_pong):
+        problems.append("line {}: hold={}|{} waits at both ends, which needs loop=true and "
+                        "ping_pong=true. Set both, or give one wait, such as "
+                        "hold={}".format(entry.lines.get("hold", entry.line),
+                                         value_shown(hold[0]), value_shown(hold[1]),
+                                         value_shown(hold[0])))
+        fine = False
+    elif hold and not loop and not ping_pong:
+        problems.append("line {}: hold waits where the {} turns round, and with loop=false it "
+                        "plays through once. Add ping_pong=true, or take hold out".format(
+                            entry.lines.get("hold", entry.line), entry.effect))
+        fine = False
+    return fine
 
 
 def __in_kilobytes(count):
@@ -1323,6 +1403,9 @@ def build_shows(entries, fx, board, problems, build=True):
                     entry.line, setting))
 
         settings = check_settings(entry, SCREEN_EFFECTS[entry.effect], problems)
+        if entry.effect in ("gif", "sequence") and not __player_faults(entry, settings,
+                                                                       problems):
+            continue
 
         # A sequence names a folder where the others name a file, and neither works
         # without one. none shows black and names neither
@@ -1434,7 +1517,14 @@ def build_shows(entries, fx, board, problems, build=True):
             problems.append(__too_big(at, target, entry.effect, e))
             continue
         except Exception as e:      # noqa: BLE001
-            problems.append("line {}: {} could not be played: {}".format(at, target, e))
+            # A source with no frame delays is refused in a program's terms
+            said = str(e)
+            if "fps=None has nothing to read" in said or "every frame delay is zero" in said:
+                problems.append("line {}: {} does not say how long each frame shows, so "
+                                "give it a pace, such as fps=10 or interval=0.5".format(
+                                    at, target))
+            else:
+                problems.append("line {}: {} could not be played: {}".format(at, target, e))
             continue
 
         built.update((entry.scene, place) for place in places)

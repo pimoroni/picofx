@@ -193,6 +193,7 @@ def build_board(fx, settings, problems):
         else:
             declared["sensor"] = sensor
 
+    FELL_BACK[0] = False
     if not declared:
         return fx()
 
@@ -200,6 +201,7 @@ def build_board(fx, settings, problems):
         return fx(**declared)
     except Exception as e:      # noqa: BLE001
         problems.append("the board could not be set up as the file asks: {}".format(e))
+        FELL_BACK[0] = True
         return fx()
 
 
@@ -216,6 +218,9 @@ BUILT_SENSOR = []
 # for the shows to fill with one broadcast group per panel size. The shows add "light", the
 # hub's one backlight
 BUILT_HUB = {}
+
+# Whether the board was built plain after refusing what the file declared
+FELL_BACK = [False]
 
 
 def hub_declared(board):
@@ -271,7 +276,11 @@ def strips(fx, lengths, problems):
         except Exception as e:      # noqa: BLE001
             failed.add(kind)
             lengths.pop(kind, None)
-            problems.append("{} could not be set up: {}".format(strip_shown(kind), e))
+            if FELL_BACK[0]:
+                problems.append("{} is not running, as the board could not be set up as "
+                                "the file asks".format(strip_shown(kind)))
+            else:
+                problems.append("{} could not be set up: {}".format(strip_shown(kind), e))
             continue
 
         BUILT_STRIPS[kind] = (strip, count, after)
