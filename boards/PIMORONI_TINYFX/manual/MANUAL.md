@@ -51,17 +51,17 @@ them are two large tabs. **Effects** is where you'll spend most of your time, an
 ```picker
 header: Tiny FX Picker
 pages: *Effects, Programs
-tabs: *Outputs=mono Wave, Sound
+tabs: *Outputs=mono Wave, Sound, Sensor
 ```
 
-Under **Effects** you'll find **Outputs** for the lights and **Sound** for the
-speaker. Each tab shows a small preview of what it's playing, and [[Edit board]]
+Under **Effects** you'll find **Outputs** for the lights, **Sound** for the
+speaker and **Sensor** for the sensor connector. Each tab shows a small preview of what it's playing, and [[Edit board]]
 sits at the end of the row.
 
 ### Lights: Choosing a look
 
-On **Outputs** you'll see your lights, and below them a bar showing what each
-stretch of them plays.
+On **Outputs** you'll see your lights in stretches. Each stretch is a card
+holding its lights, over a band of the look it plays.
 
 When your board is new, the picker opens on **Outputs**. The six mono outputs are
 one stretch playing Wave, and the RGB output has a stretch of its own playing
@@ -71,13 +71,12 @@ Rainbow.
 badge: Wiring, the RGB output is one colour light
 mono: *Wave 6
 colour RGB: Rainbow 1
-tools:
 settings: Wave, on outputs 1 to 6, Brightness 100, Speed 45, Spread 50
 cards mono Along the lights: *Wave, Scanner, Chase, Marquee
 ```
 
-Click the bar, or any light, to select that stretch. Then click a card in the
-gallery to play that look there.
+Click a stretch to select it. Then click a card in the gallery to play that look
+there.
 
 The cards are grouped by how they play. **Along the lights** travel from one end
 to the other, **Ready-made** looks combine several others, **All together** shows
@@ -85,7 +84,8 @@ the same on every light, and **Individual** gives each light its own part. Cards
 with a small palette let you choose the colour, and [[Nothing]] turns the stretch
 off.
 
-The selected stretch's settings sit just above the gallery. Every look has a
+The selected stretch's settings sit just above the gallery, pointing up at their
+stretch. Every look has a
 brightness, and most also have a speed and a setting of their own. A look that
 takes a colour shows a row of colours to choose from, with [[custom]] for any
 other. [[Reverse]] changes which end a travelling look starts from. If you want
@@ -94,28 +94,24 @@ in.
 
 ### Lights: Cutting into stretches
 
-To play more than one look, cut the bar into stretches. Hover over the bar where
-you want a cut, between two lights, and click.
+To play more than one look, cut the lights into stretches. Hover over a stretch
+where you want a cut, between two lights, and click.
 
 Try it between mono lights 3 and 4. You'll have two stretches, both still playing
 Wave. Click the right-hand one and choose Sparkle, and lights 4 to 6 start to
 twinkle.
 
 ```picker
+badge: Wiring, the RGB output is one colour light
 mono: Wave 3, *Sparkle 3
 colour RGB: Rainbow 1
-tools:
 settings: Sparkle, on outputs 4 to 6, Brightness 100
 cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
 ```
 
-Drag a cut to move it, or click the cross on it to remove it.
-
-The tools under the bar do the same in one go. [[Split into]] cuts the selected
-stretch into a number of equal [[stretches]], or into stretches of so many
-[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
-the number of stretches you set, starting with the selected one, and repeats
-them to the end. The arrows above the bar undo and redo.
+Drag a cut to move it, or click the cross on it to remove it. [[Join all]], at the
+right of the row above, puts the lights back to one stretch, and the arrows
+beside it undo and redo.
 
 ### Board: Setting up your hardware
 
@@ -127,14 +123,16 @@ setting with it, such as the order your lights are wired in. These settings
 describe your hardware, so they're shared by every scene.
 
 ```picker
-tabs editing: *Outputs=mono Wave, Sound
-badge: Wiring, the RGB output is one colour light | Drag each light to match its position in your build.
+tabs editing: *Outputs=mono Wave, Sound, Sensor
+badge: Wiring, the RGB output is one colour light | Drag lights to match your build. The arrow on the RGB output splits or rejoins it.
 wiring mono Wave: 1, 2, 3, 4, 5, 6 | RGB
 ```
 
 Drag each light to match where it sits in your build, so a look that travels
 moves the right way. The arrow on the RGB output moves it across to the mono side
-as three mono lights, or brings them back as one colour light.
+as three mono lights, or brings them back as one colour light. [[Reset wiring]],
+under the connectors, puts every light back in wiring order and rejoins the RGB
+output.
 
 ### Sound: Choosing a sound
 
@@ -193,7 +191,7 @@ over from it while that scene shows.
 With a scene chosen, the page shows what the board plays where the scene sets
 nothing. Those lights play Always on's look, on tiles striped inside a dashed
 outline. A light that only another scene uses is dark, as the board turns it
-off, and the bar names the scene that lights it. In a scene, [[Nothing]] means
+off, and its stretch names the scene that lights it. In a scene, [[Nothing]] means
 the scene sets nothing of its own there, so Always on can still play.
 
 On **Sound**, Always on's sound wears the same stripes in a scene with none of

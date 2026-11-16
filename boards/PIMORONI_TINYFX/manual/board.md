@@ -3,11 +3,11 @@
 ```picker
 header: Tiny FX Picker
 pages: *Effects, Programs
-tabs: *Outputs=mono Wave, Sound
+tabs: *Outputs=mono Wave, Sound, Sensor
 ```
 
-Under **Effects** you'll find **Outputs** for the lights and **Sound** for the
-speaker. Each tab shows a small preview of what it's playing, and [[Edit board]]
+Under **Effects** you'll find **Outputs** for the lights, **Sound** for the
+speaker and **Sensor** for the sensor connector. Each tab shows a small preview of what it's playing, and [[Edit board]]
 sits at the end of the row.
 
 <!-- block picker_first_look -->
@@ -20,7 +20,6 @@ Rainbow.
 badge: Wiring, the RGB output is one colour light
 mono: *Wave 6
 colour RGB: Rainbow 1
-tools:
 settings: Wave, on outputs 1 to 6, Brightness 100, Speed 45, Spread 50
 cards mono Along the lights: *Wave, Scanner, Chase, Marquee
 ```
@@ -32,9 +31,9 @@ Wave. Click the right-hand one and choose Sparkle, and lights 4 to 6 start to
 twinkle.
 
 ```picker
+badge: Wiring, the RGB output is one colour light
 mono: Wave 3, *Sparkle 3
 colour RGB: Rainbow 1
-tools:
 settings: Sparkle, on outputs 4 to 6, Brightness 100
 cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
 ```
@@ -42,14 +41,16 @@ cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
 <!-- block picker_board -->
 
 ```picker
-tabs editing: *Outputs=mono Wave, Sound
-badge: Wiring, the RGB output is one colour light | Drag each light to match its position in your build.
+tabs editing: *Outputs=mono Wave, Sound, Sensor
+badge: Wiring, the RGB output is one colour light | Drag lights to match your build. The arrow on the RGB output splits or rejoins it.
 wiring mono Wave: 1, 2, 3, 4, 5, 6 | RGB
 ```
 
 Drag each light to match where it sits in your build, so a look that travels
 moves the right way. The arrow on the RGB output moves it across to the mono side
-as three mono lights, or brings them back as one colour light.
+as three mono lights, or brings them back as one colour light. [[Reset wiring]],
+under the connectors, puts every light back in wiring order and rejoins the RGB
+output.
 
 <!-- block picker_programs_picture -->
 

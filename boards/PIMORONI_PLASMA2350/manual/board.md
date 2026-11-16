@@ -20,7 +20,6 @@ Rainbow.
 ```picker
 badge strip: Strip, 66 LEDs, GRB
 strip: *Nothing 66
-tools:
 settings: Nothing, on LEDs 1 to 66 of the strip on DAT
 cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee, *Nothing
 ```
@@ -34,7 +33,6 @@ a light starts sweeping along that half.
 ```picker
 badge strip: Strip, 66 LEDs, GRB
 strip: Rainbow 33, *Scanner 33
-tools:
 settings: Scanner, on LEDs 34 to 66 of the strip on DAT, colour red, Brightness 100, Speed 50
 cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
 ```

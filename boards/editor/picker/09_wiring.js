@@ -7,7 +7,7 @@
 
 var SLIDE_MS = 420;
 
-// The connectors sit under both sides of the outputs, before their tools and settings
+// The connectors sit under both sides of the outputs, before the chosen stretch's settings
 (function () {
   var row = document.createElement("div");
   row.id = "wiringRow";
@@ -35,7 +35,7 @@ function wiredSide() {
 // The lamps on show
 function lampsShown() {
   return Array.prototype.slice.call(document.querySelectorAll(
-    "#outRun .lamp[data-key], #monoRun .lamp[data-key]"));
+    "#outBar .cardlamp[data-key], #monoBar .cardlamp[data-key]"));
 }
 
 function lampNode(key) {
@@ -51,26 +51,27 @@ function bringForward(keys, on) {
   });
 }
 
-// How far the sides and what follows them run outside setup, the cutting and the bar
-// included, so the connectors can take up the same room while setting up
-var unwiredSpan = null;
-
-function sidesSpan() {
-  return document.getElementById("outTools").getBoundingClientRect().top -
-         document.getElementById("sides").getBoundingClientRect().top;
+// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
+// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// of the settings, and the panel only grows by what they need beyond that room
+function overlapBelow(box) {
+  var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -
+                 box.getBoundingClientRect().bottom;
+  if (settings <= 0) return;
+  box.style.minHeight = Math.max(box.getBoundingClientRect().height, settings) + "px";
+  box.style.marginBottom = -settings + "px";
 }
 
 function renderConnectors() {
   var box = document.getElementById("wiringRow");
   box.textContent = "";
+  box.style.marginBottom = "";
+  box.style.minHeight = "";
   var old = document.getElementById("wiringLines");
   if (old) old.parentNode.removeChild(old);
   // A board whose outputs are its own LEDs has no wiring to show
   document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
-  if (!setupOn || !BOARD.wiring_order) {
-    unwiredSpan = sidesSpan();
-    return;
-  }
+  if (!setupOn || !BOARD.wiring_order) return;
 
   var row = document.createElement("div");
   row.className = "wireconnectors";
@@ -101,7 +102,11 @@ function renderConnectors() {
     block.addEventListener("mouseleave", function () { bringForward(keys, false); });
     row.appendChild(block);
   });
-  box.appendChild(row);
+  // The board's edge holds its connectors and, under them, what the wiring order says
+  var board = document.createElement("div");
+  board.className = "wireboard";
+  board.appendChild(row);
+  box.appendChild(board);
 
   var side = wiredSide();
   var astray = astrayOf(side);
@@ -109,18 +114,21 @@ function renderConnectors() {
     var node = lampNode(lamp.key);
     if (node) node.classList.add("astray");
   });
-  var said = document.createElement("p");
-  said.className = "wiresay";
-  said.innerHTML = astray.length
+  var foot = document.createElement("div");
+  foot.className = "wirefoot";
+  var said = document.createElement("span");
+  said.innerHTML = (astray.length
     ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
-      "order, numbered in bold. Hover over a light or connector to highlight its wire."
-    : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
-  box.appendChild(said);
-  // The connectors sit lower by whatever the cutting and the bar took beyond them, and the
-  // lines run on down to them, so setting up leaves the section its size
-  row.style.marginTop = "";
-  var short = unwiredSpan === null ? 0 : unwiredSpan - sidesSpan();
-  if (short > 0) row.style.marginTop = (parseFloat(getComputedStyle(row).marginTop) + short) + "px";
+      "order, numbered in bold. "
+    : "All lights are in wiring order. ") + brokenSentence() +
+    "Hover over a light or connector to highlight its wire.";
+  foot.appendChild(said);
+  // The button stays while there is nothing to reset, so the board's edge never changes height
+  var reset = resetWiringButton();
+  reset.disabled = !wiringChanged(astray);
+  foot.appendChild(reset);
+  board.appendChild(foot);
+  overlapBelow(box);
   drawLines();
 }
 
@@ -164,6 +172,32 @@ var sliding = null;
 function moveLamp(move) {
   slideFrom(lampKey(move.from));
   moveLampInScenes(move);
+}
+
+// The outputs broken out, said as a sentence for the board's edge, or nothing where none are
+function brokenSentence() {
+  var broken = breakingOutputs().some(function (out) { return wiring[out].broken; });
+  if (!broken) return "";
+  var said = brokenSaid();
+  return said.charAt(0).toUpperCase() + said.slice(1) + ". ";
+}
+
+// The button that puts the wiring back as the board comes, each lamp sliding to its place and a
+// rejoined output's lamp gathering from the middle of its three
+function resetWiringButton() {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "wirereset";
+  button.textContent = "Reset wiring";
+  button.title = "Rejoin every broken-out output and put every light back in wiring order";
+  button.onclick = function () {
+    slideFrom(null);
+    breakingOutputs().forEach(function (out) {
+      if (wiring[out].broken) gatherFromThree(out);
+    });
+    resetWiringInScenes();
+  };
+  return button;
 }
 
 // Where a lamp is within the outputs' panel. The page may scroll straight after a draw to
@@ -222,6 +256,12 @@ function breakOut(out) {
 
 function rejoin(out) {
   slideFrom(null);
+  gatherFromThree(out);
+  rejoinInScenes(out);
+}
+
+// Start a rejoined output's lamp in the slide from the middle of its three channels
+function gatherFromThree(out) {
   var three = [0, 1, 2].map(function (channel) {
     return sliding.was[lampKey({out: out, channel: channel})];
   }).filter(Boolean);
@@ -231,7 +271,6 @@ function rejoin(out) {
       top: three.reduce(function (sum, one) { return sum + one.top; }, 0) / three.length
     };
   }
-  rejoinInScenes(out);
 }
 
 drawSteps.after.push(function () {

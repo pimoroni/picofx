@@ -65,18 +65,11 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 /* A tab whose section cannot be used just now, which still opens to say why */
 .ledtab.blocked{opacity:.45}
-.head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
-.head .gap{flex:1}
-/* The row of settings that belongs to the bar, which the run above it is cut into. As tall as
-   the step buttons, so a side without them starts its bar level with one that has them */
-.head.cutting{margin-top:.9rem;min-height:1.75rem}
-.head.cutting .what{font-size:.82rem;color:var(--dim)}
-
 /* Zoomed in, the bar is wider than the room it has and scrolls inside it. The padding
    and the pull back up leave the labels above a cut somewhere to be drawn */
 .scroller{overflow-x:auto;overflow-y:hidden;padding-top:1.2rem;margin-top:-1.2rem}
-/* That pull reaches over the buttons in the row above, so they sit on top to take their clicks */
-.head.cutting button{position:relative;z-index:1}
+/* A strip's bar keeps that room clear of the strip drawn above it, with the bar's own margin */
+.stripbar{margin-top:.3rem}
 .scroller::-webkit-scrollbar{height:9px}
 .scroller::-webkit-scrollbar-thumb{background:#cfc9bf;border-radius:99px}
 .scroller::-webkit-scrollbar-track{background:#f0eeea;border-radius:99px}
@@ -151,6 +144,37 @@ button.round svg{display:block}
 .sec .says .beneath{font-weight:400;color:var(--dim);margin-left:.45em;padding-left:.45em;
  border-left:1px solid #c9c3b9}
 .sec.narrow .says{font-size:.6rem}
+/* The outputs' stretches as cards holding their lamps, evenly spaced so a cut falls between two,
+   over a thin band of what the stretch plays. A cut can be made anywhere over the lamps and band.
+   The room above the cards holds a cut's label and its cross, clear of the row above */
+.bar.carded{margin-top:.75rem}
+.bar.carded .sec{display:flex;flex-direction:column}
+.cardlamps{display:flex;padding:.55rem 0 .3rem}
+/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+   without moving a lamp */
+/* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
+   gap between tiles follows the outputs' panel, not the card, so every card's lights match,
+   and closes up on a narrow panel to leave the lights their room */
+#sides{container-type:inline-size}
+.cardlamp{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+ position:relative;margin:0 clamp(0px,(100cqw - 400px) / 100,4px);padding:.3rem 1px .05rem;
+ border:1px solid transparent;
+ border-radius:8px}
+.cardlamp i{display:block;position:relative;width:min(1.9rem,100%);aspect-ratio:1;
+ border-radius:50%;background:#2a2d30;box-sizing:border-box}
+.cardlamp b{font:400 .66rem/1.5 system-ui,sans-serif;color:var(--dim);max-width:100%;
+ overflow:hidden;text-overflow:clip;white-space:nowrap}
+/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
+   what the board does there, in a scene Always on's look in full or dark */
+.cardlamp.unset{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* A broken-out lamp has a dot in the colour of the channel that drives it, centred on the edge of
+   its light at the top left and ringed off the light. Which output that is has no mark of its own */
+.cardlamp.chan i::after{content:"";position:absolute;left:calc(14.645% - 16%);
+ top:calc(14.645% - 16%);width:32%;height:32%;border-radius:50%;background:var(--chan);
+ box-shadow:0 0 0 2px var(--panel)}
+.bar.carded .sec .lit{height:.45rem;border-radius:0}
+.bar.carded .sec .cuts{height:auto;bottom:1.1rem}
 
 /* A cut that is already there, dragged to move it along the run or taken out by its
    cross, which joins the two stretches either side. Two acts, two targets,
@@ -168,45 +192,20 @@ button.round svg{display:block}
 /* Room under the bar for the crosses to sit in */
 .bar{padding-bottom:1.4rem}
 
-/* How many lights are in a run, ticked off under it while there are few enough to see */
-.ticks{display:flex;gap:2px;margin-bottom:.15rem}
-.ticks span{flex:1;text-align:center;font:400 .6rem/1.4 system-ui,sans-serif;
- color:var(--dim);min-width:0;overflow:hidden}
-
-.tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
- font-size:.85rem;color:var(--dim)}
-.tools input[type=number]{width:3.4rem;padding:.25rem .3rem;border:1px solid var(--line);
- border-radius:7px;font:inherit;font-size:.85rem;text-align:center}
-.tools .gap{flex:1}
-
-/* The run itself, above the bar it is cut by */
-.run{background:var(--panel);border:1px solid var(--line);border-radius:10px;
- padding:.8rem .7rem;margin-top:.7rem}
-.run svg{display:block;width:100%;height:auto}
-.run svg .ringed{fill:none;stroke:var(--accent);stroke-width:1.4;opacity:.9;
- pointer-events:none}
-/* The whole span a stretch covers takes the click, not only the lights along it */
-.run svg .span{fill:transparent;cursor:pointer}
-.run svg .span:hover{fill:rgba(0,133,125,.07)}
-.lamps{display:flex;gap:.4rem;justify-content:flex-start;flex-wrap:wrap}
-.lamp{padding:.25rem .25rem .1rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);line-height:1;cursor:grab}
-.lamp{cursor:pointer}
-/* The stretch being edited, ringed on the preview so it and the bar agree */
-.lamp.ringed{box-shadow:0 0 0 2px var(--accent)}
-.lamp.carried{opacity:.35}
-.lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
-.lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:50%;
- box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
-/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
-   what the board does there, in a scene Always on's look in full or dark */
-.lamp.unset{border-style:dashed;border-color:#a9a49b;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
- text-align:center}
-
 /* What the picked section is playing */
-.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
+.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem;
+ background:var(--panel)}
+/* Pointing at its stretch, the panel is drawn in the colour the stretch is picked in, and its
+   point is a square turned on its corner over the top edge, filled to hide the edge under it.
+   --notch is measured from the panel's outer edge, so the square's 14px sits 2px + 7px left */
+.chosen.pointing{position:relative;border:2px solid var(--accent);
+ padding:calc(.6rem - 1px) calc(.8rem - 1px)}
+.chosen.pointing::before{content:"";position:absolute;top:-8px;left:calc(var(--notch) - 9px);
+ width:12px;height:12px;background:inherit;border-top:2px solid var(--accent);
+ border-left:2px solid var(--accent);transform:rotate(45deg);border-top-left-radius:2px}
+/* Nothing looks picked while the board is set up */
+body.setupall .chosen.pointing{border-color:var(--line)}
+body.setupall .chosen.pointing::before{display:none}
 .chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
 .chosen .who b{color:var(--ink);font-size:.92rem}
 /* The gallery. A card shows what a look does, and a tap puts it on the stretch being worked on */
@@ -263,40 +262,28 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-/* ---- lamps and runs ---- */
+/* ---- the lamps in Edit board ---- */
 
-/* An output's lamp says which of the two things it is. A colour one is one lens, and a
-   broken one is three, which keep the output's own outline around them so the connector
-   they share is still readable */
-.lamp.colourlamp i{background:#2a2d30}
-.lamp.chan b{font-size:.6rem}
-
-/* A broken-out lamp says which of its output's three channels drives it, cut into the
-   corner. Which output that is has no mark of its own. Pointing at one of the three is
-   what shows them, and a tint per output was more colour than anyone could hold */
-.lamp.chan{position:relative;overflow:hidden}
-.lamp.chan::before{content:"";position:absolute;top:0;left:0;width:0;height:0;
- border-width:.4rem;border-style:solid;
- border-color:var(--chan) transparent transparent var(--chan)}
+/* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
+   stretches are the scene's, so only the lamps answer the pointer */
+body.setupall .cardlamp{cursor:grab;background:var(--panel);border-style:solid;
+ border-color:var(--line)}
+body.setupall .cardlamp:active{cursor:grabbing}
+body.setupall .bar.carded .sec{pointer-events:none}
+body.setupall .bar.carded .cardlamp{pointer-events:auto}
+body.setupall .bar.carded .sec>:not(.cardlamps):not(.stripbeads),
+body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
+/* Cutting is the scene's, so no place to cut is offered while the board is set up. A place takes
+   the pointer of its own, which the card's standing back does not take from it */
+body.setupall .bar.carded .sec .cut{display:none}
+.cardlamp.carried{opacity:.35}
+.cardlamp.landing{box-shadow:-3px 0 0 var(--accent)}
+.cardlamp.landing.after{box-shadow:3px 0 0 var(--accent)}
 
 /* Pointing at one channel lights the edges of all three of its output, each in the
    colour of the channel it is driven from. An outline rather than a border, so nothing
    moves as it comes and goes, and inset so it reads as the edge thickening */
-.lamp.chan.kin{outline:2px solid var(--chan);outline-offset:-1px}
-.outgroup.kin .cross{display:inline-flex}
-/* The run is one block of lamps. An output is a space in it, not a box around it. The
-   lamps are close within an output and further apart between them, which is what says
-   where one connector ends and the next begins */
-.outgroup{display:flex;align-items:stretch;gap:.15rem;position:relative;
- margin-right:.5rem}
-.lamps{gap:0}
-/* A lamp is what is picked up and placed, so a box only means that these lamps happen
-   to sit next to each other and share a connector. Only Edit board lets a lamp move */
-body.setupall .lamp{cursor:grab}
-body.setupall .lamp:active{cursor:grabbing}
-.lamp.carried{opacity:.35}
-.lamp.landing{box-shadow:-3px 0 0 var(--accent)}
-.lamp.landing.after{box-shadow:3px 0 0 var(--accent)}
+.cardlamp.chan.kin{outline:2px solid var(--chan);outline-offset:-1px}
 
 /* One set of looks, drawn for the kind being worked on. A tab per kind, and a kind the
    board has none of is offered but not taken. It says what breaking an output out would
@@ -332,66 +319,29 @@ body.setupall .lamp:active{cursor:grabbing}
    lamps to the right, and the gap between them is what an output crosses. Each side is
    as wide as what it holds, so the divide moves as outputs are broken out and put back */
 .sides{display:flex;align-items:flex-start;gap:1rem}
-/* A side is never narrower than the rows under it need. Squeezed below this its counts
-   wrap, and a wrapped count puts the two sides out of line with each other */
-.side{min-width:8.5rem;display:flex;flex-direction:column}
+.side{min-width:0;display:flex;flex-direction:column}
 /* A side holding nothing has nothing to cut and nothing to show, so it says so and
    stands aside */
-.side.empty .run,.side.empty .head.cutting,.side.empty>div[id$="Bar"]{display:none}
-.side .run{width:100%}
-#sideA .lamps{justify-content:flex-start}
-#sideB .lamps{justify-content:flex-end}
-/* On the mono side every group is one output's three channels, each lamp saying which it
-   is, so the run reads evenly and the wider gap between groups is not needed to tell one
-   connector from the next */
-#sideB .outgroup{margin-right:0;margin-left:.15rem}
-#sideB .sidehead{flex-direction:row-reverse}
-
-/* The right side's row mirrors the left, but the two step buttons keep their order.
-   Reversing the row would put redo before undo */
-#sideB .head.cutting{justify-content:flex-end}
-#sideB .head.cutting .gap{order:-1}
-#sideB .head.cutting .what{order:3}
-/* A count that wraps makes its side taller than the other, so it never wraps */
-.head.cutting .what{white-space:nowrap}
-.sidehead{display:flex;align-items:baseline;gap:.5rem;font:600 .82rem system-ui,sans-serif;
- margin:0 0 .35rem;flex-wrap:nowrap;white-space:nowrap;min-width:0;height:1.35rem}
-.sidehead span{font-weight:400;font-size:.75rem;color:var(--dim);min-width:0;
- overflow:hidden;text-overflow:ellipsis}
+.side.empty>div[id$="Bar"]{display:none}
 .side.nothing{font-size:.8rem;color:var(--dim);padding:1.2rem .4rem;text-align:center;
  border:1px dashed var(--line);border-radius:11px;background:#fcfbf9}
 
-/* The arrow an output crosses on. It sits on the output itself, pointing at the side it
-   would move to */
+/* The arrow an output crosses on. It sits on the corner of the lamp pointed at, pointing at the
+   side it would move to */
 .cross{position:absolute;top:-.45rem;width:1.2rem;height:1.2rem;padding:0;
  border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;
  color:var(--rgbout);border-color:#d9c8f5;background:var(--panel);
  box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.outgroup:hover .cross{display:inline-flex}
+.cardlamp:hover .cross{display:inline-flex}
 #sideA .cross{right:-.3rem}
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
-/* A board whose outputs start with its mono ones lays them out first. The mono lamps pack to
-   the left and the colour side mirrors to the right, holding the steps both sides share */
+/* A board whose outputs start with its mono ones lays them out first, and the colour side
+   follows them on the right */
 #sides.monofirst #sideB{order:-1}
-#sides.monofirst #sideA{min-width:12rem}
-#sides.monofirst #sideA .lamps{justify-content:flex-end}
-#sides.monofirst #sideB .lamps{justify-content:flex-start}
-#sides.monofirst #sideA .outgroup{margin-right:0;margin-left:.15rem}
-#sides.monofirst #sideB .outgroup{margin-right:.15rem;margin-left:0}
-#sides.monofirst #sideA .sidehead{flex-direction:row-reverse}
-#sides.monofirst #sideB .sidehead{flex-direction:row}
-#sides.monofirst #sideA .head.cutting{justify-content:flex-end}
-#sides.monofirst #sideA .head.cutting .gap{order:-1}
-#sides.monofirst #sideA .head.cutting .what{order:3}
-#sides.monofirst #sideB .head.cutting{justify-content:flex-start}
-#sides.monofirst #sideB .head.cutting .gap,#sides.monofirst #sideB .head.cutting .what{order:0}
 #sides.monofirst #sideA .cross{left:-.3rem;right:auto}
 #sides.monofirst #sideB .cross{right:-.3rem;left:auto}
-/* A mono output is one light, with no channel's corner to cut and no kin to gather */
-.lamp.chan.single::before{display:none}
-.lamp.chan.single.kin{outline:none}
 
 
 /* Scenes take turns, so they are a grid of cards over the frame they open, one card a
@@ -497,7 +447,7 @@ body.setupall .lamp:active{cursor:grabbing}
 .scenebody{border:1px solid transparent;border-radius:12px;padding:0}
 .scenebody.framed{border:1.5px solid var(--frame);border-top-left-radius:0;
  background:var(--panel);padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
-.scenebody.framed .panel{background:#faf9f7}
+.scenebody.framed .panel,.scenebody.framed #wiringRow,.scenebody.framed .chosen{background:#faf9f7}
 
 /* What one scene is called, and how long it holds */
 .sceneset{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;
@@ -646,14 +596,15 @@ body.setupall .lamp:active{cursor:grabbing}
 .sceneset select.scenethen{max-width:9rem;font-weight:600}
 .sceneset.alwaysnote{display:flex;align-items:center;font-size:.74rem;line-height:1.35;
  color:var(--dim)}
-/* The tools under a run, in the screens' button style. Split and Repeat are each one outlined
-   group read as a sentence, words then number then the buttons that act, divided as the
-   screens' segmented choices are. The screens' rules are repeated for the pages with none */
-.stretchtools{gap:.5rem .8rem}
-.stretchtools .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
- padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
- align-items:center;gap:.35rem;cursor:pointer}
-.stretchtools .stoggle:disabled{opacity:.4;cursor:default}
+/* Split into, on a strip's chosen stretch beside its Reverse, in the screens' button style. It is
+   one outlined group read as a sentence, words then number then the buttons that act, divided as
+   the screens' segmented choices are. The screens' rules are repeated for the pages with none */
+.chosen .who .stretchtools{display:inline-flex;margin-left:auto;flex:none}
+.chosen .who .stretchtools + .direction{margin-left:0}
+/* On a narrow page the buttons move under the stretch's name, whole, rather than squeeze it */
+.chosen .who.withway{flex-wrap:wrap;row-gap:.4rem}
+.chosen .who .direction{flex:none}
+.stretchtools .toolsays,.stretchtools .toolact{white-space:nowrap}
 .stretchtools .toolset{display:inline-flex;align-items:stretch;border:1.5px solid var(--line);
  border-radius:8px;overflow:hidden;background:var(--panel);font:600 .76rem system-ui,sans-serif}
 .stretchtools .toolsays{display:inline-flex;align-items:center;gap:.35rem;padding:0 .45rem 0 .55rem;
@@ -661,14 +612,11 @@ body.setupall .lamp:active{cursor:grabbing}
 .stretchtools .toolset input[type=number]{width:2.6rem;margin:.18rem .3rem .18rem 0;padding:.1rem .2rem;
  font:inherit;border:1px solid var(--line);border-radius:6px;text-align:center}
 .stretchtools .toolact{border:0;border-left:1px solid var(--line);border-radius:0;
- background:var(--panel);padding:.28rem .55rem;font:inherit;color:var(--accent);cursor:pointer}
+ background:var(--panel);padding:.28rem .55rem;font:inherit;color:var(--ink);cursor:pointer}
 .stretchtools .toolact:hover:enabled{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .stretchtools .toolact:disabled{color:var(--dim);opacity:.5;cursor:default}
-/* What Repeat copies, a swatch a stretch, and on the bar while it is pointed at */
-.repeatchips{display:inline-flex;align-items:center;gap:2px;padding-right:.45rem}
-.repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
-.repeatchip.nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 2px,#d8d2c8 2px,
- #d8d2c8 3.5px)}
+/* A colour of a palette, beside its slider */
+.palettechip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 /* A cut's cross sits above the bar, in the room already kept there for where a new cut would
    fall. The two never show at once, since one is pointed at on a cut and the other inside a
    stretch. So the bar keeps no room under it for the cross */
@@ -683,8 +631,6 @@ body.setupall .lamp:active{cursor:grabbing}
    default. Otherwise a bar of a hundred labelled stretches widens the page to fit them all, and
    the strip drawn above it grows too, since the bar is what scrolls */
 #tabStack > *{min-width:0}
-.bar > .sec.repeatfrom{outline:2px dashed var(--accent);outline-offset:-2px}
-.bar > .sec.repeatover{opacity:.35}
 /* A setting's icon before its name, a line drawing in the name's grey */
 .chosen .tuning label.withicon{display:inline-flex;align-items:center;gap:.4rem}
 .settingicon{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;
@@ -733,12 +679,46 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .blinkmore{margin-left:.3rem;padding:.15rem .5rem;border:1px dashed var(--line);border-radius:5px;
  background:none;color:var(--ink);font-size:.78rem;cursor:pointer}
 
-/* A strip is a run like the outputs, drawn as wire and beads. The wire runs between the
-   lights as well as around the turns, so where it begins and ends is readable */
-.striprun{overflow-x:auto;padding:.2rem 0 .1rem}
-.striprun svg{display:block}
-.strip .head{margin-bottom:.3rem}
-.strip .lamps{gap:.18rem}
+/* A strip's LEDs are beads on a wire in its stretches' cards. Each card draws the wire behind its
+   own beads, over its background, and the bar's wire joins the cards from the lead block to the
+   ring. --bead, --gap, --gapdrawn, --fill and --apart are set for the room each LED has, --apart
+   running from 1 for beads apart at full size to 0 for one continuous strip. --beadtall, --wire,
+   --end and --wiremiddle stay the same */
+.stripcards{position:relative}
+.stripcards > .sec{z-index:1}
+.stripwire{position:absolute;background:#c9c3b9;pointer-events:none}
+.wireend{flex:0 0 auto;width:max(8px,calc(var(--end) * .8));position:relative;align-self:stretch;
+ z-index:1}
+.wireend .lead{position:absolute;left:2px;top:calc(var(--wiremiddle) - var(--end) * .31);
+ width:calc(var(--end) * .42);height:calc(var(--end) * .62);border-radius:calc(var(--end) * .13);
+ background:#8f8a81}
+.wireend .tail{position:absolute;right:2px;top:calc(var(--wiremiddle) - var(--end) * .29);
+ width:calc(var(--end) * .58);height:calc(var(--end) * .58);box-sizing:border-box;
+ border:max(1.2px,calc(var(--end) * .14)) solid #a9a49b;border-radius:50%;background:#fff}
+.stripbeads{display:flex;align-items:center;margin:.45rem 3px .3rem;padding:3px 0;border-radius:7px;
+ background:linear-gradient(#c9c3b9,#c9c3b9) center/100% var(--wire) no-repeat}
+/* A stretch set to Nothing. Its beads sit on the stripes Nothing wears elsewhere, inside a broken
+   line, and show what the board does there */
+.stripbeads.unset{outline:1.4px dashed #a9a49b;outline-offset:-1px;
+ background:linear-gradient(#c9c3b9,#c9c3b9) center/100% var(--wire) no-repeat,
+ repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* The places a stretch can be cut are spread across the same width as its beads */
+.stripcards .sec .cuts{left:3px;right:3px}
+.stripbeads i{flex:1 1 0;min-width:0;display:flex;justify-content:center}
+/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom.
+   It takes its own room less the gap, so beads join exactly where the gap closes. Its corners and
+   edge close up with the gap, so the joined strip is square and even.
+   A gap under a pixel is drawn as a whole pixel, which a browser draws evenly, and is filled
+   with the beads' own colour, which deepens as --fill rises from 0 to 1 while the gap closes. The
+   fill is the bead drawn again half a gap and half a pixel to either side, in its colour as
+   painted, overlapping its neighbours so no seam is left where they meet */
+.stripbeads b{--filled:color-mix(in srgb,currentColor calc(var(--fill) * 100%),transparent);
+ display:block;width:min(var(--beadtall),calc(100% - var(--gapdrawn)));
+ height:var(--beadtall);border-radius:calc(min(5px,var(--bead) * .22) * var(--apart));
+ background:#2a2d30;color:#2a2d30;
+ box-shadow:inset 0 0 0 calc(1px * var(--apart)) rgba(0,0,0,.12),
+ calc(var(--gapdrawn) / 2 + .5px) 0 0 0 var(--filled),
+ calc(var(--gapdrawn) / -2 - .5px) 0 0 0 var(--filled)}
 
 /* How many lights are on a strip, which is a fact about the board and not the scene */
 .leds{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--dim);
@@ -746,6 +726,7 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .leds input{font:inherit;font-size:.8rem;width:4.5rem;padding:.24rem .4rem;
  border-radius:7px;border:1px solid var(--line);background:var(--bg);color:inherit}
 .leds .says{margin-left:.2rem}
+.leds .stretchcount{white-space:nowrap}
 
 /* Lines read from the board's file that no setting here stands for, carried as written */
 .keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
@@ -763,7 +744,8 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .sound .hear:hover{color:var(--ink);border-color:var(--ink)}
 .sound .hear.playing{background:var(--accent);border-color:var(--accent);color:#fff}
 /* A light a kept line plays, taken until that line goes */
-.lamp.keptlamp, .sec.keptlamp{outline:2px dashed var(--dim);outline-offset:2px}
+.sec.keptlamp, .cardlamp.keptlamp i{outline:2px dashed var(--dim);
+ outline-offset:2px}
 /* One set of pictures, each able to go to A, to B, or to both */
 .assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.7rem}
 .asset{position:relative;border:2px solid var(--line);border-radius:10px;overflow:hidden;
@@ -1198,21 +1180,27 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .boardchip select option{color:var(--ink)}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
 .facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
-/* The outputs' setup hint stays on the line of their box, so setting up moves no lamp, and
-   is cut short where the page is too narrow, its whole saying in its tooltip */
-#outFacts{display:flex;align-items:center;margin-top:0}
-#outFacts .chip{flex:0 0 auto;white-space:nowrap}
-/* With the sides unnamed the lamps sit under the board's box at a strip's spacing, their
-   own margin being for the heading and adding to the box's inside the sides */
-#sides.unnamed .run{margin-top:0}
-#outFacts .hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
- flex:1 1 0;width:0}
+/* The outputs' setup hint sits on the line of their box, which it fits at the page's full width.
+   On a narrower page it is cut short with its whole text kept in its tooltip, so the line never
+   grows taller, and where too little of it would show it is left out */
+#outFacts{display:flex;align-items:center;margin-top:0;container-type:inline-size}
+#outFacts .chip{flex:0 1 auto;min-width:0;white-space:nowrap}
+#outFacts .chip small{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#outFacts .hint{min-width:0;flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (max-width:600px){#outFacts .hint{display:none}}
+/* A run's zoom, steps and Join all, at the right of the row naming its wiring or its strip */
+.headsteps{margin-left:auto;display:flex;align-items:center;gap:.35rem;flex:none}
+.headsteps .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
+ padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
+ align-items:center;gap:.35rem;cursor:pointer}
+.headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
-   stand back, and every section's board settings open at once */
+   stand back, and every section's board settings open at once. A run's cards stand back around
+   its lights, which are the board's */
 body.setupall #tabs,body.setupall #sceneTabRow,
-body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
-body.setupall [id$=Tools],body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
+body.setupall #looks,body.setupall [id$=Chosen],
+body.setupall .headsteps,body.setupall .stretchcount{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */
 body.setupall #assets,body.setupall #screensSays,
@@ -1233,19 +1221,31 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
    pin to its lamp, never none, brought forward by pointing at the lamp or the connector */
 #outPanel.wired{position:relative}
 #outPanel.wired .sides{position:relative;z-index:1}
-/* The cutting is the scene's and waits while the board is set up, so it steps out of the
-   way, and the connectors sit straight under the lamps they feed */
-#outPanel.wired #outCut,#outPanel.wired #outBar,#outPanel.wired #monoCut,
-#outPanel.wired #monoBar{display:none}
+/* The connectors cover the stretch's settings that stand back under them, in the panel's own
+   colour. Their box holds its inner margin, so its height is all of theirs */
+#outPanel.wired #wiringRow{position:relative;z-index:1;display:flow-root}
+#wiringRow{background:var(--panel)}
 /* The connectors sit in one strip, the board's edge, and a connector is its pins and its
    number with nothing round it. Drawn as a box, a connector reads as a thing to pick up and
-   drag next to the lamps it feeds */
-.wireconnectors{display:flex;justify-content:space-between;gap:.5rem;margin:2.8rem 0 0;
- position:relative;z-index:1;background:#2b3036;border-radius:6px;
+   drag next to the lamps it feeds. Pins narrow to keep every connector on a narrow page */
+.wireboard{margin:2.8rem 0 0;position:relative;z-index:1;background:#2b3036;border-radius:6px;
  padding:.35rem .45rem .2rem}
-.wireconnector{padding:0 .3rem;cursor:default}
+.wireconnectors{display:flex;justify-content:space-between;gap:.5rem}
+/* What the wiring says, ruled off under the connectors, and the way back to how the board comes.
+   The words wrap beside the button, which keeps its place */
+.wirefoot{display:flex;align-items:center;gap:.8rem;margin-top:.3rem;
+ padding:.35rem .3rem .2rem;border-top:1px solid rgba(255,255,255,.12);
+ font:400 .74rem/1.4 system-ui,sans-serif;color:#a7a197}
+.wirefoot>span{flex:1 1 0;min-width:0}
+.wirefoot b{color:#fff}
+.wirereset{flex:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;
+ background:transparent;color:#fff;padding:.15rem .55rem;font:600 .72rem system-ui,sans-serif;
+ cursor:pointer}
+.wirereset:hover:enabled{background:rgba(255,255,255,.12);border-color:#fff}
+.wirereset:disabled{opacity:.35;cursor:default}
+.wireconnector{padding:0 .3rem;cursor:default;flex:0 1 auto;min-width:0}
 .wirepins{display:flex;gap:.35rem;justify-content:center}
-.wirepin{display:block;width:.8rem;height:.45rem;border-radius:2px}
+.wirepin{display:block;flex:0 1 auto;width:.8rem;min-width:4px;height:.45rem;border-radius:2px}
 /* A colour output is one lamp, so one pin */
 .wirepin.whole{width:2.9rem;background:#cfc8bc}
 .wirepin.single{width:1.4rem;background:#cfc8bc}
@@ -1258,13 +1258,11 @@ svg.wirelines{position:absolute;inset:0;width:100%;height:100%;pointer-events:no
  overflow:visible;z-index:2}
 svg.wirelines path{fill:none;stroke-width:1.6;opacity:.16}
 svg.wirelines path.wirehot{opacity:1;stroke-width:2.4}
-#outPanel .lamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
+#outPanel .cardlamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
 .wirepin.wirehot{outline:2px solid #fff;outline-offset:1px}
-.wiresay{font-size:.78rem;color:var(--dim);margin:.8rem 0 0}
-.wiresay b{color:var(--ink)}
 /* A lamp out of the order the lamps are wired in is bold, since a lamp has colours enough */
-body.setupall #outPanel .lamp.astray b{font-weight:700;color:var(--ink)}
-#outPanel .lamp.moving{z-index:3;position:relative;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+body.setupall #outPanel .cardlamp.astray b{font-weight:700;color:var(--ink)}
+#outPanel .cardlamp.moving{z-index:3;box-shadow:0 6px 16px rgba(0,0,0,.18)}
 
 /* ---- the LED sections as an accordion, where a closed one says in a swatch what it plays ---- */
 .accswatch{display:inline-flex;width:8rem;height:.55rem;border-radius:3px;overflow:hidden;
@@ -1856,19 +1854,12 @@ body:has(>dialog.firmwaresheet[open]){overflow:hidden}
   <div class="facts" id="outFacts"></div>
   <div class="sides" id="sides">
    <div class="side" id="sideA">
-    <div class="sidehead" id="headA"></div>
-    <div class="run" id="outRun"></div>
-    <div class="head" id="outCut"></div>
     <div id="outBar"></div>
    </div>
    <div class="side" id="sideB">
-    <div class="sidehead" id="headB"></div>
-    <div class="run" id="monoRun"></div>
-    <div class="head" id="monoCut"></div>
     <div id="monoBar"></div>
    </div>
   </div>
-  <div id="outTools"></div>
   <div id="outChosen"></div>
  </details>
 
@@ -1949,10 +1940,7 @@ var BOARD = {
  "output_words": {
   "tab": "Outputs",
   "panel": "seven of them, each one light or three",
-  "colour": "Colour outputs",
-  "colour_says": "no adapter fitted",
-  "mono": "Mono lights",
-  "mono_says": "three to every output broken out"
+  "colour": "Colour outputs"
  },
  "opening": {
   "colour": "Rainbow"
@@ -3633,77 +3621,20 @@ function paintCards() {
   });
 }
 
-// ---- the run, lamps left to right, an output's own kept together --------------------------
+// ---- the lamps, lit and put in place -------------------------------------------------------
 
-function renderRun(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var lamps = document.createElement("div");
-  lamps.className = "lamps";
-  var faces = [];
-  var group = null;
-  var groupOut = -1;
-
-  run.lamps.forEach(function (lamp, at) {
-    // An output's lamps stay together, so the connector they share is still one thing.
-    // Its number and, where there is one, the arrow it crosses on sit in a column of
-    // their own, so neither ever comes between two lamps
-    if (lamp.out !== groupOut) {
-      group = outputGroup(lamp);
-      lamps.appendChild(group);
-      groupOut = lamp.out;
-    }
-    var mine = sectionAt(run, at);
-    var one = document.createElement("div");
-    // A mono output's lamp is one light, with no channel's corner and no kin
-    one.className = "lamp" + (run === active && mine === run.picked ? " ringed" : "") +
-                    (lamp.colour ? " colourlamp" : isChannel(lamp) ? " chan" : " chan single");
-    if (!lamp.colour && isChannel(lamp)) {
-      one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-      // Which three would gather if this output were put back to one colour lamp, which
-      // is the question being asked whenever one of them is pointed at
-      (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-      one.onmouseenter = function () { showKin(lamp.out, true); };
-      one.onmouseleave = function () { showKin(lamp.out, false); };
-    }
-    var playing = lookNamed(run.sections[mine].look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    one.onclick = function () {
-      pick(run, mine);
-      draw();
-    };
-    takesPlace(one, lamp);
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces.push(face);
-    group.appendChild(one);
+// Light each lamp's face as it plays, faces[at] being the face of the run's lamp at `at`. A lamp
+// playing nothing of its own is marked unset, which its holder shows
+function paintFaces(faces, all) {
+  faces.forEach(function (face, at) {
+    var one = all[at] || {level: 0, ink: "#e4e0d9"};
+    face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
+    face.parentNode.classList.toggle("unset", !!one.unset);
+    face.style.boxShadow = one.level > 0.05
+      ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
+        "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
+      : "inset 0 0 0 1px rgba(0,0,0,.2)";
   });
-
-  box.appendChild(lamps);
-  painters.push({run: run, paint: function (all) {
-    faces.forEach(function (face, at) {
-      var one = all[at] || {level: 0, ink: "#e4e0d9"};
-      face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
-      face.parentNode.classList.toggle("unset", !!one.unset);
-      face.style.boxShadow = one.level > 0.05
-        ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
-          "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
-        : "inset 0 0 0 1px rgba(0,0,0,.2)";
-    });
-  }});
-}
-
-// One output's lamps, kept together. Every lamp already says which output and channel
-// it is, so the group carries no number of its own. It is a space in the run and the
-// place the arrow appears when the output is pointed at
-function outputGroup(lamp) {
-  var group = document.createElement("div");
-  group.className = "outgroup" + (lamp.colour ? " whole" : "");
-  group.appendChild(crossing(lamp.out, lamp.colour));
-  return group;
 }
 
 // A lamp is dragged to where it sits on the build. A colour output is one lamp so it
@@ -3757,14 +3688,10 @@ function placeLamp(move) {
   order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
 }
 
-// Lighting an output's three channels, each at its own edge and in its own colour. The
-// arrow that gathers them shows on every group holding one of the three, so what would
-// come back is visible before anything is pressed
+// Light an output's three channels, each at its own edge and in its own colour, so what the
+// arrow would rejoin is visible before it is pressed
 function showKin(out, on) {
-  (kinOf[out] || []).forEach(function (node) {
-    node.classList.toggle("kin", on);
-    if (node.parentNode) node.parentNode.classList.toggle("kin", on);
-  });
+  (kinOf[out] || []).forEach(function (node) { node.classList.toggle("kin", on); });
 }
 
 // ---- the bar, one cell per stretch, cut between them --------------------------------------
@@ -3827,21 +3754,69 @@ function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
+// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
+// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+function carded(run) {
+  return !run.strip;
+}
+
+// A stretch's lamps, one for each light it holds, each face kept in faces by the lamp's place
+// in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
+// to drag to its place on the build, and an output that breaks out has its arrow on its tiles
+function cardLamps(run, section, faces) {
+  var row = document.createElement("span");
+  row.className = "cardlamps";
+  var wiring = canEdit("outPanel");
+  for (var at = section.from; at <= section.to; at++) {
+    var lamp = run.lamps[at];
+    var one = document.createElement("span");
+    var channel = !lamp.colour && isChannel(lamp);
+    // A broken-out channel is marked in its channel's colour
+    one.className = "cardlamp" + (channel ? " chan" : "");
+    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
+    var playing = lookNamed(section.look);
+    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
+    var face = document.createElement("i");
+    one.appendChild(face);
+    var said = document.createElement("b");
+    said.textContent = shortName(lamp);
+    one.appendChild(said);
+    faces[at] = face;
+    if (wiring) setUpLamp(one, lamp, channel);
+    row.appendChild(one);
+  }
+  return row;
+}
+
+// Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
+// arrow. Pointing at one channel shows the other two of its output
+function setUpLamp(one, lamp, channel) {
+  takesPlace(one, lamp);
+  one.appendChild(crossing(lamp.out, lamp.colour));
+  if (!channel) return;
+  (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
+  one.addEventListener("mouseenter", function () { showKin(lamp.out, true); });
+  one.addEventListener("mouseleave", function () { showKin(lamp.out, false); });
+}
+
 function renderBar(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
   var scroller = document.createElement("div");
   scroller.className = "scroller";
   var bar = document.createElement("div");
-  bar.className = "bar";
+  bar.className = "bar" + (carded(run) ? " carded" : "");
+  var faces = [];
 
   run.sections.forEach(function (section, at) {
-    var cell = document.createElement("button");
+    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
+    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
     cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
     cell.style.flex = widthOf(section) + " 1 0";
     var first = run.lamps[section.from];
     cell.title = (first && first.colour ? "colour" : "mono") + ", " +
                  targetFor(run, section).selector;
+    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
 
     var look = lookNamed(section.look);
     var under = look ? null : stretchUnder(run, section);
@@ -3899,6 +3874,7 @@ function renderBar(where, run) {
   });
   scroller.appendChild(bar);
   box.appendChild(scroller);
+  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
 }
 
 function cutPoint(run, after, wide, from) {
@@ -3945,14 +3921,38 @@ function crossing(out, colour) {
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
-function zoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  row.appendChild(iconButton(BACK, "Undo", !run.was.length,
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !run.undone.length,
-                             function () { stepOn(run); }));
+// Add the run's controls at the right of its header row, the box naming its wiring or its strip.
+// A long strip zooms first, then come the steps back and on, then Join all as a quick reset
+function headSteps(row, run) {
+  var steps = document.createElement("span");
+  steps.className = "headsteps";
+
+  // Zooming is only any use where there are more lights than a panel can show. The
+  // buttons hold the middle of the view, since a press has no place on the run to hold
+  if (run.strip && run.count > ZOOMS_OVER) {
+    steps.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
+                                 }));
+    var said = document.createElement("span");
+    said.className = "howfar";
+    said.textContent = Math.round(zoomOf(run) * 100) + "%";
+    steps.appendChild(said);
+    steps.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
+                                 }));
+  }
+
+  steps.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
+                               function () { stepBack(run); }));
+  steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
+                               function () { stepOn(run); }));
+  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                        "merge into one stretch, keeping the selected stretch's look");
+  join.onclick = function () { joinAll(run); };
+  steps.appendChild(join);
+  row.appendChild(steps);
 }
 
 var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
@@ -3973,21 +3973,13 @@ function iconButton(drawing, says, off, done) {
   return made;
 }
 
-function renderCutting(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  box.className = "head cutting";
+// A strip's count of stretches, said after its chip. Zoomed in, the bar shows only some of them
+function stretchCount(run) {
   var says = document.createElement("span");
-  says.className = "what";
+  says.className = "stretchcount";
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
-  box.appendChild(says);
-  // The steps the two sides share go on the cutting row of the side at the right, as a strip
-  // keeps its own on its cutting row. That is the second side while it has lamps
-  var first = MONO_FIRST ? mono : outs, second = MONO_FIRST ? outs : mono;
-  var right = second.lamps.length ? second : first;
-  if (where === (right === mono ? "monoCut" : "outCut")) zoomAndSteps(box, active);
+  return says;
 }
 
 // The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
@@ -3996,6 +3988,46 @@ var chosenSteps = [];
 function renderChosen(where, run) {
   renderChosenPanel(where, run);
   chosenSteps.forEach(function (step) { step(where, run); });
+  pointFrom(where, run);
+}
+
+// ---- the chosen stretch's panel, pointing at its stretch -------------------------------------
+
+// How far the point stays from the panel's corners, and the least of a stretch it points at
+var NOTCH_INSET = 14;
+
+// Make the chosen stretch's panel point up at its stretch in the bar above. The panel is pointed
+// again whenever its size changes, which is also when a hidden tab is shown, and when a long
+// strip's bar scrolls under it
+function pointFrom(where, run) {
+  var box = document.getElementById(where);
+  var panel = box && box.querySelector(".chosen");
+  var bar = document.getElementById((run.id || run.name) + "Bar");
+  if (!panel || !bar) return;
+  function point() { pointAt(panel, bar.querySelectorAll(".sec")[run.picked]); }
+  point();
+  if (window.ResizeObserver) new ResizeObserver(point).observe(panel);
+  var scroller = bar.querySelector(".scroller");
+  if (scroller) scroller.addEventListener("scroll", point);
+}
+
+// Point a panel at the middle of the part of a stretch's cell in view. It points at nothing where
+// the cell is scrolled out of view, or is not picked since another run is being worked on
+function pointAt(panel, cell) {
+  if (cell && !cell.classList.contains("picked")) cell = null;
+  var from = panel.getBoundingClientRect();
+  var shown = cell ? cell.getBoundingClientRect() : null;
+  var view = cell && cell.closest(".scroller") ? cell.closest(".scroller").getBoundingClientRect()
+                                                : shown;
+  var left = shown ? Math.max(shown.left, view.left) : 0;
+  var right = shown ? Math.min(shown.right, view.right) : 0;
+  var pointing = !!shown && from.width > 0 && right - left >= NOTCH_INSET;
+  panel.classList.toggle("pointing", pointing);
+  if (!pointing) return;
+  // A stretch at either end of the bar is pointed at as near its middle as the corners allow
+  var middle = Math.min(Math.max((left + right) / 2, from.left + NOTCH_INSET),
+                        from.right - NOTCH_INSET);
+  panel.style.setProperty("--notch", (middle - from.left) + "px");
 }
 
 function renderChosenPanel(where, run) {
@@ -4050,44 +4082,21 @@ function renderChosenPanel(where, run) {
   }
 }
 
-// The two sides, each as wide as what it holds, so the divide between them moves as
-// outputs are broken out and put back
+// Size the two sides, each as wide as the lamps it holds, so the divide between them moves as
+// outputs are broken out and put back and every lamp has the same room. The sides carry no names,
+// so breaking an output out never adds or takes away a row above the cards. The lamps' labels,
+// the board's box and the board's edge already say which lights are which
 function renderSides() {
-  var words = BOARD.output_words;
-  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
-   {run: mono, side: "sideB", head: "headB", title: words.mono,
-    says: words.mono_says}].forEach(function (set) {
+  [{run: outs, side: "sideA"}, {run: mono, side: "sideB"}].forEach(function (set) {
     var box = document.getElementById(set.side);
     var count = set.run.lamps.length;
-    var groups = {};
-    set.run.lamps.forEach(function (lamp) { groups[lamp.out] = true; });
-    // Each output is a space in the run as well as its lamps, so the spaces are counted
-    // too or the last output wraps onto a row of its own
-    var room = count + Object.keys(groups).length;
     // A side with nothing on it is not there at all. An output comes back from the arrow
     // on one of its channels, so nothing is reached by keeping an empty column open, and
     // the side that holds every lamp gets the whole width
     box.style.display = count ? "" : "none";
-    box.style.flex = room + " 1 0";
+    box.style.flex = count + " 1 0";
     box.className = "side";
-
-    var head = document.getElementById(set.head);
-    head.textContent = "";
-    head.appendChild(document.createTextNode(set.title));
-    var says = document.createElement("span");
-    // A side with nothing in it has no count to give, and no room to give one in
-    says.textContent = count
-      ? count + (count === 1 ? " light, " : " lights, ") + set.says
-      : "";
-    head.appendChild(says);
   });
-  // A side is named only while there are two, telling the colour lamps from the mono ones.
-  // With every output one colour lamp, the board's box says so already
-  var two = mono.lamps.length > 0;
-  ["headA", "headB"].forEach(function (id) {
-    document.getElementById(id).style.display = two ? "" : "none";
-  });
-  document.getElementById("sides").classList.toggle("unnamed", !two);
 }
 
 // ---- the file, painted -----------------------------------------------------------------------
@@ -4151,21 +4160,15 @@ function draw() {
   cardFaces = [];
   kinOf = {};
   renderGalleries();
-  renderRun("outRun", outs);
-  renderCutting("outCut", outs);
   renderBar("outBar", outs);
-  renderCutting("monoCut", mono);
-  renderRun("monoRun", mono);
   renderBar("monoBar", mono);
 
-  // Both sides are in the one panel, so one set of tools serves whichever was last worked
+  // Both sides are in the one panel, so one stretch's settings serve whichever was last worked
   // on rather than a set under each
   renderSides();
-  renderTools("outTools", active);
   renderChosen("outChosen", active);
 
   renderPreview();
-  levelSides();
   paintAll();
 
   drawSteps.after.forEach(function (step) { step(); });
@@ -4220,19 +4223,6 @@ function refocus(place) {
       // A field made as another type has no caret to place
     }
   }
-}
-
-// Each side stacks its own rows, so a run whose lamps wrap onto a second row pushes its
-// cutting and its bar below the other side's. Both runs take the height of the taller, so
-// the two sides read across whatever either is holding
-function levelSides() {
-  var both = [document.getElementById("outRun"), document.getElementById("monoRun")];
-  both.forEach(function (box) { box.style.minHeight = ""; });
-  var tallest = 0;
-  both.forEach(function (box) {
-    tallest = Math.max(tallest, box.getBoundingClientRect().height);
-  });
-  both.forEach(function (box) { box.style.minHeight = tallest + "px"; });
 }
 
 function paintAll() {
@@ -5422,163 +5412,6 @@ function stripSelector(run, section) {
     : (section.from + 1) + "-" + (section.to + 1));
 }
 
-// ---- drawing one -----------------------------------------------------------------------
-// Beads on a wire that runs between them, a bead at the lead in and a ring at the tail. A whole
-// stretch takes the click, not only the lights in it
-
-var SVG = "http://www.w3.org/2000/svg";
-
-function tag(name, attrs) {
-  var made = document.createElementNS(SVG, name);
-  Object.keys(attrs).forEach(function (key) { made.setAttribute(key, attrs[key]); });
-  return made;
-}
-
-function spanRows(section, place) {
-  var rows = {};
-  for (var n = section.from; n <= section.to; n++) {
-    var spot = place(n);
-    var row = rows[spot.row] || (rows[spot.row] = {y: spot.y, low: spot.x, high: spot.x});
-    row.low = Math.min(row.low, spot.x);
-    row.high = Math.max(row.high, spot.x);
-  }
-  return Object.keys(rows).map(function (which) { return rows[which]; });
-}
-
-function wireRun(run) {
-  var SIZE = 11, GAP = 2.5, PER_ROW = 30;
-  var EDGE = 10, TAIL = 6;
-  var rows = Math.ceil(run.count / PER_ROW);
-  var across = Math.min(run.count, PER_ROW);
-  var wide = across * SIZE + (across - 1) * GAP;
-  var pitch = SIZE + GAP * 2;
-  var high = rows * pitch - GAP * 2 + 2;
-  var full = EDGE * 2 + wide;
-  // The ring around a picked stretch stands outside the lights it goes round, so the
-  // drawing is given a margin rather than shaving the ring off at the top and bottom
-  var ROOM = 4;
-
-  function place(i) {
-    var row = Math.floor(i / PER_ROW);
-    var col = i % PER_ROW;
-    if (row % 2) col = PER_ROW - 1 - col;
-    return {x: EDGE + col * (SIZE + GAP), y: row * pitch + 1, row: row};
-  }
-  function middleOf(row) { return row * pitch + 1 + SIZE / 2; }
-
-  var svg = tag("svg", {viewBox: (-ROOM) + " " + (-ROOM) + " " + (full + ROOM * 2) +
-                                 " " + (high + ROOM * 2),
-                        preserveAspectRatio: "xMinYMid meet"});
-
-  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line, as
-  // an output's lamp does. Its beads show what the board does there
-  var stripes = "unset-" + run.name;
-  var defs = tag("defs", {});
-  var pattern = tag("pattern", {id: stripes, patternUnits: "userSpaceOnUse", width: 6, height: 6,
-                                patternTransform: "rotate(-45)"});
-  pattern.appendChild(tag("rect", {width: 6, height: 6, fill: "#e4e0d9"}));
-  pattern.appendChild(tag("rect", {width: 3, height: 6, fill: "#f0eeea"}));
-  defs.appendChild(pattern);
-  svg.appendChild(defs);
-  if (run.there !== false) {
-    run.sections.forEach(function (section) {
-      if (lookNamed(section.look)) return;
-      spanRows(section, place).forEach(function (row) {
-        svg.appendChild(tag("rect", {"class": "unset", x: row.low - GAP / 2, y: row.y - 2.2,
-                                     width: row.high - row.low + SIZE + GAP,
-                                     height: SIZE + 4.4, rx: 4, fill: "url(#" + stripes + ")",
-                                     stroke: "#a9a49b", "stroke-width": 0.7,
-                                     "stroke-dasharray": "2 1.5"}));
-      });
-    });
-  }
-
-  for (var r = 0; r < rows - 1; r++) {
-    var atRight = r % 2 === 0;
-    var x = atRight ? EDGE + wide : EDGE;
-    var bulge = atRight ? x + EDGE : x - EDGE;
-    svg.appendChild(tag("path", {
-      d: "M" + x + " " + middleOf(r) + " C" + bulge + " " + middleOf(r) + " " +
-         bulge + " " + middleOf(r + 1) + " " + x + " " + middleOf(r + 1),
-      fill: "none", stroke: "#c9c3b9", "stroke-width": 1.8}));
-  }
-  for (var row = 0; row < rows; row++) {
-    var ends = [];
-    for (var n = row * PER_ROW; n < Math.min(run.count, (row + 1) * PER_ROW); n++) {
-      ends.push(place(n).x);
-    }
-    if (!ends.length) continue;
-    svg.appendChild(tag("path", {
-      d: "M" + Math.min.apply(null, ends) + " " + middleOf(row) +
-         " L" + (Math.max.apply(null, ends) + SIZE) + " " + middleOf(row),
-      stroke: "#c9c3b9", "stroke-width": 1.8, fill: "none"}));
-  }
-
-  var first = place(0);
-  svg.appendChild(tag("path", {d: "M0 " + middleOf(0) + " L" + first.x + " " + middleOf(0),
-                               stroke: "#c9c3b9", "stroke-width": 1.8, fill: "none"}));
-  svg.appendChild(tag("rect", {x: 0, y: middleOf(0) - 3.4, width: 4.6, height: 6.8,
-                               rx: 1.4, fill: "#8f8a81"}));
-
-  var beads = [];
-  for (var i = 0; i < run.count; i++) {
-    var spot = place(i);
-    var bead = tag("rect", {x: spot.x, y: spot.y, width: SIZE, height: SIZE, rx: 2.4,
-                            stroke: "rgba(0,0,0,.12)", "stroke-width": 0.6});
-    svg.appendChild(bead);
-    beads.push(bead);
-  }
-
-  // A stretch is one thing to point at, so the whole span it covers takes the click and
-  // not only the beads in it. A stretch that wraps takes one span per row it is on
-  run.sections.forEach(function (section, at) {
-    spanRows(section, place).forEach(function (row) {
-      var plate = tag("rect", {"class": "span", x: row.low - GAP / 2, y: row.y - 2.2,
-                               width: row.high - row.low + SIZE + GAP,
-                               height: SIZE + 4.4, rx: 4});
-      plate.onclick = function () { pick(run, at); draw(); };
-      var says = tag("title", {});
-      says.textContent = "lights " + (section.from + 1) + " to " + (section.to + 1) +
-                         ", playing " +
-                         (lookNamed(section.look) || {name: "Nothing"}).name;
-      plate.appendChild(says);
-      svg.appendChild(plate);
-    });
-  });
-
-  // The stretch being edited, ringed on the run so the bar and the preview say the same
-  // thing about what is being worked on
-  var picked = run.sections[run.picked];
-  if (picked && isPicked(run, run.picked)) {
-    spanRows(picked, place).forEach(function (row) {
-      svg.appendChild(tag("rect", {"class": "ringed", x: row.low - GAP / 2, y: row.y - 2.2,
-                                   width: row.high - row.low + SIZE + GAP,
-                                   height: SIZE + 4.4, rx: 4}));
-    });
-  }
-
-  // No cut marks here. The run is the preview window and the bar is where the cutting
-  // is done, so the run is left saying only what the lights are doing
-
-  var last = place(run.count - 1);
-  var goingRight = last.row % 2 === 0;
-  var from = goingRight ? last.x + SIZE : last.x;
-  var to = from + (goingRight ? TAIL : -TAIL);
-  svg.appendChild(tag("path", {d: "M" + from + " " + middleOf(last.row) + " L" + to +
-                                  " " + middleOf(last.row),
-                               stroke: "#c9c3b9", "stroke-width": 1.8, fill: "none"}));
-  svg.appendChild(tag("circle", {cx: to, cy: middleOf(last.row), r: 2.4, fill: "#fff",
-                                 stroke: "#a9a49b", "stroke-width": 1.6}));
-
-  return {svg: svg, paint: function (all) {
-    for (var n = 0; n < beads.length; n++) {
-      var one = all[n] || {level: 0, ink: "#e4e0d9"};
-      // A bead playing nothing is drawn unlit, as an output's lamp is
-      beads[n].setAttribute("fill", one.nothing ? "#2a2d30" : inkAt(one));
-    }
-  }};
-}
-
 var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                 "<path d='M5 7.2 L9.4 7.2'/>";
 
@@ -5605,24 +5438,85 @@ function splitSection(run, ways) {
   draw();
 }
 
-// The picked stretch and the ones after it, many in all, repeated over the rest of the run
-function repeatSections(run, many) {
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  if (!pattern.length) return;
-  remember(run);
-  var kept = run.sections.slice(0, run.picked + many);
-  var at = pattern[pattern.length - 1].to + 1;
-  var i = 0;
-  while (at < run.count) {
-    var from = pattern[i % pattern.length];
-    var wide = widthOf(from);
-    kept.push({from: at, to: Math.min(run.count - 1, at + wide - 1), look: from.look,
-               pace: from.pace, mood: from.mood, colour: from.colour});
-    at += wide;
-    i++;
+// ---- a strip's LEDs, in its stretches' cards -------------------------------------------------
+// A strip's LEDs sit in its stretches' cards as beads on a wire. The wire runs the length of the
+// bar from a lead block before the first card to a ring after the last, outside the stretches,
+// since neither is a light. Between the two ends of a straight scale, the beads close up as an
+// LED's room shrinks, from beads apart at full size to one continuous strip.
+
+// The largest a bead is drawn, in pixels, and the height every bead keeps
+var BEAD_MOST = 22;
+
+// The gap in pixels between two full-size beads
+var GAP_MOST = 4.8;
+
+// The room in pixels an LED has where the gaps, corners and edges have closed up to one strip.
+// It is what 120 LEDs have on a page 1280 pixels wide
+var BEADS_JOIN_AT = 6.4;
+// A stretch's beads, each kept in beads by its LED's place on the strip so it can be lit as the
+// strip plays
+function stripBeads(run, section, beads) {
+  var row = document.createElement("span");
+  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line
+  row.className = "stripbeads" + (lookNamed(section.look) ? "" : " unset");
+  for (var n = section.from; n <= section.to; n++) {
+    var room = document.createElement("i");
+    var bead = document.createElement("b");
+    room.appendChild(bead);
+    row.appendChild(room);
+    beads[n] = bead;
   }
-  run.sections = kept;
-  draw();
+  return row;
+}
+
+// One end of the strip's wire, the lead block before its first LED or the ring after its last
+function wireEnd(which) {
+  var end = document.createElement("span");
+  end.className = "wireend";
+  var mark = document.createElement("span");
+  mark.className = which;
+  end.appendChild(mark);
+  return end;
+}
+
+// Draw a strip's beads for the room each LED has, and run its wire between the two ends. Every
+// card's beads take the size of the narrowest card's, so all of a strip's LEDs match
+function fitBeads(bar, beads) {
+  if (!beads.length || !bar.offsetWidth) return;
+  var room = Infinity;
+  beads.forEach(function (bead) {
+    room = Math.min(room, bead.parentNode.getBoundingClientRect().width);
+  });
+  // How far the strip is from one continuous strip, 1 where beads are full size and 0 where they
+  // have joined, which closes the gap, the corners and the edges together in a straight line
+  var apart = (room - BEADS_JOIN_AT) / (BEAD_MOST + GAP_MOST - BEADS_JOIN_AT);
+  apart = Math.max(0, Math.min(1, apart));
+  var size = Math.min(BEAD_MOST, room - GAP_MOST * apart);
+  // A bead keeps its full height whatever its width. The wire and the ends are drawn in
+  // proportion to that height, as the strip was drawn before
+  var wire = BEAD_MOST * 0.16;
+  bar.style.setProperty("--apart", apart);
+  bar.style.setProperty("--gap", (GAP_MOST * apart) + "px");
+  // A gap under a pixel is drawn whole, and filled more the more it has closed. Once closed, the
+  // beads meet edge to edge
+  bar.style.setProperty("--fill", 1 - Math.min(1, GAP_MOST * apart));
+  bar.style.setProperty("--gapdrawn", apart > 0 ? "max(var(--gap), 1px)" : "0px");
+  bar.style.setProperty("--bead", size + "px");
+  bar.style.setProperty("--beadtall", BEAD_MOST + "px");
+  bar.style.setProperty("--wire", wire + "px");
+  bar.style.setProperty("--end", BEAD_MOST + "px");
+
+  var middle = beads[0].getBoundingClientRect();
+  var from = bar.getBoundingClientRect();
+  var lead = bar.querySelector(".wireend .lead").getBoundingClientRect();
+  var tail = bar.querySelector(".wireend .tail").getBoundingClientRect();
+  var line = bar.querySelector(".stripwire");
+  line.style.top = (middle.top + middle.height / 2 - from.top - wire / 2) + "px";
+  line.style.height = wire + "px";
+  // The wire starts in the lead block and ends in the ring, never showing past either
+  line.style.left = (lead.left + lead.width / 2 - from.left) + "px";
+  line.style.right = (from.right - tail.left - tail.width / 2) + "px";
+  bar.style.setProperty("--wiremiddle", (middle.top + middle.height / 2 - from.top) + "px");
 }
 
 function renderStripBar(where, run) {
@@ -5636,8 +5530,10 @@ function renderStripBar(where, run) {
   var scroller = document.createElement("div");
   scroller.className = "scroller";
   var bar = document.createElement("div");
-  bar.className = "bar";
+  bar.className = "bar carded stripcards";
   bar.style.width = (zoomOf(run) * 100) + "%";
+  var beads = [];
+  bar.appendChild(wireEnd("lead"));
 
   run.sections.forEach(function (section, at) {
     var wide = widthOf(section);
@@ -5646,11 +5542,9 @@ function renderStripBar(where, run) {
                      (wide * 40 < run.count * 8 ? " narrow" : "");
     cell.style.flex = wide + " 1 0";
     cell.title = "lights " + (section.from + 1) + " to " + (section.to + 1);
+    cell.appendChild(stripBeads(run, section, beads));
 
-    // The bar says where the cuts are and what each stretch was given. Showing the
-    // effect here as well would be the same picture twice, and a still palette does not
-    // stand for a moving one anyway. So a stretch is washed in a colour of its look and
-    // named, and the run above is where it is watched
+    // Under its LEDs, a stretch is washed in a colour of its look and named
     var look = lookNamed(section.look);
     var under = look ? null : stretchUnder(run, section);
     cell.appendChild(washOf(run, section, look, under));
@@ -5699,10 +5593,26 @@ function renderStripBar(where, run) {
       bar.appendChild(edge);
     }
   });
+  bar.appendChild(wireEnd("tail"));
+  var line = document.createElement("span");
+  line.className = "stripwire";
+  bar.appendChild(line);
   scroller.appendChild(bar);
   box.appendChild(scroller);
   scroller.scrollLeft = kept;
   scroller.onscroll = function () { run.scrolled = scroller.scrollLeft; };
+  // The beads are drawn for the room the bar has, which a hidden tab shown or a page resized
+  // changes without a draw
+  fitBeads(bar, beads);
+  if (window.ResizeObserver) new ResizeObserver(function () { fitBeads(bar, beads); }).observe(bar);
+  painters.push({run: run, paint: function (all) {
+    beads.forEach(function (bead, n) {
+      var one = all[n] || {level: 0, ink: "#e4e0d9"};
+      // A bead playing nothing is drawn unlit, as an output's lamp is. Its colour is kept as its
+      // text colour as well, which fills a closing gap beside it
+      bead.style.background = bead.style.color = one.nothing ? "#2a2d30" : inkAt(one);
+    });
+  }});
 
   // Rolling the wheel over the bar zooms into the light under the pointer, keeping it
   // where it is on the screen. The buttons do the same in steps, which is what says the
@@ -5716,47 +5626,6 @@ function renderStripBar(where, run) {
     var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
     zoomTo(run, zoomOf(run) * (e.deltaY < 0 ? 1.25 : 0.8), at, e.clientX - box2.left);
   };
-
-  // Which light is which, while there are few enough of them to be worth saying. They
-  // go between the bar and the run above it, so they read as naming both
-  if (run.count <= 12) {
-    var ticks = document.createElement("div");
-    ticks.className = "ticks";
-    for (var n = 0; n < run.count; n++) {
-      var tick = document.createElement("span");
-      tick.textContent = (run.name === "out" ? run.order[n] : n) + 1;
-      ticks.appendChild(tick);
-    }
-    box.insertBefore(ticks, scroller);
-  }
-}
-
-function stripZoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-
-  // Zooming is only any use where there are more lights than a panel can show. The
-  // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.count > ZOOMS_OVER) {
-    row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                               function () {
-                                 zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                               }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    row.appendChild(said);
-    row.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                               function () {
-                                 zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                               }));
-  }
-
-  row.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                             function () { stepOn(run); }));
 }
 
 function hexOf(rgb) {
@@ -5832,27 +5701,9 @@ function astrayOf(side) {
   });
 }
 
-// The drawing picks through the runs' pick(), which makes the strip the
-// run being worked on, so only one stretch on the page is ever marked
+// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
+// worked on, so only one stretch on the page is ever marked
 function isPicked(run, at) { return run === active && run.picked === at; }
-
-// How wide the drawing draws a full row of thirty lights, in its own units
-var FULL_ROW_DRAWN = Number(wireRun({count: 30, sections: [], lamps: []}).svg
-                              .getAttribute("viewBox").split(" ")[2]);
-
-// A strip run says how many lights it has under the name the drawing asks for
-function renderStrip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  run.count = run.lamps.length;
-  var made = wireRun(run);
-  // The drawing fills the width at a full row of lights, and a shorter strip keeps that
-  // size of light, not growing to fill the width
-  var drawn = Number(made.svg.getAttribute("viewBox").split(" ")[2]);
-  made.svg.style.maxWidth = Math.min(100, drawn / FULL_ROW_DRAWN * 100) + "%";
-  box.appendChild(made.svg);
-  painters.push({run: run, paint: made.paint});
-}
 
 // ---- how many lights are on one ------------------------------------------------------------
 // The chip the drawing keeps its count in. A strip's length is a fact about the
@@ -6001,9 +5852,9 @@ function zoomTo(run, want, at, from) {
 }
 
 // ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting, filling and joining it
-// all back keep what it played. splitSection() and repeatSections() copy only its look, pace,
-// setting and colour, and joinAll() starts from one stretch playing nothing
+// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
+// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
+// stretch playing nothing
 function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,
@@ -6023,24 +5874,10 @@ function divide(run, ways) {
   draw();
 }
 
-function fill(run, many) {
-  // It runs to the run's count, which the outputs do not keep
-  run.count = run.lamps.length;
-  var pattern = run.sections.slice(run.picked, run.picked + many).map(playsOf);
-  var kept = run.picked + many;
-  repeatSections(run, many);
-  for (var made = kept; made < run.sections.length; made++) {
-    Object.assign(run.sections[made], playsOf(pattern[(made - kept) % pattern.length]));
-  }
-  draw();
-}
-
-// ---- the tools under a run -------------------------------------------------------------------
-// One row for the outputs, the mono lights and the strips alike, in the screens' button style.
-// It splits the stretch picked into a number of parts or into lengths of a number of lights, joins
-// them all back, and repeats the stretches from the picked one to the end of the run. Each is
-// one outlined group read as a sentence, its words first, then its number, then the buttons
-// that act, so a number is never apart from what it is for.
+// ---- splitting a strip's chosen stretch ------------------------------------------------------
+// The chosen stretch's panel splits it into a number of parts or into lengths of a number of
+// lights, in the screens' button style. It is one outlined group read as a sentence, its words
+// first, then its number, then the buttons that act, so the number is never apart from them.
 
 // The picked stretch cut every so many lights from its start, a shorter one last where they
 // do not divide it evenly
@@ -6084,14 +5921,13 @@ function toolNumber(value, low, high, focus, change) {
   return box;
 }
 
-function renderTools(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
+// The Split into group for a strip's chosen stretch, shown in its panel. Splitting earns its place
+// along a strip's many LEDs, while the outputs are few and cut one at a time between their lamps
+function splitTools(where, run) {
   var section = run.sections[run.picked];
   var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("div");
-  row.className = "tools stretchtools";
+  var row = document.createElement("span");
+  row.className = "stretchtools";
 
   var ways = run.ways || 3;
   var split = toolGroup("&#9986;", "Split into");
@@ -6108,50 +5944,7 @@ function renderTools(where, run) {
   lengths.onclick = function () { divideLengths(run, ways); };
   split.appendChild(lengths);
   row.appendChild(split);
-
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  row.appendChild(join);
-
-  var many = run.pattern || 2;
-  var repeat = toolGroup("&#8649;", "Repeat");
-  repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
-                                function (value) { run.pattern = value; }));
-  // What it copies, a swatch for each stretch of the pattern, since a result that looks like
-  // what was there says nothing of what was taken
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  var chips = document.createElement("span");
-  chips.className = "repeatchips";
-  pattern.forEach(function (section) {
-    var look = lookNamed(section.look);
-    var chip = document.createElement("span");
-    chip.className = "repeatchip" + (look ? "" : " nothing");
-    if (look) chip.style.background = washFor(run, section, look);
-    chip.title = look ? look.name : "Nothing";
-    chips.appendChild(chip);
-  });
-  repeat.appendChild(chips);
-  var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the selected stretch" + (many === 1 ? "" : many === 2
-                        ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated to the end of the run, replacing what is there");
-  along.onclick = function () { fill(run, many); };
-  repeat.appendChild(along);
-  // Pointed at, the bar outlines what it copies and fades what it would replace
-  function marking(on) {
-    barCells(run).forEach(function (cell, at) {
-      cell.classList.toggle("repeatfrom", on && at >= run.picked && at < run.picked + many);
-      cell.classList.toggle("repeatover", on && at >= run.picked + many);
-    });
-  }
-  repeat.onmouseenter = function () { marking(true); };
-  repeat.onmouseleave = function () { marking(false); };
-  repeat.addEventListener("focusin", function () { marking(true); });
-  repeat.addEventListener("focusout", function () { marking(false); });
-  row.appendChild(repeat);
-
-  box.appendChild(row);
+  return row;
 }
 
 // A run's stretches as its bar draws them, in order
@@ -6199,10 +5992,7 @@ function toolAct(words, off, act, title) {
     panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) +
                       "<span class='says'>" + strip.says + "</span></summary>" +
                       "<div class='leds' id='" + id + "Leds'></div>" +
-                      "<div class='run striprun' id='" + id + "Run'></div>" +
-                      "<div class='head' id='" + id + "Cut'></div>" +
-                      "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Tools'></div>" +
+                      "<div class='stripbar' id='" + id + "Bar'></div>" +
                       "<div id='" + id + "Chosen'></div>";
     after.parentNode.insertBefore(panel, after.nextSibling);
     after = panel;
@@ -6219,31 +6009,20 @@ settle();
 // ---- drawing the page -------------------------------------------------------------------
 
 drawSteps.after.push(function () {
-  // The outputs' tools and settings are for the stretch being worked on, which while a
-  // strip is picked is under that strip instead
-  if (active.strip) {
-    document.getElementById("outTools").textContent = "";
-    document.getElementById("outChosen").textContent = "";
-  }
+  // The outputs' settings are for the stretch being worked on, which while a strip is picked is
+  // under that strip instead
+  if (active.strip) document.getElementById("outChosen").textContent = "";
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     // A strip made too short to zoom has no zoom buttons, so it is not left zoomed in
     if (run.lamps.length <= ZOOMS_OVER) {
       run.zoom = 1;
       run.scrolled = 0;
     }
+    run.count = run.lamps.length;
     renderLeds(run.id + "Leds", run);
-    renderStrip(run.id + "Run", run);
-    // The count of stretches, then the zoom and the steps beside it, all the drawing's own, so
-    // the bar scrolls when zoomed in
-    renderCutting(run.id + "Cut", run);
-    stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
     renderStripBar(run.id + "Bar", run);
-    document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
-    if (run === active) {
-      renderTools(run.id + "Tools", run);
-      renderChosen(run.id + "Chosen", run);
-    }
+    if (run === active) renderChosen(run.id + "Chosen", run);
   });
   fitBars();
   // The page painted what it drew before these were made, so a fresh bead would hold the
@@ -7358,6 +7137,7 @@ chosenSteps.push(function (where, run) {
   while (who.firstChild) named.appendChild(who.firstChild);
   who.appendChild(named);
   who.classList.add("withway");
+  if (run.strip) who.appendChild(splitTools(where, run));
   who.appendChild(directionToggle(run, section));
 });
 
@@ -7518,6 +7298,37 @@ var moveLampInScenes = acrossScenes(function (move) {
   acrossWiring(function () { placeLamp(move); });
 });
 
+// The wiring put back as the board comes, every output that breaks out rejoined and every lamp in
+// the order the board wires them. Each scene keeps its looks on the lamps they were on, and
+// neighbouring stretches left playing the same, as moves and splits leave them, become one
+var rejoinOne = changeWiring(rejoinWiring, true);
+
+var resetWiringInScenes = acrossScenes(function () {
+  breakingOutputs().forEach(rejoinOne);
+  acrossWiring(function () { order = plainOrder(); });
+  [outs, mono].forEach(joinAlike);
+});
+
+// Join a run's neighbouring stretches that play exactly the same
+function joinAlike(run) {
+  var joined = [];
+  run.sections.forEach(function (section) {
+    var last = joined[joined.length - 1];
+    if (last && JSON.stringify(playsOf(last)) === JSON.stringify(playsOf(section))) {
+      last.to = section.to;
+    } else {
+      joined.push(section);
+    }
+  });
+  run.sections = joined;
+  run.picked = Math.max(0, Math.min(run.picked, joined.length - 1));
+}
+
+// Whether the wiring differs from how the board comes, a lamp out of order or an output broken out
+function wiringChanged(astray) {
+  return astray.length > 0 || breakingOutputs().some(function (out) { return wiring[out].broken; });
+}
+
 // Whether a lamp can be dragged to where it sits just now. Where a lamp sits is changed with
 // the wiring, so only where that can be
 function lampsMovable() { return canEdit("outPanel"); }
@@ -7669,11 +7480,8 @@ function setSetup(on) {
 // Nothing looks picked while setup is on. The marks are drawn by the pages below, so they
 // are taken off once drawn
 function unmark() {
-  document.querySelectorAll(".lamp.ringed, .sec.picked, .card.picked").forEach(function (one) {
-    one.classList.remove("ringed", "picked");
-  });
-  document.querySelectorAll(".run svg rect.ringed").forEach(function (ring) {
-    ring.parentNode.removeChild(ring);
+  document.querySelectorAll(".sec.picked, .card.picked").forEach(function (one) {
+    one.classList.remove("picked");
   });
 }
 
@@ -7730,13 +7538,16 @@ function renderOutFacts() {
     var hint = document.createElement("span");
     hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag each light to match its position in your build." +
-      (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
-       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
-                           "mono lights, or rejoins them." : "");
+    hint.textContent = "Drag lights to match your build." +
+      (breaking.length > 1 ? " Arrows split or rejoin an output's three lights."
+       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it."
+       : "");
+    // Cut short on a narrow page, the hint is whole in its tooltip
     hint.title = hint.textContent;
     box.appendChild(hint);
   }
+  // The outputs' controls are for whichever side was last worked on, as the tools are
+  headSteps(box, active.strip ? lastOutputRun : active);
 }
 
 // What a strip is built as, its length and what follows it on the board line
@@ -7846,6 +7657,8 @@ function renderLeds(where, run) {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
+  box.appendChild(stretchCount(run));
+  headSteps(box, run);
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
@@ -7877,7 +7690,7 @@ drawSteps.after.push(function () {
 
 var SLIDE_MS = 420;
 
-// The connectors sit under both sides of the outputs, before their tools and settings
+// The connectors sit under both sides of the outputs, before the chosen stretch's settings
 (function () {
   var row = document.createElement("div");
   row.id = "wiringRow";
@@ -7905,7 +7718,7 @@ function wiredSide() {
 // The lamps on show
 function lampsShown() {
   return Array.prototype.slice.call(document.querySelectorAll(
-    "#outRun .lamp[data-key], #monoRun .lamp[data-key]"));
+    "#outBar .cardlamp[data-key], #monoBar .cardlamp[data-key]"));
 }
 
 function lampNode(key) {
@@ -7921,26 +7734,27 @@ function bringForward(keys, on) {
   });
 }
 
-// How far the sides and what follows them run outside setup, the cutting and the bar
-// included, so the connectors can take up the same room while setting up
-var unwiredSpan = null;
-
-function sidesSpan() {
-  return document.getElementById("outTools").getBoundingClientRect().top -
-         document.getElementById("sides").getBoundingClientRect().top;
+// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
+// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// of the settings, and the panel only grows by what they need beyond that room
+function overlapBelow(box) {
+  var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -
+                 box.getBoundingClientRect().bottom;
+  if (settings <= 0) return;
+  box.style.minHeight = Math.max(box.getBoundingClientRect().height, settings) + "px";
+  box.style.marginBottom = -settings + "px";
 }
 
 function renderConnectors() {
   var box = document.getElementById("wiringRow");
   box.textContent = "";
+  box.style.marginBottom = "";
+  box.style.minHeight = "";
   var old = document.getElementById("wiringLines");
   if (old) old.parentNode.removeChild(old);
   // A board whose outputs are its own LEDs has no wiring to show
   document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
-  if (!setupOn || !BOARD.wiring_order) {
-    unwiredSpan = sidesSpan();
-    return;
-  }
+  if (!setupOn || !BOARD.wiring_order) return;
 
   var row = document.createElement("div");
   row.className = "wireconnectors";
@@ -7971,7 +7785,11 @@ function renderConnectors() {
     block.addEventListener("mouseleave", function () { bringForward(keys, false); });
     row.appendChild(block);
   });
-  box.appendChild(row);
+  // The board's edge holds its connectors and, under them, what the wiring order says
+  var board = document.createElement("div");
+  board.className = "wireboard";
+  board.appendChild(row);
+  box.appendChild(board);
 
   var side = wiredSide();
   var astray = astrayOf(side);
@@ -7979,18 +7797,21 @@ function renderConnectors() {
     var node = lampNode(lamp.key);
     if (node) node.classList.add("astray");
   });
-  var said = document.createElement("p");
-  said.className = "wiresay";
-  said.innerHTML = astray.length
+  var foot = document.createElement("div");
+  foot.className = "wirefoot";
+  var said = document.createElement("span");
+  said.innerHTML = (astray.length
     ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
-      "order, numbered in bold. Hover over a light or connector to highlight its wire."
-    : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
-  box.appendChild(said);
-  // The connectors sit lower by whatever the cutting and the bar took beyond them, and the
-  // lines run on down to them, so setting up leaves the section its size
-  row.style.marginTop = "";
-  var short = unwiredSpan === null ? 0 : unwiredSpan - sidesSpan();
-  if (short > 0) row.style.marginTop = (parseFloat(getComputedStyle(row).marginTop) + short) + "px";
+      "order, numbered in bold. "
+    : "All lights are in wiring order. ") + brokenSentence() +
+    "Hover over a light or connector to highlight its wire.";
+  foot.appendChild(said);
+  // The button stays while there is nothing to reset, so the board's edge never changes height
+  var reset = resetWiringButton();
+  reset.disabled = !wiringChanged(astray);
+  foot.appendChild(reset);
+  board.appendChild(foot);
+  overlapBelow(box);
   drawLines();
 }
 
@@ -8034,6 +7855,32 @@ var sliding = null;
 function moveLamp(move) {
   slideFrom(lampKey(move.from));
   moveLampInScenes(move);
+}
+
+// The outputs broken out, said as a sentence for the board's edge, or nothing where none are
+function brokenSentence() {
+  var broken = breakingOutputs().some(function (out) { return wiring[out].broken; });
+  if (!broken) return "";
+  var said = brokenSaid();
+  return said.charAt(0).toUpperCase() + said.slice(1) + ". ";
+}
+
+// The button that puts the wiring back as the board comes, each lamp sliding to its place and a
+// rejoined output's lamp gathering from the middle of its three
+function resetWiringButton() {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "wirereset";
+  button.textContent = "Reset wiring";
+  button.title = "Rejoin every broken-out output and put every light back in wiring order";
+  button.onclick = function () {
+    slideFrom(null);
+    breakingOutputs().forEach(function (out) {
+      if (wiring[out].broken) gatherFromThree(out);
+    });
+    resetWiringInScenes();
+  };
+  return button;
 }
 
 // Where a lamp is within the outputs' panel. The page may scroll straight after a draw to
@@ -8092,6 +7939,12 @@ function breakOut(out) {
 
 function rejoin(out) {
   slideFrom(null);
+  gatherFromThree(out);
+  rejoinInScenes(out);
+}
+
+// Start a rejoined output's lamp in the slide from the middle of its three channels
+function gatherFromThree(out) {
   var three = [0, 1, 2].map(function (channel) {
     return sliding.was[lampKey({out: out, channel: channel})];
   }).filter(Boolean);
@@ -8101,7 +7954,6 @@ function rejoin(out) {
       top: three.reduce(function (sum, one) { return sum + one.top; }, 0) / three.length
     };
   }
-  rejoinInScenes(out);
 }
 
 drawSteps.after.push(function () {
@@ -8277,19 +8129,15 @@ function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-// Each section is only ever seen on its own here, so each keeps its own tools and settings
+// Each section is only ever seen on its own here, so each keeps its own stretch's settings
 // whichever is worked on, and none changes height when another tab is chosen. The outputs'
 // are for whichever of their two sides was last worked on
 var lastOutputRun = outs;
 
 drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;
-  if (active.strip) {
-    renderTools("outTools", lastOutputRun);
-    renderChosen("outChosen", lastOutputRun);
-  }
+  if (active.strip) renderChosen("outChosen", lastOutputRun);
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderTools(run.id + "Tools", run);
     renderChosen(run.id + "Chosen", run);
   });
   renderLedTabs();
@@ -16264,7 +16112,7 @@ function paintPalette(swatches, lines) {
   swatches.textContent = "";
   (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function (said) {
     var chip = document.createElement("span");
-    chip.className = "repeatchip";
+    chip.className = "palettechip";
     chip.style.background = inkOf(said.slice(7));
     chip.title = said.slice(7);
     swatches.appendChild(chip);
@@ -18184,9 +18032,9 @@ function markKeptLights() {
       });
       return;
     }
-    var box = document.getElementById(run === outs ? "outRun" : "monoRun");
+    var box = document.getElementById(run === outs ? "outBar" : "monoBar");
     if (!box) return;
-    box.querySelectorAll(".lamp").forEach(function (lamp, at) {
+    box.querySelectorAll(".cardlamp").forEach(function (lamp, at) {
       if (!named[at]) return;
       lamp.classList.add("keptlamp");
       lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;

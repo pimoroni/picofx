@@ -310,163 +310,6 @@ function stripSelector(run, section) {
     : (section.from + 1) + "-" + (section.to + 1));
 }
 
-// ---- drawing one -----------------------------------------------------------------------
-// Beads on a wire that runs between them, a bead at the lead in and a ring at the tail. A whole
-// stretch takes the click, not only the lights in it
-
-var SVG = "http://www.w3.org/2000/svg";
-
-function tag(name, attrs) {
-  var made = document.createElementNS(SVG, name);
-  Object.keys(attrs).forEach(function (key) { made.setAttribute(key, attrs[key]); });
-  return made;
-}
-
-function spanRows(section, place) {
-  var rows = {};
-  for (var n = section.from; n <= section.to; n++) {
-    var spot = place(n);
-    var row = rows[spot.row] || (rows[spot.row] = {y: spot.y, low: spot.x, high: spot.x});
-    row.low = Math.min(row.low, spot.x);
-    row.high = Math.max(row.high, spot.x);
-  }
-  return Object.keys(rows).map(function (which) { return rows[which]; });
-}
-
-function wireRun(run) {
-  var SIZE = 11, GAP = 2.5, PER_ROW = 30;
-  var EDGE = 10, TAIL = 6;
-  var rows = Math.ceil(run.count / PER_ROW);
-  var across = Math.min(run.count, PER_ROW);
-  var wide = across * SIZE + (across - 1) * GAP;
-  var pitch = SIZE + GAP * 2;
-  var high = rows * pitch - GAP * 2 + 2;
-  var full = EDGE * 2 + wide;
-  // The ring around a picked stretch stands outside the lights it goes round, so the
-  // drawing is given a margin rather than shaving the ring off at the top and bottom
-  var ROOM = 4;
-
-  function place(i) {
-    var row = Math.floor(i / PER_ROW);
-    var col = i % PER_ROW;
-    if (row % 2) col = PER_ROW - 1 - col;
-    return {x: EDGE + col * (SIZE + GAP), y: row * pitch + 1, row: row};
-  }
-  function middleOf(row) { return row * pitch + 1 + SIZE / 2; }
-
-  var svg = tag("svg", {viewBox: (-ROOM) + " " + (-ROOM) + " " + (full + ROOM * 2) +
-                                 " " + (high + ROOM * 2),
-                        preserveAspectRatio: "xMinYMid meet"});
-
-  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line, as
-  // an output's lamp does. Its beads show what the board does there
-  var stripes = "unset-" + run.name;
-  var defs = tag("defs", {});
-  var pattern = tag("pattern", {id: stripes, patternUnits: "userSpaceOnUse", width: 6, height: 6,
-                                patternTransform: "rotate(-45)"});
-  pattern.appendChild(tag("rect", {width: 6, height: 6, fill: "#e4e0d9"}));
-  pattern.appendChild(tag("rect", {width: 3, height: 6, fill: "#f0eeea"}));
-  defs.appendChild(pattern);
-  svg.appendChild(defs);
-  if (run.there !== false) {
-    run.sections.forEach(function (section) {
-      if (lookNamed(section.look)) return;
-      spanRows(section, place).forEach(function (row) {
-        svg.appendChild(tag("rect", {"class": "unset", x: row.low - GAP / 2, y: row.y - 2.2,
-                                     width: row.high - row.low + SIZE + GAP,
-                                     height: SIZE + 4.4, rx: 4, fill: "url(#" + stripes + ")",
-                                     stroke: "#a9a49b", "stroke-width": 0.7,
-                                     "stroke-dasharray": "2 1.5"}));
-      });
-    });
-  }
-
-  for (var r = 0; r < rows - 1; r++) {
-    var atRight = r % 2 === 0;
-    var x = atRight ? EDGE + wide : EDGE;
-    var bulge = atRight ? x + EDGE : x - EDGE;
-    svg.appendChild(tag("path", {
-      d: "M" + x + " " + middleOf(r) + " C" + bulge + " " + middleOf(r) + " " +
-         bulge + " " + middleOf(r + 1) + " " + x + " " + middleOf(r + 1),
-      fill: "none", stroke: "#c9c3b9", "stroke-width": 1.8}));
-  }
-  for (var row = 0; row < rows; row++) {
-    var ends = [];
-    for (var n = row * PER_ROW; n < Math.min(run.count, (row + 1) * PER_ROW); n++) {
-      ends.push(place(n).x);
-    }
-    if (!ends.length) continue;
-    svg.appendChild(tag("path", {
-      d: "M" + Math.min.apply(null, ends) + " " + middleOf(row) +
-         " L" + (Math.max.apply(null, ends) + SIZE) + " " + middleOf(row),
-      stroke: "#c9c3b9", "stroke-width": 1.8, fill: "none"}));
-  }
-
-  var first = place(0);
-  svg.appendChild(tag("path", {d: "M0 " + middleOf(0) + " L" + first.x + " " + middleOf(0),
-                               stroke: "#c9c3b9", "stroke-width": 1.8, fill: "none"}));
-  svg.appendChild(tag("rect", {x: 0, y: middleOf(0) - 3.4, width: 4.6, height: 6.8,
-                               rx: 1.4, fill: "#8f8a81"}));
-
-  var beads = [];
-  for (var i = 0; i < run.count; i++) {
-    var spot = place(i);
-    var bead = tag("rect", {x: spot.x, y: spot.y, width: SIZE, height: SIZE, rx: 2.4,
-                            stroke: "rgba(0,0,0,.12)", "stroke-width": 0.6});
-    svg.appendChild(bead);
-    beads.push(bead);
-  }
-
-  // A stretch is one thing to point at, so the whole span it covers takes the click and
-  // not only the beads in it. A stretch that wraps takes one span per row it is on
-  run.sections.forEach(function (section, at) {
-    spanRows(section, place).forEach(function (row) {
-      var plate = tag("rect", {"class": "span", x: row.low - GAP / 2, y: row.y - 2.2,
-                               width: row.high - row.low + SIZE + GAP,
-                               height: SIZE + 4.4, rx: 4});
-      plate.onclick = function () { pick(run, at); draw(); };
-      var says = tag("title", {});
-      says.textContent = "lights " + (section.from + 1) + " to " + (section.to + 1) +
-                         ", playing " +
-                         (lookNamed(section.look) || {name: "Nothing"}).name;
-      plate.appendChild(says);
-      svg.appendChild(plate);
-    });
-  });
-
-  // The stretch being edited, ringed on the run so the bar and the preview say the same
-  // thing about what is being worked on
-  var picked = run.sections[run.picked];
-  if (picked && isPicked(run, run.picked)) {
-    spanRows(picked, place).forEach(function (row) {
-      svg.appendChild(tag("rect", {"class": "ringed", x: row.low - GAP / 2, y: row.y - 2.2,
-                                   width: row.high - row.low + SIZE + GAP,
-                                   height: SIZE + 4.4, rx: 4}));
-    });
-  }
-
-  // No cut marks here. The run is the preview window and the bar is where the cutting
-  // is done, so the run is left saying only what the lights are doing
-
-  var last = place(run.count - 1);
-  var goingRight = last.row % 2 === 0;
-  var from = goingRight ? last.x + SIZE : last.x;
-  var to = from + (goingRight ? TAIL : -TAIL);
-  svg.appendChild(tag("path", {d: "M" + from + " " + middleOf(last.row) + " L" + to +
-                                  " " + middleOf(last.row),
-                               stroke: "#c9c3b9", "stroke-width": 1.8, fill: "none"}));
-  svg.appendChild(tag("circle", {cx: to, cy: middleOf(last.row), r: 2.4, fill: "#fff",
-                                 stroke: "#a9a49b", "stroke-width": 1.6}));
-
-  return {svg: svg, paint: function (all) {
-    for (var n = 0; n < beads.length; n++) {
-      var one = all[n] || {level: 0, ink: "#e4e0d9"};
-      // A bead playing nothing is drawn unlit, as an output's lamp is
-      beads[n].setAttribute("fill", one.nothing ? "#2a2d30" : inkAt(one));
-    }
-  }};
-}
-
 var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                 "<path d='M5 7.2 L9.4 7.2'/>";
 
@@ -493,24 +336,85 @@ function splitSection(run, ways) {
   draw();
 }
 
-// The picked stretch and the ones after it, many in all, repeated over the rest of the run
-function repeatSections(run, many) {
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  if (!pattern.length) return;
-  remember(run);
-  var kept = run.sections.slice(0, run.picked + many);
-  var at = pattern[pattern.length - 1].to + 1;
-  var i = 0;
-  while (at < run.count) {
-    var from = pattern[i % pattern.length];
-    var wide = widthOf(from);
-    kept.push({from: at, to: Math.min(run.count - 1, at + wide - 1), look: from.look,
-               pace: from.pace, mood: from.mood, colour: from.colour});
-    at += wide;
-    i++;
+// ---- a strip's LEDs, in its stretches' cards -------------------------------------------------
+// A strip's LEDs sit in its stretches' cards as beads on a wire. The wire runs the length of the
+// bar from a lead block before the first card to a ring after the last, outside the stretches,
+// since neither is a light. Between the two ends of a straight scale, the beads close up as an
+// LED's room shrinks, from beads apart at full size to one continuous strip.
+
+// The largest a bead is drawn, in pixels, and the height every bead keeps
+var BEAD_MOST = 22;
+
+// The gap in pixels between two full-size beads
+var GAP_MOST = 4.8;
+
+// The room in pixels an LED has where the gaps, corners and edges have closed up to one strip.
+// It is what 120 LEDs have on a page 1280 pixels wide
+var BEADS_JOIN_AT = 6.4;
+// A stretch's beads, each kept in beads by its LED's place on the strip so it can be lit as the
+// strip plays
+function stripBeads(run, section, beads) {
+  var row = document.createElement("span");
+  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line
+  row.className = "stripbeads" + (lookNamed(section.look) ? "" : " unset");
+  for (var n = section.from; n <= section.to; n++) {
+    var room = document.createElement("i");
+    var bead = document.createElement("b");
+    room.appendChild(bead);
+    row.appendChild(room);
+    beads[n] = bead;
   }
-  run.sections = kept;
-  draw();
+  return row;
+}
+
+// One end of the strip's wire, the lead block before its first LED or the ring after its last
+function wireEnd(which) {
+  var end = document.createElement("span");
+  end.className = "wireend";
+  var mark = document.createElement("span");
+  mark.className = which;
+  end.appendChild(mark);
+  return end;
+}
+
+// Draw a strip's beads for the room each LED has, and run its wire between the two ends. Every
+// card's beads take the size of the narrowest card's, so all of a strip's LEDs match
+function fitBeads(bar, beads) {
+  if (!beads.length || !bar.offsetWidth) return;
+  var room = Infinity;
+  beads.forEach(function (bead) {
+    room = Math.min(room, bead.parentNode.getBoundingClientRect().width);
+  });
+  // How far the strip is from one continuous strip, 1 where beads are full size and 0 where they
+  // have joined, which closes the gap, the corners and the edges together in a straight line
+  var apart = (room - BEADS_JOIN_AT) / (BEAD_MOST + GAP_MOST - BEADS_JOIN_AT);
+  apart = Math.max(0, Math.min(1, apart));
+  var size = Math.min(BEAD_MOST, room - GAP_MOST * apart);
+  // A bead keeps its full height whatever its width. The wire and the ends are drawn in
+  // proportion to that height, as the strip was drawn before
+  var wire = BEAD_MOST * 0.16;
+  bar.style.setProperty("--apart", apart);
+  bar.style.setProperty("--gap", (GAP_MOST * apart) + "px");
+  // A gap under a pixel is drawn whole, and filled more the more it has closed. Once closed, the
+  // beads meet edge to edge
+  bar.style.setProperty("--fill", 1 - Math.min(1, GAP_MOST * apart));
+  bar.style.setProperty("--gapdrawn", apart > 0 ? "max(var(--gap), 1px)" : "0px");
+  bar.style.setProperty("--bead", size + "px");
+  bar.style.setProperty("--beadtall", BEAD_MOST + "px");
+  bar.style.setProperty("--wire", wire + "px");
+  bar.style.setProperty("--end", BEAD_MOST + "px");
+
+  var middle = beads[0].getBoundingClientRect();
+  var from = bar.getBoundingClientRect();
+  var lead = bar.querySelector(".wireend .lead").getBoundingClientRect();
+  var tail = bar.querySelector(".wireend .tail").getBoundingClientRect();
+  var line = bar.querySelector(".stripwire");
+  line.style.top = (middle.top + middle.height / 2 - from.top - wire / 2) + "px";
+  line.style.height = wire + "px";
+  // The wire starts in the lead block and ends in the ring, never showing past either
+  line.style.left = (lead.left + lead.width / 2 - from.left) + "px";
+  line.style.right = (from.right - tail.left - tail.width / 2) + "px";
+  bar.style.setProperty("--wiremiddle", (middle.top + middle.height / 2 - from.top) + "px");
 }
 
 function renderStripBar(where, run) {
@@ -524,8 +428,10 @@ function renderStripBar(where, run) {
   var scroller = document.createElement("div");
   scroller.className = "scroller";
   var bar = document.createElement("div");
-  bar.className = "bar";
+  bar.className = "bar carded stripcards";
   bar.style.width = (zoomOf(run) * 100) + "%";
+  var beads = [];
+  bar.appendChild(wireEnd("lead"));
 
   run.sections.forEach(function (section, at) {
     var wide = widthOf(section);
@@ -534,11 +440,9 @@ function renderStripBar(where, run) {
                      (wide * 40 < run.count * 8 ? " narrow" : "");
     cell.style.flex = wide + " 1 0";
     cell.title = "lights " + (section.from + 1) + " to " + (section.to + 1);
+    cell.appendChild(stripBeads(run, section, beads));
 
-    // The bar says where the cuts are and what each stretch was given. Showing the
-    // effect here as well would be the same picture twice, and a still palette does not
-    // stand for a moving one anyway. So a stretch is washed in a colour of its look and
-    // named, and the run above is where it is watched
+    // Under its LEDs, a stretch is washed in a colour of its look and named
     var look = lookNamed(section.look);
     var under = look ? null : stretchUnder(run, section);
     cell.appendChild(washOf(run, section, look, under));
@@ -587,10 +491,26 @@ function renderStripBar(where, run) {
       bar.appendChild(edge);
     }
   });
+  bar.appendChild(wireEnd("tail"));
+  var line = document.createElement("span");
+  line.className = "stripwire";
+  bar.appendChild(line);
   scroller.appendChild(bar);
   box.appendChild(scroller);
   scroller.scrollLeft = kept;
   scroller.onscroll = function () { run.scrolled = scroller.scrollLeft; };
+  // The beads are drawn for the room the bar has, which a hidden tab shown or a page resized
+  // changes without a draw
+  fitBeads(bar, beads);
+  if (window.ResizeObserver) new ResizeObserver(function () { fitBeads(bar, beads); }).observe(bar);
+  painters.push({run: run, paint: function (all) {
+    beads.forEach(function (bead, n) {
+      var one = all[n] || {level: 0, ink: "#e4e0d9"};
+      // A bead playing nothing is drawn unlit, as an output's lamp is. Its colour is kept as its
+      // text colour as well, which fills a closing gap beside it
+      bead.style.background = bead.style.color = one.nothing ? "#2a2d30" : inkAt(one);
+    });
+  }});
 
   // Rolling the wheel over the bar zooms into the light under the pointer, keeping it
   // where it is on the screen. The buttons do the same in steps, which is what says the
@@ -604,47 +524,6 @@ function renderStripBar(where, run) {
     var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
     zoomTo(run, zoomOf(run) * (e.deltaY < 0 ? 1.25 : 0.8), at, e.clientX - box2.left);
   };
-
-  // Which light is which, while there are few enough of them to be worth saying. They
-  // go between the bar and the run above it, so they read as naming both
-  if (run.count <= 12) {
-    var ticks = document.createElement("div");
-    ticks.className = "ticks";
-    for (var n = 0; n < run.count; n++) {
-      var tick = document.createElement("span");
-      tick.textContent = (run.name === "out" ? run.order[n] : n) + 1;
-      ticks.appendChild(tick);
-    }
-    box.insertBefore(ticks, scroller);
-  }
-}
-
-function stripZoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-
-  // Zooming is only any use where there are more lights than a panel can show. The
-  // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.count > ZOOMS_OVER) {
-    row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                               function () {
-                                 zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                               }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    row.appendChild(said);
-    row.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                               function () {
-                                 zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                               }));
-  }
-
-  row.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                             function () { stepOn(run); }));
 }
 
 function hexOf(rgb) {
@@ -720,27 +599,9 @@ function astrayOf(side) {
   });
 }
 
-// The drawing picks through the runs' pick(), which makes the strip the
-// run being worked on, so only one stretch on the page is ever marked
+// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
+// worked on, so only one stretch on the page is ever marked
 function isPicked(run, at) { return run === active && run.picked === at; }
-
-// How wide the drawing draws a full row of thirty lights, in its own units
-var FULL_ROW_DRAWN = Number(wireRun({count: 30, sections: [], lamps: []}).svg
-                              .getAttribute("viewBox").split(" ")[2]);
-
-// A strip run says how many lights it has under the name the drawing asks for
-function renderStrip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  run.count = run.lamps.length;
-  var made = wireRun(run);
-  // The drawing fills the width at a full row of lights, and a shorter strip keeps that
-  // size of light, not growing to fill the width
-  var drawn = Number(made.svg.getAttribute("viewBox").split(" ")[2]);
-  made.svg.style.maxWidth = Math.min(100, drawn / FULL_ROW_DRAWN * 100) + "%";
-  box.appendChild(made.svg);
-  painters.push({run: run, paint: made.paint});
-}
 
 // ---- how many lights are on one ------------------------------------------------------------
 // The chip the drawing keeps its count in. A strip's length is a fact about the
@@ -889,9 +750,9 @@ function zoomTo(run, want, at, from) {
 }
 
 // ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting, filling and joining it
-// all back keep what it played. splitSection() and repeatSections() copy only its look, pace,
-// setting and colour, and joinAll() starts from one stretch playing nothing
+// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
+// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
+// stretch playing nothing
 function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,
@@ -911,24 +772,10 @@ function divide(run, ways) {
   draw();
 }
 
-function fill(run, many) {
-  // It runs to the run's count, which the outputs do not keep
-  run.count = run.lamps.length;
-  var pattern = run.sections.slice(run.picked, run.picked + many).map(playsOf);
-  var kept = run.picked + many;
-  repeatSections(run, many);
-  for (var made = kept; made < run.sections.length; made++) {
-    Object.assign(run.sections[made], playsOf(pattern[(made - kept) % pattern.length]));
-  }
-  draw();
-}
-
-// ---- the tools under a run -------------------------------------------------------------------
-// One row for the outputs, the mono lights and the strips alike, in the screens' button style.
-// It splits the stretch picked into a number of parts or into lengths of a number of lights, joins
-// them all back, and repeats the stretches from the picked one to the end of the run. Each is
-// one outlined group read as a sentence, its words first, then its number, then the buttons
-// that act, so a number is never apart from what it is for.
+// ---- splitting a strip's chosen stretch ------------------------------------------------------
+// The chosen stretch's panel splits it into a number of parts or into lengths of a number of
+// lights, in the screens' button style. It is one outlined group read as a sentence, its words
+// first, then its number, then the buttons that act, so the number is never apart from them.
 
 // The picked stretch cut every so many lights from its start, a shorter one last where they
 // do not divide it evenly
@@ -972,14 +819,13 @@ function toolNumber(value, low, high, focus, change) {
   return box;
 }
 
-function renderTools(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
+// The Split into group for a strip's chosen stretch, shown in its panel. Splitting earns its place
+// along a strip's many LEDs, while the outputs are few and cut one at a time between their lamps
+function splitTools(where, run) {
   var section = run.sections[run.picked];
   var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("div");
-  row.className = "tools stretchtools";
+  var row = document.createElement("span");
+  row.className = "stretchtools";
 
   var ways = run.ways || 3;
   var split = toolGroup("&#9986;", "Split into");
@@ -996,50 +842,7 @@ function renderTools(where, run) {
   lengths.onclick = function () { divideLengths(run, ways); };
   split.appendChild(lengths);
   row.appendChild(split);
-
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  row.appendChild(join);
-
-  var many = run.pattern || 2;
-  var repeat = toolGroup("&#8649;", "Repeat");
-  repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
-                                function (value) { run.pattern = value; }));
-  // What it copies, a swatch for each stretch of the pattern, since a result that looks like
-  // what was there says nothing of what was taken
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  var chips = document.createElement("span");
-  chips.className = "repeatchips";
-  pattern.forEach(function (section) {
-    var look = lookNamed(section.look);
-    var chip = document.createElement("span");
-    chip.className = "repeatchip" + (look ? "" : " nothing");
-    if (look) chip.style.background = washFor(run, section, look);
-    chip.title = look ? look.name : "Nothing";
-    chips.appendChild(chip);
-  });
-  repeat.appendChild(chips);
-  var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the selected stretch" + (many === 1 ? "" : many === 2
-                        ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated to the end of the run, replacing what is there");
-  along.onclick = function () { fill(run, many); };
-  repeat.appendChild(along);
-  // Pointed at, the bar outlines what it copies and fades what it would replace
-  function marking(on) {
-    barCells(run).forEach(function (cell, at) {
-      cell.classList.toggle("repeatfrom", on && at >= run.picked && at < run.picked + many);
-      cell.classList.toggle("repeatover", on && at >= run.picked + many);
-    });
-  }
-  repeat.onmouseenter = function () { marking(true); };
-  repeat.onmouseleave = function () { marking(false); };
-  repeat.addEventListener("focusin", function () { marking(true); });
-  repeat.addEventListener("focusout", function () { marking(false); });
-  row.appendChild(repeat);
-
-  box.appendChild(row);
+  return row;
 }
 
 // A run's stretches as its bar draws them, in order
@@ -1087,10 +890,7 @@ function toolAct(words, off, act, title) {
     panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) +
                       "<span class='says'>" + strip.says + "</span></summary>" +
                       "<div class='leds' id='" + id + "Leds'></div>" +
-                      "<div class='run striprun' id='" + id + "Run'></div>" +
-                      "<div class='head' id='" + id + "Cut'></div>" +
-                      "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Tools'></div>" +
+                      "<div class='stripbar' id='" + id + "Bar'></div>" +
                       "<div id='" + id + "Chosen'></div>";
     after.parentNode.insertBefore(panel, after.nextSibling);
     after = panel;
@@ -1107,31 +907,20 @@ settle();
 // ---- drawing the page -------------------------------------------------------------------
 
 drawSteps.after.push(function () {
-  // The outputs' tools and settings are for the stretch being worked on, which while a
-  // strip is picked is under that strip instead
-  if (active.strip) {
-    document.getElementById("outTools").textContent = "";
-    document.getElementById("outChosen").textContent = "";
-  }
+  // The outputs' settings are for the stretch being worked on, which while a strip is picked is
+  // under that strip instead
+  if (active.strip) document.getElementById("outChosen").textContent = "";
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     // A strip made too short to zoom has no zoom buttons, so it is not left zoomed in
     if (run.lamps.length <= ZOOMS_OVER) {
       run.zoom = 1;
       run.scrolled = 0;
     }
+    run.count = run.lamps.length;
     renderLeds(run.id + "Leds", run);
-    renderStrip(run.id + "Run", run);
-    // The count of stretches, then the zoom and the steps beside it, all the drawing's own, so
-    // the bar scrolls when zoomed in
-    renderCutting(run.id + "Cut", run);
-    stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
     renderStripBar(run.id + "Bar", run);
-    document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
-    if (run === active) {
-      renderTools(run.id + "Tools", run);
-      renderChosen(run.id + "Chosen", run);
-    }
+    if (run === active) renderChosen(run.id + "Chosen", run);
   });
   fitBars();
   // The page painted what it drew before these were made, so a fresh bead would hold the
@@ -2246,5 +2035,6 @@ chosenSteps.push(function (where, run) {
   while (who.firstChild) named.appendChild(who.firstChild);
   who.appendChild(named);
   who.classList.add("withway");
+  if (run.strip) who.appendChild(splitTools(where, run));
   who.appendChild(directionToggle(run, section));
 });

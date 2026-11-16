@@ -65,18 +65,11 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 /* A tab whose section cannot be used just now, which still opens to say why */
 .ledtab.blocked{opacity:.45}
-.head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
-.head .gap{flex:1}
-/* The row of settings that belongs to the bar, which the run above it is cut into. As tall as
-   the step buttons, so a side without them starts its bar level with one that has them */
-.head.cutting{margin-top:.9rem;min-height:1.75rem}
-.head.cutting .what{font-size:.82rem;color:var(--dim)}
-
 /* Zoomed in, the bar is wider than the room it has and scrolls inside it. The padding
    and the pull back up leave the labels above a cut somewhere to be drawn */
 .scroller{overflow-x:auto;overflow-y:hidden;padding-top:1.2rem;margin-top:-1.2rem}
-/* That pull reaches over the buttons in the row above, so they sit on top to take their clicks */
-.head.cutting button{position:relative;z-index:1}
+/* A strip's bar keeps that room clear of the strip drawn above it, with the bar's own margin */
+.stripbar{margin-top:.3rem}
 .scroller::-webkit-scrollbar{height:9px}
 .scroller::-webkit-scrollbar-thumb{background:#cfc9bf;border-radius:99px}
 .scroller::-webkit-scrollbar-track{background:#f0eeea;border-radius:99px}
@@ -151,6 +144,37 @@ button.round svg{display:block}
 .sec .says .beneath{font-weight:400;color:var(--dim);margin-left:.45em;padding-left:.45em;
  border-left:1px solid #c9c3b9}
 .sec.narrow .says{font-size:.6rem}
+/* The outputs' stretches as cards holding their lamps, evenly spaced so a cut falls between two,
+   over a thin band of what the stretch plays. A cut can be made anywhere over the lamps and band.
+   The room above the cards holds a cut's label and its cross, clear of the row above */
+.bar.carded{margin-top:.75rem}
+.bar.carded .sec{display:flex;flex-direction:column}
+.cardlamps{display:flex;padding:.55rem 0 .3rem}
+/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+   without moving a lamp */
+/* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
+   gap between tiles follows the outputs' panel, not the card, so every card's lights match,
+   and closes up on a narrow panel to leave the lights their room */
+#sides{container-type:inline-size}
+.cardlamp{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+ position:relative;margin:0 clamp(0px,(100cqw - 400px) / 100,4px);padding:.3rem 1px .05rem;
+ border:1px solid transparent;
+ border-radius:8px}
+.cardlamp i{display:block;position:relative;width:min(1.9rem,100%);aspect-ratio:1;
+ border-radius:50%;background:#2a2d30;box-sizing:border-box}
+.cardlamp b{font:400 .66rem/1.5 system-ui,sans-serif;color:var(--dim);max-width:100%;
+ overflow:hidden;text-overflow:clip;white-space:nowrap}
+/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
+   what the board does there, in a scene Always on's look in full or dark */
+.cardlamp.unset{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* A broken-out lamp has a dot in the colour of the channel that drives it, centred on the edge of
+   its light at the top left and ringed off the light. Which output that is has no mark of its own */
+.cardlamp.chan i::after{content:"";position:absolute;left:calc(14.645% - 16%);
+ top:calc(14.645% - 16%);width:32%;height:32%;border-radius:50%;background:var(--chan);
+ box-shadow:0 0 0 2px var(--panel)}
+.bar.carded .sec .lit{height:.45rem;border-radius:0}
+.bar.carded .sec .cuts{height:auto;bottom:1.1rem}
 
 /* A cut that is already there, dragged to move it along the run or taken out by its
    cross, which joins the two stretches either side. Two acts, two targets,
@@ -168,45 +192,20 @@ button.round svg{display:block}
 /* Room under the bar for the crosses to sit in */
 .bar{padding-bottom:1.4rem}
 
-/* How many lights are in a run, ticked off under it while there are few enough to see */
-.ticks{display:flex;gap:2px;margin-bottom:.15rem}
-.ticks span{flex:1;text-align:center;font:400 .6rem/1.4 system-ui,sans-serif;
- color:var(--dim);min-width:0;overflow:hidden}
-
-.tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
- font-size:.85rem;color:var(--dim)}
-.tools input[type=number]{width:3.4rem;padding:.25rem .3rem;border:1px solid var(--line);
- border-radius:7px;font:inherit;font-size:.85rem;text-align:center}
-.tools .gap{flex:1}
-
-/* The run itself, above the bar it is cut by */
-.run{background:var(--panel);border:1px solid var(--line);border-radius:10px;
- padding:.8rem .7rem;margin-top:.7rem}
-.run svg{display:block;width:100%;height:auto}
-.run svg .ringed{fill:none;stroke:var(--accent);stroke-width:1.4;opacity:.9;
- pointer-events:none}
-/* The whole span a stretch covers takes the click, not only the lights along it */
-.run svg .span{fill:transparent;cursor:pointer}
-.run svg .span:hover{fill:rgba(0,133,125,.07)}
-.lamps{display:flex;gap:.4rem;justify-content:flex-start;flex-wrap:wrap}
-.lamp{padding:.25rem .25rem .1rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);line-height:1;cursor:grab}
-.lamp{cursor:pointer}
-/* The stretch being edited, ringed on the preview so it and the bar agree */
-.lamp.ringed{box-shadow:0 0 0 2px var(--accent)}
-.lamp.carried{opacity:.35}
-.lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
-.lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:50%;
- box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
-/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
-   what the board does there, in a scene Always on's look in full or dark */
-.lamp.unset{border-style:dashed;border-color:#a9a49b;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
- text-align:center}
-
 /* What the picked section is playing */
-.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
+.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem;
+ background:var(--panel)}
+/* Pointing at its stretch, the panel is drawn in the colour the stretch is picked in, and its
+   point is a square turned on its corner over the top edge, filled to hide the edge under it.
+   --notch is measured from the panel's outer edge, so the square's 14px sits 2px + 7px left */
+.chosen.pointing{position:relative;border:2px solid var(--accent);
+ padding:calc(.6rem - 1px) calc(.8rem - 1px)}
+.chosen.pointing::before{content:"";position:absolute;top:-8px;left:calc(var(--notch) - 9px);
+ width:12px;height:12px;background:inherit;border-top:2px solid var(--accent);
+ border-left:2px solid var(--accent);transform:rotate(45deg);border-top-left-radius:2px}
+/* Nothing looks picked while the board is set up */
+body.setupall .chosen.pointing{border-color:var(--line)}
+body.setupall .chosen.pointing::before{display:none}
 .chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
 .chosen .who b{color:var(--ink);font-size:.92rem}
 /* The gallery. A card shows what a look does, and a tap puts it on the stretch being worked on */
@@ -263,40 +262,28 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-/* ---- lamps and runs ---- */
+/* ---- the lamps in Edit board ---- */
 
-/* An output's lamp says which of the two things it is. A colour one is one lens, and a
-   broken one is three, which keep the output's own outline around them so the connector
-   they share is still readable */
-.lamp.colourlamp i{background:#2a2d30}
-.lamp.chan b{font-size:.6rem}
-
-/* A broken-out lamp says which of its output's three channels drives it, cut into the
-   corner. Which output that is has no mark of its own. Pointing at one of the three is
-   what shows them, and a tint per output was more colour than anyone could hold */
-.lamp.chan{position:relative;overflow:hidden}
-.lamp.chan::before{content:"";position:absolute;top:0;left:0;width:0;height:0;
- border-width:.4rem;border-style:solid;
- border-color:var(--chan) transparent transparent var(--chan)}
+/* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
+   stretches are the scene's, so only the lamps answer the pointer */
+body.setupall .cardlamp{cursor:grab;background:var(--panel);border-style:solid;
+ border-color:var(--line)}
+body.setupall .cardlamp:active{cursor:grabbing}
+body.setupall .bar.carded .sec{pointer-events:none}
+body.setupall .bar.carded .cardlamp{pointer-events:auto}
+body.setupall .bar.carded .sec>:not(.cardlamps):not(.stripbeads),
+body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
+/* Cutting is the scene's, so no place to cut is offered while the board is set up. A place takes
+   the pointer of its own, which the card's standing back does not take from it */
+body.setupall .bar.carded .sec .cut{display:none}
+.cardlamp.carried{opacity:.35}
+.cardlamp.landing{box-shadow:-3px 0 0 var(--accent)}
+.cardlamp.landing.after{box-shadow:3px 0 0 var(--accent)}
 
 /* Pointing at one channel lights the edges of all three of its output, each in the
    colour of the channel it is driven from. An outline rather than a border, so nothing
    moves as it comes and goes, and inset so it reads as the edge thickening */
-.lamp.chan.kin{outline:2px solid var(--chan);outline-offset:-1px}
-.outgroup.kin .cross{display:inline-flex}
-/* The run is one block of lamps. An output is a space in it, not a box around it. The
-   lamps are close within an output and further apart between them, which is what says
-   where one connector ends and the next begins */
-.outgroup{display:flex;align-items:stretch;gap:.15rem;position:relative;
- margin-right:.5rem}
-.lamps{gap:0}
-/* A lamp is what is picked up and placed, so a box only means that these lamps happen
-   to sit next to each other and share a connector. Only Edit board lets a lamp move */
-body.setupall .lamp{cursor:grab}
-body.setupall .lamp:active{cursor:grabbing}
-.lamp.carried{opacity:.35}
-.lamp.landing{box-shadow:-3px 0 0 var(--accent)}
-.lamp.landing.after{box-shadow:3px 0 0 var(--accent)}
+.cardlamp.chan.kin{outline:2px solid var(--chan);outline-offset:-1px}
 
 /* One set of looks, drawn for the kind being worked on. A tab per kind, and a kind the
    board has none of is offered but not taken. It says what breaking an output out would
@@ -332,66 +319,29 @@ body.setupall .lamp:active{cursor:grabbing}
    lamps to the right, and the gap between them is what an output crosses. Each side is
    as wide as what it holds, so the divide moves as outputs are broken out and put back */
 .sides{display:flex;align-items:flex-start;gap:1rem}
-/* A side is never narrower than the rows under it need. Squeezed below this its counts
-   wrap, and a wrapped count puts the two sides out of line with each other */
-.side{min-width:8.5rem;display:flex;flex-direction:column}
+.side{min-width:0;display:flex;flex-direction:column}
 /* A side holding nothing has nothing to cut and nothing to show, so it says so and
    stands aside */
-.side.empty .run,.side.empty .head.cutting,.side.empty>div[id$="Bar"]{display:none}
-.side .run{width:100%}
-#sideA .lamps{justify-content:flex-start}
-#sideB .lamps{justify-content:flex-end}
-/* On the mono side every group is one output's three channels, each lamp saying which it
-   is, so the run reads evenly and the wider gap between groups is not needed to tell one
-   connector from the next */
-#sideB .outgroup{margin-right:0;margin-left:.15rem}
-#sideB .sidehead{flex-direction:row-reverse}
-
-/* The right side's row mirrors the left, but the two step buttons keep their order.
-   Reversing the row would put redo before undo */
-#sideB .head.cutting{justify-content:flex-end}
-#sideB .head.cutting .gap{order:-1}
-#sideB .head.cutting .what{order:3}
-/* A count that wraps makes its side taller than the other, so it never wraps */
-.head.cutting .what{white-space:nowrap}
-.sidehead{display:flex;align-items:baseline;gap:.5rem;font:600 .82rem system-ui,sans-serif;
- margin:0 0 .35rem;flex-wrap:nowrap;white-space:nowrap;min-width:0;height:1.35rem}
-.sidehead span{font-weight:400;font-size:.75rem;color:var(--dim);min-width:0;
- overflow:hidden;text-overflow:ellipsis}
+.side.empty>div[id$="Bar"]{display:none}
 .side.nothing{font-size:.8rem;color:var(--dim);padding:1.2rem .4rem;text-align:center;
  border:1px dashed var(--line);border-radius:11px;background:#fcfbf9}
 
-/* The arrow an output crosses on. It sits on the output itself, pointing at the side it
-   would move to */
+/* The arrow an output crosses on. It sits on the corner of the lamp pointed at, pointing at the
+   side it would move to */
 .cross{position:absolute;top:-.45rem;width:1.2rem;height:1.2rem;padding:0;
  border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;
  color:var(--rgbout);border-color:#d9c8f5;background:var(--panel);
  box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.outgroup:hover .cross{display:inline-flex}
+.cardlamp:hover .cross{display:inline-flex}
 #sideA .cross{right:-.3rem}
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
-/* A board whose outputs start with its mono ones lays them out first. The mono lamps pack to
-   the left and the colour side mirrors to the right, holding the steps both sides share */
+/* A board whose outputs start with its mono ones lays them out first, and the colour side
+   follows them on the right */
 #sides.monofirst #sideB{order:-1}
-#sides.monofirst #sideA{min-width:12rem}
-#sides.monofirst #sideA .lamps{justify-content:flex-end}
-#sides.monofirst #sideB .lamps{justify-content:flex-start}
-#sides.monofirst #sideA .outgroup{margin-right:0;margin-left:.15rem}
-#sides.monofirst #sideB .outgroup{margin-right:.15rem;margin-left:0}
-#sides.monofirst #sideA .sidehead{flex-direction:row-reverse}
-#sides.monofirst #sideB .sidehead{flex-direction:row}
-#sides.monofirst #sideA .head.cutting{justify-content:flex-end}
-#sides.monofirst #sideA .head.cutting .gap{order:-1}
-#sides.monofirst #sideA .head.cutting .what{order:3}
-#sides.monofirst #sideB .head.cutting{justify-content:flex-start}
-#sides.monofirst #sideB .head.cutting .gap,#sides.monofirst #sideB .head.cutting .what{order:0}
 #sides.monofirst #sideA .cross{left:-.3rem;right:auto}
 #sides.monofirst #sideB .cross{right:-.3rem;left:auto}
-/* A mono output is one light, with no channel's corner to cut and no kin to gather */
-.lamp.chan.single::before{display:none}
-.lamp.chan.single.kin{outline:none}
 
 
 /* Scenes take turns, so they are a grid of cards over the frame they open, one card a
@@ -497,7 +447,7 @@ body.setupall .lamp:active{cursor:grabbing}
 .scenebody{border:1px solid transparent;border-radius:12px;padding:0}
 .scenebody.framed{border:1.5px solid var(--frame);border-top-left-radius:0;
  background:var(--panel);padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
-.scenebody.framed .panel{background:#faf9f7}
+.scenebody.framed .panel,.scenebody.framed #wiringRow,.scenebody.framed .chosen{background:#faf9f7}
 
 /* What one scene is called, and how long it holds */
 .sceneset{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;
@@ -646,14 +596,15 @@ body.setupall .lamp:active{cursor:grabbing}
 .sceneset select.scenethen{max-width:9rem;font-weight:600}
 .sceneset.alwaysnote{display:flex;align-items:center;font-size:.74rem;line-height:1.35;
  color:var(--dim)}
-/* The tools under a run, in the screens' button style. Split and Repeat are each one outlined
-   group read as a sentence, words then number then the buttons that act, divided as the
-   screens' segmented choices are. The screens' rules are repeated for the pages with none */
-.stretchtools{gap:.5rem .8rem}
-.stretchtools .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
- padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
- align-items:center;gap:.35rem;cursor:pointer}
-.stretchtools .stoggle:disabled{opacity:.4;cursor:default}
+/* Split into, on a strip's chosen stretch beside its Reverse, in the screens' button style. It is
+   one outlined group read as a sentence, words then number then the buttons that act, divided as
+   the screens' segmented choices are. The screens' rules are repeated for the pages with none */
+.chosen .who .stretchtools{display:inline-flex;margin-left:auto;flex:none}
+.chosen .who .stretchtools + .direction{margin-left:0}
+/* On a narrow page the buttons move under the stretch's name, whole, rather than squeeze it */
+.chosen .who.withway{flex-wrap:wrap;row-gap:.4rem}
+.chosen .who .direction{flex:none}
+.stretchtools .toolsays,.stretchtools .toolact{white-space:nowrap}
 .stretchtools .toolset{display:inline-flex;align-items:stretch;border:1.5px solid var(--line);
  border-radius:8px;overflow:hidden;background:var(--panel);font:600 .76rem system-ui,sans-serif}
 .stretchtools .toolsays{display:inline-flex;align-items:center;gap:.35rem;padding:0 .45rem 0 .55rem;
@@ -661,14 +612,11 @@ body.setupall .lamp:active{cursor:grabbing}
 .stretchtools .toolset input[type=number]{width:2.6rem;margin:.18rem .3rem .18rem 0;padding:.1rem .2rem;
  font:inherit;border:1px solid var(--line);border-radius:6px;text-align:center}
 .stretchtools .toolact{border:0;border-left:1px solid var(--line);border-radius:0;
- background:var(--panel);padding:.28rem .55rem;font:inherit;color:var(--accent);cursor:pointer}
+ background:var(--panel);padding:.28rem .55rem;font:inherit;color:var(--ink);cursor:pointer}
 .stretchtools .toolact:hover:enabled{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .stretchtools .toolact:disabled{color:var(--dim);opacity:.5;cursor:default}
-/* What Repeat copies, a swatch a stretch, and on the bar while it is pointed at */
-.repeatchips{display:inline-flex;align-items:center;gap:2px;padding-right:.45rem}
-.repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
-.repeatchip.nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 2px,#d8d2c8 2px,
- #d8d2c8 3.5px)}
+/* A colour of a palette, beside its slider */
+.palettechip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 /* A cut's cross sits above the bar, in the room already kept there for where a new cut would
    fall. The two never show at once, since one is pointed at on a cut and the other inside a
    stretch. So the bar keeps no room under it for the cross */
@@ -683,8 +631,6 @@ body.setupall .lamp:active{cursor:grabbing}
    default. Otherwise a bar of a hundred labelled stretches widens the page to fit them all, and
    the strip drawn above it grows too, since the bar is what scrolls */
 #tabStack > *{min-width:0}
-.bar > .sec.repeatfrom{outline:2px dashed var(--accent);outline-offset:-2px}
-.bar > .sec.repeatover{opacity:.35}
 /* A setting's icon before its name, a line drawing in the name's grey */
 .chosen .tuning label.withicon{display:inline-flex;align-items:center;gap:.4rem}
 .settingicon{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;
@@ -733,12 +679,46 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .blinkmore{margin-left:.3rem;padding:.15rem .5rem;border:1px dashed var(--line);border-radius:5px;
  background:none;color:var(--ink);font-size:.78rem;cursor:pointer}
 
-/* A strip is a run like the outputs, drawn as wire and beads. The wire runs between the
-   lights as well as around the turns, so where it begins and ends is readable */
-.striprun{overflow-x:auto;padding:.2rem 0 .1rem}
-.striprun svg{display:block}
-.strip .head{margin-bottom:.3rem}
-.strip .lamps{gap:.18rem}
+/* A strip's LEDs are beads on a wire in its stretches' cards. Each card draws the wire behind its
+   own beads, over its background, and the bar's wire joins the cards from the lead block to the
+   ring. --bead, --gap, --gapdrawn, --fill and --apart are set for the room each LED has, --apart
+   running from 1 for beads apart at full size to 0 for one continuous strip. --beadtall, --wire,
+   --end and --wiremiddle stay the same */
+.stripcards{position:relative}
+.stripcards > .sec{z-index:1}
+.stripwire{position:absolute;background:#c9c3b9;pointer-events:none}
+.wireend{flex:0 0 auto;width:max(8px,calc(var(--end) * .8));position:relative;align-self:stretch;
+ z-index:1}
+.wireend .lead{position:absolute;left:2px;top:calc(var(--wiremiddle) - var(--end) * .31);
+ width:calc(var(--end) * .42);height:calc(var(--end) * .62);border-radius:calc(var(--end) * .13);
+ background:#8f8a81}
+.wireend .tail{position:absolute;right:2px;top:calc(var(--wiremiddle) - var(--end) * .29);
+ width:calc(var(--end) * .58);height:calc(var(--end) * .58);box-sizing:border-box;
+ border:max(1.2px,calc(var(--end) * .14)) solid #a9a49b;border-radius:50%;background:#fff}
+.stripbeads{display:flex;align-items:center;margin:.45rem 3px .3rem;padding:3px 0;border-radius:7px;
+ background:linear-gradient(#c9c3b9,#c9c3b9) center/100% var(--wire) no-repeat}
+/* A stretch set to Nothing. Its beads sit on the stripes Nothing wears elsewhere, inside a broken
+   line, and show what the board does there */
+.stripbeads.unset{outline:1.4px dashed #a9a49b;outline-offset:-1px;
+ background:linear-gradient(#c9c3b9,#c9c3b9) center/100% var(--wire) no-repeat,
+ repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* The places a stretch can be cut are spread across the same width as its beads */
+.stripcards .sec .cuts{left:3px;right:3px}
+.stripbeads i{flex:1 1 0;min-width:0;display:flex;justify-content:center}
+/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom.
+   It takes its own room less the gap, so beads join exactly where the gap closes. Its corners and
+   edge close up with the gap, so the joined strip is square and even.
+   A gap under a pixel is drawn as a whole pixel, which a browser draws evenly, and is filled
+   with the beads' own colour, which deepens as --fill rises from 0 to 1 while the gap closes. The
+   fill is the bead drawn again half a gap and half a pixel to either side, in its colour as
+   painted, overlapping its neighbours so no seam is left where they meet */
+.stripbeads b{--filled:color-mix(in srgb,currentColor calc(var(--fill) * 100%),transparent);
+ display:block;width:min(var(--beadtall),calc(100% - var(--gapdrawn)));
+ height:var(--beadtall);border-radius:calc(min(5px,var(--bead) * .22) * var(--apart));
+ background:#2a2d30;color:#2a2d30;
+ box-shadow:inset 0 0 0 calc(1px * var(--apart)) rgba(0,0,0,.12),
+ calc(var(--gapdrawn) / 2 + .5px) 0 0 0 var(--filled),
+ calc(var(--gapdrawn) / -2 - .5px) 0 0 0 var(--filled)}
 
 /* How many lights are on a strip, which is a fact about the board and not the scene */
 .leds{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--dim);
@@ -746,6 +726,7 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .leds input{font:inherit;font-size:.8rem;width:4.5rem;padding:.24rem .4rem;
  border-radius:7px;border:1px solid var(--line);background:var(--bg);color:inherit}
 .leds .says{margin-left:.2rem}
+.leds .stretchcount{white-space:nowrap}
 
 /* Lines read from the board's file that no setting here stands for, carried as written */
 .keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
@@ -763,7 +744,8 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .sound .hear:hover{color:var(--ink);border-color:var(--ink)}
 .sound .hear.playing{background:var(--accent);border-color:var(--accent);color:#fff}
 /* A light a kept line plays, taken until that line goes */
-.lamp.keptlamp, .sec.keptlamp{outline:2px dashed var(--dim);outline-offset:2px}
+.sec.keptlamp, .cardlamp.keptlamp i{outline:2px dashed var(--dim);
+ outline-offset:2px}
 /* One set of pictures, each able to go to A, to B, or to both */
 .assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.7rem}
 .asset{position:relative;border:2px solid var(--line);border-radius:10px;overflow:hidden;
@@ -1198,21 +1180,27 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .boardchip select option{color:var(--ink)}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
 .facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
-/* The outputs' setup hint stays on the line of their box, so setting up moves no lamp, and
-   is cut short where the page is too narrow, its whole saying in its tooltip */
-#outFacts{display:flex;align-items:center;margin-top:0}
-#outFacts .chip{flex:0 0 auto;white-space:nowrap}
-/* With the sides unnamed the lamps sit under the board's box at a strip's spacing, their
-   own margin being for the heading and adding to the box's inside the sides */
-#sides.unnamed .run{margin-top:0}
-#outFacts .hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
- flex:1 1 0;width:0}
+/* The outputs' setup hint sits on the line of their box, which it fits at the page's full width.
+   On a narrower page it is cut short with its whole text kept in its tooltip, so the line never
+   grows taller, and where too little of it would show it is left out */
+#outFacts{display:flex;align-items:center;margin-top:0;container-type:inline-size}
+#outFacts .chip{flex:0 1 auto;min-width:0;white-space:nowrap}
+#outFacts .chip small{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#outFacts .hint{min-width:0;flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (max-width:600px){#outFacts .hint{display:none}}
+/* A run's zoom, steps and Join all, at the right of the row naming its wiring or its strip */
+.headsteps{margin-left:auto;display:flex;align-items:center;gap:.35rem;flex:none}
+.headsteps .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
+ padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
+ align-items:center;gap:.35rem;cursor:pointer}
+.headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
-   stand back, and every section's board settings open at once */
+   stand back, and every section's board settings open at once. A run's cards stand back around
+   its lights, which are the board's */
 body.setupall #tabs,body.setupall #sceneTabRow,
-body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
-body.setupall [id$=Tools],body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
+body.setupall #looks,body.setupall [id$=Chosen],
+body.setupall .headsteps,body.setupall .stretchcount{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */
 body.setupall #assets,body.setupall #screensSays,
@@ -1233,19 +1221,31 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
    pin to its lamp, never none, brought forward by pointing at the lamp or the connector */
 #outPanel.wired{position:relative}
 #outPanel.wired .sides{position:relative;z-index:1}
-/* The cutting is the scene's and waits while the board is set up, so it steps out of the
-   way, and the connectors sit straight under the lamps they feed */
-#outPanel.wired #outCut,#outPanel.wired #outBar,#outPanel.wired #monoCut,
-#outPanel.wired #monoBar{display:none}
+/* The connectors cover the stretch's settings that stand back under them, in the panel's own
+   colour. Their box holds its inner margin, so its height is all of theirs */
+#outPanel.wired #wiringRow{position:relative;z-index:1;display:flow-root}
+#wiringRow{background:var(--panel)}
 /* The connectors sit in one strip, the board's edge, and a connector is its pins and its
    number with nothing round it. Drawn as a box, a connector reads as a thing to pick up and
-   drag next to the lamps it feeds */
-.wireconnectors{display:flex;justify-content:space-between;gap:.5rem;margin:2.8rem 0 0;
- position:relative;z-index:1;background:#2b3036;border-radius:6px;
+   drag next to the lamps it feeds. Pins narrow to keep every connector on a narrow page */
+.wireboard{margin:2.8rem 0 0;position:relative;z-index:1;background:#2b3036;border-radius:6px;
  padding:.35rem .45rem .2rem}
-.wireconnector{padding:0 .3rem;cursor:default}
+.wireconnectors{display:flex;justify-content:space-between;gap:.5rem}
+/* What the wiring says, ruled off under the connectors, and the way back to how the board comes.
+   The words wrap beside the button, which keeps its place */
+.wirefoot{display:flex;align-items:center;gap:.8rem;margin-top:.3rem;
+ padding:.35rem .3rem .2rem;border-top:1px solid rgba(255,255,255,.12);
+ font:400 .74rem/1.4 system-ui,sans-serif;color:#a7a197}
+.wirefoot>span{flex:1 1 0;min-width:0}
+.wirefoot b{color:#fff}
+.wirereset{flex:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;
+ background:transparent;color:#fff;padding:.15rem .55rem;font:600 .72rem system-ui,sans-serif;
+ cursor:pointer}
+.wirereset:hover:enabled{background:rgba(255,255,255,.12);border-color:#fff}
+.wirereset:disabled{opacity:.35;cursor:default}
+.wireconnector{padding:0 .3rem;cursor:default;flex:0 1 auto;min-width:0}
 .wirepins{display:flex;gap:.35rem;justify-content:center}
-.wirepin{display:block;width:.8rem;height:.45rem;border-radius:2px}
+.wirepin{display:block;flex:0 1 auto;width:.8rem;min-width:4px;height:.45rem;border-radius:2px}
 /* A colour output is one lamp, so one pin */
 .wirepin.whole{width:2.9rem;background:#cfc8bc}
 .wirepin.single{width:1.4rem;background:#cfc8bc}
@@ -1258,13 +1258,11 @@ svg.wirelines{position:absolute;inset:0;width:100%;height:100%;pointer-events:no
  overflow:visible;z-index:2}
 svg.wirelines path{fill:none;stroke-width:1.6;opacity:.16}
 svg.wirelines path.wirehot{opacity:1;stroke-width:2.4}
-#outPanel .lamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
+#outPanel .cardlamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
 .wirepin.wirehot{outline:2px solid #fff;outline-offset:1px}
-.wiresay{font-size:.78rem;color:var(--dim);margin:.8rem 0 0}
-.wiresay b{color:var(--ink)}
 /* A lamp out of the order the lamps are wired in is bold, since a lamp has colours enough */
-body.setupall #outPanel .lamp.astray b{font-weight:700;color:var(--ink)}
-#outPanel .lamp.moving{z-index:3;position:relative;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+body.setupall #outPanel .cardlamp.astray b{font-weight:700;color:var(--ink)}
+#outPanel .cardlamp.moving{z-index:3;box-shadow:0 6px 16px rgba(0,0,0,.18)}
 
 /* ---- the LED sections as an accordion, where a closed one says in a swatch what it plays ---- */
 .accswatch{display:inline-flex;width:8rem;height:.55rem;border-radius:3px;overflow:hidden;
@@ -1856,19 +1854,12 @@ body:has(>dialog.firmwaresheet[open]){overflow:hidden}
   <div class="facts" id="outFacts"></div>
   <div class="sides" id="sides">
    <div class="side" id="sideA">
-    <div class="sidehead" id="headA"></div>
-    <div class="run" id="outRun"></div>
-    <div class="head" id="outCut"></div>
     <div id="outBar"></div>
    </div>
    <div class="side" id="sideB">
-    <div class="sidehead" id="headB"></div>
-    <div class="run" id="monoRun"></div>
-    <div class="head" id="monoCut"></div>
     <div id="monoBar"></div>
    </div>
   </div>
-  <div id="outTools"></div>
   <div id="outChosen"></div>
  </details>
 

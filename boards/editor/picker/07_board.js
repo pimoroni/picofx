@@ -58,6 +58,37 @@ var moveLampInScenes = acrossScenes(function (move) {
   acrossWiring(function () { placeLamp(move); });
 });
 
+// The wiring put back as the board comes, every output that breaks out rejoined and every lamp in
+// the order the board wires them. Each scene keeps its looks on the lamps they were on, and
+// neighbouring stretches left playing the same, as moves and splits leave them, become one
+var rejoinOne = changeWiring(rejoinWiring, true);
+
+var resetWiringInScenes = acrossScenes(function () {
+  breakingOutputs().forEach(rejoinOne);
+  acrossWiring(function () { order = plainOrder(); });
+  [outs, mono].forEach(joinAlike);
+});
+
+// Join a run's neighbouring stretches that play exactly the same
+function joinAlike(run) {
+  var joined = [];
+  run.sections.forEach(function (section) {
+    var last = joined[joined.length - 1];
+    if (last && JSON.stringify(playsOf(last)) === JSON.stringify(playsOf(section))) {
+      last.to = section.to;
+    } else {
+      joined.push(section);
+    }
+  });
+  run.sections = joined;
+  run.picked = Math.max(0, Math.min(run.picked, joined.length - 1));
+}
+
+// Whether the wiring differs from how the board comes, a lamp out of order or an output broken out
+function wiringChanged(astray) {
+  return astray.length > 0 || breakingOutputs().some(function (out) { return wiring[out].broken; });
+}
+
 // Whether a lamp can be dragged to where it sits just now. Where a lamp sits is changed with
 // the wiring, so only where that can be
 function lampsMovable() { return canEdit("outPanel"); }

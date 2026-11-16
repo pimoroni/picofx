@@ -16,8 +16,7 @@
  "output_words": {
   "tab": "Outputs",
   "panel": "seven of them, each one light or three",
-  "colour": "Colour outputs", "colour_says": "no adapter fitted",
-  "mono": "Mono lights", "mono_says": "three to every output broken out"
+  "colour": "Colour outputs"
  },
  "opening": {"colour": "Rainbow"},
  "wiring_order": true,
