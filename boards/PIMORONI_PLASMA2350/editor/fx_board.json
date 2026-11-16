@@ -7,8 +7,7 @@
  "output_words": {
   "tab": "LED",
   "panel": "the board's own RGB LED",
-  "colour": "RGB LED", "colour_says": "any colour",
-  "mono": "Mono lights", "mono_says": ""
+  "colour": "RGB LED"
  },
  "opening": {"colour": "Rainbow"},
  "wiring_order": false,

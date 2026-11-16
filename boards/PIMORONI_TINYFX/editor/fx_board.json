@@ -14,8 +14,7 @@
  "output_words": {
   "tab": "Outputs",
   "panel": "six mono and one RGB, which can be three",
-  "colour": "RGB output", "colour_says": "any colour",
-  "mono": "Mono lights", "mono_says": "the six outputs, and the RGB's three broken out"
+  "colour": "RGB output"
  },
  "opening": {"colour": "Rainbow", "mono": "Wave"},
  "wiring_order": true,

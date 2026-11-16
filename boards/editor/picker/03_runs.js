@@ -1385,44 +1385,21 @@ function renderChosenPanel(where, run) {
   }
 }
 
-// The two sides, each as wide as what it holds, so the divide between them moves as
-// outputs are broken out and put back
+// Size the two sides, each as wide as the lamps it holds, so the divide between them moves as
+// outputs are broken out and put back and every lamp has the same room. The sides carry no names,
+// so breaking an output out never adds or takes away a row above the cards. The lamps' labels,
+// the board's box and the board's edge already say which lights are which
 function renderSides() {
-  var words = BOARD.output_words;
-  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
-   {run: mono, side: "sideB", head: "headB", title: words.mono,
-    says: words.mono_says}].forEach(function (set) {
+  [{run: outs, side: "sideA"}, {run: mono, side: "sideB"}].forEach(function (set) {
     var box = document.getElementById(set.side);
     var count = set.run.lamps.length;
-    var groups = {};
-    set.run.lamps.forEach(function (lamp) { groups[lamp.out] = true; });
-    // Each output is a space in the run as well as its lamps, so the spaces are counted
-    // too or the last output wraps onto a row of its own
-    var room = count + Object.keys(groups).length;
     // A side with nothing on it is not there at all. An output comes back from the arrow
     // on one of its channels, so nothing is reached by keeping an empty column open, and
     // the side that holds every lamp gets the whole width
     box.style.display = count ? "" : "none";
-    box.style.flex = room + " 1 0";
+    box.style.flex = count + " 1 0";
     box.className = "side";
-
-    var head = document.getElementById(set.head);
-    head.textContent = "";
-    head.appendChild(document.createTextNode(set.title));
-    var says = document.createElement("span");
-    // A side with nothing in it has no count to give, and no room to give one in
-    says.textContent = count
-      ? count + (count === 1 ? " light, " : " lights, ") + set.says
-      : "";
-    head.appendChild(says);
   });
-  // A side is named only while there are two, telling the colour lamps from the mono ones.
-  // With every output one colour lamp, the board's box says so already
-  var two = mono.lamps.length > 0;
-  ["headA", "headB"].forEach(function (id) {
-    document.getElementById(id).style.display = two ? "" : "none";
-  });
-  document.getElementById("sides").classList.toggle("unnamed", !two);
 }
 
 // ---- the file, painted -----------------------------------------------------------------------

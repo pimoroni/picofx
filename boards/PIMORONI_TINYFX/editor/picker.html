@@ -332,18 +332,10 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
    lamps to the right, and the gap between them is what an output crosses. Each side is
    as wide as what it holds, so the divide moves as outputs are broken out and put back */
 .sides{display:flex;align-items:flex-start;gap:1rem}
-/* A side is never narrower than the rows under it need. Squeezed below this its counts
-   wrap, and a wrapped count puts the two sides out of line with each other */
-.side{min-width:8.5rem;display:flex;flex-direction:column}
+.side{min-width:0;display:flex;flex-direction:column}
 /* A side holding nothing has nothing to cut and nothing to show, so it says so and
    stands aside */
 .side.empty>div[id$="Bar"]{display:none}
-#sideB .sidehead{flex-direction:row-reverse}
-
-.sidehead{display:flex;align-items:baseline;gap:.5rem;font:600 .82rem system-ui,sans-serif;
- margin:0 0 .35rem;flex-wrap:nowrap;white-space:nowrap;min-width:0;height:1.35rem}
-.sidehead span{font-weight:400;font-size:.75rem;color:var(--dim);min-width:0;
- overflow:hidden;text-overflow:ellipsis}
 .side.nothing{font-size:.8rem;color:var(--dim);padding:1.2rem .4rem;text-align:center;
  border:1px dashed var(--line);border-radius:11px;background:#fcfbf9}
 
@@ -358,12 +350,9 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
-/* A board whose outputs start with its mono ones lays them out first. The mono lamps pack to
-   the left and the colour side mirrors to the right, holding the steps both sides share */
+/* A board whose outputs start with its mono ones lays them out first, and the colour side
+   follows them on the right */
 #sides.monofirst #sideB{order:-1}
-#sides.monofirst #sideA{min-width:12rem}
-#sides.monofirst #sideA .sidehead{flex-direction:row-reverse}
-#sides.monofirst #sideB .sidehead{flex-direction:row}
 #sides.monofirst #sideA .cross{left:-.3rem;right:auto}
 #sides.monofirst #sideB .cross{right:-.3rem;left:auto}
 
@@ -1213,9 +1202,21 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
 /* The connectors sit in one strip, the board's edge, and a connector is its pins and its
    number with nothing round it. Drawn as a box, a connector reads as a thing to pick up and
    drag next to the lamps it feeds. Pins narrow to keep every connector on a narrow page */
-.wireconnectors{display:flex;justify-content:space-between;gap:.5rem;margin:2.8rem 0 0;
- position:relative;z-index:1;background:#2b3036;border-radius:6px;
+.wireboard{margin:2.8rem 0 0;position:relative;z-index:1;background:#2b3036;border-radius:6px;
  padding:.35rem .45rem .2rem}
+.wireconnectors{display:flex;justify-content:space-between;gap:.5rem}
+/* What the wiring says, ruled off under the connectors, and the way back to how the board comes.
+   The words wrap beside the button, which keeps its place */
+.wirefoot{display:flex;align-items:center;gap:.8rem;margin-top:.3rem;
+ padding:.35rem .3rem .2rem;border-top:1px solid rgba(255,255,255,.12);
+ font:400 .74rem/1.4 system-ui,sans-serif;color:#a7a197}
+.wirefoot>span{flex:1 1 0;min-width:0}
+.wirefoot b{color:#fff}
+.wirereset{flex:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;
+ background:transparent;color:#fff;padding:.15rem .55rem;font:600 .72rem system-ui,sans-serif;
+ cursor:pointer}
+.wirereset:hover:enabled{background:rgba(255,255,255,.12);border-color:#fff}
+.wirereset:disabled{opacity:.35;cursor:default}
 .wireconnector{padding:0 .3rem;cursor:default;flex:0 1 auto;min-width:0}
 .wirepins{display:flex;gap:.35rem;justify-content:center}
 .wirepin{display:block;flex:0 1 auto;width:.8rem;min-width:4px;height:.45rem;border-radius:2px}
@@ -1233,8 +1234,6 @@ svg.wirelines path{fill:none;stroke-width:1.6;opacity:.16}
 svg.wirelines path.wirehot{opacity:1;stroke-width:2.4}
 #outPanel .cardlamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
 .wirepin.wirehot{outline:2px solid #fff;outline-offset:1px}
-.wiresay{font-size:.78rem;color:var(--dim);margin:.8rem 0 0}
-.wiresay b{color:var(--ink)}
 /* A lamp out of the order the lamps are wired in is bold, since a lamp has colours enough */
 body.setupall #outPanel .cardlamp.astray b{font-weight:700;color:var(--ink)}
 #outPanel .cardlamp.moving{z-index:3;box-shadow:0 6px 16px rgba(0,0,0,.18)}
@@ -1793,11 +1792,9 @@ body.discovermodal{overflow:hidden}
   <div class="facts" id="outFacts"></div>
   <div class="sides" id="sides">
    <div class="side" id="sideA">
-    <div class="sidehead" id="headA"></div>
     <div id="outBar"></div>
    </div>
    <div class="side" id="sideB">
-    <div class="sidehead" id="headB"></div>
     <div id="monoBar"></div>
    </div>
   </div>
@@ -1868,10 +1865,7 @@ var BOARD = {
  "output_words": {
   "tab": "Outputs",
   "panel": "six mono and one RGB, which can be three",
-  "colour": "RGB output",
-  "colour_says": "any colour",
-  "mono": "Mono lights",
-  "mono_says": "the six outputs, and the RGB's three broken out"
+  "colour": "RGB output"
  },
  "opening": {
   "colour": "Rainbow",
@@ -3979,44 +3973,21 @@ function renderChosenPanel(where, run) {
   }
 }
 
-// The two sides, each as wide as what it holds, so the divide between them moves as
-// outputs are broken out and put back
+// Size the two sides, each as wide as the lamps it holds, so the divide between them moves as
+// outputs are broken out and put back and every lamp has the same room. The sides carry no names,
+// so breaking an output out never adds or takes away a row above the cards. The lamps' labels,
+// the board's box and the board's edge already say which lights are which
 function renderSides() {
-  var words = BOARD.output_words;
-  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
-   {run: mono, side: "sideB", head: "headB", title: words.mono,
-    says: words.mono_says}].forEach(function (set) {
+  [{run: outs, side: "sideA"}, {run: mono, side: "sideB"}].forEach(function (set) {
     var box = document.getElementById(set.side);
     var count = set.run.lamps.length;
-    var groups = {};
-    set.run.lamps.forEach(function (lamp) { groups[lamp.out] = true; });
-    // Each output is a space in the run as well as its lamps, so the spaces are counted
-    // too or the last output wraps onto a row of its own
-    var room = count + Object.keys(groups).length;
     // A side with nothing on it is not there at all. An output comes back from the arrow
     // on one of its channels, so nothing is reached by keeping an empty column open, and
     // the side that holds every lamp gets the whole width
     box.style.display = count ? "" : "none";
-    box.style.flex = room + " 1 0";
+    box.style.flex = count + " 1 0";
     box.className = "side";
-
-    var head = document.getElementById(set.head);
-    head.textContent = "";
-    head.appendChild(document.createTextNode(set.title));
-    var says = document.createElement("span");
-    // A side with nothing in it has no count to give, and no room to give one in
-    says.textContent = count
-      ? count + (count === 1 ? " light, " : " lights, ") + set.says
-      : "";
-    head.appendChild(says);
   });
-  // A side is named only while there are two, telling the colour lamps from the mono ones.
-  // With every output one colour lamp, the board's box says so already
-  var two = mono.lamps.length > 0;
-  ["headA", "headB"].forEach(function (id) {
-    document.getElementById(id).style.display = two ? "" : "none";
-  });
-  document.getElementById("sides").classList.toggle("unnamed", !two);
 }
 
 // ---- the file, painted -----------------------------------------------------------------------
@@ -7310,6 +7281,37 @@ var moveLampInScenes = acrossScenes(function (move) {
   acrossWiring(function () { placeLamp(move); });
 });
 
+// The wiring put back as the board comes, every output that breaks out rejoined and every lamp in
+// the order the board wires them. Each scene keeps its looks on the lamps they were on, and
+// neighbouring stretches left playing the same, as moves and splits leave them, become one
+var rejoinOne = changeWiring(rejoinWiring, true);
+
+var resetWiringInScenes = acrossScenes(function () {
+  breakingOutputs().forEach(rejoinOne);
+  acrossWiring(function () { order = plainOrder(); });
+  [outs, mono].forEach(joinAlike);
+});
+
+// Join a run's neighbouring stretches that play exactly the same
+function joinAlike(run) {
+  var joined = [];
+  run.sections.forEach(function (section) {
+    var last = joined[joined.length - 1];
+    if (last && JSON.stringify(playsOf(last)) === JSON.stringify(playsOf(section))) {
+      last.to = section.to;
+    } else {
+      joined.push(section);
+    }
+  });
+  run.sections = joined;
+  run.picked = Math.max(0, Math.min(run.picked, joined.length - 1));
+}
+
+// Whether the wiring differs from how the board comes, a lamp out of order or an output broken out
+function wiringChanged(astray) {
+  return astray.length > 0 || breakingOutputs().some(function (out) { return wiring[out].broken; });
+}
+
 // Whether a lamp can be dragged to where it sits just now. Where a lamp sits is changed with
 // the wiring, so only where that can be
 function lampsMovable() { return canEdit("outPanel"); }
@@ -7767,7 +7769,11 @@ function renderConnectors() {
     block.addEventListener("mouseleave", function () { bringForward(keys, false); });
     row.appendChild(block);
   });
-  box.appendChild(row);
+  // The board's edge holds its connectors and, under them, what the wiring order says
+  var board = document.createElement("div");
+  board.className = "wireboard";
+  board.appendChild(row);
+  box.appendChild(board);
 
   var side = wiredSide();
   var astray = astrayOf(side);
@@ -7775,13 +7781,20 @@ function renderConnectors() {
     var node = lampNode(lamp.key);
     if (node) node.classList.add("astray");
   });
-  var said = document.createElement("p");
-  said.className = "wiresay";
-  said.innerHTML = astray.length
+  var foot = document.createElement("div");
+  foot.className = "wirefoot";
+  var said = document.createElement("span");
+  said.innerHTML = (astray.length
     ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
-      "order, numbered in bold. Hover over a light or connector to highlight its wire."
-    : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
-  box.appendChild(said);
+      "order, numbered in bold. "
+    : "All lights are in wiring order. ") + brokenSentence() +
+    "Hover over a light or connector to highlight its wire.";
+  foot.appendChild(said);
+  // The button stays while there is nothing to reset, so the board's edge never changes height
+  var reset = resetWiringButton();
+  reset.disabled = !wiringChanged(astray);
+  foot.appendChild(reset);
+  board.appendChild(foot);
   overlapBelow(box);
   drawLines();
 }
@@ -7826,6 +7839,32 @@ var sliding = null;
 function moveLamp(move) {
   slideFrom(lampKey(move.from));
   moveLampInScenes(move);
+}
+
+// The outputs broken out, said as a sentence for the board's edge, or nothing where none are
+function brokenSentence() {
+  var broken = breakingOutputs().some(function (out) { return wiring[out].broken; });
+  if (!broken) return "";
+  var said = brokenSaid();
+  return said.charAt(0).toUpperCase() + said.slice(1) + ". ";
+}
+
+// The button that puts the wiring back as the board comes, each lamp sliding to its place and a
+// rejoined output's lamp gathering from the middle of its three
+function resetWiringButton() {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "wirereset";
+  button.textContent = "Reset wiring";
+  button.title = "Rejoin every broken-out output and put every light back in wiring order";
+  button.onclick = function () {
+    slideFrom(null);
+    breakingOutputs().forEach(function (out) {
+      if (wiring[out].broken) gatherFromThree(out);
+    });
+    resetWiringInScenes();
+  };
+  return button;
 }
 
 // Where a lamp is within the outputs' panel. The page may scroll straight after a draw to
@@ -7884,6 +7923,12 @@ function breakOut(out) {
 
 function rejoin(out) {
   slideFrom(null);
+  gatherFromThree(out);
+  rejoinInScenes(out);
+}
+
+// Start a rejoined output's lamp in the slide from the middle of its three channels
+function gatherFromThree(out) {
   var three = [0, 1, 2].map(function (channel) {
     return sliding.was[lampKey({out: out, channel: channel})];
   }).filter(Boolean);
@@ -7893,7 +7938,6 @@ function rejoin(out) {
       top: three.reduce(function (sum, one) { return sum + one.top; }, 0) / three.length
     };
   }
-  rejoinInScenes(out);
 }
 
 drawSteps.after.push(function () {
