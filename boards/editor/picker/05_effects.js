@@ -634,8 +634,14 @@ function stripChipChoice(run) {
       if ((run.order || "") === pair[0]) option.selected = true;
       choice.appendChild(option);
     });
+    choice.appendChild(notFittedOption(run.there === false));
     choice.title = "The strip's colour order. Change it if red shows as another colour";
     choice.onchange = function () {
+      if (choice.value === NOT_FITTED_CHOICE) {
+        dropStrip(run);
+        return;
+      }
+      fitStrip(run);
       stripSet(run, {order: choice.value});
       draw();
     };
@@ -652,12 +658,38 @@ function stripChipChoice(run) {
     if (brightness === run.brightness) option.selected = true;
     choice.appendChild(option);
   });
+  choice.appendChild(notFittedOption(run.there === false));
   choice.title = "Overall strip brightness, applied on top of each stretch's level";
   choice.onchange = function () {
+    if (choice.value === NOT_FITTED_CHOICE) {
+      dropStrip(run);
+      return;
+    }
+    fitStrip(run);
     stripSet(run, {brightness: Number(choice.value)});
     draw();
   };
   return choice;
+}
+
+// Fit a strip not fitted, as choosing anything but not fitted on its chip does
+function fitStrip(run) {
+  if (run.there !== false) return;
+  stripThere(run, true);
+  workOn(run.id + "Panel");
+}
+
+// The value a board setting's choice takes for a part not fitted, which is how a strip, a screen
+// or a hub position is taken off the board, and stays chosen while it is off
+var NOT_FITTED_CHOICE = "not fitted";
+
+// The last option of a board setting's choice, chosen where the part is not fitted
+function notFittedOption(chosen) {
+  var option = document.createElement("option");
+  option.value = NOT_FITTED_CHOICE;
+  option.textContent = "not fitted";
+  option.selected = !!chosen;
+  return option;
 }
 
 // The same as words, where the chip cannot be changed

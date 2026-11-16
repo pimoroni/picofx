@@ -7,12 +7,39 @@
 // Whether the whole page is in its setup mode
 var setupOn = false;
 
+// The tooltip on everything that wears the board's chip
+var BOARD_SETTING_SAYS = "Board setup, shared by every scene";
+
 // The panels that hold a board fact, and the colour each one's box takes
 var BOARD_CHIP_CLASSES = {outPanel: "outs"};
 STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
 
-// Whether the board facts in this panel can be changed just now
-function canEdit(panel) { return setupOn; }
+// Whether the board facts in this panel can be changed just now. Every board setting is changed
+// where it is shown, and only the outputs' wiring waits for its own view, where lights are
+// dragged into place
+function canEdit(panel) { return panel === "outPanel" ? setupOn : true; }
+
+// A board setting's act, such as adding a screen, which is made where it is shown
+function boardAct(act) { return act; }
+
+// The Wiring chip opens the outputs' wiring view, where it shows pressed, and a second click
+// closes it
+document.addEventListener("click", function (event) {
+  if (event.target.closest("select, input, button, header")) return;
+  if (!event.target.closest("#outFacts .boardchip")) return;
+  setSetup(!setupOn);
+  draw();
+});
+
+// The chip a board setting's add button carries, before its words
+function boardButton(words) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "boardadd";
+  button.appendChild(boardIcon());
+  button.appendChild(document.createTextNode(words));
+  return button;
+}
 
 // ---- selection waits while the board is set up ------------------------------------------------
 // A stretch is picked to give it a look, which setup does not do, so a tap there picks
@@ -58,7 +85,7 @@ function unmark() {
 function boardBox(panel, parts) {
   var box = document.createElement("span");
   box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "Board setup, shared by every scene";
+  box.title = BOARD_SETTING_SAYS;
   box.appendChild(boardIcon());
   parts.forEach(function (part) {
     box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
@@ -73,7 +100,8 @@ function small(words) {
 }
 
 // The board's chip, three legs a side, set three apart as the smallest spacing that still
-// reads as legs at 16px
+// reads as legs at 16px. It carries the board's tooltip itself, so a chip with no box around it
+// says it too
 function boardIcon() {
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 14 14");
@@ -81,7 +109,8 @@ function boardIcon() {
   svg.setAttribute("height", "13");
   svg.setAttribute("class", "boardicon");
   svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
+  svg.innerHTML = "<title>" + BOARD_SETTING_SAYS + "</title>" +
+                  "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
                   "stroke='currentColor' stroke-width='1.3'/>" +
                   "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
                   "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
@@ -166,41 +195,26 @@ function dropStrip(run) {
   draw();
 }
 
-// The cross on a strip's chip while the board is edited, as a screen has on its own
-function stripDrop(run) {
-  var drop = document.createElement("button");
-  drop.type = "button";
-  drop.className = "drop";
-  drop.textContent = "\u00d7";
-  drop.title = "Remove this strip from every scene";
-  drop.onclick = function () { dropStrip(run); };
-  return drop;
-}
-
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
+// A strip not fitted offers to be added, which goes into Edit board to do it, or says why it
+// cannot be
 function renderStripOut(box, run, panel) {
   box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
   var blocked = stripBlockedBy(run);
   if (blocked) {
+    box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
     var why = document.createElement("span");
     why.className = "stripblocked says";
     why.textContent = blocked;
     box.appendChild(why);
     return;
   }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
-  add.onclick = function () {
-    stripThere(run, true);
-    workOn(panel);
-    draw();
-  };
-  box.appendChild(add);
+  // The strip's choice stays, at not fitted, and choosing anything else fits it
+  box.appendChild(boardBox(panel, ["Strip", stripChipChoice(run)]));
+  var how = document.createElement("span");
+  how.className = "stripblocked says";
+  how.textContent = "Choose its " + (run.made === null ? "colour order" : "brightness") +
+                    " above to fit this strip";
+  box.appendChild(how);
 }
 
 function renderLeds(where, run) {
@@ -219,9 +233,8 @@ function renderLeds(where, run) {
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
+    chip.title = BOARD_SETTING_SAYS;
     chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
   } else {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));

@@ -1212,7 +1212,7 @@ function renderScreensTab() {
     if (!chip || !size) return;
     var fact = document.createElement("span");
     fact.className = "bandfact";
-    fact.title = "Board setup, shared by every scene";
+    fact.title = BOARD_SETTING_SAYS;
     band.insertBefore(fact, size);
     fact.appendChild(chip);
     fact.appendChild(size);

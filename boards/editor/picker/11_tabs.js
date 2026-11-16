@@ -36,6 +36,8 @@ function chosenTakesLooks() {
 // Edit board and changing scene each put back a stretch of their own, which can be another tab's
 drawSteps.before.push(function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
+  // A strip fitted or taken off where it is shown changes whether the looks are for this tab
+  showChosen();
 });
 
 // Every tab's section stays laid out in one shared place, only the chosen one seen, so the
@@ -113,6 +115,8 @@ function renderLedTabs() {
     tabSwatch(swatch, panel);
     tab.appendChild(swatch);
     tab.addEventListener("click", function () {
+      // The wiring view is the outputs' own, so leaving their tab closes it
+      if (setupOn && panel !== "outPanel") setSetup(false);
       chosenTab = panel;
       if (chosenTakesLooks()) workOn(panel);
       showChosen();
@@ -120,18 +124,6 @@ function renderLedTabs() {
     });
     bar.appendChild(tab);
   });
-
-  var gap = document.createElement("span");
-  gap.className = "gap";
-  bar.appendChild(gap);
-  // The tabs grow and shrink as setting up opens and closes, so they are held where they
-  // were on the screen
-  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
-    var was = bar.getBoundingClientRect().top;
-    setSetup(!setupOn);
-    draw();
-    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
-  }));
 }
 
 // A section shown as a tab is not folded away, since the tab is how it is left
