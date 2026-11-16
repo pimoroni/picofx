@@ -3,6 +3,7 @@
  "terms": {
   "BOARD_TITLE": "Tiny FX",
   "BOARD_HAS": "Six mono outputs, one RGB output, a speaker",
+  "RESET_BUTTON": "RST",
   "LIGHTS_TABS": "On **Outputs**",
   "TRAVELLING_LIGHT": "dim light",
   "PROGRAMS_OFFERED": "what a remote, a sensor or a speaker brings",

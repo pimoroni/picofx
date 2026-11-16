@@ -241,6 +241,28 @@ browser. Safari and Firefox cannot write to a drive from a web page, so the
 picker says so there. [The editor](#the-editor) can still save from them, as a
 download.
 
+### Updating: Getting newer firmware
+
+When you press [[Open FX drive]], the picker checks whether newer firmware is
+out for your board, at most once a day and only while the computer is online.
+If there is, [[Update available]] appears beside the version at the top of the
+page.
+
+[[Update available]] shows what's new and offers the one file your board needs.
+Save to the board first, then download the file. Hold **Boot**, press
+**Reset**, then let go of **Boot**, and drag the file onto the drive
+that appears. The
+board restarts by itself, and your FX drive and the files on it are kept. Open
+`PICKER.html` from the drive again afterwards, to use the picker that comes
+with the new firmware.
+
+Your computer may report an error as the board restarts. If the drive the board
+showed is still there, drag the file onto it again.
+
+When a release needs something done before you update, such as copying your
+files off the drive, the button turns amber and a warning appears at the top of
+what's new. Read it before you start.
+
 <!-- contents fold -->
 
 ## The editor

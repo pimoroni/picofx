@@ -3,6 +3,7 @@
  "terms": {
   "BOARD_TITLE": "Plasma 2350",
   "BOARD_HAS": "Two LED terminals, a screen connector on the 2350",
+  "RESET_BUTTON": "Reset",
   "LIGHTS_TABS": "On a strip's tab or **LED**",
   "ENTRY_TARGETS": "the strips, the board's LED and the screen",
   "OUTPUT": "LED",

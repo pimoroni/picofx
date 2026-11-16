@@ -1,6 +1,8 @@
 {
  "name": "Mighty FX",
  "examples": true,
+ "release": {"files": {"mighty_fx_drive": "Mighty FX"}, "bootloader_drive": "RP2350",
+             "reset_button": "RST"},
  "examples_index": "examples/mighty_fx/index.json",
  "outputs": [
   {"name": "out1", "kind": "colour", "breaks_out": true},

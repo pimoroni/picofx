@@ -113,7 +113,8 @@ BYTES_PER_LINE = 64
 
 # The board's description: its name, outputs, strips, screens, sound, the examples it offers, and
 # the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them, the name
-# those examples give the board, and with "shell" set, that its drive carries the pages as shells
+# those examples give the board, and with "shell" set, that its drive carries the pages as shells.
+# Its "release" names the release files the picker offers, a wireless build's apart
 DESCRIPTION_NAME = "fx_board.json"
 
 # The picker's page and the parts every board shares, from the repository's root
@@ -129,6 +130,7 @@ FEATURE_FOLDERS = {
     "sound": lambda board: bool(board["sound"]),
     "sensor": lambda board: bool(board.get("sensor")),
     "discover": lambda board: "examples_index" in board,
+    "firmware": lambda board: "release" in board,
 }
 
 # The picker's parts are its script, so the page closes after the last of them
@@ -221,8 +223,9 @@ def picker(board_dir, repo_dir, version):
 BOARD_TABLES = ("STRIPS", "SCREENS", "STRIP_BRIGHTNESS", "STRIP_TAKES")
 
 # What the module carries, in order. The catalogue without screen ports is only for a board
-# that detects at run time whether it has them
-MODULE_PAGES = ("PICKER", "EDITOR", "CATALOGUE", "CATALOGUE_WITHOUT_SCREENS")
+# that detects at run time whether it has them, and the wireless one only for a board whose
+# wireless build shares the module with its plain one
+MODULE_PAGES = ("PICKER", "EDITOR", "CATALOGUE", "CATALOGUE_WITHOUT_SCREENS", "CATALOGUE_WIRELESS")
 
 
 def board_declares(board_dir):
@@ -309,11 +312,13 @@ def described(board):
             "hub": screens["hub"], "detect": False}
 
 
-def catalogue(repo_dir, board_dir, board, offer_screens=True):
+def catalogue(repo_dir, board_dir, board, offer_screens=True, wireless=False):
     """catalogue.js, from the same tables autofx reads on the board, with the strips and screen
     ports its class declares, or its description where its class is not here, and the board's
     outputs and connectors from its description. Without offer_screens it offers no screen
-    ports, for a board that detects it has none."""
+    ports, for a board that detects it has none. A board with a separate wireless build says
+    which build the catalogue is for, the wireless one with wireless, so the picker offers that
+    build's release file."""
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -352,6 +357,10 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True):
         "hub": board_hub(declared),
         "sound": bool(board["sound"]),
     }
+    # A board whose wireless build shares its pages with its plain one says which build this
+    # catalogue is for. A board with one build says nothing, whether or not it has wireless
+    if "wireless_files" in board.get("release", {}):
+        own["wireless"] = wireless
     tables = {
         "effects": {name: {"kind": kind, "takes": list(takes)}
                     for name, (_cls, kind, _called, takes)
@@ -524,6 +533,14 @@ def main():
     if declared and declared["detect"]:
         sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,
                                                          offer_screens=False)
+    # A board whose wireless build shares this module is told which build it is by the
+    # catalogue the firmware writes. pages.py picks one catalogue, so a board can take one
+    # variant or the other, not both
+    if "wireless_files" in board.get("release", {}):
+        if "CATALOGUE_WITHOUT_SCREENS" in sources:
+            sys.exit("{} gives a wireless build to a board that detects its screen ports, and "
+                     "the drive can carry one catalogue variant".format(DESCRIPTION_NAME))
+        sources["CATALOGUE_WIRELESS"] = catalogue(repo_dir, args.board_dir, board, wireless=True)
 
     shelled = set(SHELLED) if board.get("shell", False) else set()
     if args.check:

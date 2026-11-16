@@ -415,6 +415,7 @@ var CATALOGUE = {
   "strips": [],
   "screens": [],
   "hub": false,
-  "sound": true
+  "sound": true,
+  "wireless": false
  }
 };

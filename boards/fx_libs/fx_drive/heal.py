@@ -273,8 +273,8 @@ def mount(screens=True, wireless=False, sound=True):
     `screens` is False for a board found to have no screen ports, which is then given
     the catalogue without them where its pages carry one, and no pictures or drawings
     folder. `wireless` is True for a board with a wireless module, which is given the
-    WiFi credentials. `sound` is False for a board that cannot play sound, which is given
-    no sounds folder.
+    WiFi credentials, and the wireless build's catalogue where its pages carry one.
+    `sound` is False for a board that cannot play sound, which is given no sounds folder.
     """
     global __screens, __wireless, __sound
     __screens, __wireless, __sound = screens, wireless, sound
@@ -326,7 +326,7 @@ def mount(screens=True, wireless=False, sound=True):
     __make_folders(screens, sound)
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
-    for name, document in pages(screens):
+    for name, document in pages(screens, wireless):
         __heal(fs, name, document)
     __sweep_host_litter()
     __mark_for_mac(fs)

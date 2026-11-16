@@ -955,6 +955,16 @@ function discoverRenderBrowser() {
       ? "Every example here needs hardware that is not ticked."
       : any ? "The drive has every example."
       : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
+  } else {
+    // Examples needing firmware that a release brings are counted at the top, saying where it is
+    var updatable = offers.filter(function (offer) {
+      return discover.newer[offer[0]] && discoverReleased(discoverEntry(offer[0]).firmware) === true;
+    }).length;
+    if (updatable) {
+      scroll.appendChild(discoverElement("p", "discoverhint discoverneeds",
+        discoverCount(updatable, "example here needs", "examples here need") + " newer firmware. " +
+        "To update, go back and press Update available beside the version."));
+    }
   }
   var shown = [];
   var listed = discoverSections(kind, offers).filter(function (section) {
@@ -1162,7 +1172,7 @@ function discoverOfferCard(offer, shown) {
   }
   if (discover.newer[path]) {
     var needs = discoverElement("span", "discoverpill newer", "Needs " + discoverEntry(path).firmware);
-    needs.title = "Needs " + BOARD.name + " firmware " + discoverEntry(path).firmware + " or newer.";
+    needs.title = discoverNeedsSays(discoverEntry(path).firmware);
     card.appendChild(needs);
   }
   card.onclick = function (e) {
@@ -1175,6 +1185,21 @@ function discoverOfferCard(offer, shown) {
     }
   };
   return card;
+}
+
+// Whether the latest firmware release brings the version given, or null where that is unknown, as
+// it is offline or on a board without the firmware part
+function discoverReleased(version) {
+  return typeof firmwareCovers === "function" ? firmwareCovers(version) : null;
+}
+
+// The tip on an example's Needs mark, saying where its firmware comes from where that is known
+function discoverNeedsSays(version) {
+  var needs = "Needs " + BOARD.name + " firmware " + version + " or newer";
+  var released = discoverReleased(version);
+  if (released === true) return needs + ", from Update available beside the version.";
+  if (released === false) return needs + ", not yet released.";
+  return needs + ".";
 }
 
 // A small mark in a card's corner, as a download arrow, Update, or the firmware it needs
@@ -1190,7 +1215,7 @@ function discoverPill(cardPath) {
   } else if (discover.newer[path] && discover.states[path] !== "current") {
     pill.textContent = "Needs " + entry.firmware;
     pill.className += " newer";
-    pill.title = "Needs " + BOARD.name + " firmware " + entry.firmware + " or newer.";
+    pill.title = discoverNeedsSays(entry.firmware);
   } else if (discover.states[path] === "missing") {
     pill.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11' aria-hidden='true'><path " +
                      "d='M5.5 1 L5.5 7.5 M2.5 4.8 L5.5 7.8 L8.5 4.8 M1.5 9.8 L9.5 9.8' " +

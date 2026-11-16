@@ -1,6 +1,8 @@
 {
  "name": "Plasma 2350",
  "examples": false,
+ "release": {"files": {"plasma_2350_drive": "Plasma 2350"}, "bootloader_drive": "RP2350",
+             "reset_button": "Reset"},
  "outputs": [
   {"name": "rgb", "kind": "colour", "breaks_out": false}
  ],

@@ -1,6 +1,9 @@
 {
  "name": "Tiny FX",
  "examples": true,
+ "release": {"files": {"tiny_fx_drive": "Tiny FX"},
+             "wireless_files": {"tiny_fx_w_drive": "Tiny FX W"}, "bootloader_drive": "RPI-RP2",
+             "reset_button": "RST"},
  "examples_index": "examples/tiny_fx/index.json",
  "outputs": [
   {"name": "out1", "kind": "mono"},

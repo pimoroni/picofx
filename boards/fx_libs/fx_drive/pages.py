@@ -38,14 +38,17 @@ def __encode(packed, f):
         f.write(binascii.b2a_base64(view[at:at + step], newline=False))
 
 
-def pages(screens):
+def pages(screens, wireless=False):
     """
     Each packed page's name on the drive and its document, the catalogue without the
-    screens for a board found to have no screen ports.
+    screens for a board found to have no screen ports, and the wireless build's catalogue
+    for a wireless build whose pages carry one.
     """
     catalogue = fx_editor.CATALOGUE
     if not screens:
         catalogue = getattr(fx_editor, "CATALOGUE_WITHOUT_SCREENS", catalogue)
+    if wireless:
+        catalogue = getattr(fx_editor, "CATALOGUE_WIRELESS", catalogue)
     return ((MANUAL_NAME, fx_manual.MANUAL), (PICKER_NAME, fx_editor.PICKER),
             (EDITOR_NAME, fx_editor.EDITOR), (CATALOGUE_NAME, catalogue))
 
