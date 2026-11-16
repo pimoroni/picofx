@@ -2,12 +2,12 @@ import {draw, drawSteps} from "../00_draw.js";
 import {spoken} from "../03_lines.js";
 import {bodyParts, capture, frozen, namesOf, state} from "../04_scenes.js";
 import {
-  HUB_PLACES, hubHeadSteps, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder,
-  placesThere
+  HUB_PLACES, hubHeadSteps, hubParts, pickPlace, placePicked, placeThere, placeTurnForChosen,
+  placeUnder, placesSaid, placesThere
 } from "./15_hub.js";
-import {placeGroups, placesSaid} from "./18_hub_text.js";
-import {LOOK_START, assetSteps, freshLook, kindOf} from "../screens/12_screens.js";
-import {ANCHOR_NAMES, groundSaid, pictureSaid, playingTokens} from "../screens/14_screen_text.js";
+import {LOOK_START, assetSteps, freshLook, kindOf, pictureSaid} from "../screens/12_screens.js";
+import {pictureOffset} from "../screens/13_screen_art.js";
+import {ANCHOR_NAMES, groundSaid, placingTokens, playingTokens} from "../screens/14_screen_text.js";
 import {lightRow} from "../screens/16_screen_settings.js";
 
 // ---- the hub's positions in groups -----------------------------------------------------------
@@ -23,7 +23,7 @@ import {lightRow} from "../screens/16_screen_settings.js";
 // group for the strip, and a picture goes to a group or a position on its own, never to one
 // member of a group. A group holds one panel size only, since the two sizes are sent apart.
 
-export var GROUP_NUMBERS = ["1", "2", "3"];
+var GROUP_NUMBERS = ["1", "2", "3"];
 var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
 
 // A position on its own is its own group, named by its letter
@@ -44,7 +44,7 @@ function membersOfGroup(number) {
 
 // What a picture or the strip is sent to, each group with a member in number order and then each
 // position on its own in the hub's order
-export function sendTargets() {
+function sendTargets() {
   var targets = GROUP_NUMBERS.filter(function (number) {
     return membersOfGroup(number).length;
   }).map(function (number) {
@@ -158,7 +158,7 @@ function splitsOverAlways(places) {
 }
 
 // The positions of numbered groups among those given that splitsOverAlways() breaks up
-export function breakingUp(places) {
+function breakingUp(places) {
   return places.filter(function (place) {
     return inNumberedGroup(place) && splitsOverAlways(membersOf(place));
   });
@@ -392,3 +392,40 @@ export function plainness(send) {
   return differences(send, {places: send.places,
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
 }
+
+// What a position plays, as a key. Positions with the same key are one entry, and one stream.
+// Panels of different sizes are sent apart, so the size is part of it. They are one send where
+// the file would say the same for them, so a setting a picture does not take, such as a still's
+// pace, or one the page only remembers, such as the last custom colour, never splits them.
+//
+// One entry plays one drawing on every position it names, where entries of their own each run
+// it afresh, so a drawing joins others only in a numbered group
+function playingKey(playing, place) {
+  var look = playing.look || LOOK_START;
+  var size = state.hub.sizes[place];
+  var where = pictureOffset(look, playing.shows, size, playing.turn);
+  var kind = kindOf(playing.shows);
+  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
+  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
+    .concat(playingTokens(playing, look, kind, size)).join("|");
+}
+
+// The positions of one scene, gathered into what each different picture is sent to
+export function placeGroups(body) {
+  var groups = [];
+  var byKey = {};
+  placesThere().forEach(function (place) {
+    var playing = body.places && body.places[place];
+    if (!playing || !playing.shows) return;
+    var key = playingKey(playing, place);
+    if (!byKey[key]) {
+      byKey[key] = {playing: playing, places: []};
+      groups.push(byKey[key]);
+    }
+    byKey[key].places.push(place);
+  });
+  return groups;
+}
+hubParts.placeGroups = placeGroups;
+hubParts.breakingUp = breakingUp;
+hubParts.sendTargets = sendTargets;

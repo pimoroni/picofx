@@ -3,7 +3,6 @@ import {BOARD, lookNamed} from "./01_looks.js";
 import {spoken} from "./03_lines.js";
 import {widthOf} from "./03_outputs.js";
 import {activate, active, copyBlinks, copyExact, mono, outs, runs, settle} from "./03_runs.js";
-import {sceneBand, sceneEdge, sceneTab, sceneTurn} from "./04_scene_tray.js";
 
 // ---- scenes ---------------------------------------------------------------------------
 // Adding, removing and reordering scenes, and what a scene leaves to Always on. A scene's body is
@@ -262,47 +261,6 @@ function removeScene(which) {
 
 function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
 
-export function renderScenes() {
-  var box = document.getElementById("tabs");
-  box.textContent = "";
-
-  // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make
-  if (state.scenes.length) {
-    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
-    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
-    state.scenes.forEach(function (scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
-    });
-  }
-
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" +
-                   (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play one after another";
-  plus.onclick = addScene;
-  box.appendChild(plus);
-  box.classList.toggle("tray", state.scenes.length > 0);
-  spanTray();
-
-  // The frame is what says these belong to the picked card, so it appears with the cards, in
-  // the picked card's colour. Its tab holds the scene's settings beside what the page says about it
-  var frame = document.getElementById("sceneBody");
-  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-  var tabRow = document.getElementById("sceneTabRow");
-  tabRow.hidden = !state.scenes.length;
-  var picked = state.at < 0 ? null : state.scenes[state.at];
-  [frame, tabRow].forEach(function (node) {
-    node.style.setProperty("--frame", sceneEdge(picked));
-    node.style.setProperty("--frameband", sceneBand(picked));
-  });
-  renderSceneAside();
-}
-
 // Stretch Always on's card down every row the scenes' cards and the add button wrap into, as
 // many as the tray's width leaves room for. Where the scenes fill their last row, the add button
 // is a thin bar the width of the tray under them, so it never takes a row as a lone card
@@ -326,7 +284,7 @@ export function spanTray() {
 
 // Beside the frame's tab, where the picked scene comes in the turns and the way to remove it,
 // or for Always on how many scenes it plays under
-function renderSceneAside() {
+export function renderSceneAside() {
   var aside = document.getElementById("sceneAside");
   aside.textContent = "";
   if (!state.scenes.length) return;

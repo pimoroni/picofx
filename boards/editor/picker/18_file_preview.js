@@ -1,4 +1,5 @@
 import {banner, saving} from "./00_banner.js";
+import {drawParts} from "./00_draw.js";
 import {currentText} from "./07_writing.js";
 import {
   CAN_REACH_A_DRIVE, CHECKING, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking, openDrive,
@@ -97,6 +98,7 @@ export function renderPreview() {
                                    : stale + " reported lines have since changed.";
   }
 }
+drawParts.preview = renderPreview;
 
 document.getElementById("save").onclick = async function () {
   var button = this;

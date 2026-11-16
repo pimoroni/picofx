@@ -1,12 +1,8 @@
 import {allBodies, bodyParts, driveParts, otherScenes, state} from "../04_scenes.js";
 import {boardLineSteps, notFittedSteps, screenHooks, screensFitted} from "../07_board.js";
-import {isHiddenName} from "../18_drive.js";
+import {isHiddenName, nameShown} from "../18_drive.js";
 import {isExampleMedia, mediaHome} from "../26_drive_files.js";
-import {openingString} from "../26_drive_programs.js";
-import {drawingArts, drawingSaid, madeDrawing, shownBefore, styleWords} from "./13_screen_art.js";
-import {
-  mediaFound, pictureSaid, readScreens, screenEntry, setMediaFound
-} from "./14_screen_text.js";
+import {argumentFrom, openingString} from "../26_drive_programs.js";
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -111,6 +107,11 @@ export var screensHeadSteps = {instead: [], after: []};
 // as the hub's positions, the whole pictures and the hub's groups
 export var assetSteps = [];
 
+// What the screens parts after this one lend to this one and the art, filled in as they load:
+// madeDrawing(name) from the art, screenEntry(letter, body) and readScreens(bodies) from the text,
+// turnForChosen(letter) from the settings and renderTab() from the tab
+export var screenParts = {};
+
 export function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
 }
@@ -172,12 +173,12 @@ bodyParts.push({
   // A scene's screens are written after its lamps
   entries: function (body, lines) {
     SCREENS.forEach(function (letter) {
-      var entry = body.screens && screenEntry(letter, body);
+      var entry = body.screens && screenParts.screenEntry(letter, body);
       if (entry) lines.push(entry);
     });
     return lines;
   },
-  read: readScreens
+  read: function () { return screenParts.readScreens.apply(null, arguments); }
 });
 
 // The board line gives a screen's size only where some scene shows something on it or turns it
@@ -273,7 +274,7 @@ driveParts.push({
     // A drawing cannot run in the page, so one without a thumbnail is shown by a face made from
     // its opening string
     mediaFound.forEach(function (one) {
-      if (one.kind === "drawing" && !one.thumbHandle) madeDrawing(one.name);
+      if (one.kind === "drawing" && !one.thumbHandle) screenParts.madeDrawing(one.name);
     });
   },
   said: function () {
@@ -349,4 +350,78 @@ export function screenUnder(letter) {
     return scene.body.screens && (scene.body.screens[letter].shows || scene.body.screens[letter].off);
   });
   return by.length ? {off: by} : null;
+}
+
+// A line of a drawing's opening string that says how to show it
+var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles|Firmware):\s*(.+?)\s*$/;
+
+// What an opening string says of a drawing, or null for a file that is not one. Its defaults are
+// the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
+// 90 or 270, Pixel double = true"
+export function drawingSaid(docstring) {
+  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {},
+              styles: []};
+  var rest = docstring.split("\n").filter(function (line) {
+    var field = line.match(DRAWING_LINE);
+    if (!field) return true;
+    if (field[1] === "Styles") {
+      // A choice the drawing offers, a line each, the first in a line being the one it takes
+      // where none is chosen
+      var choices = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
+      if (choices.length) said.styles.push(choices);
+    } else if (field[1] === "Defaults") {
+      field[2].split(",").map(argumentFrom).forEach(function (setting) {
+        said.defaults[setting.name] = setting;
+      });
+    } else {
+      said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
+    }
+    return false;
+  }).join(" ").split(/\s+/).join(" ").trim();
+  if (!said.title) return null;
+  var first = rest.match(/^(.*?\.)(\s|$)/);
+  said.description = first ? first[1] : rest;
+  return said;
+}
+
+export var drawingArts = {};
+
+// What each file last showed on a screen, composed with its look, by name
+export var shownBefore = {};
+
+// Every style word a drawing could be drawn in but its first, each one a thumbnail can be named for
+function styleWords(drawing) {
+  var words = [[]];
+  drawing.styles.forEach(function (line) {
+    var grown = [];
+    words.forEach(function (word) {
+      line.forEach(function (choice, at) { grown.push(at ? word.concat([choice]) : word); });
+    });
+    words = grown;
+  });
+  return words.filter(function (word) { return word.length; }).map(function (word) {
+    return word.join("-");
+  });
+}
+
+// ---- the pictures on the drive ------------------------------------------------------------------
+// A screen can show gifs and stills, PNG or JPEG, folders of them, which play as a slideshow,
+// and drawings
+
+var mediaFound = [];
+
+// Set the pictures and drawings found on the drive
+function setMediaFound(list) {
+  mediaFound = list;
+}
+
+// ---- what is showing, and every section under it ----
+
+// A picture's name as a person reads it, or a drawing's title
+export function pictureSaid(name) {
+  var media = mediaNamed(name);
+  if (media && media.kind === "drawing") return media.drawing.title;
+  // A slideshow of the user's own is a path from the drive's top, an example plainly its name
+  if (isExampleMedia(name)) return nameShown(name);
+  return media && media.kind === "folder" ? "/" + name : name;
 }

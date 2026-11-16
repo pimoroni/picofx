@@ -1,18 +1,16 @@
 import {draw} from "./00_draw.js";
-import {isPicked} from "./01_colours.js";
 import {lookNamed} from "./01_looks.js";
 import {painters} from "./02_preview.js";
-import {coloursWritten, takesColour, targetFor} from "./03_lines.js";
-import {CHANNEL_INKS, isChannel, kinOf, selectorFor, shortName, widthOf} from "./03_outputs.js";
+import {coloursWritten, takesColour} from "./03_lines.js";
+import {shortName, widthOf} from "./03_outputs.js";
 import {
-  active, canEdit, copyBlinks, copyExact, cutAt, dragged, inkAt, mono, pick, remember, setHolding,
-  settle, uncut
+  cutAt, inkAt, isPicked, mono, pick, playsOf, remember, setHolding, settle, uncut
 } from "./03_runs.js";
-import {stretchUnder, underSaid} from "./04_scenes.js";
-import {BEADS_JOIN_AT, BEAD_MOST, GAP_MOST, MONO_WASH, ZOOMS_OVER} from "./05_strips.js";
-import {crossing, showKin} from "./09_wiring.js";
+import {stretchUnder} from "./04_scenes.js";
+import {
+  BEADS_JOIN_AT, BEAD_MOST, GAP_MOST, MONO_WASH, ZOOMS_OVER, stripDrawing
+} from "./05_strips.js";
 import {escapeHtml} from "./18_file_preview.js";
-import {paintFaces, takesPlace} from "./33_gallery.js";
 
 // ---- the bar, one cell per stretch, cut between them --------------------------------------
 
@@ -24,7 +22,7 @@ export function washFor(run, section, look) {
 
 // A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
 // window onto Always on's own band where Always on plays there and over dark where it is off
-function washOf(run, section, look, under) {
+export function washOf(run, section, look, under) {
   var wash = document.createElement("span");
   if (look || !under) {
     wash.className = "lit" + (look ? "" : " nothing");
@@ -70,134 +68,17 @@ function paneOnto(run, shows, start, end, wide) {
 
 // The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
 // the stretch shows nothing at all
-function beneath(under) {
+export function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
 // Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
 // setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
-function carded(run) {
+export function carded(run) {
   return !run.strip;
 }
 
-// A stretch's lamps, one for each light it holds, each face kept in faces by the lamp's place
-// in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
-// to drag to its place on the build, and an output that breaks out has its arrow on its tiles
-function cardLamps(run, section, faces) {
-  var row = document.createElement("span");
-  row.className = "cardlamps";
-  var wiring = canEdit("outPanel");
-  for (var at = section.from; at <= section.to; at++) {
-    var lamp = run.lamps[at];
-    var one = document.createElement("span");
-    var channel = !lamp.colour && isChannel(lamp);
-    // A broken-out channel is marked in its channel's colour
-    one.className = "cardlamp" + (channel ? " chan" : "");
-    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-    var playing = lookNamed(section.look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces[at] = face;
-    if (wiring) setUpLamp(one, lamp, channel);
-    row.appendChild(one);
-  }
-  return row;
-}
-
-// Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
-// arrow. Pointing at one channel shows the other two of its output
-function setUpLamp(one, lamp, channel) {
-  takesPlace(one, lamp);
-  one.appendChild(crossing(lamp.out, lamp.colour));
-  if (!channel) return;
-  (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-  one.addEventListener("mouseenter", function () { showKin(lamp.out, true); });
-  one.addEventListener("mouseleave", function () { showKin(lamp.out, false); });
-}
-
-export function renderBar(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar" + (carded(run) ? " carded" : "");
-  var faces = [];
-
-  run.sections.forEach(function (section, at) {
-    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
-    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
-    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
-    cell.style.flex = widthOf(section) + " 1 0";
-    var first = run.lamps[section.from];
-    cell.title = (first && first.colour ? "colour" : "mono") + ", " +
-                 targetFor(run, section).selector;
-    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
-
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title = under.tip;
-
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
-                     beneath(under);
-    cell.appendChild(says);
-
-    // Where this stretch can be cut, one place between two lamps
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var i = section.from; i < section.to; i++) {
-      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
-    }
-    cell.appendChild(inside);
-
-    cell.onclick = function () {
-      if (dragged) return;
-      pick(run, at);
-      draw();
-    };
-    bar.appendChild(cell);
-
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click \u00d7 to remove it";
-      edge.onmousedown = function (event) {
-        event.preventDefault();
-        remember(run);
-        // The stretch being resized is the one being worked on, whichever side it is on
-        pick(run, at);
-        // The bar is rebuilt on every move, so what is held onto is where the bar lives
-        // and not the bar itself, which would be a node already thrown away
-        setHolding({run: run, which: at, where: where, had: run.sections.length});
-        edge.classList.add("holding");
-      };
-      // Taking the cut out is its own target, so it is never confused with moving it
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\u00d7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function (event) { event.stopPropagation(); };
-      drop.onclick = function (event) {
-        event.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
-}
-
-function cutPoint(run, after, wide, from) {
+export function cutPoint(run, after, wide, from) {
   var snip = document.createElement("i");
   snip.className = "cut";
   snip.style.left = ((after - from + 1) / wide * 100) + "%";
@@ -297,7 +178,7 @@ function fitBeads(bar, beads) {
   bar.style.setProperty("--wiremiddle", (middle.top + middle.height / 2 - from.top) + "px");
 }
 
-export function renderStripBar(where, run) {
+function renderStripBar(where, run) {
   var box = document.getElementById(where);
   var was = box.querySelector(".scroller");
   var kept = was ? was.scrollLeft : run.scrolled || 0;
@@ -430,17 +311,6 @@ export function zoomTo(run, want, at, from) {
   run.scrolled = scroller.scrollLeft;
 }
 
-// ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
-// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
-// stretch playing nothing
-export function playsOf(section) {
-  return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
-          custom: section.custom, reversed: section.reversed, level: section.level,
-          blinks: copyBlinks(section.blinks), exact: copyExact(section.exact),
-          timings: copyExact(section.timings)};
-}
-
 function divide(run, ways) {
   var section = run.sections[run.picked];
   if (!section) return;
@@ -559,7 +429,7 @@ function toolAct(words, off, act, title) {
 // bar it would overhang the bar. Though hidden until pointed at, it still takes its room, and
 // would make an unzoomed bar scroll. A label within its own width of an end is turned inward,
 // and a bar at its whole width does not scroll at all
-export function fitBars() {
+function fitBars() {
   document.querySelectorAll(".scroller").forEach(function (scroller) {
     var bar = scroller.querySelector(".bar");
     if (!bar) return;
@@ -575,6 +445,8 @@ export function fitBars() {
     });
   });
 }
+stripDrawing.bar = renderStripBar;
+stripDrawing.fit = fitBars;
 
 // A look given a colour is drawn in it, and one playing several, as Party does, in those.
 // Any other look is drawn in its card's colours, since one colour in its line is no picture

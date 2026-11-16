@@ -4,11 +4,6 @@ import {
 } from "../04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
 import {tabSwatches} from "../11_tabs.js";
-import {breakingUp, sendTargets} from "./17_hub_groups.js";
-import {
-  hubEntry, offHubEntries, placeGroups, placesSaid, readHubBoard, readHubLines
-} from "./18_hub_text.js";
-import {hubSwitch, renderHubHead} from "./19_hub_view.js";
 import {assetSteps, screensHeadSteps} from "../screens/12_screens.js";
 import {mediaArt} from "../screens/13_screen_art.js";
 import {chosenAfresh} from "../screens/16_screen_settings.js";
@@ -48,6 +43,11 @@ export var placePicked = "A";
 export function pickPlace(place) {
   placePicked = place;
 }
+
+// What the hub parts after this one lend to it, filled in as they load: placeGroups(body),
+// breakingUp(places) and sendTargets() from the groups, hubEntry(group), offHubEntries(body),
+// readBoard() and read(bodies) from the text, and renderHead() and hubSwitch() from the view
+export var hubParts = {};
 
 // Whether a position has a panel to show on, its size being "" where it has none
 export function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
@@ -132,15 +132,15 @@ bodyParts.push({
     return set ? ["hub", "Screen Hub"] : null;
   },
   // The board line's hub is read before any scene's lines, since screens write none through a hub
-  readBoard: readHubBoard,
-  read: readHubLines
+  readBoard: function () { return hubParts.readBoard.apply(null, arguments); },
+  read: function () { return hubParts.read.apply(null, arguments); }
 });
 
 bodyParts.push({
   entries: function (body, lines) {
     if (!state.hub.on) return lines;
-    placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
-    offHubEntries(body).forEach(function (one) { lines.push(one.line); });
+    hubParts.placeGroups(body).forEach(function (group) { lines.push(hubParts.hubEntry(group)); });
+    hubParts.offHubEntries(body).forEach(function (one) { lines.push(one.line); });
     return lines;
   }
 });
@@ -184,14 +184,14 @@ export var hubHeadSteps = [];
 // the screens' boxes above
 screensHeadSteps.instead.push(function () {
   if (!state.hub.on) return false;
-  renderHubHead();
+  hubParts.renderHead();
   return true;
 });
 
 screensHeadSteps.after.push(function () {
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
-  facts.appendChild(hubSwitch());
+  facts.appendChild(hubParts.hubSwitch());
 });
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
@@ -250,7 +250,7 @@ assetSteps.push(function () {
   pick.textContent = "";
 
   function turn(places, off) {
-    var breaking = off ? [] : breakingUp(places);
+    var breaking = off ? [] : hubParts.breakingUp(places);
     places.forEach(function (place) {
       var held = state.places[place];
       held.off = off;
@@ -259,7 +259,7 @@ assetSteps.push(function () {
     breaking.forEach(function (place) { state.places[place].group = place; });
   }
 
-  sendTargets().forEach(function (target) {
+  hubParts.sendTargets().forEach(function (target) {
     var off = target.places.every(function (place) { return state.places[place].off; });
     var button = document.createElement("button");
     button.type = "button";
@@ -350,3 +350,19 @@ drawSteps.after.push(function () {
   says.parentNode.insertBefore(facts, says);
   says.hidden = true;
 }());
+
+// ---- what the file says ----------------------------------------------------------------------
+
+// Positions as the file names them, a run of neighbours as a range, such as "A-C,E"
+export function placesSaid(places) {
+  var said = [];
+  var at = 0;
+  while (at < places.length) {
+    var end = at;
+    while (end + 1 < places.length &&
+           HUB_PLACES.indexOf(places[end + 1]) === HUB_PLACES.indexOf(places[end]) + 1) end++;
+    said.push(end > at ? places[at] + "-" + places[end] : places[at]);
+    at = end + 1;
+  }
+  return said.join(",");
+}

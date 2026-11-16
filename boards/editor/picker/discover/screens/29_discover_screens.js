@@ -7,8 +7,8 @@ import {
   discoverKinds, discoverPictureSaid, discoverPill, discoverPlaceBar, discoverThumbImage,
   discoverThumbs
 } from "../28_discover.js";
-import {assetSteps, mediaNamed} from "../../screens/12_screens.js";
-import {drawingInk, drawingSaid} from "../../screens/13_screen_art.js";
+import {assetSteps, drawingSaid, mediaNamed} from "../../screens/12_screens.js";
+import {drawingInk} from "../../screens/13_screen_art.js";
 import {copyDrawing} from "../../screens/16_screen_settings.js";
 
 // ---- examples to discover, on the Screens tab ---------------------------------------------------

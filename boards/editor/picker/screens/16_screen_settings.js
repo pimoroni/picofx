@@ -11,7 +11,8 @@ import {copyTile} from "../22_program.js";
 import {isExampleMedia, mediaHome, scanMedia} from "../26_drive_files.js";
 import {copyToOwn, folderAt} from "../26_drive_programs.js";
 import {
-  SCREENS, assetSteps, freshLook, kindOf, mediaNamed, screenButton, screenUnder, screensPaired
+  SCREENS, assetSteps, freshLook, kindOf, mediaNamed, pictureSaid, screenButton, screenParts,
+  screenUnder, screensPaired
 } from "./12_screens.js";
 import {
   canvasPixels, drawingInk, mediaArt, pairCanvas, panelPreview, pictureOffset, styleChoices,
@@ -19,7 +20,7 @@ import {
 } from "./13_screen_art.js";
 import {
   ANCHOR_NAMES, BG_NAMES, firstAsLastAllowed, groundHex, groundParts, groundSaid, holdAllowed,
-  pictureSaid, placementSaid, playbackSaid, secondHoldAllowed, speedLine
+  placementSaid, playbackSaid, secondHoldAllowed
 } from "./14_screen_text.js";
 
 // ---- a screen's settings ------------------------------------------------------------------------
@@ -29,6 +30,7 @@ import {
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
 // last looked at says whether it is newly chosen, and a scene coming round brings its own turn
 export function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
+screenParts.turnForChosen = turnForChosen;
 
 SCREENS.forEach(function (letter) { state.screens[letter].look = freshLook(); });
 Object.keys(WORDS).forEach(function (name) { BG_NAMES["#" + hexOf(WORDS[name])] = name; });
@@ -83,14 +85,14 @@ function foldSection(key, name, says, body) {
   return fold;
 }
 
-export function sline() {
+function sline() {
   var row = document.createElement("div");
   row.className = "sline";
   for (var at = 0; at < arguments.length; at++) if (arguments[at]) row.appendChild(arguments[at]);
   return row;
 }
 
-export function named(words) {
+function named(words) {
   var label = document.createElement("span");
   label.className = "snamed";
   label.textContent = words;
@@ -125,7 +127,7 @@ function numberBox(value, placeholder, change, step) {
   return box;
 }
 
-export function unit(words) {
+function unit(words) {
   var said = document.createElement("span");
   said.className = "sunit";
   said.textContent = words;
@@ -840,4 +842,13 @@ function drawingDoubled(drawing) {
   var doubled = drawing.defaults["Pixel double"];
   if (!doubled || (doubled["default"] !== "true" && doubled["default"] !== "false")) return null;
   return doubled["default"] === "true";
+}
+
+// The speed's line, kept to one line, with its choices, the figure and what the figure counts
+function speedLine(speed, every, look) {
+  var line = sline(named("Speed"), speed, every,
+                   every ? unit(look.pace === "fps" ? "frames per second" : "seconds per frame")
+                         : null);
+  line.classList.add("speedline");
+  return line;
 }

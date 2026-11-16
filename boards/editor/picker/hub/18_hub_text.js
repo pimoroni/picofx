@@ -1,66 +1,13 @@
 import {boardResidue, filterResidue} from "../03_kept.js";
 import {entryParts} from "../03_reading.js";
 import {state} from "../04_scenes.js";
-import {HUB_PLACES, placesThere} from "./15_hub.js";
-import {GROUP_NUMBERS, differences, listSaid, plainness} from "./17_hub_groups.js";
-import {LOOK_START, freshLook, kindOf} from "../screens/12_screens.js";
-import {pictureOffset} from "../screens/13_screen_art.js";
-import {
-  lookEntry, offEntry, placingTokens, playingTokens, screenPlaying
-} from "../screens/14_screen_text.js";
-
-// ---- what the file says ----------------------------------------------------------------------
-
-// Positions as the file names them, a run of neighbours as a range, such as "A-C,E"
-export function placesSaid(places) {
-  var said = [];
-  var at = 0;
-  while (at < places.length) {
-    var end = at;
-    while (end + 1 < places.length &&
-           HUB_PLACES.indexOf(places[end + 1]) === HUB_PLACES.indexOf(places[end]) + 1) end++;
-    said.push(end > at ? places[at] + "-" + places[end] : places[at]);
-    at = end + 1;
-  }
-  return said.join(",");
-}
-
-// What a position plays, as a key. Positions with the same key are one entry, and one stream.
-// Panels of different sizes are sent apart, so the size is part of it. They are one send where
-// the file would say the same for them, so a setting a picture does not take, such as a still's
-// pace, or one the page only remembers, such as the last custom colour, never splits them.
-//
-// One entry plays one drawing on every position it names, where entries of their own each run
-// it afresh, so a drawing joins others only in a numbered group
-function playingKey(playing, place) {
-  var look = playing.look || LOOK_START;
-  var size = state.hub.sizes[place];
-  var where = pictureOffset(look, playing.shows, size, playing.turn);
-  var kind = kindOf(playing.shows);
-  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
-  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
-    .concat(playingTokens(playing, look, kind, size)).join("|");
-}
-
-// The positions of one scene, gathered into what each different picture is sent to
-export function placeGroups(body) {
-  var groups = [];
-  var byKey = {};
-  placesThere().forEach(function (place) {
-    var playing = body.places && body.places[place];
-    if (!playing || !playing.shows) return;
-    var key = playingKey(playing, place);
-    if (!byKey[key]) {
-      byKey[key] = {playing: playing, places: []};
-      groups.push(byKey[key]);
-    }
-    byKey[key].places.push(place);
-  });
-  return groups;
-}
+import {HUB_PLACES, hubParts, placesSaid, placesThere} from "./15_hub.js";
+import {differences, listSaid, placeGroups, plainness} from "./17_hub_groups.js";
+import {freshLook} from "../screens/12_screens.js";
+import {lookEntry, offEntry, screenPlaying} from "../screens/14_screen_text.js";
 
 // A group's entry. Every position is lit by the hub's one light, so each entry carries it
-export function hubEntry(group) {
+function hubEntry(group) {
   return lookEntry("hub" + placesSaid(group.places), group.playing,
                    group.playing.look || freshLook(), state.hubLight,
                    state.hub.sizes[group.places[0]]);
@@ -68,7 +15,7 @@ export function hubEntry(group) {
 
 // The lines turning hub positions off in a scene, one for each group and one for each position on
 // its own, so the groups read back as they were written
-export function offHubEntries(body) {
+function offHubEntries(body) {
   var byGroup = {};
   var groups = [];
   placesThere().forEach(function (place) {
@@ -105,7 +52,7 @@ function hubPlacesNamed(selector) {
 
 // Read the hub the board line declares into the page, which writes those tokens itself from then
 // on. The hub is off where the line declares none
-export function readHubBoard() {
+function readHubBoard() {
   var port = null;
   var sizes = {};
   var taken = [];
@@ -130,7 +77,7 @@ export function readHubBoard() {
 }
 
 // Try each kept line of each body as a hub entry, moving those the hub's own writer gives back
-export function readHubLines(bodies) {
+function readHubLines(bodies) {
   if (!state.hub.on) return;
 
   // Each scene lights the hub its own way, and the first of its lines to be read decides how
@@ -182,6 +129,10 @@ export function readHubLines(bodies) {
     body.hubLight = state.hubLight;
   });
 }
+hubParts.hubEntry = hubEntry;
+hubParts.offHubEntries = offHubEntries;
+hubParts.readBoard = readHubBoard;
+hubParts.read = readHubLines;
 
 // Screens named in the note are bold, so "A plays" reads as the screen and not as a word. The
 // letters and their commas and dashes are all the markup holds

@@ -45,10 +45,10 @@ import {pick, runs} from "./03_runs.js";
 export function renderStripBar(where, run) { ... }
 ```
 
-The build checks every import names a part the board takes and something that part exports,
-then joins the parts into one script in number order, without the import and export lines.
-A part's top-level statements run in that order, so a statement may only use what a part before
-it has made.
+The build checks every import names a part the board takes and something that part exports, and
+refuses parts that import each other in a circle. It then joins the parts into one script in
+number order, without the import and export lines. A part's top-level statements run in that
+order, so a statement may only use what a part before it has made.
 
 A variable is written only by the part that declares it. Other parts call that part's function
 to change it, such as `activate()`, `setLayout()` or `setPrograms()`.
@@ -65,10 +65,15 @@ node tools/picker/fix_imports.js
 node tools/picker/check_modules.js
 ```
 
-A part that needs work done by a later one offers a list, and the later part adds a function to
-it:
+A part that needs work done by a later one offers a list or an object, and the later part adds
+its function to it:
 
-- `drawSteps.before` and `drawSteps.after`, run on every `draw()`.
+- `drawSteps.before` and `drawSteps.after`, run on every `draw()`, and `drawParts`, the named
+  steps between them that `DRAW_ORDER` in `00_draw.js` puts in order, and `paintSteps`.
+- `stripDrawing` in `05_strips.js`, `screenParts` in `screens/12_screens.js` and `hubParts` in
+  `hub/15_hub.js`, which the later parts of the strips, screens and hub fill in.
+- `programsReadingSteps` and `programsReadSteps`, as the drive's programs are read and once they
+  are.
 - `chosenSteps`, for the settings drawn under a chosen stretch.
 - `boardLineSteps`, `bannerSteps`, `connectSteps`, `notFittedSteps`, `programCardSteps` and
   `programViewSteps`, at those points.

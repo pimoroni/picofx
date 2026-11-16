@@ -2,9 +2,9 @@ import {banner} from "./00_banner.js";
 import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
-import {PROGRAMS, boardSet, programNamed, setPrograms} from "./19_board_settings.js";
-import {renderProgramView, thumbImages} from "./22_program.js";
-import {readWaitingProgram} from "./27_readback.js";
+import {
+  PROGRAMS, boardSet, programNamed, programsReadSteps, programsReadingSteps, setPrograms
+} from "./19_board_settings.js";
 
 // ---- the programs on the drive ------------------------------------------------------------------
 // Opening the drive reads the programs it holds, every Python file at its top level, in OWN_FOLDER
@@ -259,7 +259,7 @@ export async function drivePrograms(dir, ownOnly) {
                                  : null;
     if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
     programsReading = [0, files.length];
-    renderProgramView();
+    programsReadingSteps.forEach(function (step) { step(); });
   }
   for (var i = 0; i < files.length; i++) {
     try {
@@ -275,7 +275,7 @@ export async function drivePrograms(dir, ownOnly) {
     }
     if (programsReading) {
       programsReading[0] = i + 1;
-      if (i % 8 === 7) renderProgramView();
+      if (i % 8 === 7) programsReadingSteps.forEach(function (step) { step(); });
     }
   }
   if (!ownOnly) programsReading = null;
@@ -464,6 +464,8 @@ async function readDrivePrograms() {
   setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
-  readWaitingProgram();
+  programsReadSteps.forEach(function (step) { step(); });
   draw();
 }
+
+export var thumbImages = {};

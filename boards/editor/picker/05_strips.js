@@ -1,21 +1,11 @@
 import {draw, drawSteps, paintAll} from "./00_draw.js";
-import {WORDS, detented, hexOf} from "./01_colours.js";
-import {BOARD, SIGNAL_TIMINGS, lookNamed, timingOf, withSection} from "./01_looks.js";
-import {directionToggle} from "./02_preview.js";
+import {BOARD, lookNamed} from "./01_looks.js";
 import {filterKept, filterResidue} from "./03_kept.js";
-import {
-  brightnessSlider, forwardTargetFor, runsAWay, startColour, takesColour, targetFor, wherePlays
-} from "./03_lines.js";
+import {startColour} from "./03_lines.js";
 import {entryParts, lampsNamed} from "./03_reading.js";
-import {Run, active, blank, canEdit, chosenSteps, mono, outs, runs, settle} from "./03_runs.js";
+import {Run, active, blank, mono, outs, runs, settle} from "./03_runs.js";
 import {renderChosen} from "./04_led_panels.js";
-import {allBodies, apply, slotAt, state, store, stretchUnder} from "./04_scenes.js";
-import {standingIn} from "./07_board.js";
-import {boardBox, renderLeds, small, stripChipChoice} from "./08_setup.js";
-import {workOn} from "./10_led_sections.js";
-import {renderPreview} from "./18_file_preview.js";
-import {barCells, fitBars, renderStripBar, splitTools, washFor} from "./31_stretch_bar.js";
-import {renderColourPick, signalFace} from "./32_stretch_editor.js";
+import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
 
 // ---- the strips ---------------------------------------------------------------------------
 // A strip is a run like the outputs, cut into stretches, each playing its own look, and cut
@@ -91,8 +81,8 @@ export var BEADS_JOIN_AT = 6.4;
 // board, so it is the same in every scene and changing it here changes it in all of them
 
 // A strip's length as the chip takes it. One LED is a strip autofx accepts
-var STRIP_FEWEST = 1;
-var STRIP_MOST = 300;
+export var STRIP_FEWEST = 1;
+export var STRIP_MOST = 300;
 
 // The orders a strip can take its colours in, as the file writes them after its length.
 // The board's own is written as nothing
@@ -130,38 +120,6 @@ export function readStripTail(run, tail) {
   var percent = tail.match(/^(\d+(?:\.\d+)?)%$/);
   var brightness = percent ? Number(percent[1]) / 100 : Number(tail);
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
-}
-
-// A strip's chip, its length and its order or brightness to set, shown while the board is set up
-export function renderStripChip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var chip = document.createElement("div");
-  chip.className = "chip strip";
-  chip.appendChild(document.createTextNode("Strip"));
-  var count = document.createElement("input");
-  count.type = "number";
-  count.min = STRIP_FEWEST;
-  count.max = STRIP_MOST;
-  count.value = run.leds;
-  count.onchange = function () {
-    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
-                                                           STRIP_FEWEST));
-    if (want === run.leds) return;
-    stripSet(run, {leds: want});
-    settle();
-    draw();
-  };
-  chip.appendChild(count);
-  var unit = document.createElement("small");
-  unit.textContent = "LEDs";
-  chip.appendChild(unit);
-  chip.appendChild(stripChipChoice(run));
-  box.appendChild(chip);
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "shared by every scene";
-  box.appendChild(says);
 }
 
 // ---- zooming a strip's bar --------------------------------------------------------------------
@@ -202,6 +160,10 @@ settle();
 
 // ---- drawing the page -------------------------------------------------------------------
 
+// How a strip is drawn, filled in by the parts that draw it: leds(where, run) its LEDs and their
+// facts, bar(where, run) its bar, and fit() every strip's bar to the width it has
+export var stripDrawing = {leds: function () {}, bar: function () {}, fit: function () {}};
+
 drawSteps.after.push(function () {
   // The outputs' settings are for the stretch being worked on, which while a strip is picked is
   // under that strip instead
@@ -213,12 +175,12 @@ drawSteps.after.push(function () {
       run.scrolled = 0;
     }
     run.count = run.lamps.length;
-    renderLeds(run.id + "Leds", run);
-    renderStripBar(run.id + "Bar", run);
+    stripDrawing.leds(run.id + "Leds", run);
+    stripDrawing.bar(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) renderChosen(run.id + "Chosen", run);
   });
-  fitBars();
+  stripDrawing.fit();
   // The page painted what it drew before these were made, so a fresh bead would hold the
   // default fill until the next frame and show black
   paintAll();
@@ -232,18 +194,6 @@ drawSteps.after.push(function () {
 // under the lamps and the Repeat tool's chips all ask here
 export var MONO_WASH = "#f3c98b";
 
-// The second setting a look starts at, on its card and on a stretch given it, where middling
-// does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
-// steps at picofx's six, and the signals' lamps fade in about a tenth of a second, as a real
-// signal's do. Marquee starts with every third light lit
-export var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
-                   "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
-
-// Solid's own colour, which a stretch given it starts in and its card shows, still and at full
-// brightness. A card stepping through the swatches would read as Colour steps, and its palette
-// mark already says a colour is chosen
-export var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
-
 // The looks the board opens playing start in their own colours too
 [outs, mono].forEach(function (run) {
   run.sections.forEach(function (section) {
@@ -256,53 +206,6 @@ export var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
 // kept while a swatch is chosen so custom comes back to both, as a screen's background does.
 // It is kept here, since the stretches are made afresh on every draw
 export var customColours = {};
-
-// The stretch's settings, with the colour choice in place of a slider that steps tones
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var memo = box && section && standingIn(run, section);
-  if (memo) {
-    var note = document.createElement("div");
-    note.className = "standin";
-    note.textContent = look.name + ", replacing " + memo.look + ", " +
-                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
-    box.querySelector(".chosen").appendChild(note);
-  }
-  // A count of stops may depend on the stretch, as Spread's lengths do on its lights
-  if (box && look && look.detents) {
-    detented(box, where, typeof look.detents === "function"
-      ? look.detents(targetFor(run, section)) : look.detents);
-  }
-  var wrap = box && box.querySelector(".chosen");
-  if (!wrap || !look) return;
-  var tuning = wrap.querySelector(".tuning");
-  if (!tuning) {
-    tuning = document.createElement("div");
-    tuning.className = "tuning";
-    wrap.appendChild(tuning);
-  }
-  // Solid's own slider is its brightness, so it gives way to the Brightness slider every look has
-  if (look.solid) tuning.textContent = "";
-  // A mono lamp has no colour to be given
-  var first = run.lamps[section.from];
-  var coloured = takesColour(look) && !!first && first.colour;
-  // The second slider steps a table of tones for these looks, and the swatches take
-  // its place. On mono lights it has nothing to set, since a mono light has no colour
-  var mono = !!first && !first.colour;
-  var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
-  if ((coloured || mono) && toneless && tuning.children.length >= 4) {
-    tuning.removeChild(tuning.children[3]);
-    tuning.removeChild(tuning.children[2]);
-  }
-  brightnessSlider(tuning, run, where);
-  // The colour leads and the sliders follow it, brightness the first of them
-  if (coloured) {
-    renderColourPick(wrap, run);
-    wrap.appendChild(tuning);
-  }
-});
 
 // Party flashes its three sets a third of a beat apart, and the phases it was given, 0, 0.33
 // and 0.67, light the first set, then the third, then the second, a step back toward the start
@@ -335,62 +238,15 @@ export var SIGNAL_STATES = {
 
 // A slider's tint, amber and green a shade deeper than the lamps. A browser gives a light
 // accent a dark track, which reads as a slider filled to its end
-var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
+export var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
                    green_interval: "#16894a", amber_interval: "#a86600",
                    flashing_interval: "#a86600"};
-
-// A signal's timings take Speed's place, each a slider in seconds under its own name
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
-  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
-  var after = speed ? speed.nextSibling : null;
-  if (speed) {
-    tuning.removeChild(speed.previousElementSibling);
-    tuning.removeChild(speed);
-  }
-  // Ease is about every state, so it comes before them, after Brightness
-  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
-  if (ease) {
-    var easeLabel = ease.previousElementSibling;
-    if (after === easeLabel) after = ease.nextSibling;
-    tuning.insertBefore(easeLabel, after);
-    tuning.insertBefore(ease, after);
-    after = ease.nextSibling;
-  }
-  SIGNAL_TIMINGS[look.name].forEach(function (part) {
-    var label = document.createElement("label");
-    label.className = "signalstate";
-    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
-    var range = document.createElement("input");
-    range.style.accentColor = SIGNAL_TINT[part[0]];
-    range.type = "range";
-    range.min = part[3];
-    range.max = part[4];
-    range.step = 0.5;
-    range.value = withSection(section, function () { return timingOf(look.name, part[0]); });
-    range.dataset.focus = where + "-timing-" + part[0];
-    range.dataset.timing = part[0];
-    range.title = "seconds, " + part[1].toLowerCase();
-    range.oninput = function () {
-      var mine = run.sections[run.picked];
-      mine.timings = Object.assign({}, mine.timings);
-      mine.timings[part[0]] = Number(range.value);
-      renderPreview();
-    };
-    tuning.insertBefore(label, after);
-    tuning.insertBefore(range, after);
-  });
-});
 
 // ---- an icon for each setting ------------------------------------------------------------------
 // Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
 // have theirs, so a panel reads at a glance. A signal's states keep their coloured
 // drawings, since colour is what they are about. The word stays, and the icon only hints
-var SETTING_ICONS = {
+export var SETTING_ICONS = {
   "Brightness": "<circle cx='8' cy='8' r='2.8'/><path d='M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8" +
                 "M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3'/>",
   "Speed": "<path d='M2.4 12A6 6 0 1 1 13.6 12'/><path d='M8 10.2L11 5.6'/>" +
@@ -414,77 +270,8 @@ var SETTING_ICONS = {
              "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
 };
 
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning) return;
-  // Every slider keeps the picked stretch's colours on the bar in step as it moves, since one
-  // such as Palette changes them, and redraws the panel once let go. A slider's own handler
-  // plays only the preview, which would leave the bar showing the colours from before
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function (range) {
-    var moved = range.oninput;
-    range.oninput = function () {
-      if (moved) moved.call(range);
-      var live = run.sections[run.picked];
-      var cell = barCells(run)[run.picked];
-      var wash = cell && cell.querySelector(".lit");
-      if (wash && look) wash.style.background = washFor(run, live, look);
-    };
-    if (!range.onchange) range.onchange = function () { draw(); };
-  });
-  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function (label) {
-    var drawn = SETTING_ICONS[label.textContent];
-    if (!drawn || label.querySelector(".settingicon")) return;
-    if (label.textContent === "Fade") {
-      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
-    }
-    label.classList.add("withicon");
-    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
-                                           "aria-hidden='true'>" + drawn + "</svg>");
-  });
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var who = box && box.querySelector(".chosen .who");
-  var section = run && run.sections[run.picked];
-  if (!who || !section) return;
-  var look = lookNamed(section.look);
-  var under = look ? null : stretchUnder(run, section);
-  who.innerHTML = "";
-  var named = document.createElement("b");
-  named.textContent = look ? look.name : "Nothing";
-  who.appendChild(named);
-  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
-  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
-  who.title = targetFor(run, section).selector;
-  // A stretch the scene leaves empty says what the board plays there, and how to change it
-  if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    who.parentNode.insertBefore(hint, who.nextSibling);
-  }
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var who = box && box.querySelector(".chosen .who");
-  if (!section || !who) return;
-  // The name and its count stay one piece of text, the toggle set apart at the end
-  var named = document.createElement("span");
-  while (who.firstChild) named.appendChild(who.firstChild);
-  who.appendChild(named);
-  who.classList.add("withway");
-  if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
-});
-
 // Whether a strip is there, on the run and on the entry a fresh run is made from
-function stripThere(run, there) { stripSet(run, {there: there}); }
+export function stripThere(run, there) { stripSet(run, {there: there}); }
 
 function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
 
@@ -534,32 +321,6 @@ export function stripDrop(run) {
   drop.title = "Remove this strip from every scene";
   drop.onclick = function () { dropStrip(run); };
   return drop;
-}
-
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
-export function renderStripOut(box, run, panel) {
-  box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
-  var blocked = stripBlockedBy(run);
-  if (blocked) {
-    var why = document.createElement("span");
-    why.className = "stripblocked says";
-    why.textContent = blocked;
-    box.appendChild(why);
-    return;
-  }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
-  add.onclick = function () {
-    stripThere(run, true);
-    workOn(panel);
-    draw();
-  };
-  box.appendChild(add);
 }
 
 // ---- writing them back ------------------------------------------------------------------------

@@ -1,15 +1,15 @@
 import {draw, holdDrawing} from "./00_draw.js";
 import {BOARD, canPlay, keyOf, lookNamed} from "./01_looks.js";
 import {targetFor} from "./03_lines.js";
-import {OUTPUTS, order, outputSaid, placeLamp, setLayout, wiring} from "./03_outputs.js";
 import {
-  acrossWiring, breakOutWiring, canEdit, copyBlinks, copyExact, mono, outs, pickOutput,
+  OUTPUTS, order, outputSaid, placeLamp, plainOrder, setLayout, wiring
+} from "./03_outputs.js";
+import {
+  acrossWiring, breakOutWiring, canEdit, copyBlinks, copyExact, mono, outs, pickOutput, playsOf,
   rejoinWiring, runs, sectionAt, settle
 } from "./03_runs.js";
 import {apply, capture, carried, slotAt, state, store} from "./04_scenes.js";
 import {stripLengthTail} from "./05_strips.js";
-import {plainOrder} from "./27_readback.js";
-import {playsOf} from "./31_stretch_bar.js";
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
 // The new lamps are carried what the output played, both ways, broken out into three mono

@@ -1,9 +1,9 @@
 import {draw, drawSteps} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {active, outs, runs, setSetupMode, setupOn} from "./03_runs.js";
+import {active, runs, setSetupMode, setupOn} from "./03_runs.js";
 import {renderChosen} from "./04_led_panels.js";
 import {STRIPS, stripBlockedBy} from "./05_strips.js";
-import {setupButton} from "./08_setup.js";
+import {boardIcon, lastOutputRun, setLastOutputRun} from "./08_setup.js";
 import {LED_PANELS, runsOfPanel, workOn} from "./10_led_sections.js";
 
 // ---- the LED sections as tabs -----------------------------------------------------------
@@ -157,13 +157,8 @@ export function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-// Each section is only ever seen on its own here, so each keeps its own stretch's settings
-// whichever is worked on, and none changes height when another tab is chosen. The outputs'
-// are for whichever of their two sides was last worked on
-export var lastOutputRun = outs;
-
 drawSteps.after.push(function () {
-  if (!active.strip) lastOutputRun = active;
+  if (!active.strip) setLastOutputRun(active);
   if (active.strip) renderChosen("outChosen", lastOutputRun);
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
     renderChosen(run.id + "Chosen", run);
@@ -194,3 +189,16 @@ drawSteps.after.push(function () {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }());
+
+// ---- turning setup on ------------------------------------------------------------------------
+
+function setupButton(label, on, act) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "setupbutton" + (on ? " on" : "");
+  // The board's chip, as every board setting wears it, since this is where they open
+  button.appendChild(boardIcon());
+  button.appendChild(document.createTextNode(label));
+  button.addEventListener("click", act);
+  return button;
+}

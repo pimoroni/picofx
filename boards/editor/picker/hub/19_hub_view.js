@@ -4,14 +4,13 @@ import {allBodies, apply, capture, frozen, slotAt, state, store} from "../04_sce
 import {SCREEN_SIZES} from "../07_board.js";
 import {boardIcon} from "../08_setup.js";
 import {
-  HUB_PLACES, asAlwaysScreen, asScreen, hubHeadSteps, hubInk, pickPlace, placePicked, placeThere,
-  placeUnder, placesThere
+  HUB_PLACES, asAlwaysScreen, asScreen, hubHeadSteps, hubInk, hubParts, pickPlace, placePicked,
+  placeThere, placeUnder, placesThere
 } from "./15_hub.js";
-import {inNumberedGroup} from "./17_hub_groups.js";
-import {apartSaid, namesSaid, placeGroups} from "./18_hub_text.js";
-import {kindOf} from "../screens/12_screens.js";
+import {inNumberedGroup, placeGroups} from "./17_hub_groups.js";
+import {apartSaid, namesSaid} from "./18_hub_text.js";
+import {kindOf, pictureSaid} from "../screens/12_screens.js";
 import {panelPreview} from "../screens/13_screen_art.js";
-import {pictureSaid} from "../screens/14_screen_text.js";
 import {lookSections} from "../screens/16_screen_settings.js";
 
 // ---- drawing the hub -------------------------------------------------------------------------
@@ -19,7 +18,7 @@ import {lookSections} from "../screens/16_screen_settings.js";
 // The choice of two screens or a hub, which takes both connectors. It is always shown, so it can
 // be seen to be a choice, and only changed while editing the board. It sits at the top of the
 // tab, where the outputs and strips have their board box, and at that box's size
-export function hubSwitch() {
+function hubSwitch() {
   var row = document.createElement("div");
   row.className = "hubswitch" + (setupOn ? "" : " locked");
   row.title = setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it";
@@ -184,7 +183,7 @@ function hubPace() {
 }
 
 // Draw the hub's box in place of the screens'
-export function renderHubHead() {
+function renderHubHead() {
   var box = document.getElementById("screensHead");
   box.textContent = "";
   box.classList.add("hubbed");
@@ -226,3 +225,5 @@ export function renderHubHead() {
   box.appendChild(side);
   hubHeadSteps.forEach(function (step) { step(); });
 }
+hubParts.renderHead = renderHubHead;
+hubParts.hubSwitch = hubSwitch;

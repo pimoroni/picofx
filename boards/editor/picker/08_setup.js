@@ -1,14 +1,14 @@
 import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {outputSaid} from "./03_outputs.js";
-import {BOARD_CHIP_CLASSES, active, canEdit, setupOn} from "./03_runs.js";
+import {BOARD_CHIP_CLASSES, active, canEdit, outs, settle, setupOn} from "./03_runs.js";
 import {stretchCount} from "./04_led_panels.js";
 import {
-  STRIPS, STRIP_BRIGHTNESSES, STRIP_ORDERS, renderStripChip, renderStripOut, stripChipShown,
-  stripDrop, stripPercent, stripSet
+  STRIPS, STRIP_BRIGHTNESSES, STRIP_FEWEST, STRIP_MOST, STRIP_ORDERS, stripBlockedBy,
+  stripChipShown, stripDrawing, stripDrop, stripPercent, stripSet, stripThere
 } from "./05_strips.js";
 import {breakingOutputs, brokenSaid} from "./07_board.js";
 import {headSteps} from "./09_wiring.js";
-import {lastOutputRun} from "./11_tabs.js";
+import {workOn} from "./10_led_sections.js";
 
 // ---- the board set up, on the page --------------------------------------------------------------
 // The facts about the board shown beside the lights, as each strip's chip and the outputs'
@@ -16,7 +16,7 @@ import {lastOutputRun} from "./11_tabs.js";
 
 // What follows a strip's length on the board line, its brightness or its colour order, as the
 // choice on its chip
-export function stripChipChoice(run) {
+function stripChipChoice(run) {
   var choice = document.createElement("select");
   if (run.made === null) {
     STRIP_ORDERS.forEach(function (pair) {
@@ -96,16 +96,6 @@ export function boardIcon() {
   return svg;
 }
 
-// ---- the facts, in place --------------------------------------------------------------------
-
-// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
-// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
-export function noArrow() {
-  var none = document.createElement("span");
-  none.style.position = "absolute";
-  return none;
-}
-
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
@@ -131,7 +121,7 @@ function stripBuilt(run) {
   return run.leds + " LEDs, " + stripChipShown(run);
 }
 
-export function renderLeds(where, run) {
+function renderLeds(where, run) {
   var box = document.getElementById(where);
   var panel = run.id + "Panel";
   document.getElementById(panel).classList.toggle("stripout", !run.there);
@@ -157,19 +147,7 @@ export function renderLeds(where, run) {
   box.appendChild(stretchCount(run));
   headSteps(box, run);
 }
-
-// ---- turning setup on ------------------------------------------------------------------------
-
-export function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
-}
+stripDrawing.leds = renderLeds;
 
 drawSteps.after.push(function () {
   renderOutFacts();
@@ -178,3 +156,71 @@ drawSteps.after.push(function () {
   if (setupOn) unmark();
   paintAll();
 });
+
+// A strip's chip, its length and its order or brightness to set, shown while the board is set up
+function renderStripChip(where, run) {
+  var box = document.getElementById(where);
+  box.textContent = "";
+  var chip = document.createElement("div");
+  chip.className = "chip strip";
+  chip.appendChild(document.createTextNode("Strip"));
+  var count = document.createElement("input");
+  count.type = "number";
+  count.min = STRIP_FEWEST;
+  count.max = STRIP_MOST;
+  count.value = run.leds;
+  count.onchange = function () {
+    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
+                                                           STRIP_FEWEST));
+    if (want === run.leds) return;
+    stripSet(run, {leds: want});
+    settle();
+    draw();
+  };
+  chip.appendChild(count);
+  var unit = document.createElement("small");
+  unit.textContent = "LEDs";
+  chip.appendChild(unit);
+  chip.appendChild(stripChipChoice(run));
+  box.appendChild(chip);
+  var says = document.createElement("span");
+  says.className = "says";
+  says.textContent = "shared by every scene";
+  box.appendChild(says);
+}
+
+// A strip not fitted offers to be added, which only editing the board can take up, or says
+// why it cannot be
+function renderStripOut(box, run, panel) {
+  box.textContent = "";
+  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var blocked = stripBlockedBy(run);
+  if (blocked) {
+    var why = document.createElement("span");
+    why.className = "stripblocked says";
+    why.textContent = blocked;
+    box.appendChild(why);
+    return;
+  }
+  var add = document.createElement("button");
+  add.type = "button";
+  add.className = "addstrip";
+  add.textContent = "add this strip";
+  add.disabled = !canEdit(panel);
+  add.onclick = function () {
+    stripThere(run, true);
+    workOn(panel);
+    draw();
+  };
+  box.appendChild(add);
+}
+
+// Each section is only ever seen on its own here, so each keeps its own stretch's settings
+// whichever is worked on, and none changes height when another tab is chosen. The outputs'
+// are for whichever of their two sides was last worked on
+export var lastOutputRun = outs;
+
+// Set the output run last worked on
+export function setLastOutputRun(run) {
+  lastOutputRun = run;
+}

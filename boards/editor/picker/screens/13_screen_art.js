@@ -1,18 +1,13 @@
 import {draw, drawSteps} from "../00_draw.js";
 import {WORDS, rgbInk} from "../01_colours.js";
-import {setupOn} from "../03_runs.js";
-import {allBodies, apply, capture, frozen, slotAt, state, store} from "../04_scenes.js";
-import {boardIcon} from "../08_setup.js";
+import {capture, state} from "../04_scenes.js";
 import {LED_PANELS} from "../10_led_sections.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
-import {argumentFrom} from "../26_drive_programs.js";
 import {
   BOARD_INK, CHIN_INK, DRAWN, EMPTY_INK, FRAME_INK, FRAME_WIDE, GROUND_INK, HOLE_EDGE, HOLE_INK,
-  MODULE, NAME_INK, PANEL_INK, PANEL_PX, PER_MM, PRINTED, SCREENS, SCREEN_NAMES, freshLook, kindOf,
-  mediaNamed, screenShown, screenUnder, screensHeadSteps
+  MODULE, NAME_INK, PANEL_INK, PANEL_PX, PER_MM, PRINTED, SCREENS, drawingArts, freshLook, kindOf,
+  mediaNamed, screenParts, screenUnder, shownBefore
 } from "./12_screens.js";
-import {lightRow, lookSections, showingLine, turnForChosen} from "./16_screen_settings.js";
-import {previewInScene, renderAssets, renderScreensTab} from "./18_screens_tab.js";
 
 // ---- the screens drawn --------------------------------------------------------------------------
 // The screen modules and what they show: the tab's head and boxes, pictures read off the drive,
@@ -145,128 +140,6 @@ function panelDrawing(screen) {
   return holder;
 }
 
-function renderScreensHead() {
-  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
-    document.getElementById("screensHead").classList.remove("hubbed");
-    renderScreenBoxes();
-  }
-  screensHeadSteps.after.forEach(function (step) { step(); });
-}
-
-// A box for each screen port. A screen's box has the backlight across its top, what it shows
-// straight under the module, and its look's sections under that
-function renderScreenBoxes() {
-  var box = document.getElementById("screensHead");
-  box.textContent = "";
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    var side = document.createElement("div");
-    side.className = "screen-box " + letter.toLowerCase();
-    var head = document.createElement("h3");
-    head.appendChild(document.createTextNode(screenShown(letter)));
-    side.appendChild(head);
-
-    var body = document.createElement("div");
-    body.className = "body";
-    side.appendChild(body);
-
-    if (!screen.there) {
-      body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
-      add.onclick = function () {
-        screen.there = true;
-        screen.shows = null;
-        screen.kept = null;
-        draw();
-      };
-      body.appendChild(add);
-      box.appendChild(side);
-      return;
-    }
-
-    // Taking the screen out is the only way to have none, as a screen showing nothing would
-    // say the same thing twice
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this screen from every scene";
-    drop.onclick = function () {
-      screen.there = false;
-      // Every scene's choice for it goes too, since nothing is left to show them
-      store();
-      allBodies().forEach(function (held) {
-        held.screens[letter].shows = null;
-        held.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
-
-    var size = document.createElement("select");
-    // The sizes a panel can be, the catalogue's hub being no panel size
-    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
-      .filter(function (inches) { return inches !== "hub"; });
-    if (!screen.size) {
-      var quiet = document.createElement("option");
-      quiet.value = "";
-      quiet.textContent = "fitted size";
-      quiet.selected = true;
-      size.appendChild(quiet);
-    }
-    offered.forEach(function (inches) {
-      var option = document.createElement("option");
-      option.value = inches;
-      option.textContent = inches + " inch";
-      if (screen.size === inches) option.selected = true;
-      size.appendChild(option);
-    });
-    size.onchange = function () {
-      if (size.value) screen.size = size.value;
-      draw();
-    };
-    size.className = "inband";
-    size.title = "Panel fitted, shared by every scene";
-    head.insertBefore(size, drop);
-
-    body.appendChild(previewInScene(screen, letter));
-
-    // The look's sections, what it shows above them, and its backlight across the top. A screen
-    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
-    var under = screen.shows ? null : screenUnder(letter);
-    var held = screen;
-    if (under && under.always) {
-      var always = state.always.body.screens[letter];
-      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
-                                        look: always.look || screen.look});
-    }
-    var sections = lookSections("screen" + letter, held, screen.size);
-    var light = lightRow(held.look.backlight, function (value) {
-      screen.look.backlight = value;
-    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
-    if (held !== screen) {
-      frozen(sections);
-      frozen(light);
-    }
-    body.appendChild(sections);
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(light, body.firstChild);
-
-    // What the file already says for this screen, where the picker did not write it
-    // and no picture can stand for it. It is a line of its own under the settings
-    if (screen.kept) {
-      var keep = document.createElement("button");
-      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
-      keep.title = screen.kept;
-      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
-      keep.onclick = function () { screen.shows = "keep"; draw(); };
-      side.appendChild(keep);
-    }
-    box.appendChild(side);
-  });
-}
-
 // ---- pictures, read off the drive in turn ------------------------------------------------------
 // The drive is slow to read, so pictures come off it one at a time, those a screen or hub position
 // shows in any scene first and the rest of the gallery after them
@@ -348,26 +221,6 @@ export function mediaArt(name, style) {
   return styled ? mediaArt(name) : null;
 }
 
-// ---- drawing the tab -------------------------------------------------------------------------
-
-// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
-// board's
-export function renderScreensParts() {
-  renderScreensHead();
-  renderAssets();
-  var head = document.getElementById("screensHead");
-  // The band is the screen's coloured box, so it wears the board's chip like the others
-  head.querySelectorAll(".screen-box h3").forEach(function (band) {
-    band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
-  });
-  // Whether a screen is fitted and its size are the board's
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
-      .forEach(function (control) { control.disabled = true; });
-  }
-}
-
 // The tab's swatch is the two screens, each showing what its screen shows
 tabSwatches.screensPanel = function (swatch) {
   swatch.textContent = "";
@@ -421,11 +274,13 @@ function sizesUnderName() {
 
 // A picture newly chosen is given its starting turn before anything else is drawn, since
 // writing the file applies every scene in turn and would take it as already chosen
-drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
+drawSteps.before.push(function () {
+  SCREENS.forEach(function (letter) { screenParts.turnForChosen(letter); });
+});
 
 drawSteps.after.push(function () {
   sizesUnderName();
-  renderScreensTab();
+  screenParts.renderTab();
 });
 
 (function () {
@@ -514,38 +369,6 @@ function nameHue(name) {
   return (hash >>> 0) % 360;
 }
 
-// A line of a drawing's opening string that says how to show it
-var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles|Firmware):\s*(.+?)\s*$/;
-
-// What an opening string says of a drawing, or null for a file that is not one. Its defaults are
-// the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
-// 90 or 270, Pixel double = true"
-export function drawingSaid(docstring) {
-  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {},
-              styles: []};
-  var rest = docstring.split("\n").filter(function (line) {
-    var field = line.match(DRAWING_LINE);
-    if (!field) return true;
-    if (field[1] === "Styles") {
-      // A choice the drawing offers, a line each, the first in a line being the one it takes
-      // where none is chosen
-      var choices = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
-      if (choices.length) said.styles.push(choices);
-    } else if (field[1] === "Defaults") {
-      field[2].split(",").map(argumentFrom).forEach(function (setting) {
-        said.defaults[setting.name] = setting;
-      });
-    } else {
-      said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
-    }
-    return false;
-  }).join(" ").split(/\s+/).join(" ").trim();
-  if (!said.title) return null;
-  var first = rest.match(/^(.*?\.)(\s|$)/);
-  said.description = first ? first[1] : rest;
-  return said;
-}
-
 // A drawing's colour as a CSS colour, from a word the board knows, a hex, or its name
 export function drawingInk(drawing, name) {
   var word = WORDS[drawing.colour.toLowerCase()];
@@ -553,8 +376,6 @@ export function drawingInk(drawing, name) {
   if (/^#?[0-9a-f]{6}$/i.test(drawing.colour)) return "#" + drawing.colour.replace("#", "");
   return "hsl(" + nameHue(name) + ",60%,45%)";
 }
-
-export var drawingArts = {};
 
 // A drawing at a canvas's size, for where a picture's pixels are drawn. Its thumbnail covers the
 // canvas, or where it has none its colour fills the canvas with its icon or initial in the middle
@@ -602,13 +423,14 @@ function drawingArt(name, wide, high, style) {
 
 // Make a drawing's face as a square, for the gallery and the tab's swatch. It is made afresh each
 // time the drive is read, since the opening string it comes from may have changed
-export function madeDrawing(name) {
+function madeDrawing(name) {
   Object.keys(drawingArts).forEach(function (key) {
     if (key.indexOf(name + "|") === 0) delete drawingArts[key];
   });
   state.art[name] = drawingArt(name, 240, 240);
   state.art[name].face = true;
 }
+screenParts.madeDrawing = madeDrawing;
 
 // ---- drawing a look on the module -------------------------------------------------------------
 
@@ -751,9 +573,6 @@ function nextGifFrame(playing, gif) {
   }).catch(function () {});
 }
 
-// What each file last showed on a screen, composed with its look, by name
-export var shownBefore = {};
-
 // A screen module drawn showing its picture composed with its look, and a gif playing in it
 export function panelPreview(screen) {
   var style = screen.look ? screen.look.style : "";
@@ -791,21 +610,6 @@ export function styleChoices(drawing, style) {
 // drawing drawn as it is unchosen writes no style
 export function styleWord(drawing, choices) {
   return choices.filter(function (choice, at) { return choice !== drawing.styles[at][0]; }).join("-");
-}
-
-// Every style word a drawing could be drawn in but its first, each one a thumbnail can be named for
-export function styleWords(drawing) {
-  var words = [[]];
-  drawing.styles.forEach(function (line) {
-    var grown = [];
-    words.forEach(function (word) {
-      line.forEach(function (choice, at) { grown.push(at ? word.concat([choice]) : word); });
-    });
-    words = grown;
-  });
-  return words.filter(function (word) { return word.length; }).map(function (word) {
-    return word.join("-");
-  });
 }
 
 // The style word of the thumbnail nearest a style, whatever order its choices were written in. A

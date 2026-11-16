@@ -1,13 +1,13 @@
-import {draw, paintAll} from "./00_draw.js";
+import {draw, drawParts, paintAll, paintSteps} from "./00_draw.js";
 import {blinkDuty, blinkSpeed, keyOf, lookNamed, withSection} from "./01_looks.js";
 import {BLINK, blinkWord} from "./02_blink.js";
 import {
-  forwardTargetFor, linesFor, ownColourFor, runsAWay, takesColour, withExact
+  SOLID_COLOUR, START_MOODS, forwardTargetFor, linesFor, ownColourFor, runsAWay, takesColour,
+  withExact
 } from "./03_lines.js";
 import {widthOf} from "./03_outputs.js";
-import {MIDDLING, remember} from "./03_runs.js";
+import {MIDDLING, remember, runs} from "./03_runs.js";
 import {lampUnder} from "./04_scenes.js";
-import {SOLID_COLOUR, START_MOODS} from "./05_strips.js";
 
 // ---- the lamps, lit by the line the look writes ---------------------------------------
 // A card can say what a look is made of, but only a lamp actually running it can say what it
@@ -377,12 +377,20 @@ export var painters = [];
 var walks = {};
 
 // Empty the painters, which a draw makes afresh
-export function clearPainters() {
+function clearPainters() {
   painters = [];
 }
+drawParts.clearPainters = clearPainters;
+
+// Light every lamp the painters hold as its run plays at the beat
+paintSteps.push(function () {
+  var lit = {};
+  runs.forEach(function (run) { lit[run.name] = litRun(run); });
+  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
+});
 
 // What each lamp of a run shows now. A strip's stretches are played in the strip's form
-export function litRun(run) {
+function litRun(run) {
   var out = [];
   var store = walks[run.name] || (walks[run.name] = {});
   previewingStrip = !!run.strip;

@@ -2095,12 +2095,21 @@ function banner(text, warn, detail) {
   }
   box.appendChild(note);
 }
-
 // ---- drawing --------------------------------------------------------------------------------
 // The parts below add their own steps to a draw, what each readies before the page is drawn and
 // what each draws after the outputs, both in the order the parts come
 
 var drawSteps = {before: [], after: []};
+
+// What a draw does between its before and after steps, by name, each filled in by the part that
+// draws it. Those named in DRAW_ORDER go in that order, which matters: the chosen stretch's panel
+// points at its cell in the bars, so the bars are drawn before it
+var drawParts = {};
+var DRAW_ORDER = ["clearPainters", "clearCardFaces", "clearKin", "galleries", "bars", "sides",
+                  "chosen", "preview"];
+
+// The steps paintAll() takes, each lighting part of the page at the beat
+var paintSteps = [];
 
 // Whether drawing waits, while the page is changed in a way a draw would store half done
 var drawHeld = false;
@@ -2120,20 +2129,7 @@ function draw() {
   var down = window.scrollY;
   var focused = focusPlace();
   drawSteps.before.forEach(function (step) { step(); });
-
-  clearPainters();
-  clearCardFaces();
-  clearKin();
-  renderGalleries();
-  renderBar("outBar", outs);
-  renderBar("monoBar", mono);
-
-  // Both sides are in the one panel, so one stretch's settings serve whichever was last worked
-  // on rather than a set under each
-  renderSides();
-  renderChosen("outChosen", active);
-
-  renderPreview();
+  DRAW_ORDER.forEach(function (name) { if (drawParts[name]) drawParts[name](); });
   paintAll();
 
   drawSteps.after.forEach(function (step) { step(); });
@@ -2190,13 +2186,10 @@ function refocus(place) {
   }
 }
 
+// Light the page at the beat, the lamps before the cards
 function paintAll() {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-  paintCards();
+  paintSteps.forEach(function (step) { step(); });
 }
-
 // ---- colours ------------------------------------------------------------------------------------
 // Colours turned between hex, RGB and hue, the swatches and their words, and how bright a stretch
 // is drawn at its Brightness.
@@ -2273,10 +2266,6 @@ function astrayOf(side) {
     return !(onOne && atStep[upTo[place]] === 1);
   });
 }
-
-// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
-// worked on, so only one stretch on the page is ever marked
-function isPicked(run, at) { return run === active && run.picked === at; }
 
 // ---- choosing a colour ---------------------------------------------------------------------
 // Under the stretch it is for, twelve swatches and a custom one that opens a hue and
@@ -3303,6 +3292,14 @@ var walks = {};
 function clearPainters() {
   painters = [];
 }
+drawParts.clearPainters = clearPainters;
+
+// Light every lamp the painters hold as its run plays at the beat
+paintSteps.push(function () {
+  var lit = {};
+  runs.forEach(function (run) { lit[run.name] = litRun(run); });
+  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
+});
 
 // What each lamp of a run shows now. A strip's stretches are played in the strip's form
 function litRun(run) {
@@ -3701,7 +3698,7 @@ function brightnessSlider(tuning, run, where) {
   range.dataset.focus = where + "-level";
   range.oninput = function () {
     run.sections[run.picked].level = Number(range.value);
-    renderPreview();
+    drawParts.preview();
   };
   // A colour's hex and its preview show the brightness, so they are drawn again once it is set
   range.onchange = function () { draw(); };
@@ -3933,6 +3930,18 @@ function withExact(exact, write) {
   }
 }
 
+// The second setting a look starts at, on its card and on a stretch given it, where middling
+// does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
+// steps at picofx's six, and the signals' lamps fade in about a tenth of a second, as a real
+// signal's do. Marquee starts with every third light lit
+var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
+                   "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
+
+// Solid's own colour, which a stretch given it starts in and its card shows, still and at full
+// brightness. A card stepping through the swatches would read as Colour steps, and its palette
+// mark already says a colour is chosen
+var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
+
 // ---- the board's outputs, inside the sections system ------------------------------------
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
 // those three apart, the output is either one colour lamp or three mono ones, and a board is
@@ -3968,6 +3977,7 @@ var kinOf = {};
 function clearKin() {
   kinOf = {};
 }
+drawParts.clearKin = clearKin;
 
 // A colour output is one lamp or three, and nothing between, as the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
@@ -4144,6 +4154,13 @@ function stripSelector(run, section) {
   return run.name + (section.from === section.to
     ? String(section.from + 1)
     : (section.from + 1) + "-" + (section.to + 1));
+}
+
+// Every lamp in number order, an output broken out as its red, green and blue
+function plainOrder() {
+  var plain = [];
+  wiring.forEach(function (one, out) { plain = plain.concat(placesOf(out)); });
+  return plain;
 }
 
 // ---- reading an entry ---------------------------------------------------------------------------
@@ -4742,6 +4759,7 @@ var carrying_lamp = null;
 function clearCardFaces() {
   cardFaces = [];
 }
+drawParts.clearCardFaces = clearCardFaces;
 
 // Set the lamp being carried to a new place, or null when none is
 function setCarryingLamp(lamp) {
@@ -4860,48 +4878,9 @@ function stretchFor(run, isMono) {
   return run.picked;
 }
 
-// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
-// stretch can play
-function renderGalleries() {
-  // A kind the board has none of cannot be worked on, so the set goes back to the one it
-  // has. Without this the cards would be for lights that are not there
-  if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
-
-  var box = document.getElementById("looks");
-  box.textContent = "";
-
-  var tabs = document.createElement("div");
-  tabs.className = "tabs sides";
-  box.appendChild(tabs);
-
-  var run = galleryRun(showing);
-  var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
-  var lamp = section && run.lamps[section.from];
-
-  // What the stretch being worked on could actually be given. A look shaped to several
-  // lamps has nothing to say on a stretch of one, and the model would clear it the moment
-  // it landed, so the card says so and does not take it only to quietly drop it
-  var target = section ? targetFor(run, section) : null;
-
-  var shelf = document.createElement("div");
-  shelf.className = "shelf bare";
-  box.appendChild(shelf);
-
-  var looks = document.createElement("div");
-  looks.className = "gallery";
-  spanning().concat([{name: null}]).forEach(function (look) {
-    var can = !look.name || !target || canPlay(look, target);
-    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
-    var card = lookCard(showing, look, on);
-    if (!can) {
-      card.className += " cannot";
-      card.onclick = null;
-      card.title = whyNot(look, target);
-    }
-    looks.appendChild(card);
-  });
-  shelf.appendChild(looks);
-  groupGallery();
+// Draw the set of looks for mono lamps or for colour ones
+function setShowing(isMono) {
+  showing = isMono;
 }
 
 // ---- crossing from one side to the other ---------------------------------------------------
@@ -4923,16 +4902,10 @@ var chosenSteps = [];
 var NOTCH_INSET = 14;
 
 settle();
-window.addEventListener("resize", spanTray);
 
 // What the parts below write above the scenes, lines straight under the file's header and then,
 // after a blank line, lines above the board line. Each is a list of functions giving lines
 var fileHead = {under: [], above: []};
-
-drawSteps.after.push(function () {
-  renderScenes();
-  renderSceneSettings();
-});
 
 // The board opens as it ships, every colour output one colour lamp, each side whole and playing
 // the look the board's description opens it with. The strips play nothing, since what is wired
@@ -5010,6 +4983,21 @@ function setSetupMode(on) {
     heldPick = null;
     heldOutput = null;
   }
+}
+
+// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
+// worked on, so only one stretch on the page is ever marked
+function isPicked(run, at) { return run === active && run.picked === at; }
+
+// ---- what a stretch plays, carried through the tools -----------------------------------------
+// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
+// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
+// stretch playing nothing
+function playsOf(section) {
+  return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
+          custom: section.custom, reversed: section.reversed, level: section.level,
+          blinks: copyBlinks(section.blinks), exact: copyExact(section.exact),
+          timings: copyExact(section.timings)};
 }
 
 // ---- the LED panels -----------------------------------------------------------------------------
@@ -5124,7 +5112,7 @@ function renderChosenPanel(where, run) {
     // Through the run, as a page that makes the stretches afresh leaves this one behind
     range.oninput = function () {
       run.sections[run.picked][key] = Number(range.value);
-      renderPreview();
+      drawParts.preview();
     };
     return range;
   }
@@ -5146,6 +5134,10 @@ function renderSides() {
     box.className = "side";
   });
 }
+drawParts.sides = renderSides;
+// Both sides are in the one panel, so one stretch's settings serve whichever was last worked on
+// rather than a set under each
+drawParts.chosen = function () { renderChosen("outChosen", active); };
 
 // ---- the scene tray -----------------------------------------------------------------------------
 // The row of scene cards, each with its colour, its time or what it waits for, and the icons of
@@ -5504,6 +5496,90 @@ function renderSceneRow() {
   box.appendChild(row);
 }
 
+window.addEventListener("resize", spanTray);
+
+drawSteps.after.push(function () {
+  renderScenes();
+  renderSceneSettings();
+});
+
+function renderScenes() {
+  var box = document.getElementById("tabs");
+  box.textContent = "";
+
+  // One scene is what a file has before anyone asks for more, and a bar of one tab
+  // says nothing, so it is not drawn until there is a choice to make
+  if (state.scenes.length) {
+    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
+    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
+    state.scenes.forEach(function (scene, i) {
+      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
+    });
+  }
+
+  var plus = document.createElement("button");
+  plus.className = "plus";
+  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
+                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
+                   "stroke-linecap='round'/></svg>" +
+                   (state.scenes.length ? "another scene" : "split into scenes");
+  plus.title = state.scenes.length ? "Add another scene"
+                                   : "Split into scenes that play one after another";
+  plus.onclick = addScene;
+  box.appendChild(plus);
+  box.classList.toggle("tray", state.scenes.length > 0);
+  spanTray();
+
+  // The frame is what says these belong to the picked card, so it appears with the cards, in
+  // the picked card's colour. Its tab holds the scene's settings beside what the page says about it
+  var frame = document.getElementById("sceneBody");
+  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
+  var tabRow = document.getElementById("sceneTabRow");
+  tabRow.hidden = !state.scenes.length;
+  var picked = state.at < 0 ? null : state.scenes[state.at];
+  [frame, tabRow].forEach(function (node) {
+    node.style.setProperty("--frame", sceneEdge(picked));
+    node.style.setProperty("--frameband", sceneBand(picked));
+  });
+  renderSceneAside();
+}
+
+// ---- a scene's own settings, in the screens' style ---------------------------------------
+// Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
+// the screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of
+// theirs is the file's.
+
+function renderSceneSettings() {
+  renderSceneRow();
+  // Check if Always on is shown with scenes for it to play under. It has no settings of its own,
+  // so its row says what it is for, which keeps the gallery where it was as the tabs are switched
+  if (state.at < 0 && state.scenes.length) {
+    var note = document.createElement("div");
+    note.className = "sceneset alwaysnote";
+    note.textContent = "Always on plays under every scene. A scene that uses the " +
+                       "same lights, screen or sound overrides it while showing.";
+    document.getElementById("sceneSettings").appendChild(note);
+    return;
+  }
+  var row = document.querySelector("#sceneSettings .sceneset");
+  if (!row || state.at < 0) return;
+  var scene = state.scenes[state.at];
+  var ticked = row.querySelector("label");
+  if (!ticked) return;
+  // A scene going back to itself always restarts, so its toggle is held on. A scene that never
+  // shows again starts once, so its toggle is greyed
+  var loops = sceneLoops(scene);
+  var once = !sceneShowsAgain(scene);
+  var restart = toggle("&#8630;", "Restart", sceneRestarts(scene),
+                       function (on) { scene.restart = on; },
+                       loops ? "A scene that goes back to itself always restarts"
+                       : once ? "This scene shows only once, so it has nothing to restart"
+                       : "Restart this scene's effects each time it plays, instead of " +
+                         "resuming where they left off", once);
+  restart.disabled = loops || once;
+  row.replaceChild(restart, ticked);
+}
+
 // ---- scenes ---------------------------------------------------------------------------
 // Adding, removing and reordering scenes, and what a scene leaves to Always on. A scene's body is
 // every run's cuts, what each stretch plays and its steps to undo, and other parts add their own
@@ -5760,47 +5836,6 @@ function removeScene(which) {
 }
 
 function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
-
-function renderScenes() {
-  var box = document.getElementById("tabs");
-  box.textContent = "";
-
-  // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make
-  if (state.scenes.length) {
-    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
-    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
-    state.scenes.forEach(function (scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
-    });
-  }
-
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" +
-                   (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play one after another";
-  plus.onclick = addScene;
-  box.appendChild(plus);
-  box.classList.toggle("tray", state.scenes.length > 0);
-  spanTray();
-
-  // The frame is what says these belong to the picked card, so it appears with the cards, in
-  // the picked card's colour. Its tab holds the scene's settings beside what the page says about it
-  var frame = document.getElementById("sceneBody");
-  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-  var tabRow = document.getElementById("sceneTabRow");
-  tabRow.hidden = !state.scenes.length;
-  var picked = state.at < 0 ? null : state.scenes[state.at];
-  [frame, tabRow].forEach(function (node) {
-    node.style.setProperty("--frame", sceneEdge(picked));
-    node.style.setProperty("--frameband", sceneBand(picked));
-  });
-  renderSceneAside();
-}
 
 // Stretch Always on's card down every row the scenes' cards and the add button wrap into, as
 // many as the tray's width leaves room for. Where the scenes fill their last row, the add button
@@ -6231,38 +6266,6 @@ function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
 }
 
-// A strip's chip, its length and its order or brightness to set, shown while the board is set up
-function renderStripChip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var chip = document.createElement("div");
-  chip.className = "chip strip";
-  chip.appendChild(document.createTextNode("Strip"));
-  var count = document.createElement("input");
-  count.type = "number";
-  count.min = STRIP_FEWEST;
-  count.max = STRIP_MOST;
-  count.value = run.leds;
-  count.onchange = function () {
-    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
-                                                           STRIP_FEWEST));
-    if (want === run.leds) return;
-    stripSet(run, {leds: want});
-    settle();
-    draw();
-  };
-  chip.appendChild(count);
-  var unit = document.createElement("small");
-  unit.textContent = "LEDs";
-  chip.appendChild(unit);
-  chip.appendChild(stripChipChoice(run));
-  box.appendChild(chip);
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "shared by every scene";
-  box.appendChild(says);
-}
-
 // ---- zooming a strip's bar --------------------------------------------------------------------
 // A strip's bar is found by the strip's own id
 
@@ -6301,6 +6304,10 @@ settle();
 
 // ---- drawing the page -------------------------------------------------------------------
 
+// How a strip is drawn, filled in by the parts that draw it: leds(where, run) its LEDs and their
+// facts, bar(where, run) its bar, and fit() every strip's bar to the width it has
+var stripDrawing = {leds: function () {}, bar: function () {}, fit: function () {}};
+
 drawSteps.after.push(function () {
   // The outputs' settings are for the stretch being worked on, which while a strip is picked is
   // under that strip instead
@@ -6312,12 +6319,12 @@ drawSteps.after.push(function () {
       run.scrolled = 0;
     }
     run.count = run.lamps.length;
-    renderLeds(run.id + "Leds", run);
-    renderStripBar(run.id + "Bar", run);
+    stripDrawing.leds(run.id + "Leds", run);
+    stripDrawing.bar(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) renderChosen(run.id + "Chosen", run);
   });
-  fitBars();
+  stripDrawing.fit();
   // The page painted what it drew before these were made, so a fresh bead would hold the
   // default fill until the next frame and show black
   paintAll();
@@ -6331,18 +6338,6 @@ drawSteps.after.push(function () {
 // under the lamps and the Repeat tool's chips all ask here
 var MONO_WASH = "#f3c98b";
 
-// The second setting a look starts at, on its card and on a stretch given it, where middling
-// does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
-// steps at picofx's six, and the signals' lamps fade in about a tenth of a second, as a real
-// signal's do. Marquee starts with every third light lit
-var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
-                   "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
-
-// Solid's own colour, which a stretch given it starts in and its card shows, still and at full
-// brightness. A card stepping through the swatches would read as Colour steps, and its palette
-// mark already says a colour is chosen
-var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
-
 // The looks the board opens playing start in their own colours too
 [outs, mono].forEach(function (run) {
   run.sections.forEach(function (section) {
@@ -6355,53 +6350,6 @@ var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
 // kept while a swatch is chosen so custom comes back to both, as a screen's background does.
 // It is kept here, since the stretches are made afresh on every draw
 var customColours = {};
-
-// The stretch's settings, with the colour choice in place of a slider that steps tones
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var memo = box && section && standingIn(run, section);
-  if (memo) {
-    var note = document.createElement("div");
-    note.className = "standin";
-    note.textContent = look.name + ", replacing " + memo.look + ", " +
-                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
-    box.querySelector(".chosen").appendChild(note);
-  }
-  // A count of stops may depend on the stretch, as Spread's lengths do on its lights
-  if (box && look && look.detents) {
-    detented(box, where, typeof look.detents === "function"
-      ? look.detents(targetFor(run, section)) : look.detents);
-  }
-  var wrap = box && box.querySelector(".chosen");
-  if (!wrap || !look) return;
-  var tuning = wrap.querySelector(".tuning");
-  if (!tuning) {
-    tuning = document.createElement("div");
-    tuning.className = "tuning";
-    wrap.appendChild(tuning);
-  }
-  // Solid's own slider is its brightness, so it gives way to the Brightness slider every look has
-  if (look.solid) tuning.textContent = "";
-  // A mono lamp has no colour to be given
-  var first = run.lamps[section.from];
-  var coloured = takesColour(look) && !!first && first.colour;
-  // The second slider steps a table of tones for these looks, and the swatches take
-  // its place. On mono lights it has nothing to set, since a mono light has no colour
-  var mono = !!first && !first.colour;
-  var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
-  if ((coloured || mono) && toneless && tuning.children.length >= 4) {
-    tuning.removeChild(tuning.children[3]);
-    tuning.removeChild(tuning.children[2]);
-  }
-  brightnessSlider(tuning, run, where);
-  // The colour leads and the sliders follow it, brightness the first of them
-  if (coloured) {
-    renderColourPick(wrap, run);
-    wrap.appendChild(tuning);
-  }
-});
 
 // Party flashes its three sets a third of a beat apart, and the phases it was given, 0, 0.33
 // and 0.67, light the first set, then the third, then the second, a step back toward the start
@@ -6438,53 +6386,6 @@ var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
                    green_interval: "#16894a", amber_interval: "#a86600",
                    flashing_interval: "#a86600"};
 
-// A signal's timings take Speed's place, each a slider in seconds under its own name
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
-  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
-  var after = speed ? speed.nextSibling : null;
-  if (speed) {
-    tuning.removeChild(speed.previousElementSibling);
-    tuning.removeChild(speed);
-  }
-  // Ease is about every state, so it comes before them, after Brightness
-  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
-  if (ease) {
-    var easeLabel = ease.previousElementSibling;
-    if (after === easeLabel) after = ease.nextSibling;
-    tuning.insertBefore(easeLabel, after);
-    tuning.insertBefore(ease, after);
-    after = ease.nextSibling;
-  }
-  SIGNAL_TIMINGS[look.name].forEach(function (part) {
-    var label = document.createElement("label");
-    label.className = "signalstate";
-    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
-    var range = document.createElement("input");
-    range.style.accentColor = SIGNAL_TINT[part[0]];
-    range.type = "range";
-    range.min = part[3];
-    range.max = part[4];
-    range.step = 0.5;
-    range.value = withSection(section, function () { return timingOf(look.name, part[0]); });
-    range.dataset.focus = where + "-timing-" + part[0];
-    range.dataset.timing = part[0];
-    range.title = "seconds, " + part[1].toLowerCase();
-    range.oninput = function () {
-      var mine = run.sections[run.picked];
-      mine.timings = Object.assign({}, mine.timings);
-      mine.timings[part[0]] = Number(range.value);
-      renderPreview();
-    };
-    tuning.insertBefore(label, after);
-    tuning.insertBefore(range, after);
-  });
-});
-
 // ---- an icon for each setting ------------------------------------------------------------------
 // Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
 // have theirs, so a panel reads at a glance. A signal's states keep their coloured
@@ -6512,75 +6413,6 @@ var SETTING_ICONS = {
              "<circle cx='4.9' cy='7.6' r='.9' class='filled'/><circle cx='6.2' cy='4.7' r='.9' " +
              "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
 };
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning) return;
-  // Every slider keeps the picked stretch's colours on the bar in step as it moves, since one
-  // such as Palette changes them, and redraws the panel once let go. A slider's own handler
-  // plays only the preview, which would leave the bar showing the colours from before
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function (range) {
-    var moved = range.oninput;
-    range.oninput = function () {
-      if (moved) moved.call(range);
-      var live = run.sections[run.picked];
-      var cell = barCells(run)[run.picked];
-      var wash = cell && cell.querySelector(".lit");
-      if (wash && look) wash.style.background = washFor(run, live, look);
-    };
-    if (!range.onchange) range.onchange = function () { draw(); };
-  });
-  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function (label) {
-    var drawn = SETTING_ICONS[label.textContent];
-    if (!drawn || label.querySelector(".settingicon")) return;
-    if (label.textContent === "Fade") {
-      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
-    }
-    label.classList.add("withicon");
-    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
-                                           "aria-hidden='true'>" + drawn + "</svg>");
-  });
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var who = box && box.querySelector(".chosen .who");
-  var section = run && run.sections[run.picked];
-  if (!who || !section) return;
-  var look = lookNamed(section.look);
-  var under = look ? null : stretchUnder(run, section);
-  who.innerHTML = "";
-  var named = document.createElement("b");
-  named.textContent = look ? look.name : "Nothing";
-  who.appendChild(named);
-  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
-  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
-  who.title = targetFor(run, section).selector;
-  // A stretch the scene leaves empty says what the board plays there, and how to change it
-  if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    who.parentNode.insertBefore(hint, who.nextSibling);
-  }
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var who = box && box.querySelector(".chosen .who");
-  if (!section || !who) return;
-  // The name and its count stay one piece of text, the toggle set apart at the end
-  var named = document.createElement("span");
-  while (who.firstChild) named.appendChild(who.firstChild);
-  who.appendChild(named);
-  who.classList.add("withway");
-  if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
-});
 
 // Whether a strip is there, on the run and on the entry a fresh run is made from
 function stripThere(run, there) { stripSet(run, {there: there}); }
@@ -6635,32 +6467,6 @@ function stripDrop(run) {
   return drop;
 }
 
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
-function renderStripOut(box, run, panel) {
-  box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
-  var blocked = stripBlockedBy(run);
-  if (blocked) {
-    var why = document.createElement("span");
-    why.className = "stripblocked says";
-    why.textContent = blocked;
-    box.appendChild(why);
-    return;
-  }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
-  add.onclick = function () {
-    stripThere(run, true);
-    workOn(panel);
-    draw();
-  };
-  box.appendChild(add);
-}
-
 // ---- writing them back ------------------------------------------------------------------------
 
 // The strip a board token gives a length, such as stripl for stripl=30, or null
@@ -6682,81 +6488,6 @@ function forgetKeptFor(run) {
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
   filterResidue(function (token) { return stripOfToken(token) !== run.name; });
 }
-
-// ---- blinking through several colours, on the chosen stretch ------------------------------------
-// The chips of the colours Blink steps through, drawn among the chosen stretch's settings.
-
-// Above the swatches, the colours it blinks through, each a chip that the picker changes
-// while it is chosen, with a way to add another and to take one away
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var pick = box && box.querySelector(".chosen .colourpick");
-  var first = section && run.lamps[section.from];
-  if (!pick || section.look !== BLINK || !first || !first.colour) return;
-  function live() { return run.sections[run.picked]; }
-  var blinks = section.blinks || {colours: [section.colour || "#ff0000"], at: 0};
-  blinks.colours[blinks.at] = section.colour;
-  section.blinks = blinks;
-
-  function choose(at) {
-    var mine = live();
-    mine.blinks.at = at;
-    mine.colour = mine.blinks.colours[at];
-    mine.custom = !blinkNamed(mine.colour);
-    draw();
-  }
-
-  var row = document.createElement("div");
-  row.className = "blinklist";
-  var said = document.createElement("span");
-  said.className = "blinksay";
-  said.textContent = blinks.colours.length > 1 ? "Blinks through" : "Blinks in";
-  row.appendChild(said);
-  blinks.colours.forEach(function (hex, at) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
-    chip.style.setProperty("--chip", hex);
-    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") +
-                 (blinkNamed(hex) || hex);
-    chip.onclick = function () { choose(at); };
-    row.appendChild(chip);
-    if (blinks.colours.length > 1) {
-      var drop = document.createElement("button");
-      drop.type = "button";
-      drop.className = "blinkdrop";
-      drop.textContent = "\u00d7";
-      drop.title = "stop blinking in " + (blinkNamed(hex) || hex);
-      drop.onclick = function () {
-        var mine = live();
-        mine.blinks.colours.splice(at, 1);
-        var left = mine.blinks.colours;
-        mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
-        mine.colour = left[mine.blinks.at];
-        mine.custom = !blinkNamed(mine.colour);
-        if (left.length === 1) mine.blinks = undefined;
-        draw();
-      };
-      row.appendChild(drop);
-    }
-  });
-  var more = document.createElement("button");
-  more.type = "button";
-  more.className = "blinkmore";
-  more.textContent = "+ another colour";
-  more.title = "blink through several colours, one per blink";
-  // The colour added is a copy of the last, a custom one included, to be changed from there
-  more.onclick = function () {
-    var mine = live();
-    if (!mine.blinks) mine.blinks = {colours: [mine.colour], at: 0};
-    var colours = mine.blinks.colours;
-    colours.push(colours[colours.length - 1]);
-    choose(colours.length - 1);
-  };
-  row.appendChild(more);
-  pick.insertBefore(row, pick.firstChild);
-});
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
 // The new lamps are carried what the output played, both ways, broken out into three mono
@@ -7194,16 +6925,6 @@ function boardIcon() {
   return svg;
 }
 
-// ---- the facts, in place --------------------------------------------------------------------
-
-// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
-// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
-function noArrow() {
-  var none = document.createElement("span");
-  none.style.position = "absolute";
-  return none;
-}
-
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
@@ -7255,19 +6976,7 @@ function renderLeds(where, run) {
   box.appendChild(stretchCount(run));
   headSteps(box, run);
 }
-
-// ---- turning setup on ------------------------------------------------------------------------
-
-function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
-}
+stripDrawing.leds = renderLeds;
 
 drawSteps.after.push(function () {
   renderOutFacts();
@@ -7276,6 +6985,74 @@ drawSteps.after.push(function () {
   if (setupOn) unmark();
   paintAll();
 });
+
+// A strip's chip, its length and its order or brightness to set, shown while the board is set up
+function renderStripChip(where, run) {
+  var box = document.getElementById(where);
+  box.textContent = "";
+  var chip = document.createElement("div");
+  chip.className = "chip strip";
+  chip.appendChild(document.createTextNode("Strip"));
+  var count = document.createElement("input");
+  count.type = "number";
+  count.min = STRIP_FEWEST;
+  count.max = STRIP_MOST;
+  count.value = run.leds;
+  count.onchange = function () {
+    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
+                                                           STRIP_FEWEST));
+    if (want === run.leds) return;
+    stripSet(run, {leds: want});
+    settle();
+    draw();
+  };
+  chip.appendChild(count);
+  var unit = document.createElement("small");
+  unit.textContent = "LEDs";
+  chip.appendChild(unit);
+  chip.appendChild(stripChipChoice(run));
+  box.appendChild(chip);
+  var says = document.createElement("span");
+  says.className = "says";
+  says.textContent = "shared by every scene";
+  box.appendChild(says);
+}
+
+// A strip not fitted offers to be added, which only editing the board can take up, or says
+// why it cannot be
+function renderStripOut(box, run, panel) {
+  box.textContent = "";
+  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var blocked = stripBlockedBy(run);
+  if (blocked) {
+    var why = document.createElement("span");
+    why.className = "stripblocked says";
+    why.textContent = blocked;
+    box.appendChild(why);
+    return;
+  }
+  var add = document.createElement("button");
+  add.type = "button";
+  add.className = "addstrip";
+  add.textContent = "add this strip";
+  add.disabled = !canEdit(panel);
+  add.onclick = function () {
+    stripThere(run, true);
+    workOn(panel);
+    draw();
+  };
+  box.appendChild(add);
+}
+
+// Each section is only ever seen on its own here, so each keeps its own stretch's settings
+// whichever is worked on, and none changes height when another tab is chosen. The outputs'
+// are for whichever of their two sides was last worked on
+var lastOutputRun = outs;
+
+// Set the output run last worked on
+function setLastOutputRun(run) {
+  lastOutputRun = run;
+}
 
 // ---- the wiring ---------------------------------------------------------------------------------
 // The wiring row over the outputs and each strip's header row, with their steps back and on, and
@@ -7627,6 +7404,16 @@ drawSteps.after.push(function () {
 // The lines run between things the page has laid out, so they follow the layout
 window.addEventListener("resize", function () { if (setupOn) draw(); });
 
+// ---- the facts, in place --------------------------------------------------------------------
+
+// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
+// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
+function noArrow() {
+  var none = document.createElement("span");
+  none.style.position = "absolute";
+  return none;
+}
+
 // ---- the LED sections, for a page that shows one at a time ----------------------------------
 // The outputs and each strip, which the gallery can give a look to, as against the screens,
 // which it cannot. A page showing one at a time makes the one shown the one worked on, so
@@ -7798,13 +7585,8 @@ function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-// Each section is only ever seen on its own here, so each keeps its own stretch's settings
-// whichever is worked on, and none changes height when another tab is chosen. The outputs'
-// are for whichever of their two sides was last worked on
-var lastOutputRun = outs;
-
 drawSteps.after.push(function () {
-  if (!active.strip) lastOutputRun = active;
+  if (!active.strip) setLastOutputRun(active);
   if (active.strip) renderChosen("outChosen", lastOutputRun);
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
     renderChosen(run.id + "Chosen", run);
@@ -7835,6 +7617,19 @@ drawSteps.after.push(function () {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }());
+
+// ---- turning setup on ------------------------------------------------------------------------
+
+function setupButton(label, on, act) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "setupbutton" + (on ? " on" : "");
+  // The board's chip, as every board setting wears it, since this is where they open
+  button.appendChild(boardIcon());
+  button.appendChild(document.createTextNode(label));
+  button.addEventListener("click", act);
+  return button;
+}
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -7939,6 +7734,11 @@ var screensHeadSteps = {instead: [], after: []};
 // as the hub's positions, the whole pictures and the hub's groups
 var assetSteps = [];
 
+// What the screens parts after this one lend to this one and the art, filled in as they load:
+// madeDrawing(name) from the art, screenEntry(letter, body) and readScreens(bodies) from the text,
+// turnForChosen(letter) from the settings and renderTab() from the tab
+var screenParts = {};
+
 function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
 }
@@ -8000,12 +7800,12 @@ bodyParts.push({
   // A scene's screens are written after its lamps
   entries: function (body, lines) {
     SCREENS.forEach(function (letter) {
-      var entry = body.screens && screenEntry(letter, body);
+      var entry = body.screens && screenParts.screenEntry(letter, body);
       if (entry) lines.push(entry);
     });
     return lines;
   },
-  read: readScreens
+  read: function () { return screenParts.readScreens.apply(null, arguments); }
 });
 
 // The board line gives a screen's size only where some scene shows something on it or turns it
@@ -8101,7 +7901,7 @@ driveParts.push({
     // A drawing cannot run in the page, so one without a thumbnail is shown by a face made from
     // its opening string
     mediaFound.forEach(function (one) {
-      if (one.kind === "drawing" && !one.thumbHandle) madeDrawing(one.name);
+      if (one.kind === "drawing" && !one.thumbHandle) screenParts.madeDrawing(one.name);
     });
   },
   said: function () {
@@ -8177,6 +7977,80 @@ function screenUnder(letter) {
     return scene.body.screens && (scene.body.screens[letter].shows || scene.body.screens[letter].off);
   });
   return by.length ? {off: by} : null;
+}
+
+// A line of a drawing's opening string that says how to show it
+var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles|Firmware):\s*(.+?)\s*$/;
+
+// What an opening string says of a drawing, or null for a file that is not one. Its defaults are
+// the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
+// 90 or 270, Pixel double = true"
+function drawingSaid(docstring) {
+  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {},
+              styles: []};
+  var rest = docstring.split("\n").filter(function (line) {
+    var field = line.match(DRAWING_LINE);
+    if (!field) return true;
+    if (field[1] === "Styles") {
+      // A choice the drawing offers, a line each, the first in a line being the one it takes
+      // where none is chosen
+      var choices = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
+      if (choices.length) said.styles.push(choices);
+    } else if (field[1] === "Defaults") {
+      field[2].split(",").map(argumentFrom).forEach(function (setting) {
+        said.defaults[setting.name] = setting;
+      });
+    } else {
+      said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
+    }
+    return false;
+  }).join(" ").split(/\s+/).join(" ").trim();
+  if (!said.title) return null;
+  var first = rest.match(/^(.*?\.)(\s|$)/);
+  said.description = first ? first[1] : rest;
+  return said;
+}
+
+var drawingArts = {};
+
+// What each file last showed on a screen, composed with its look, by name
+var shownBefore = {};
+
+// Every style word a drawing could be drawn in but its first, each one a thumbnail can be named for
+function styleWords(drawing) {
+  var words = [[]];
+  drawing.styles.forEach(function (line) {
+    var grown = [];
+    words.forEach(function (word) {
+      line.forEach(function (choice, at) { grown.push(at ? word.concat([choice]) : word); });
+    });
+    words = grown;
+  });
+  return words.filter(function (word) { return word.length; }).map(function (word) {
+    return word.join("-");
+  });
+}
+
+// ---- the pictures on the drive ------------------------------------------------------------------
+// A screen can show gifs and stills, PNG or JPEG, folders of them, which play as a slideshow,
+// and drawings
+
+var mediaFound = [];
+
+// Set the pictures and drawings found on the drive
+function setMediaFound(list) {
+  mediaFound = list;
+}
+
+// ---- what is showing, and every section under it ----
+
+// A picture's name as a person reads it, or a drawing's title
+function pictureSaid(name) {
+  var media = mediaNamed(name);
+  if (media && media.kind === "drawing") return media.drawing.title;
+  // A slideshow of the user's own is a path from the drive's top, an example plainly its name
+  if (isExampleMedia(name)) return nameShown(name);
+  return media && media.kind === "folder" ? "/" + name : name;
 }
 
 // ---- the screens drawn --------------------------------------------------------------------------
@@ -8310,128 +8184,6 @@ function panelDrawing(screen) {
   return holder;
 }
 
-function renderScreensHead() {
-  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
-    document.getElementById("screensHead").classList.remove("hubbed");
-    renderScreenBoxes();
-  }
-  screensHeadSteps.after.forEach(function (step) { step(); });
-}
-
-// A box for each screen port. A screen's box has the backlight across its top, what it shows
-// straight under the module, and its look's sections under that
-function renderScreenBoxes() {
-  var box = document.getElementById("screensHead");
-  box.textContent = "";
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    var side = document.createElement("div");
-    side.className = "screen-box " + letter.toLowerCase();
-    var head = document.createElement("h3");
-    head.appendChild(document.createTextNode(screenShown(letter)));
-    side.appendChild(head);
-
-    var body = document.createElement("div");
-    body.className = "body";
-    side.appendChild(body);
-
-    if (!screen.there) {
-      body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
-      add.onclick = function () {
-        screen.there = true;
-        screen.shows = null;
-        screen.kept = null;
-        draw();
-      };
-      body.appendChild(add);
-      box.appendChild(side);
-      return;
-    }
-
-    // Taking the screen out is the only way to have none, as a screen showing nothing would
-    // say the same thing twice
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this screen from every scene";
-    drop.onclick = function () {
-      screen.there = false;
-      // Every scene's choice for it goes too, since nothing is left to show them
-      store();
-      allBodies().forEach(function (held) {
-        held.screens[letter].shows = null;
-        held.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
-
-    var size = document.createElement("select");
-    // The sizes a panel can be, the catalogue's hub being no panel size
-    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
-      .filter(function (inches) { return inches !== "hub"; });
-    if (!screen.size) {
-      var quiet = document.createElement("option");
-      quiet.value = "";
-      quiet.textContent = "fitted size";
-      quiet.selected = true;
-      size.appendChild(quiet);
-    }
-    offered.forEach(function (inches) {
-      var option = document.createElement("option");
-      option.value = inches;
-      option.textContent = inches + " inch";
-      if (screen.size === inches) option.selected = true;
-      size.appendChild(option);
-    });
-    size.onchange = function () {
-      if (size.value) screen.size = size.value;
-      draw();
-    };
-    size.className = "inband";
-    size.title = "Panel fitted, shared by every scene";
-    head.insertBefore(size, drop);
-
-    body.appendChild(previewInScene(screen, letter));
-
-    // The look's sections, what it shows above them, and its backlight across the top. A screen
-    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
-    var under = screen.shows ? null : screenUnder(letter);
-    var held = screen;
-    if (under && under.always) {
-      var always = state.always.body.screens[letter];
-      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
-                                        look: always.look || screen.look});
-    }
-    var sections = lookSections("screen" + letter, held, screen.size);
-    var light = lightRow(held.look.backlight, function (value) {
-      screen.look.backlight = value;
-    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
-    if (held !== screen) {
-      frozen(sections);
-      frozen(light);
-    }
-    body.appendChild(sections);
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(light, body.firstChild);
-
-    // What the file already says for this screen, where the picker did not write it
-    // and no picture can stand for it. It is a line of its own under the settings
-    if (screen.kept) {
-      var keep = document.createElement("button");
-      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
-      keep.title = screen.kept;
-      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
-      keep.onclick = function () { screen.shows = "keep"; draw(); };
-      side.appendChild(keep);
-    }
-    box.appendChild(side);
-  });
-}
-
 // ---- pictures, read off the drive in turn ------------------------------------------------------
 // The drive is slow to read, so pictures come off it one at a time, those a screen or hub position
 // shows in any scene first and the rest of the gallery after them
@@ -8513,26 +8265,6 @@ function mediaArt(name, style) {
   return styled ? mediaArt(name) : null;
 }
 
-// ---- drawing the tab -------------------------------------------------------------------------
-
-// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
-// board's
-function renderScreensParts() {
-  renderScreensHead();
-  renderAssets();
-  var head = document.getElementById("screensHead");
-  // The band is the screen's coloured box, so it wears the board's chip like the others
-  head.querySelectorAll(".screen-box h3").forEach(function (band) {
-    band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
-  });
-  // Whether a screen is fitted and its size are the board's
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
-      .forEach(function (control) { control.disabled = true; });
-  }
-}
-
 // The tab's swatch is the two screens, each showing what its screen shows
 tabSwatches.screensPanel = function (swatch) {
   swatch.textContent = "";
@@ -8586,11 +8318,13 @@ function sizesUnderName() {
 
 // A picture newly chosen is given its starting turn before anything else is drawn, since
 // writing the file applies every scene in turn and would take it as already chosen
-drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
+drawSteps.before.push(function () {
+  SCREENS.forEach(function (letter) { screenParts.turnForChosen(letter); });
+});
 
 drawSteps.after.push(function () {
   sizesUnderName();
-  renderScreensTab();
+  screenParts.renderTab();
 });
 
 (function () {
@@ -8679,38 +8413,6 @@ function nameHue(name) {
   return (hash >>> 0) % 360;
 }
 
-// A line of a drawing's opening string that says how to show it
-var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles|Firmware):\s*(.+?)\s*$/;
-
-// What an opening string says of a drawing, or null for a file that is not one. Its defaults are
-// the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
-// 90 or 270, Pixel double = true"
-function drawingSaid(docstring) {
-  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {},
-              styles: []};
-  var rest = docstring.split("\n").filter(function (line) {
-    var field = line.match(DRAWING_LINE);
-    if (!field) return true;
-    if (field[1] === "Styles") {
-      // A choice the drawing offers, a line each, the first in a line being the one it takes
-      // where none is chosen
-      var choices = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
-      if (choices.length) said.styles.push(choices);
-    } else if (field[1] === "Defaults") {
-      field[2].split(",").map(argumentFrom).forEach(function (setting) {
-        said.defaults[setting.name] = setting;
-      });
-    } else {
-      said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
-    }
-    return false;
-  }).join(" ").split(/\s+/).join(" ").trim();
-  if (!said.title) return null;
-  var first = rest.match(/^(.*?\.)(\s|$)/);
-  said.description = first ? first[1] : rest;
-  return said;
-}
-
 // A drawing's colour as a CSS colour, from a word the board knows, a hex, or its name
 function drawingInk(drawing, name) {
   var word = WORDS[drawing.colour.toLowerCase()];
@@ -8718,8 +8420,6 @@ function drawingInk(drawing, name) {
   if (/^#?[0-9a-f]{6}$/i.test(drawing.colour)) return "#" + drawing.colour.replace("#", "");
   return "hsl(" + nameHue(name) + ",60%,45%)";
 }
-
-var drawingArts = {};
 
 // A drawing at a canvas's size, for where a picture's pixels are drawn. Its thumbnail covers the
 // canvas, or where it has none its colour fills the canvas with its icon or initial in the middle
@@ -8774,6 +8474,7 @@ function madeDrawing(name) {
   state.art[name] = drawingArt(name, 240, 240);
   state.art[name].face = true;
 }
+screenParts.madeDrawing = madeDrawing;
 
 // ---- drawing a look on the module -------------------------------------------------------------
 
@@ -8916,9 +8617,6 @@ function nextGifFrame(playing, gif) {
   }).catch(function () {});
 }
 
-// What each file last showed on a screen, composed with its look, by name
-var shownBefore = {};
-
 // A screen module drawn showing its picture composed with its look, and a gif playing in it
 function panelPreview(screen) {
   var style = screen.look ? screen.look.style : "";
@@ -8956,21 +8654,6 @@ function styleChoices(drawing, style) {
 // drawing drawn as it is unchosen writes no style
 function styleWord(drawing, choices) {
   return choices.filter(function (choice, at) { return choice !== drawing.styles[at][0]; }).join("-");
-}
-
-// Every style word a drawing could be drawn in but its first, each one a thumbnail can be named for
-function styleWords(drawing) {
-  var words = [[]];
-  drawing.styles.forEach(function (line) {
-    var grown = [];
-    words.forEach(function (word) {
-      line.forEach(function (choice, at) { grown.push(at ? word.concat([choice]) : word); });
-    });
-    words = grown;
-  });
-  return words.filter(function (word) { return word.length; }).map(function (word) {
-    return word.join("-");
-  });
 }
 
 // The style word of the thumbnail nearest a style, whatever order its choices were written in. A
@@ -9824,17 +9507,8 @@ function readScreens(bodies) {
     boardResidue.splice(boardResidue.indexOf(sizes[letter].token), 1);
   });
 }
-
-// ---- the pictures on the drive ------------------------------------------------------------------
-// A screen can show gifs and stills, PNG or JPEG, folders of them, which play as a slideshow,
-// and drawings
-
-var mediaFound = [];
-
-// Set the pictures and drawings found on the drive
-function setMediaFound(list) {
-  mediaFound = list;
-}
+screenParts.screenEntry = screenEntry;
+screenParts.readScreens = readScreens;
 
 // Colours the file can say by name, the words the board knows, the rest written as hex
 var BG_NAMES = {};
@@ -9965,26 +9639,6 @@ function playbackSaid(held, look) {
               (look.holdBack && secondHoldAllowed(held, look) ? " and " + look.holdBack + " s"
                                                               : ""));
   return said.join(", ");
-}
-
-// The speed's line, kept to one line, with its choices, the figure and what the figure counts
-function speedLine(speed, every, look) {
-  var line = sline(named("Speed"), speed, every,
-                   every ? unit(look.pace === "fps" ? "frames per second" : "seconds per frame")
-                         : null);
-  line.classList.add("speedline");
-  return line;
-}
-
-// ---- what is showing, and every section under it ----
-
-// A picture's name as a person reads it, or a drawing's title
-function pictureSaid(name) {
-  var media = mediaNamed(name);
-  if (media && media.kind === "drawing") return media.drawing.title;
-  // A slideshow of the user's own is a path from the drive's top, an example plainly its name
-  if (isExampleMedia(name)) return nameShown(name);
-  return media && media.kind === "folder" ? "/" + name : name;
 }
 
 // ---- what the file says ------------------------------------------------------------------------
@@ -11497,6 +11151,11 @@ function pickPlace(place) {
   placePicked = place;
 }
 
+// What the hub parts after this one lend to it, filled in as they load: placeGroups(body),
+// breakingUp(places) and sendTargets() from the groups, hubEntry(group), offHubEntries(body),
+// readBoard() and read(bodies) from the text, and renderHead() and hubSwitch() from the view
+var hubParts = {};
+
 // Whether a position has a panel to show on, its size being "" where it has none
 function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
@@ -11580,15 +11239,15 @@ bodyParts.push({
     return set ? ["hub", "Screen Hub"] : null;
   },
   // The board line's hub is read before any scene's lines, since screens write none through a hub
-  readBoard: readHubBoard,
-  read: readHubLines
+  readBoard: function () { return hubParts.readBoard.apply(null, arguments); },
+  read: function () { return hubParts.read.apply(null, arguments); }
 });
 
 bodyParts.push({
   entries: function (body, lines) {
     if (!state.hub.on) return lines;
-    placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
-    offHubEntries(body).forEach(function (one) { lines.push(one.line); });
+    hubParts.placeGroups(body).forEach(function (group) { lines.push(hubParts.hubEntry(group)); });
+    hubParts.offHubEntries(body).forEach(function (one) { lines.push(one.line); });
     return lines;
   }
 });
@@ -11632,14 +11291,14 @@ var hubHeadSteps = [];
 // the screens' boxes above
 screensHeadSteps.instead.push(function () {
   if (!state.hub.on) return false;
-  renderHubHead();
+  hubParts.renderHead();
   return true;
 });
 
 screensHeadSteps.after.push(function () {
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
-  facts.appendChild(hubSwitch());
+  facts.appendChild(hubParts.hubSwitch());
 });
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
@@ -11698,7 +11357,7 @@ assetSteps.push(function () {
   pick.textContent = "";
 
   function turn(places, off) {
-    var breaking = off ? [] : breakingUp(places);
+    var breaking = off ? [] : hubParts.breakingUp(places);
     places.forEach(function (place) {
       var held = state.places[place];
       held.off = off;
@@ -11707,7 +11366,7 @@ assetSteps.push(function () {
     breaking.forEach(function (place) { state.places[place].group = place; });
   }
 
-  sendTargets().forEach(function (target) {
+  hubParts.sendTargets().forEach(function (target) {
     var off = target.places.every(function (place) { return state.places[place].off; });
     var button = document.createElement("button");
     button.type = "button";
@@ -11799,6 +11458,22 @@ drawSteps.after.push(function () {
   says.hidden = true;
 }());
 
+// ---- what the file says ----------------------------------------------------------------------
+
+// Positions as the file names them, a run of neighbours as a range, such as "A-C,E"
+function placesSaid(places) {
+  var said = [];
+  var at = 0;
+  while (at < places.length) {
+    var end = at;
+    while (end + 1 < places.length &&
+           HUB_PLACES.indexOf(places[end + 1]) === HUB_PLACES.indexOf(places[end]) + 1) end++;
+    said.push(end > at ? places[at] + "-" + places[end] : places[at]);
+    at = end + 1;
+  }
+  return said.join(",");
+}
+
 // ---- a screen's settings ------------------------------------------------------------------------
 // The chosen screen's settings, its orientation, placement, background, drawing and playback,
 // each kept in the scene.
@@ -11806,6 +11481,7 @@ drawSteps.after.push(function () {
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
 // last looked at says whether it is newly chosen, and a scene coming round brings its own turn
 function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
+screenParts.turnForChosen = turnForChosen;
 
 SCREENS.forEach(function (letter) { state.screens[letter].look = freshLook(); });
 Object.keys(WORDS).forEach(function (name) { BG_NAMES["#" + hexOf(WORDS[name])] = name; });
@@ -12619,6 +12295,15 @@ function drawingDoubled(drawing) {
   return doubled["default"] === "true";
 }
 
+// The speed's line, kept to one line, with its choices, the figure and what the figure counts
+function speedLine(speed, every, look) {
+  var line = sline(named("Speed"), speed, every,
+                   every ? unit(look.pace === "fps" ? "frames per second" : "seconds per frame")
+                         : null);
+  line.classList.add("speedline");
+  return line;
+}
+
 // ---- the hub's positions in groups -----------------------------------------------------------
 // With a look beside every picture, two positions showing the same picture could differ in a
 // setting no drawing makes plain, and so be sent apart. So positions are put in groups, and a
@@ -13001,6 +12686,43 @@ function plainness(send) {
   return differences(send, {places: send.places,
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
 }
+
+// What a position plays, as a key. Positions with the same key are one entry, and one stream.
+// Panels of different sizes are sent apart, so the size is part of it. They are one send where
+// the file would say the same for them, so a setting a picture does not take, such as a still's
+// pace, or one the page only remembers, such as the last custom colour, never splits them.
+//
+// One entry plays one drawing on every position it names, where entries of their own each run
+// it afresh, so a drawing joins others only in a numbered group
+function playingKey(playing, place) {
+  var look = playing.look || LOOK_START;
+  var size = state.hub.sizes[place];
+  var where = pictureOffset(look, playing.shows, size, playing.turn);
+  var kind = kindOf(playing.shows);
+  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
+  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
+    .concat(playingTokens(playing, look, kind, size)).join("|");
+}
+
+// The positions of one scene, gathered into what each different picture is sent to
+function placeGroups(body) {
+  var groups = [];
+  var byKey = {};
+  placesThere().forEach(function (place) {
+    var playing = body.places && body.places[place];
+    if (!playing || !playing.shows) return;
+    var key = playingKey(playing, place);
+    if (!byKey[key]) {
+      byKey[key] = {playing: playing, places: []};
+      groups.push(byKey[key]);
+    }
+    byKey[key].places.push(place);
+  });
+  return groups;
+}
+hubParts.placeGroups = placeGroups;
+hubParts.breakingUp = breakingUp;
+hubParts.sendTargets = sendTargets;
 
 // ---- the two screens paired -------------------------------------------------------------------
 // Two screens paired in a scene show one picture or drawing, played once and sent to both in
@@ -13437,6 +13159,7 @@ function renderPreview() {
                                    : stale + " reported lines have since changed.";
   }
 }
+drawParts.preview = renderPreview;
 
 document.getElementById("save").onclick = async function () {
   var button = this;
@@ -13544,56 +13267,6 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page needs Chrome or Edge to reach the drive.");
-}
-
-// ---- what the file says ----------------------------------------------------------------------
-
-// Positions as the file names them, a run of neighbours as a range, such as "A-C,E"
-function placesSaid(places) {
-  var said = [];
-  var at = 0;
-  while (at < places.length) {
-    var end = at;
-    while (end + 1 < places.length &&
-           HUB_PLACES.indexOf(places[end + 1]) === HUB_PLACES.indexOf(places[end]) + 1) end++;
-    said.push(end > at ? places[at] + "-" + places[end] : places[at]);
-    at = end + 1;
-  }
-  return said.join(",");
-}
-
-// What a position plays, as a key. Positions with the same key are one entry, and one stream.
-// Panels of different sizes are sent apart, so the size is part of it. They are one send where
-// the file would say the same for them, so a setting a picture does not take, such as a still's
-// pace, or one the page only remembers, such as the last custom colour, never splits them.
-//
-// One entry plays one drawing on every position it names, where entries of their own each run
-// it afresh, so a drawing joins others only in a numbered group
-function playingKey(playing, place) {
-  var look = playing.look || LOOK_START;
-  var size = state.hub.sizes[place];
-  var where = pictureOffset(look, playing.shows, size, playing.turn);
-  var kind = kindOf(playing.shows);
-  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
-  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
-    .concat(playingTokens(playing, look, kind, size)).join("|");
-}
-
-// The positions of one scene, gathered into what each different picture is sent to
-function placeGroups(body) {
-  var groups = [];
-  var byKey = {};
-  placesThere().forEach(function (place) {
-    var playing = body.places && body.places[place];
-    if (!playing || !playing.shows) return;
-    var key = playingKey(playing, place);
-    if (!byKey[key]) {
-      byKey[key] = {playing: playing, places: []};
-      groups.push(byKey[key]);
-    }
-    byKey[key].places.push(place);
-  });
-  return groups;
 }
 
 // A group's entry. Every position is lit by the hub's one light, so each entry carries it
@@ -13719,6 +13392,10 @@ function readHubLines(bodies) {
     body.hubLight = state.hubLight;
   });
 }
+hubParts.hubEntry = hubEntry;
+hubParts.offHubEntries = offHubEntries;
+hubParts.readBoard = readHubBoard;
+hubParts.read = readHubLines;
 
 // Screens named in the note are bold, so "A plays" reads as the screen and not as a word. The
 // letters and their commas and dashes are all the markup holds
@@ -13961,6 +13638,149 @@ function renderScreensTab() {
     band.title = "";
   });
 }
+screenParts.renderTab = renderScreensTab;
+
+// A box for each screen port. A screen's box has the backlight across its top, what it shows
+// straight under the module, and its look's sections under that
+function renderScreenBoxes() {
+  var box = document.getElementById("screensHead");
+  box.textContent = "";
+  SCREENS.forEach(function (letter) {
+    var screen = state.screens[letter];
+    var side = document.createElement("div");
+    side.className = "screen-box " + letter.toLowerCase();
+    var head = document.createElement("h3");
+    head.appendChild(document.createTextNode(screenShown(letter)));
+    side.appendChild(head);
+
+    var body = document.createElement("div");
+    body.className = "body";
+    side.appendChild(body);
+
+    if (!screen.there) {
+      body.className = "body adding";
+      var add = document.createElement("button");
+      add.textContent = "add this screen";
+      add.onclick = function () {
+        screen.there = true;
+        screen.shows = null;
+        screen.kept = null;
+        draw();
+      };
+      body.appendChild(add);
+      box.appendChild(side);
+      return;
+    }
+
+    // Taking the screen out is the only way to have none, as a screen showing nothing would
+    // say the same thing twice
+    var drop = document.createElement("button");
+    drop.className = "drop";
+    drop.textContent = "\u00d7";
+    drop.title = "Remove this screen from every scene";
+    drop.onclick = function () {
+      screen.there = false;
+      // Every scene's choice for it goes too, since nothing is left to show them
+      store();
+      allBodies().forEach(function (held) {
+        held.screens[letter].shows = null;
+        held.screens[letter].kept = null;
+      });
+      apply(slotAt(state.at).body);
+      draw();
+    };
+    head.appendChild(drop);
+
+    var size = document.createElement("select");
+    // The sizes a panel can be, the catalogue's hub being no panel size
+    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
+      .filter(function (inches) { return inches !== "hub"; });
+    if (!screen.size) {
+      var quiet = document.createElement("option");
+      quiet.value = "";
+      quiet.textContent = "fitted size";
+      quiet.selected = true;
+      size.appendChild(quiet);
+    }
+    offered.forEach(function (inches) {
+      var option = document.createElement("option");
+      option.value = inches;
+      option.textContent = inches + " inch";
+      if (screen.size === inches) option.selected = true;
+      size.appendChild(option);
+    });
+    size.onchange = function () {
+      if (size.value) screen.size = size.value;
+      draw();
+    };
+    size.className = "inband";
+    size.title = "Panel fitted, shared by every scene";
+    head.insertBefore(size, drop);
+
+    body.appendChild(previewInScene(screen, letter));
+
+    // The look's sections, what it shows above them, and its backlight across the top. A screen
+    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
+    var under = screen.shows ? null : screenUnder(letter);
+    var held = screen;
+    if (under && under.always) {
+      var always = state.always.body.screens[letter];
+      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
+                                        look: always.look || screen.look});
+    }
+    var sections = lookSections("screen" + letter, held, screen.size);
+    var light = lightRow(held.look.backlight, function (value) {
+      screen.look.backlight = value;
+    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
+    if (held !== screen) {
+      frozen(sections);
+      frozen(light);
+    }
+    body.appendChild(sections);
+    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+    body.insertBefore(light, body.firstChild);
+
+    // What the file already says for this screen, where the picker did not write it
+    // and no picture can stand for it. It is a line of its own under the settings
+    if (screen.kept) {
+      var keep = document.createElement("button");
+      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
+      keep.title = screen.kept;
+      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
+      keep.onclick = function () { screen.shows = "keep"; draw(); };
+      side.appendChild(keep);
+    }
+    box.appendChild(side);
+  });
+}
+
+// ---- drawing the tab -------------------------------------------------------------------------
+
+// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
+// board's
+function renderScreensParts() {
+  renderScreensHead();
+  renderAssets();
+  var head = document.getElementById("screensHead");
+  // The band is the screen's coloured box, so it wears the board's chip like the others
+  head.querySelectorAll(".screen-box h3").forEach(function (band) {
+    band.insertBefore(boardIcon(), band.firstChild);
+    band.title = "Board setup, shared by every scene";
+  });
+  // Whether a screen is fitted and its size are the board's
+  if (!setupOn) {
+    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
+      .forEach(function (control) { control.disabled = true; });
+  }
+}
+
+function renderScreensHead() {
+  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
+    document.getElementById("screensHead").classList.remove("hubbed");
+    renderScreenBoxes();
+  }
+  screensHeadSteps.after.forEach(function (step) { step(); });
+}
 
 // ---- the board's own settings -----------------------------------------------------------------
 // Three settings belong to the board and to no section. They are whether a save plays without an
@@ -14165,6 +13985,12 @@ var onProgramPage = false;
 function setProgramPage(on) {
   onProgramPage = on;
 }
+
+// The steps run while the programs are read, so the program tab can count them in
+var programsReadingSteps = [];
+
+// The steps run once the programs are read, before the page is drawn
+var programsReadSteps = [];
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
@@ -14378,42 +14204,8 @@ function renderHubHead() {
   box.appendChild(side);
   hubHeadSteps.forEach(function (step) { step(); });
 }
-
-// ---- a scene's own settings, in the screens' style ---------------------------------------
-// Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
-// the screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of
-// theirs is the file's.
-
-function renderSceneSettings() {
-  renderSceneRow();
-  // Check if Always on is shown with scenes for it to play under. It has no settings of its own,
-  // so its row says what it is for, which keeps the gallery where it was as the tabs are switched
-  if (state.at < 0 && state.scenes.length) {
-    var note = document.createElement("div");
-    note.className = "sceneset alwaysnote";
-    note.textContent = "Always on plays under every scene. A scene that uses the " +
-                       "same lights, screen or sound overrides it while showing.";
-    document.getElementById("sceneSettings").appendChild(note);
-    return;
-  }
-  var row = document.querySelector("#sceneSettings .sceneset");
-  if (!row || state.at < 0) return;
-  var scene = state.scenes[state.at];
-  var ticked = row.querySelector("label");
-  if (!ticked) return;
-  // A scene going back to itself always restarts, so its toggle is held on. A scene that never
-  // shows again starts once, so its toggle is greyed
-  var loops = sceneLoops(scene);
-  var once = !sceneShowsAgain(scene);
-  var restart = toggle("&#8630;", "Restart", sceneRestarts(scene),
-                       function (on) { scene.restart = on; },
-                       loops ? "A scene that goes back to itself always restarts"
-                       : once ? "This scene shows only once, so it has nothing to restart"
-                       : "Restart this scene's effects each time it plays, instead of " +
-                         "resuming where they left off", once);
-  restart.disabled = loops || once;
-  row.replaceChild(restart, ticked);
-}
+hubParts.renderHead = renderHubHead;
+hubParts.hubSwitch = hubSwitch;
 
 // ---- how the board takes a save, on the save button ----------------------------------------------
 // Whether a save plays without an eject, and whether the drive stays hidden at start, are about
@@ -14663,7 +14455,6 @@ function programTitle(path) {
 // frame or a drive program's own
 
 var THUMB_W = 160, THUMB_H = 120;
-var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
   var canvas = document.createElement("canvas");
@@ -15275,6 +15066,7 @@ function renderProgramView() {
   }
   programViewSteps.forEach(function (step) { step(); });
 }
+programsReadingSteps.push(renderProgramView);
 
 // What the parts after this one add to the program tab once its programs are listed
 var programViewSteps = [];
@@ -15690,6 +15482,11 @@ try {
   // Shut where the page may not keep anything
 }
 
+// Open or shut the drawer
+function setFiguresOpen(open) {
+  figuresOpen = open;
+}
+
 // A setting's value in a stretch's lines, without its sign, or null where none names it. A
 // fade is read as its fall, the part after its bar, which is what a trail is
 function settingIn(lines, key) {
@@ -15740,133 +15537,6 @@ function placeFor(run, section, look, slider, key, value) {
   }
   return {place: best, off: nearest};
 }
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look) return;
-  function live() { return run.sections[run.picked]; }
-  tuning.classList.toggle("figuresopen", figuresOpen);
-
-  var ranges = Array.prototype.slice.call(tuning.querySelectorAll("input[type=range]"));
-  var boxes = [];
-  ranges.forEach(function (range) {
-    var slider = (range.dataset.focus || "").split("-").pop();
-    var cells, way = null, key = null, widest = 3;
-    var timing = range.dataset.timing;
-    if (timing) {
-      // A signal's timing is its seconds already, typed past the slider's ends as it is
-      widest = Math.max(String(range.min).length, String(range.max).length) + 2;
-      cells = figureCells(figureSaid(Number(range.value)), "s",
-                          "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
-        var mine = live();
-        mine.timings = Object.assign({}, mine.timings);
-        mine.timings[timing] = Math.round(typed * 100) / 100;
-      });
-    } else if (slider === "mood" && look.mood === "Palette") {
-      // A palette is its colours, not a number, so its slot shows them
-      var swatches = document.createElement("span");
-      swatches.className = "figurebox paletteswatches";
-      paintPalette(swatches, sectionLines(run, section, look));
-      // Across the box and unit columns, from where the boxes start, being wider than a box
-      swatches.style.gridColumn = "span 2";
-      cells = [swatches, null];
-    } else if (slider === "level") {
-      var bright = section.level === undefined ? 1 : section.level;
-      cells = figureCells(String(Math.round(bright * 100)), "%",
-                          "brightness, typed as a percentage", function (typed) {
-        live().level = Math.max(0.01, Math.min(1, typed / 100));
-      });
-    } else if (slider === "pace" || slider === "mood") {
-      key = figureKey(run, section, look, slider);
-      if (key) {
-        way = figureWay(key, look);
-        // As wide as the widest figure the slider can reach, so dragging it never resizes its
-        // column and with it the slider
-        [0, 0.5, 1].forEach(function (place) {
-          var reach = figureSaid(way.show(settingIn(linesAt(run, section, look, slider, place),
-                                                   key)));
-          widest = Math.max(widest, reach.length);
-        });
-        var typedHere = section.exact && section.exact[slider];
-        var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
-        cells = figureCells(figureSaid(way.show(value)), way.unit,
-                            "the file's " + key + ", typed exactly, beyond the slider's range if needed",
-                            function (typed) {
-          var wanted = way.take(typed);
-          var mine = live();
-          var found = placeFor(run, mine, look, slider, key, wanted);
-          mine[slider] = found.place;
-          mine.exact = Object.assign({}, mine.exact);
-          if (found.off > 1e-6) {
-            mine.exact[slider] = {key: key, value: Math.round(wanted * 1000) / 1000};
-          } else {
-            delete mine.exact[slider];
-          }
-        });
-      }
-    } else {
-      return;
-    }
-    // Check if the slider has no one figure
-    if (!cells) {
-      // Keep the row's cells, empty, so the columns stay whole
-      cells = [document.createElement("span"), document.createElement("span")];
-      cells[0].className = "figurebox";
-      cells[1].className = "figureunit";
-    }
-    if (cells[0].tagName === "INPUT") {
-      // A figure typed past the slider's end, wider than any it reaches, widens the box to fit
-      boxes.push({box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length)});
-    }
-    if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);
-    range.parentNode.insertBefore(cells[0], range.nextSibling);
-
-    // Moved, the slider is the setting again, and its figure follows it
-    var moved = range.oninput;
-    range.oninput = function () {
-      var mine = live();
-      if (mine.exact && mine.exact[slider]) {
-        mine.exact = Object.assign({}, mine.exact);
-        delete mine.exact[slider];
-      }
-      if (moved) moved.call(range);
-      if (cells[0].classList.contains("paletteswatches")) {
-        paintPalette(cells[0], sectionLines(run, mine, look));
-        return;
-      }
-      if (cells[0].tagName !== "INPUT") return;
-      if (timing) cells[0].value = figureSaid(Number(range.value));
-      else if (slider === "level") cells[0].value = String(Math.round(Number(range.value) * 100));
-      else cells[0].value = figureSaid(way.show(settingIn(sectionLines(run, mine, look), key)));
-    };
-  });
-
-  // Every box in the panel as wide as the widest, so they line up and none moves as it changes
-  var chars = boxes.reduce(function (most, one) { return Math.max(most, one.chars); }, 3);
-  boxes.forEach(function (one) { one.box.style.width = (chars + 0.5) + "ch"; });
-
-  // The drawer's handle, down the right of the sliders, which opens and shuts every figure
-  var handle = document.createElement("button");
-  handle.type = "button";
-  handle.className = "figurehandle";
-  handle.textContent = figuresOpen ? "\u203a" : "\u2039";
-  handle.title = figuresOpen ? "hide values" : "show values";
-  handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
-  handle.style.gridRow = "1 / span " + ranges.length;
-  handle.onclick = function () {
-    figuresOpen = !figuresOpen;
-    try {
-      window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
-    } catch (e) {
-      // Kept only for this visit where the page may not keep anything
-    }
-    draw();
-  };
-  tuning.appendChild(handle);
-});
 
 // ---- the drive's files ---------------------------------------------------------------------------
 // The files on the FX drive. A walk of the drive finds each part's own files, and files are added
@@ -16516,7 +16186,7 @@ async function drivePrograms(dir, ownOnly) {
                                  : null;
     if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
     programsReading = [0, files.length];
-    renderProgramView();
+    programsReadingSteps.forEach(function (step) { step(); });
   }
   for (var i = 0; i < files.length; i++) {
     try {
@@ -16532,7 +16202,7 @@ async function drivePrograms(dir, ownOnly) {
     }
     if (programsReading) {
       programsReading[0] = i + 1;
-      if (i % 8 === 7) renderProgramView();
+      if (i % 8 === 7) programsReadingSteps.forEach(function (step) { step(); });
     }
   }
   if (!ownOnly) programsReading = null;
@@ -16721,9 +16391,11 @@ async function readDrivePrograms() {
   setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
-  readWaitingProgram();
+  programsReadSteps.forEach(function (step) { step(); });
   draw();
 }
+
+var thumbImages = {};
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
@@ -16869,6 +16541,7 @@ function readWaitingProgram() {
   readProgram(named, argued);
   if (!boardSet.program) setProgramPage(page);
 }
+programsReadSteps.push(readWaitingProgram);
 
 // Take a file into the page, with its board line, its scenes and every entry kept in its scene
 function absorbFile(text) {
@@ -16956,13 +16629,6 @@ function wireAsRead(broken) {
   }), order);
   // The plain order is of the wiring just set
   setLayout(wiring, plainOrder());
-}
-
-// Every lamp in number order, an output broken out as its red, green and blue
-function plainOrder() {
-  var plain = [];
-  wiring.forEach(function (one, out) { plain = plain.concat(placesOf(out)); });
-  return plain;
 }
 
 // ---- the wiring, in a comment of the page's own -------------------------------------------------
@@ -19413,123 +19079,6 @@ function carded(run) {
   return !run.strip;
 }
 
-// A stretch's lamps, one for each light it holds, each face kept in faces by the lamp's place
-// in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
-// to drag to its place on the build, and an output that breaks out has its arrow on its tiles
-function cardLamps(run, section, faces) {
-  var row = document.createElement("span");
-  row.className = "cardlamps";
-  var wiring = canEdit("outPanel");
-  for (var at = section.from; at <= section.to; at++) {
-    var lamp = run.lamps[at];
-    var one = document.createElement("span");
-    var channel = !lamp.colour && isChannel(lamp);
-    // A broken-out channel is marked in its channel's colour
-    one.className = "cardlamp" + (channel ? " chan" : "");
-    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-    var playing = lookNamed(section.look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces[at] = face;
-    if (wiring) setUpLamp(one, lamp, channel);
-    row.appendChild(one);
-  }
-  return row;
-}
-
-// Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
-// arrow. Pointing at one channel shows the other two of its output
-function setUpLamp(one, lamp, channel) {
-  takesPlace(one, lamp);
-  one.appendChild(crossing(lamp.out, lamp.colour));
-  if (!channel) return;
-  (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-  one.addEventListener("mouseenter", function () { showKin(lamp.out, true); });
-  one.addEventListener("mouseleave", function () { showKin(lamp.out, false); });
-}
-
-function renderBar(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar" + (carded(run) ? " carded" : "");
-  var faces = [];
-
-  run.sections.forEach(function (section, at) {
-    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
-    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
-    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
-    cell.style.flex = widthOf(section) + " 1 0";
-    var first = run.lamps[section.from];
-    cell.title = (first && first.colour ? "colour" : "mono") + ", " +
-                 targetFor(run, section).selector;
-    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
-
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title = under.tip;
-
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
-                     beneath(under);
-    cell.appendChild(says);
-
-    // Where this stretch can be cut, one place between two lamps
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var i = section.from; i < section.to; i++) {
-      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
-    }
-    cell.appendChild(inside);
-
-    cell.onclick = function () {
-      if (dragged) return;
-      pick(run, at);
-      draw();
-    };
-    bar.appendChild(cell);
-
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click \u00d7 to remove it";
-      edge.onmousedown = function (event) {
-        event.preventDefault();
-        remember(run);
-        // The stretch being resized is the one being worked on, whichever side it is on
-        pick(run, at);
-        // The bar is rebuilt on every move, so what is held onto is where the bar lives
-        // and not the bar itself, which would be a node already thrown away
-        setHolding({run: run, which: at, where: where, had: run.sections.length});
-        edge.classList.add("holding");
-      };
-      // Taking the cut out is its own target, so it is never confused with moving it
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\u00d7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function (event) { event.stopPropagation(); };
-      drop.onclick = function (event) {
-        event.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
-}
-
 function cutPoint(run, after, wide, from) {
   var snip = document.createElement("i");
   snip.className = "cut";
@@ -19763,17 +19312,6 @@ function zoomTo(run, want, at, from) {
   run.scrolled = scroller.scrollLeft;
 }
 
-// ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
-// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
-// stretch playing nothing
-function playsOf(section) {
-  return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
-          custom: section.custom, reversed: section.reversed, level: section.level,
-          blinks: copyBlinks(section.blinks), exact: copyExact(section.exact),
-          timings: copyExact(section.timings)};
-}
-
 function divide(run, ways) {
   var section = run.sections[run.picked];
   if (!section) return;
@@ -19908,6 +19446,8 @@ function fitBars() {
     });
   });
 }
+stripDrawing.bar = renderStripBar;
+stripDrawing.fit = fitBars;
 
 // A look given a colour is drawn in it, and one playing several, as Party does, in those.
 // Any other look is drawn in its card's colours, since one colour in its line is no picture
@@ -20147,6 +19687,371 @@ function figureCells(said, unit, title, take) {
   return [box, units];
 }
 
+// The stretch's settings, with the colour choice in place of a slider that steps tones
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  var memo = box && section && standingIn(run, section);
+  if (memo) {
+    var note = document.createElement("div");
+    note.className = "standin";
+    note.textContent = look.name + ", replacing " + memo.look + ", " +
+                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
+    box.querySelector(".chosen").appendChild(note);
+  }
+  // A count of stops may depend on the stretch, as Spread's lengths do on its lights
+  if (box && look && look.detents) {
+    detented(box, where, typeof look.detents === "function"
+      ? look.detents(targetFor(run, section)) : look.detents);
+  }
+  var wrap = box && box.querySelector(".chosen");
+  if (!wrap || !look) return;
+  var tuning = wrap.querySelector(".tuning");
+  if (!tuning) {
+    tuning = document.createElement("div");
+    tuning.className = "tuning";
+    wrap.appendChild(tuning);
+  }
+  // Solid's own slider is its brightness, so it gives way to the Brightness slider every look has
+  if (look.solid) tuning.textContent = "";
+  // A mono lamp has no colour to be given
+  var first = run.lamps[section.from];
+  var coloured = takesColour(look) && !!first && first.colour;
+  // The second slider steps a table of tones for these looks, and the swatches take
+  // its place. On mono lights it has nothing to set, since a mono light has no colour
+  var mono = !!first && !first.colour;
+  var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
+  if ((coloured || mono) && toneless && tuning.children.length >= 4) {
+    tuning.removeChild(tuning.children[3]);
+    tuning.removeChild(tuning.children[2]);
+  }
+  brightnessSlider(tuning, run, where);
+  // The colour leads and the sliders follow it, brightness the first of them
+  if (coloured) {
+    renderColourPick(wrap, run);
+    wrap.appendChild(tuning);
+  }
+});
+
+// A signal's timings take Speed's place, each a slider in seconds under its own name
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  var tuning = box && box.querySelector(".chosen .tuning");
+  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
+  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
+  var after = speed ? speed.nextSibling : null;
+  if (speed) {
+    tuning.removeChild(speed.previousElementSibling);
+    tuning.removeChild(speed);
+  }
+  // Ease is about every state, so it comes before them, after Brightness
+  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
+  if (ease) {
+    var easeLabel = ease.previousElementSibling;
+    if (after === easeLabel) after = ease.nextSibling;
+    tuning.insertBefore(easeLabel, after);
+    tuning.insertBefore(ease, after);
+    after = ease.nextSibling;
+  }
+  SIGNAL_TIMINGS[look.name].forEach(function (part) {
+    var label = document.createElement("label");
+    label.className = "signalstate";
+    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
+    var range = document.createElement("input");
+    range.style.accentColor = SIGNAL_TINT[part[0]];
+    range.type = "range";
+    range.min = part[3];
+    range.max = part[4];
+    range.step = 0.5;
+    range.value = withSection(section, function () { return timingOf(look.name, part[0]); });
+    range.dataset.focus = where + "-timing-" + part[0];
+    range.dataset.timing = part[0];
+    range.title = "seconds, " + part[1].toLowerCase();
+    range.oninput = function () {
+      var mine = run.sections[run.picked];
+      mine.timings = Object.assign({}, mine.timings);
+      mine.timings[part[0]] = Number(range.value);
+      renderPreview();
+    };
+    tuning.insertBefore(label, after);
+    tuning.insertBefore(range, after);
+  });
+});
+
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var tuning = box && box.querySelector(".chosen .tuning");
+  if (!tuning) return;
+  // Every slider keeps the picked stretch's colours on the bar in step as it moves, since one
+  // such as Palette changes them, and redraws the panel once let go. A slider's own handler
+  // plays only the preview, which would leave the bar showing the colours from before
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function (range) {
+    var moved = range.oninput;
+    range.oninput = function () {
+      if (moved) moved.call(range);
+      var live = run.sections[run.picked];
+      var cell = barCells(run)[run.picked];
+      var wash = cell && cell.querySelector(".lit");
+      if (wash && look) wash.style.background = washFor(run, live, look);
+    };
+    if (!range.onchange) range.onchange = function () { draw(); };
+  });
+  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function (label) {
+    var drawn = SETTING_ICONS[label.textContent];
+    if (!drawn || label.querySelector(".settingicon")) return;
+    if (label.textContent === "Fade") {
+      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
+    }
+    label.classList.add("withicon");
+    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
+                                           "aria-hidden='true'>" + drawn + "</svg>");
+  });
+});
+
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var who = box && box.querySelector(".chosen .who");
+  var section = run && run.sections[run.picked];
+  if (!who || !section) return;
+  var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
+  who.innerHTML = "";
+  var named = document.createElement("b");
+  named.textContent = look ? look.name : "Nothing";
+  who.appendChild(named);
+  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
+  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
+  who.title = targetFor(run, section).selector;
+  // A stretch the scene leaves empty says what the board plays there, and how to change it
+  if (under) {
+    var hint = document.createElement("div");
+    hint.className = "underhint";
+    hint.textContent = under.tip + " Choose a look to give this scene its own.";
+    who.parentNode.insertBefore(hint, who.nextSibling);
+  }
+});
+
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var who = box && box.querySelector(".chosen .who");
+  if (!section || !who) return;
+  // The name and its count stay one piece of text, the toggle set apart at the end
+  var named = document.createElement("span");
+  while (who.firstChild) named.appendChild(who.firstChild);
+  who.appendChild(named);
+  who.classList.add("withway");
+  if (run.strip) who.appendChild(splitTools(where, run));
+  who.appendChild(directionToggle(run, section));
+});
+
+// ---- blinking through several colours, on the chosen stretch ------------------------------------
+// The chips of the colours Blink steps through, drawn among the chosen stretch's settings.
+
+// Above the swatches, the colours it blinks through, each a chip that the picker changes
+// while it is chosen, with a way to add another and to take one away
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var pick = box && box.querySelector(".chosen .colourpick");
+  var first = section && run.lamps[section.from];
+  if (!pick || section.look !== BLINK || !first || !first.colour) return;
+  function live() { return run.sections[run.picked]; }
+  var blinks = section.blinks || {colours: [section.colour || "#ff0000"], at: 0};
+  blinks.colours[blinks.at] = section.colour;
+  section.blinks = blinks;
+
+  function choose(at) {
+    var mine = live();
+    mine.blinks.at = at;
+    mine.colour = mine.blinks.colours[at];
+    mine.custom = !blinkNamed(mine.colour);
+    draw();
+  }
+
+  var row = document.createElement("div");
+  row.className = "blinklist";
+  var said = document.createElement("span");
+  said.className = "blinksay";
+  said.textContent = blinks.colours.length > 1 ? "Blinks through" : "Blinks in";
+  row.appendChild(said);
+  blinks.colours.forEach(function (hex, at) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
+    chip.style.setProperty("--chip", hex);
+    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") +
+                 (blinkNamed(hex) || hex);
+    chip.onclick = function () { choose(at); };
+    row.appendChild(chip);
+    if (blinks.colours.length > 1) {
+      var drop = document.createElement("button");
+      drop.type = "button";
+      drop.className = "blinkdrop";
+      drop.textContent = "\u00d7";
+      drop.title = "stop blinking in " + (blinkNamed(hex) || hex);
+      drop.onclick = function () {
+        var mine = live();
+        mine.blinks.colours.splice(at, 1);
+        var left = mine.blinks.colours;
+        mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
+        mine.colour = left[mine.blinks.at];
+        mine.custom = !blinkNamed(mine.colour);
+        if (left.length === 1) mine.blinks = undefined;
+        draw();
+      };
+      row.appendChild(drop);
+    }
+  });
+  var more = document.createElement("button");
+  more.type = "button";
+  more.className = "blinkmore";
+  more.textContent = "+ another colour";
+  more.title = "blink through several colours, one per blink";
+  // The colour added is a copy of the last, a custom one included, to be changed from there
+  more.onclick = function () {
+    var mine = live();
+    if (!mine.blinks) mine.blinks = {colours: [mine.colour], at: 0};
+    var colours = mine.blinks.colours;
+    colours.push(colours[colours.length - 1]);
+    choose(colours.length - 1);
+  };
+  row.appendChild(more);
+  pick.insertBefore(row, pick.firstChild);
+});
+
+chosenSteps.push(function (where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  var tuning = box && box.querySelector(".chosen .tuning");
+  if (!tuning || !look) return;
+  function live() { return run.sections[run.picked]; }
+  tuning.classList.toggle("figuresopen", figuresOpen);
+
+  var ranges = Array.prototype.slice.call(tuning.querySelectorAll("input[type=range]"));
+  var boxes = [];
+  ranges.forEach(function (range) {
+    var slider = (range.dataset.focus || "").split("-").pop();
+    var cells, way = null, key = null, widest = 3;
+    var timing = range.dataset.timing;
+    if (timing) {
+      // A signal's timing is its seconds already, typed past the slider's ends as it is
+      widest = Math.max(String(range.min).length, String(range.max).length) + 2;
+      cells = figureCells(figureSaid(Number(range.value)), "s",
+                          "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
+        var mine = live();
+        mine.timings = Object.assign({}, mine.timings);
+        mine.timings[timing] = Math.round(typed * 100) / 100;
+      });
+    } else if (slider === "mood" && look.mood === "Palette") {
+      // A palette is its colours, not a number, so its slot shows them
+      var swatches = document.createElement("span");
+      swatches.className = "figurebox paletteswatches";
+      paintPalette(swatches, sectionLines(run, section, look));
+      // Across the box and unit columns, from where the boxes start, being wider than a box
+      swatches.style.gridColumn = "span 2";
+      cells = [swatches, null];
+    } else if (slider === "level") {
+      var bright = section.level === undefined ? 1 : section.level;
+      cells = figureCells(String(Math.round(bright * 100)), "%",
+                          "brightness, typed as a percentage", function (typed) {
+        live().level = Math.max(0.01, Math.min(1, typed / 100));
+      });
+    } else if (slider === "pace" || slider === "mood") {
+      key = figureKey(run, section, look, slider);
+      if (key) {
+        way = figureWay(key, look);
+        // As wide as the widest figure the slider can reach, so dragging it never resizes its
+        // column and with it the slider
+        [0, 0.5, 1].forEach(function (place) {
+          var reach = figureSaid(way.show(settingIn(linesAt(run, section, look, slider, place),
+                                                   key)));
+          widest = Math.max(widest, reach.length);
+        });
+        var typedHere = section.exact && section.exact[slider];
+        var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
+        cells = figureCells(figureSaid(way.show(value)), way.unit,
+                            "the file's " + key + ", typed exactly, beyond the slider's range if needed",
+                            function (typed) {
+          var wanted = way.take(typed);
+          var mine = live();
+          var found = placeFor(run, mine, look, slider, key, wanted);
+          mine[slider] = found.place;
+          mine.exact = Object.assign({}, mine.exact);
+          if (found.off > 1e-6) {
+            mine.exact[slider] = {key: key, value: Math.round(wanted * 1000) / 1000};
+          } else {
+            delete mine.exact[slider];
+          }
+        });
+      }
+    } else {
+      return;
+    }
+    // Check if the slider has no one figure
+    if (!cells) {
+      // Keep the row's cells, empty, so the columns stay whole
+      cells = [document.createElement("span"), document.createElement("span")];
+      cells[0].className = "figurebox";
+      cells[1].className = "figureunit";
+    }
+    if (cells[0].tagName === "INPUT") {
+      // A figure typed past the slider's end, wider than any it reaches, widens the box to fit
+      boxes.push({box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length)});
+    }
+    if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);
+    range.parentNode.insertBefore(cells[0], range.nextSibling);
+
+    // Moved, the slider is the setting again, and its figure follows it
+    var moved = range.oninput;
+    range.oninput = function () {
+      var mine = live();
+      if (mine.exact && mine.exact[slider]) {
+        mine.exact = Object.assign({}, mine.exact);
+        delete mine.exact[slider];
+      }
+      if (moved) moved.call(range);
+      if (cells[0].classList.contains("paletteswatches")) {
+        paintPalette(cells[0], sectionLines(run, mine, look));
+        return;
+      }
+      if (cells[0].tagName !== "INPUT") return;
+      if (timing) cells[0].value = figureSaid(Number(range.value));
+      else if (slider === "level") cells[0].value = String(Math.round(Number(range.value) * 100));
+      else cells[0].value = figureSaid(way.show(settingIn(sectionLines(run, mine, look), key)));
+    };
+  });
+
+  // Every box in the panel as wide as the widest, so they line up and none moves as it changes
+  var chars = boxes.reduce(function (most, one) { return Math.max(most, one.chars); }, 3);
+  boxes.forEach(function (one) { one.box.style.width = (chars + 0.5) + "ch"; });
+
+  // The drawer's handle, down the right of the sliders, which opens and shuts every figure
+  var handle = document.createElement("button");
+  handle.type = "button";
+  handle.className = "figurehandle";
+  handle.textContent = figuresOpen ? "\u203a" : "\u2039";
+  handle.title = figuresOpen ? "hide values" : "show values";
+  handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
+  handle.style.gridRow = "1 / span " + ranges.length;
+  handle.onclick = function () {
+    setFiguresOpen(!figuresOpen);
+    try {
+      window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
+    } catch (e) {
+      // Kept only for this visit where the page may not keep anything
+    }
+    draw();
+  };
+  tuning.appendChild(handle);
+});
+
 // ---- the look gallery ---------------------------------------------------------------------------
 // The cards of the looks the chosen stretch can play, in their groups, each lit as it plays.
 
@@ -20204,6 +20109,52 @@ function paintCards() {
     });
   });
 }
+paintSteps.push(paintCards);
+
+// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
+// stretch can play
+function renderGalleries() {
+  // A kind the board has none of cannot be worked on, so the set goes back to the one it
+  // has. Without this the cards would be for lights that are not there
+  if (!haveKind(showing) && haveKind(!showing)) setShowing(!showing);
+
+  var box = document.getElementById("looks");
+  box.textContent = "";
+
+  var tabs = document.createElement("div");
+  tabs.className = "tabs sides";
+  box.appendChild(tabs);
+
+  var run = galleryRun(showing);
+  var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
+  var lamp = section && run.lamps[section.from];
+
+  // What the stretch being worked on could actually be given. A look shaped to several
+  // lamps has nothing to say on a stretch of one, and the model would clear it the moment
+  // it landed, so the card says so and does not take it only to quietly drop it
+  var target = section ? targetFor(run, section) : null;
+
+  var shelf = document.createElement("div");
+  shelf.className = "shelf bare";
+  box.appendChild(shelf);
+
+  var looks = document.createElement("div");
+  looks.className = "gallery";
+  spanning().concat([{name: null}]).forEach(function (look) {
+    var can = !look.name || !target || canPlay(look, target);
+    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
+    var card = lookCard(showing, look, on);
+    if (!can) {
+      card.className += " cannot";
+      card.onclick = null;
+      card.title = whyNot(look, target);
+    }
+    looks.appendChild(card);
+  });
+  shelf.appendChild(looks);
+  groupGallery();
+}
+drawParts.galleries = renderGalleries;
 
 // ---- the lamps, lit and put in place -------------------------------------------------------
 
@@ -20320,6 +20271,127 @@ function groupGallery() {
     holder.appendChild(row);
   });
   flat.parentNode.replaceChild(holder, flat);
+}
+
+// Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
+// arrow. Pointing at one channel shows the other two of its output
+function setUpLamp(one, lamp, channel) {
+  takesPlace(one, lamp);
+  one.appendChild(crossing(lamp.out, lamp.colour));
+  if (!channel) return;
+  (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
+  one.addEventListener("mouseenter", function () { showKin(lamp.out, true); });
+  one.addEventListener("mouseleave", function () { showKin(lamp.out, false); });
+}
+
+function renderBar(where, run) {
+  var box = document.getElementById(where);
+  box.textContent = "";
+  var scroller = document.createElement("div");
+  scroller.className = "scroller";
+  var bar = document.createElement("div");
+  bar.className = "bar" + (carded(run) ? " carded" : "");
+  var faces = [];
+
+  run.sections.forEach(function (section, at) {
+    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
+    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
+    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
+    cell.style.flex = widthOf(section) + " 1 0";
+    var first = run.lamps[section.from];
+    cell.title = (first && first.colour ? "colour" : "mono") + ", " +
+                 targetFor(run, section).selector;
+    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
+
+    var look = lookNamed(section.look);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title = under.tip;
+
+    var says = document.createElement("span");
+    says.className = "says";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
+                     beneath(under);
+    cell.appendChild(says);
+
+    // Where this stretch can be cut, one place between two lamps
+    var inside = document.createElement("span");
+    inside.className = "cuts";
+    for (var i = section.from; i < section.to; i++) {
+      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
+    }
+    cell.appendChild(inside);
+
+    cell.onclick = function () {
+      if (dragged) return;
+      pick(run, at);
+      draw();
+    };
+    bar.appendChild(cell);
+
+    if (at < run.sections.length - 1) {
+      var edge = document.createElement("div");
+      edge.className = "edge";
+      edge.title = "drag to move this cut, or click \u00d7 to remove it";
+      edge.onmousedown = function (event) {
+        event.preventDefault();
+        remember(run);
+        // The stretch being resized is the one being worked on, whichever side it is on
+        pick(run, at);
+        // The bar is rebuilt on every move, so what is held onto is where the bar lives
+        // and not the bar itself, which would be a node already thrown away
+        setHolding({run: run, which: at, where: where, had: run.sections.length});
+        edge.classList.add("holding");
+      };
+      // Taking the cut out is its own target, so it is never confused with moving it
+      var drop = document.createElement("button");
+      drop.className = "drop";
+      drop.textContent = "\u00d7";
+      drop.title = "remove this cut and join the two stretches";
+      drop.onmousedown = function (event) { event.stopPropagation(); };
+      drop.onclick = function (event) {
+        event.stopPropagation();
+        uncut(run, at);
+      };
+      edge.appendChild(drop);
+      bar.appendChild(edge);
+    }
+  });
+  scroller.appendChild(bar);
+  box.appendChild(scroller);
+  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
+}
+drawParts.bars = function () {
+  renderBar("outBar", outs);
+  renderBar("monoBar", mono);
+};
+
+// A stretch's lamps, one for each light it holds, each face kept in faces by the lamp's place
+// in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
+// to drag to its place on the build, and an output that breaks out has its arrow on its tiles
+function cardLamps(run, section, faces) {
+  var row = document.createElement("span");
+  row.className = "cardlamps";
+  var wiring = canEdit("outPanel");
+  for (var at = section.from; at <= section.to; at++) {
+    var lamp = run.lamps[at];
+    var one = document.createElement("span");
+    var channel = !lamp.colour && isChannel(lamp);
+    // A broken-out channel is marked in its channel's colour
+    one.className = "cardlamp" + (channel ? " chan" : "");
+    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
+    var playing = lookNamed(section.look);
+    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
+    var face = document.createElement("i");
+    one.appendChild(face);
+    var said = document.createElement("b");
+    said.textContent = shortName(lamp);
+    one.appendChild(said);
+    faces[at] = face;
+    if (wiring) setUpLamp(one, lamp, channel);
+    row.appendChild(one);
+  }
+  return row;
 }
 
 // ---- the page, started ---------------------------------------------------------------------------

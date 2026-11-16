@@ -207,3 +207,9 @@ export var onProgramPage = false;
 export function setProgramPage(on) {
   onProgramPage = on;
 }
+
+// The steps run while the programs are read, so the program tab can count them in
+export var programsReadingSteps = [];
+
+// The steps run once the programs are read, before the page is drawn
+export var programsReadSteps = [];

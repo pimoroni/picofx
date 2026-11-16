@@ -1,15 +1,10 @@
-import {draw, drawSteps} from "./00_draw.js";
-import {BOARD, LOOKS, canPlay, lerp, lookNamed, r2, whyNot} from "./01_looks.js";
+import {draw, drawParts} from "./00_draw.js";
+import {BOARD, LOOKS, canPlay, lerp, lookNamed, r2} from "./01_looks.js";
 import {filterKept, keptLights} from "./03_kept.js";
-import {sectionLines, startColour, targetFor} from "./03_lines.js";
+import {START_MOODS, sectionLines, startColour, targetFor} from "./03_lines.js";
 import {
   MONO_FIRST, OUTPUTS, OUTS, order, placeOf, placesOf, setLayout, wiring
 } from "./03_outputs.js";
-import {renderScenes, spanTray} from "./04_scenes.js";
-import {START_MOODS} from "./05_strips.js";
-import {renderSceneSettings} from "./20_scene_row.js";
-import {playsOf} from "./31_stretch_bar.js";
-import {groupGallery, lookCard, spanning} from "./33_gallery.js";
 
 // ---- the runs and their stretches ---------------------------------------------------------------
 // The colour lamps and the mono ones, each a run of stretches over the lamps the wiring adds up
@@ -36,7 +31,7 @@ export function activate(run) {
 
 // Which kind of lamp the one set of looks is drawn for. It follows whatever was last
 // pointed at, so the cards are always the ones for the lights being worked on
-var showing = MONO_FIRST;
+export var showing = MONO_FIRST;
 for (var m = 0; m < OUTS; m++) setLayout(wiring, order.concat(placesOf(m)));
 
 // ---- the lamps the wiring adds up to -----------------------------------------------------
@@ -411,9 +406,10 @@ export var cardWalks = {};
 export var carrying_lamp = null;
 
 // Empty the cards' faces, which a draw makes afresh
-export function clearCardFaces() {
+function clearCardFaces() {
   cardFaces = [];
 }
+drawParts.clearCardFaces = clearCardFaces;
 
 // Set the lamp being carried to a new place, or null when none is
 export function setCarryingLamp(lamp) {
@@ -515,7 +511,7 @@ function kindAt(run, at) {
 
 // Whether the board has any lamp of a kind. With none, its looks are worth offering but
 // not worth landing, as there is nothing for them to land on until an output is broken out
-function haveKind(isMono) {
+export function haveKind(isMono) {
   return runs.some(function (run) {
     return run.lamps.some(function (lamp) { return lamp.colour === !isMono; });
   });
@@ -532,48 +528,9 @@ export function stretchFor(run, isMono) {
   return run.picked;
 }
 
-// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
-// stretch can play
-export function renderGalleries() {
-  // A kind the board has none of cannot be worked on, so the set goes back to the one it
-  // has. Without this the cards would be for lights that are not there
-  if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
-
-  var box = document.getElementById("looks");
-  box.textContent = "";
-
-  var tabs = document.createElement("div");
-  tabs.className = "tabs sides";
-  box.appendChild(tabs);
-
-  var run = galleryRun(showing);
-  var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
-  var lamp = section && run.lamps[section.from];
-
-  // What the stretch being worked on could actually be given. A look shaped to several
-  // lamps has nothing to say on a stretch of one, and the model would clear it the moment
-  // it landed, so the card says so and does not take it only to quietly drop it
-  var target = section ? targetFor(run, section) : null;
-
-  var shelf = document.createElement("div");
-  shelf.className = "shelf bare";
-  box.appendChild(shelf);
-
-  var looks = document.createElement("div");
-  looks.className = "gallery";
-  spanning().concat([{name: null}]).forEach(function (look) {
-    var can = !look.name || !target || canPlay(look, target);
-    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
-    var card = lookCard(showing, look, on);
-    if (!can) {
-      card.className += " cannot";
-      card.onclick = null;
-      card.title = whyNot(look, target);
-    }
-    looks.appendChild(card);
-  });
-  shelf.appendChild(looks);
-  groupGallery();
+// Draw the set of looks for mono lamps or for colour ones
+export function setShowing(isMono) {
+  showing = isMono;
 }
 
 // ---- crossing from one side to the other ---------------------------------------------------
@@ -595,16 +552,10 @@ export var chosenSteps = [];
 export var NOTCH_INSET = 14;
 
 settle();
-window.addEventListener("resize", spanTray);
 
 // What the parts below write above the scenes, lines straight under the file's header and then,
 // after a blank line, lines above the board line. Each is a list of functions giving lines
 export var fileHead = {under: [], above: []};
-
-drawSteps.after.push(function () {
-  renderScenes();
-  renderSceneSettings();
-});
 
 // The board opens as it ships, every colour output one colour lamp, each side whole and playing
 // the look the board's description opens it with. The strips play nothing, since what is wired
@@ -682,4 +633,19 @@ export function setSetupMode(on) {
     heldPick = null;
     heldOutput = null;
   }
+}
+
+// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
+// worked on, so only one stretch on the page is ever marked
+export function isPicked(run, at) { return run === active && run.picked === at; }
+
+// ---- what a stretch plays, carried through the tools -----------------------------------------
+// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
+// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
+// stretch playing nothing
+export function playsOf(section) {
+  return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
+          custom: section.custom, reversed: section.reversed, level: section.level,
+          blinks: copyBlinks(section.blinks), exact: copyExact(section.exact),
+          timings: copyExact(section.timings)};
 }

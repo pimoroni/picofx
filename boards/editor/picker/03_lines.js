@@ -1,4 +1,4 @@
-import {draw} from "./00_draw.js";
+import {draw, drawParts} from "./00_draw.js";
 import {FAINTEST, WORDS, atBrightness, hexOf, hexRgb, rgbInk, wordFor} from "./01_colours.js";
 import {blinkDuty, blinkSpeed, isBanked, lookLines, lookNamed, withSection} from "./01_looks.js";
 import {blinkList, blinkWord} from "./02_blink.js";
@@ -6,8 +6,6 @@ import {
   CHANNELS, CHANNEL_WORDS, OUTPUTS, colourOutputsSaid, isChannel, joinedItems, nameThese,
   nextOutput, outputSaid, outputsNamed, rangeItem, stripSelector, widthOf
 } from "./03_outputs.js";
-import {SOLID_COLOUR} from "./05_strips.js";
-import {renderPreview} from "./18_file_preview.js";
 
 // ---- what a stretch's lines say -----------------------------------------------------------------
 // The effect lines a stretch writes for its look, the colours and the way it runs, and the words
@@ -218,7 +216,7 @@ export function brightnessSlider(tuning, run, where) {
   range.dataset.focus = where + "-level";
   range.oninput = function () {
     run.sections[run.picked].level = Number(range.value);
-    renderPreview();
+    drawParts.preview();
   };
   // A colour's hex and its preview show the brightness, so they are drawn again once it is set
   range.onchange = function () { draw(); };
@@ -449,3 +447,15 @@ export function withExact(exact, write) {
     exactNow = had;
   }
 }
+
+// The second setting a look starts at, on its card and on a stretch given it, where middling
+// does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
+// steps at picofx's six, and the signals' lamps fade in about a tenth of a second, as a real
+// signal's do. Marquee starts with every third light lit
+export var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
+                   "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
+
+// Solid's own colour, which a stretch given it starts in and its card shows, still and at full
+// brightness. A card stepping through the swatches would read as Colour steps, and its palette
+// mark already says a colour is chosen
+export var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);

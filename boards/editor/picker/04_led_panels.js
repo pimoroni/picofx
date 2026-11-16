@@ -1,8 +1,8 @@
+import {drawParts} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
 import {targetFor} from "./03_lines.js";
 import {widthOf} from "./03_outputs.js";
-import {NOTCH_INSET, chosenSteps, mono, outs} from "./03_runs.js";
-import {renderPreview} from "./18_file_preview.js";
+import {NOTCH_INSET, active, chosenSteps, mono, outs} from "./03_runs.js";
 
 // ---- the LED panels -----------------------------------------------------------------------------
 // The panel of settings under the chosen stretch, pointing up at it, and the two sides of the
@@ -116,7 +116,7 @@ function renderChosenPanel(where, run) {
     // Through the run, as a page that makes the stretches afresh leaves this one behind
     range.oninput = function () {
       run.sections[run.picked][key] = Number(range.value);
-      renderPreview();
+      drawParts.preview();
     };
     return range;
   }
@@ -126,7 +126,7 @@ function renderChosenPanel(where, run) {
 // outputs are broken out and put back and every lamp has the same room. The sides carry no names,
 // so breaking an output out never adds or takes away a row above the cards. The lamps' labels,
 // the board's box and the board's edge already say which lights are which
-export function renderSides() {
+function renderSides() {
   [{run: outs, side: "sideA"}, {run: mono, side: "sideB"}].forEach(function (set) {
     var box = document.getElementById(set.side);
     var count = set.run.lamps.length;
@@ -138,3 +138,7 @@ export function renderSides() {
     box.className = "side";
   });
 }
+drawParts.sides = renderSides;
+// Both sides are in the one panel, so one stretch's settings serve whichever was last worked on
+// rather than a set under each
+drawParts.chosen = function () { renderChosen("outChosen", active); };

@@ -1,16 +1,18 @@
-import {clearPainters, litRun, painters} from "./02_preview.js";
-import {clearKin} from "./03_outputs.js";
-import {active, clearCardFaces, mono, outs, renderGalleries, runs} from "./03_runs.js";
-import {renderChosen, renderSides} from "./04_led_panels.js";
-import {renderPreview} from "./18_file_preview.js";
-import {renderBar} from "./31_stretch_bar.js";
-import {paintCards} from "./33_gallery.js";
-
 // ---- drawing --------------------------------------------------------------------------------
 // The parts below add their own steps to a draw, what each readies before the page is drawn and
 // what each draws after the outputs, both in the order the parts come
 
 export var drawSteps = {before: [], after: []};
+
+// What a draw does between its before and after steps, by name, each filled in by the part that
+// draws it. Those named in DRAW_ORDER go in that order, which matters: the chosen stretch's panel
+// points at its cell in the bars, so the bars are drawn before it
+export var drawParts = {};
+var DRAW_ORDER = ["clearPainters", "clearCardFaces", "clearKin", "galleries", "bars", "sides",
+                  "chosen", "preview"];
+
+// The steps paintAll() takes, each lighting part of the page at the beat
+export var paintSteps = [];
 
 // Whether drawing waits, while the page is changed in a way a draw would store half done
 var drawHeld = false;
@@ -30,20 +32,7 @@ export function draw() {
   var down = window.scrollY;
   var focused = focusPlace();
   drawSteps.before.forEach(function (step) { step(); });
-
-  clearPainters();
-  clearCardFaces();
-  clearKin();
-  renderGalleries();
-  renderBar("outBar", outs);
-  renderBar("monoBar", mono);
-
-  // Both sides are in the one panel, so one stretch's settings serve whichever was last worked
-  // on rather than a set under each
-  renderSides();
-  renderChosen("outChosen", active);
-
-  renderPreview();
+  DRAW_ORDER.forEach(function (name) { if (drawParts[name]) drawParts[name](); });
   paintAll();
 
   drawSteps.after.forEach(function (step) { step(); });
@@ -100,9 +89,7 @@ function refocus(place) {
   }
 }
 
+// Light the page at the beat, the lamps before the cards
 export function paintAll() {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-  paintCards();
+  paintSteps.forEach(function (step) { step(); });
 }

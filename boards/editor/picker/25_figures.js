@@ -1,8 +1,4 @@
-import {draw} from "./00_draw.js";
-import {lookNamed} from "./01_looks.js";
 import {sectionLines} from "./03_lines.js";
-import {chosenSteps} from "./03_runs.js";
-import {figureCells, paintPalette} from "./32_stretch_editor.js";
 
 // ---- the looks in groups ------------------------------------------------------------------
 // The gallery grouped by how the lights play together, each group a row of at most five, the
@@ -49,7 +45,7 @@ var FIGURE_KEYS = {
 var SIGNAL_GREEN = {"Traffic light": 12, "Pelican crossing": 20};
 
 // How a setting's value is shown, the figure rising as the slider does, and taken back
-function figureWay(key, look) {
+export function figureWay(key, look) {
   var times = {unit: "/s", show: function (v) { return 1 / v; },
                take: function (f) { return 1 / f; }};
   var same = function (unit) {
@@ -71,14 +67,19 @@ function figureWay(key, look) {
 }
 
 // The localStorage key that keeps whether the drawer is open between visits
-var FIGURES_KEPT = "fx-picker-figures-open";
+export var FIGURES_KEPT = "fx-picker-figures-open";
 
 // Whether the drawer is open
-var figuresOpen = false;
+export var figuresOpen = false;
 try {
   figuresOpen = window.localStorage.getItem(FIGURES_KEPT) === "1";
 } catch (e) {
   // Shut where the page may not keep anything
+}
+
+// Open or shut the drawer
+export function setFiguresOpen(open) {
+  figuresOpen = open;
 }
 
 // A setting's value in a stretch's lines, without its sign, or null where none names it. A
@@ -93,7 +94,7 @@ export function settingIn(lines, key) {
 }
 
 // The stretch's lines with one slider at a value and nothing typed
-function linesAt(run, section, look, slider, value) {
+export function linesAt(run, section, look, slider, value) {
   var at = Object.assign({}, section, {exact: null});
   at[slider] = value;
   return sectionLines(run, at, look);
@@ -108,7 +109,7 @@ export function figureKey(run, section, look, slider) {
   })[0] || null;
 }
 
-function figureSaid(value) {
+export function figureSaid(value) {
   return String(Math.round(value * 100) / 100);
 }
 
@@ -131,130 +132,3 @@ export function placeFor(run, section, look, slider, key, value) {
   }
   return {place: best, off: nearest};
 }
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look) return;
-  function live() { return run.sections[run.picked]; }
-  tuning.classList.toggle("figuresopen", figuresOpen);
-
-  var ranges = Array.prototype.slice.call(tuning.querySelectorAll("input[type=range]"));
-  var boxes = [];
-  ranges.forEach(function (range) {
-    var slider = (range.dataset.focus || "").split("-").pop();
-    var cells, way = null, key = null, widest = 3;
-    var timing = range.dataset.timing;
-    if (timing) {
-      // A signal's timing is its seconds already, typed past the slider's ends as it is
-      widest = Math.max(String(range.min).length, String(range.max).length) + 2;
-      cells = figureCells(figureSaid(Number(range.value)), "s",
-                          "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
-        var mine = live();
-        mine.timings = Object.assign({}, mine.timings);
-        mine.timings[timing] = Math.round(typed * 100) / 100;
-      });
-    } else if (slider === "mood" && look.mood === "Palette") {
-      // A palette is its colours, not a number, so its slot shows them
-      var swatches = document.createElement("span");
-      swatches.className = "figurebox paletteswatches";
-      paintPalette(swatches, sectionLines(run, section, look));
-      // Across the box and unit columns, from where the boxes start, being wider than a box
-      swatches.style.gridColumn = "span 2";
-      cells = [swatches, null];
-    } else if (slider === "level") {
-      var bright = section.level === undefined ? 1 : section.level;
-      cells = figureCells(String(Math.round(bright * 100)), "%",
-                          "brightness, typed as a percentage", function (typed) {
-        live().level = Math.max(0.01, Math.min(1, typed / 100));
-      });
-    } else if (slider === "pace" || slider === "mood") {
-      key = figureKey(run, section, look, slider);
-      if (key) {
-        way = figureWay(key, look);
-        // As wide as the widest figure the slider can reach, so dragging it never resizes its
-        // column and with it the slider
-        [0, 0.5, 1].forEach(function (place) {
-          var reach = figureSaid(way.show(settingIn(linesAt(run, section, look, slider, place),
-                                                   key)));
-          widest = Math.max(widest, reach.length);
-        });
-        var typedHere = section.exact && section.exact[slider];
-        var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
-        cells = figureCells(figureSaid(way.show(value)), way.unit,
-                            "the file's " + key + ", typed exactly, beyond the slider's range if needed",
-                            function (typed) {
-          var wanted = way.take(typed);
-          var mine = live();
-          var found = placeFor(run, mine, look, slider, key, wanted);
-          mine[slider] = found.place;
-          mine.exact = Object.assign({}, mine.exact);
-          if (found.off > 1e-6) {
-            mine.exact[slider] = {key: key, value: Math.round(wanted * 1000) / 1000};
-          } else {
-            delete mine.exact[slider];
-          }
-        });
-      }
-    } else {
-      return;
-    }
-    // Check if the slider has no one figure
-    if (!cells) {
-      // Keep the row's cells, empty, so the columns stay whole
-      cells = [document.createElement("span"), document.createElement("span")];
-      cells[0].className = "figurebox";
-      cells[1].className = "figureunit";
-    }
-    if (cells[0].tagName === "INPUT") {
-      // A figure typed past the slider's end, wider than any it reaches, widens the box to fit
-      boxes.push({box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length)});
-    }
-    if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);
-    range.parentNode.insertBefore(cells[0], range.nextSibling);
-
-    // Moved, the slider is the setting again, and its figure follows it
-    var moved = range.oninput;
-    range.oninput = function () {
-      var mine = live();
-      if (mine.exact && mine.exact[slider]) {
-        mine.exact = Object.assign({}, mine.exact);
-        delete mine.exact[slider];
-      }
-      if (moved) moved.call(range);
-      if (cells[0].classList.contains("paletteswatches")) {
-        paintPalette(cells[0], sectionLines(run, mine, look));
-        return;
-      }
-      if (cells[0].tagName !== "INPUT") return;
-      if (timing) cells[0].value = figureSaid(Number(range.value));
-      else if (slider === "level") cells[0].value = String(Math.round(Number(range.value) * 100));
-      else cells[0].value = figureSaid(way.show(settingIn(sectionLines(run, mine, look), key)));
-    };
-  });
-
-  // Every box in the panel as wide as the widest, so they line up and none moves as it changes
-  var chars = boxes.reduce(function (most, one) { return Math.max(most, one.chars); }, 3);
-  boxes.forEach(function (one) { one.box.style.width = (chars + 0.5) + "ch"; });
-
-  // The drawer's handle, down the right of the sliders, which opens and shuts every figure
-  var handle = document.createElement("button");
-  handle.type = "button";
-  handle.className = "figurehandle";
-  handle.textContent = figuresOpen ? "\u203a" : "\u2039";
-  handle.title = figuresOpen ? "hide values" : "show values";
-  handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
-  handle.style.gridRow = "1 / span " + ranges.length;
-  handle.onclick = function () {
-    figuresOpen = !figuresOpen;
-    try {
-      window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
-    } catch (e) {
-      // Kept only for this visit where the page may not keep anything
-    }
-    draw();
-  };
-  tuning.appendChild(handle);
-});

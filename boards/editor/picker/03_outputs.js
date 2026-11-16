@@ -1,3 +1,4 @@
+import {drawParts} from "./00_draw.js";
 import {BOARD, rangify} from "./01_looks.js";
 
 // ---- the board's outputs, inside the sections system ------------------------------------
@@ -32,9 +33,10 @@ export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 export var kinOf = {};
 
 // Empty the lamps by output, which a draw finds afresh
-export function clearKin() {
+function clearKin() {
   kinOf = {};
 }
+drawParts.clearKin = clearKin;
 
 // A colour output is one lamp or three, and nothing between, as the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
@@ -211,4 +213,11 @@ export function stripSelector(run, section) {
   return run.name + (section.from === section.to
     ? String(section.from + 1)
     : (section.from + 1) + "-" + (section.to + 1));
+}
+
+// Every lamp in number order, an output broken out as its red, green and blue
+export function plainOrder() {
+  var plain = [];
+  wiring.forEach(function (one, out) { plain = plain.concat(placesOf(out)); });
+  return plain;
 }

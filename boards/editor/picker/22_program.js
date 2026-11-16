@@ -9,11 +9,12 @@ import {tabSwatch} from "./11_tabs.js";
 import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./18_drive.js";
 import {escapeHtml} from "./18_file_preview.js";
 import {
-  PROGRAMS, argsFor, boardSet, onProgramPage, programNamed, setProgramPage, setPrograms
+  PROGRAMS, argsFor, boardSet, onProgramPage, programNamed, programsReadingSteps, setProgramPage,
+  setPrograms
 } from "./19_board_settings.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
-  programsReading, removeProgram
+  programsReading, removeProgram, thumbImages
 } from "./26_drive_programs.js";
 
 // ---- the effects page, or a program page ------------------------------------------------------
@@ -199,7 +200,6 @@ export function programTitle(path) {
 // frame or a drive program's own
 
 var THUMB_W = 160, THUMB_H = 120;
-export var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
   var canvas = document.createElement("canvas");
@@ -750,7 +750,7 @@ function programHero(path) {
   return hero;
 }
 
-export function renderProgramView() {
+function renderProgramView() {
   programView.textContent = "";
   if (!onProgramPage) return;
   programView.appendChild(programHero(boardSet.program));
@@ -811,6 +811,7 @@ export function renderProgramView() {
   }
   programViewSteps.forEach(function (step) { step(); });
 }
+programsReadingSteps.push(renderProgramView);
 
 // What the parts after this one add to the program tab once its programs are listed
 export var programViewSteps = [];

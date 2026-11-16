@@ -1,9 +1,10 @@
-import {draw} from "./00_draw.js";
-import {BOARD, lookNamed} from "./01_looks.js";
+import {draw, drawSteps} from "./00_draw.js";
+import {BOARD, lookNamed, toggle} from "./01_looks.js";
 import {runs} from "./03_runs.js";
 import {
-  bodyParts, capture, renderScenes, sceneAfter, sceneHooks, sceneLoops, sceneMark, sceneMarked,
-  sceneNameProblem, sceneRestarts, state, store, stretchPlaying, switchTo
+  addScene, bodyParts, capture, renderSceneAside, sceneAfter, sceneHooks, sceneLoops, sceneMark,
+  sceneMarked, sceneNameProblem, sceneRestarts, sceneShowsAgain, spanTray, state, store,
+  stretchPlaying, switchTo
 } from "./04_scenes.js";
 import {TAB_NAMES} from "./11_tabs.js";
 import {escapeHtml, renderPreview} from "./18_file_preview.js";
@@ -15,7 +16,7 @@ import {featureIcon} from "./22_program.js";
 
 // What a scene's card says under its name, its time or that it waits. The scene after is named
 // only where it is chosen, since a time implies the next in order
-export function sceneTurn(scene) {
+function sceneTurn(scene) {
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
   var turn = scene.waits ? "waits"
@@ -47,7 +48,7 @@ function sceneColour(scene) {
 
 // A scene's band, the background along the top of its card and its frame's tab. The remote's
 // white is a light grey, since white does not show on the page, and button 0's is its rainbow
-export function sceneBand(scene) {
+function sceneBand(scene) {
   if (scene && state.scenes.indexOf(scene) === 9)
     return "linear-gradient(90deg, " + REMOTE_RAINBOW.join(", ") + ")";
   var colour = sceneColour(scene) === "#ffffff" ? "#d9d6d0" : sceneColour(scene);
@@ -55,7 +56,7 @@ export function sceneBand(scene) {
 }
 
 // A scene's outline colour, a darker shade where its colour is too pale to show on the page
-export function sceneEdge(scene) {
+function sceneEdge(scene) {
   return scene && sceneIsPale(scene)
     ? "color-mix(in srgb, " + sceneColour(scene) + " 72%, #2b2a28)" : sceneColour(scene);
 }
@@ -133,7 +134,7 @@ function alwaysSays(body) {
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }
 
-export function sceneTab(which, slot, name, says) {
+function sceneTab(which, slot, name, says) {
   var here = state.at === which;
   var body = here ? capture() : slot.body;
   var tab = document.createElement("button");
@@ -252,7 +253,7 @@ var carriedTab = null;
 
 // A scene's row of settings, its time and whether it starts afresh. The scene row part
 // restyles it and speaks for the always-on tab
-export function renderSceneRow() {
+function renderSceneRow() {
   var box = document.getElementById("sceneSettings");
   box.textContent = "";
   if (state.at < 0) return;
@@ -364,4 +365,88 @@ export function renderSceneRow() {
   row.appendChild(again);
 
   box.appendChild(row);
+}
+
+window.addEventListener("resize", spanTray);
+
+drawSteps.after.push(function () {
+  renderScenes();
+  renderSceneSettings();
+});
+
+function renderScenes() {
+  var box = document.getElementById("tabs");
+  box.textContent = "";
+
+  // One scene is what a file has before anyone asks for more, and a bar of one tab
+  // says nothing, so it is not drawn until there is a choice to make
+  if (state.scenes.length) {
+    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
+    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
+    state.scenes.forEach(function (scene, i) {
+      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
+    });
+  }
+
+  var plus = document.createElement("button");
+  plus.className = "plus";
+  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
+                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
+                   "stroke-linecap='round'/></svg>" +
+                   (state.scenes.length ? "another scene" : "split into scenes");
+  plus.title = state.scenes.length ? "Add another scene"
+                                   : "Split into scenes that play one after another";
+  plus.onclick = addScene;
+  box.appendChild(plus);
+  box.classList.toggle("tray", state.scenes.length > 0);
+  spanTray();
+
+  // The frame is what says these belong to the picked card, so it appears with the cards, in
+  // the picked card's colour. Its tab holds the scene's settings beside what the page says about it
+  var frame = document.getElementById("sceneBody");
+  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
+  var tabRow = document.getElementById("sceneTabRow");
+  tabRow.hidden = !state.scenes.length;
+  var picked = state.at < 0 ? null : state.scenes[state.at];
+  [frame, tabRow].forEach(function (node) {
+    node.style.setProperty("--frame", sceneEdge(picked));
+    node.style.setProperty("--frameband", sceneBand(picked));
+  });
+  renderSceneAside();
+}
+
+// ---- a scene's own settings, in the screens' style ---------------------------------------
+// Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
+// the screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of
+// theirs is the file's.
+
+function renderSceneSettings() {
+  renderSceneRow();
+  // Check if Always on is shown with scenes for it to play under. It has no settings of its own,
+  // so its row says what it is for, which keeps the gallery where it was as the tabs are switched
+  if (state.at < 0 && state.scenes.length) {
+    var note = document.createElement("div");
+    note.className = "sceneset alwaysnote";
+    note.textContent = "Always on plays under every scene. A scene that uses the " +
+                       "same lights, screen or sound overrides it while showing.";
+    document.getElementById("sceneSettings").appendChild(note);
+    return;
+  }
+  var row = document.querySelector("#sceneSettings .sceneset");
+  if (!row || state.at < 0) return;
+  var scene = state.scenes[state.at];
+  var ticked = row.querySelector("label");
+  if (!ticked) return;
+  // A scene going back to itself always restarts, so its toggle is held on. A scene that never
+  // shows again starts once, so its toggle is greyed
+  var loops = sceneLoops(scene);
+  var once = !sceneShowsAgain(scene);
+  var restart = toggle("&#8630;", "Restart", sceneRestarts(scene),
+                       function (on) { scene.restart = on; },
+                       loops ? "A scene that goes back to itself always restarts"
+                       : once ? "This scene shows only once, so it has nothing to restart"
+                       : "Restart this scene's effects each time it plays, instead of " +
+                         "resuming where they left off", once);
+  restart.disabled = loops || once;
+  row.replaceChild(restart, ticked);
 }

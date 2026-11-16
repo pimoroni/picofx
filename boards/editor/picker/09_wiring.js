@@ -13,7 +13,6 @@ import {
   breakOutInScenes, breakingOutputs, brokenSaid, moveLampInScenes, rejoinInScenes,
   resetWiringInScenes, wiringChanged
 } from "./07_board.js";
-import {noArrow} from "./08_setup.js";
 import {middleOfView, toolButton, zoomOf, zoomTo} from "./31_stretch_bar.js";
 
 // ---- the wiring ---------------------------------------------------------------------------------
@@ -365,3 +364,13 @@ drawSteps.after.push(function () {
 
 // The lines run between things the page has laid out, so they follow the layout
 window.addEventListener("resize", function () { if (setupOn) draw(); });
+
+// ---- the facts, in place --------------------------------------------------------------------
+
+// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
+// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
+function noArrow() {
+  var none = document.createElement("span");
+  none.style.position = "absolute";
+  return none;
+}

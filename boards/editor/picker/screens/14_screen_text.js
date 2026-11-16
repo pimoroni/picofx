@@ -4,13 +4,10 @@ import {boardResidue} from "../03_kept.js";
 import {entryParts, unquoted} from "../03_reading.js";
 import {state} from "../04_scenes.js";
 import {notFittedRead, saidNotFitted} from "../07_board.js";
-import {nameShown} from "../18_drive.js";
-import {isExampleMedia} from "../26_drive_files.js";
 import {
-  SCREENS, SCREEN_NAMES, freshLook, kindOf, mediaNamed, screenLetter, screenShown
+  SCREENS, SCREEN_NAMES, freshLook, kindOf, screenLetter, screenParts, screenShown
 } from "./12_screens.js";
 import {canvasPixels, pairLarger, pairSized, panelPixels, pictureOffset} from "./13_screen_art.js";
-import {named, sline, unit} from "./16_screen_settings.js";
 
 // ---- what the file says about the screens -------------------------------------------------------
 // A screen's entry in a scene, written out and read back, and the words for its placement,
@@ -19,7 +16,7 @@ import {named, sline, unit} from "./16_screen_settings.js";
 // What a screen's entry says in a scene, its look or the line kept as the file had it. A hub
 // writes its positions' entries in place of the screens', and a pair writes one entry for both
 // where the first screen's would go
-export function screenEntry(letter, body) {
+function screenEntry(letter, body) {
   if (state.hub.on) return null;
   if (pairWritten(body)) return letter === SCREENS[0] ? pairEntry(body) : null;
   var screen = state.screens[letter];
@@ -109,7 +106,7 @@ export function screenPlaying(parts, body, letter) {
 }
 
 // Try each kept line of each body as a screen, moving those that write back exactly
-export function readScreens(bodies) {
+function readScreens(bodies) {
   // A file listing what was taken off has the screens it names off and the others fitted. A line
   // read for a screen below fits it again
   if (notFittedRead) {
@@ -157,17 +154,8 @@ export function readScreens(bodies) {
     boardResidue.splice(boardResidue.indexOf(sizes[letter].token), 1);
   });
 }
-
-// ---- the pictures on the drive ------------------------------------------------------------------
-// A screen can show gifs and stills, PNG or JPEG, folders of them, which play as a slideshow,
-// and drawings
-
-export var mediaFound = [];
-
-// Set the pictures and drawings found on the drive
-export function setMediaFound(list) {
-  mediaFound = list;
-}
+screenParts.screenEntry = screenEntry;
+screenParts.readScreens = readScreens;
 
 // Colours the file can say by name, the words the board knows, the rest written as hex
 export var BG_NAMES = {};
@@ -298,26 +286,6 @@ export function playbackSaid(held, look) {
               (look.holdBack && secondHoldAllowed(held, look) ? " and " + look.holdBack + " s"
                                                               : ""));
   return said.join(", ");
-}
-
-// The speed's line, kept to one line, with its choices, the figure and what the figure counts
-export function speedLine(speed, every, look) {
-  var line = sline(named("Speed"), speed, every,
-                   every ? unit(look.pace === "fps" ? "frames per second" : "seconds per frame")
-                         : null);
-  line.classList.add("speedline");
-  return line;
-}
-
-// ---- what is showing, and every section under it ----
-
-// A picture's name as a person reads it, or a drawing's title
-export function pictureSaid(name) {
-  var media = mediaNamed(name);
-  if (media && media.kind === "drawing") return media.drawing.title;
-  // A slideshow of the user's own is a path from the drive's top, an example plainly its name
-  if (isExampleMedia(name)) return nameShown(name);
-  return media && media.kind === "folder" ? "/" + name : name;
 }
 
 // ---- what the file says ------------------------------------------------------------------------

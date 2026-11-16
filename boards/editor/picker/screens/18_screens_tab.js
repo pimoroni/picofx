@@ -1,21 +1,25 @@
 import {draw} from "../00_draw.js";
-import {state} from "../04_scenes.js";
+import {setupOn} from "../03_runs.js";
+import {allBodies, apply, frozen, slotAt, state, store} from "../04_scenes.js";
 import {boardIcon} from "../08_setup.js";
 import {nameShown} from "../18_drive.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
 import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia
 } from "../26_drive_files.js";
-import {SCREENS, assetSteps, screenButton, screenUnder, screensPaired} from "./12_screens.js";
-import {mediaArt, panelPreview, renderScreensParts} from "./13_screen_art.js";
-import {drawingCopyTile} from "./16_screen_settings.js";
+import {
+  SCREENS, SCREEN_NAMES, assetSteps, screenButton, screenParts, screenShown, screenUnder,
+  screensHeadSteps, screensPaired
+} from "./12_screens.js";
+import {mediaArt, panelPreview} from "./13_screen_art.js";
+import {drawingCopyTile, lightRow, lookSections, showingLine} from "./16_screen_settings.js";
 
 // ---- the Screens tab ----------------------------------------------------------------------------
 // Each screen's preview in the scene on show, and the gallery of the drive's pictures and drawings.
 
 // A screen's preview. One the scene shows nothing on shows Always on's picture faded where the board
 // plays it there, in Always on's own settings
-export function previewInScene(screen, letter) {
+function previewInScene(screen, letter) {
   var under = screen.shows ? null : screenUnder(letter);
   if (!under || !under.always) return panelPreview(screen);
   var always = state.always.body.screens[letter];
@@ -39,7 +43,7 @@ function mediaGroups() {
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
 
-export function renderAssets() {
+function renderAssets() {
   var box = document.getElementById("assets");
   box.textContent = "";
   document.getElementById("screensSays").textContent = !state.fileHandle
@@ -186,7 +190,7 @@ export function renderAssets() {
 
 // Put the board's chip beside what is the board's, not before a box's name. That is a screen's
 // panel size in its band, the way the hub is wired in its band, and each position's panel size
-export function renderScreensTab() {
+function renderScreensTab() {
   renderScreensParts();
   if (state.hub.on) {
     document.querySelectorAll("#screensHead .hubbox .place .placesize").forEach(function (size) {
@@ -207,4 +211,147 @@ export function renderScreensTab() {
     fact.appendChild(size);
     band.title = "";
   });
+}
+screenParts.renderTab = renderScreensTab;
+
+// A box for each screen port. A screen's box has the backlight across its top, what it shows
+// straight under the module, and its look's sections under that
+function renderScreenBoxes() {
+  var box = document.getElementById("screensHead");
+  box.textContent = "";
+  SCREENS.forEach(function (letter) {
+    var screen = state.screens[letter];
+    var side = document.createElement("div");
+    side.className = "screen-box " + letter.toLowerCase();
+    var head = document.createElement("h3");
+    head.appendChild(document.createTextNode(screenShown(letter)));
+    side.appendChild(head);
+
+    var body = document.createElement("div");
+    body.className = "body";
+    side.appendChild(body);
+
+    if (!screen.there) {
+      body.className = "body adding";
+      var add = document.createElement("button");
+      add.textContent = "add this screen";
+      add.onclick = function () {
+        screen.there = true;
+        screen.shows = null;
+        screen.kept = null;
+        draw();
+      };
+      body.appendChild(add);
+      box.appendChild(side);
+      return;
+    }
+
+    // Taking the screen out is the only way to have none, as a screen showing nothing would
+    // say the same thing twice
+    var drop = document.createElement("button");
+    drop.className = "drop";
+    drop.textContent = "\u00d7";
+    drop.title = "Remove this screen from every scene";
+    drop.onclick = function () {
+      screen.there = false;
+      // Every scene's choice for it goes too, since nothing is left to show them
+      store();
+      allBodies().forEach(function (held) {
+        held.screens[letter].shows = null;
+        held.screens[letter].kept = null;
+      });
+      apply(slotAt(state.at).body);
+      draw();
+    };
+    head.appendChild(drop);
+
+    var size = document.createElement("select");
+    // The sizes a panel can be, the catalogue's hub being no panel size
+    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
+      .filter(function (inches) { return inches !== "hub"; });
+    if (!screen.size) {
+      var quiet = document.createElement("option");
+      quiet.value = "";
+      quiet.textContent = "fitted size";
+      quiet.selected = true;
+      size.appendChild(quiet);
+    }
+    offered.forEach(function (inches) {
+      var option = document.createElement("option");
+      option.value = inches;
+      option.textContent = inches + " inch";
+      if (screen.size === inches) option.selected = true;
+      size.appendChild(option);
+    });
+    size.onchange = function () {
+      if (size.value) screen.size = size.value;
+      draw();
+    };
+    size.className = "inband";
+    size.title = "Panel fitted, shared by every scene";
+    head.insertBefore(size, drop);
+
+    body.appendChild(previewInScene(screen, letter));
+
+    // The look's sections, what it shows above them, and its backlight across the top. A screen
+    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
+    var under = screen.shows ? null : screenUnder(letter);
+    var held = screen;
+    if (under && under.always) {
+      var always = state.always.body.screens[letter];
+      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
+                                        look: always.look || screen.look});
+    }
+    var sections = lookSections("screen" + letter, held, screen.size);
+    var light = lightRow(held.look.backlight, function (value) {
+      screen.look.backlight = value;
+    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
+    if (held !== screen) {
+      frozen(sections);
+      frozen(light);
+    }
+    body.appendChild(sections);
+    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+    body.insertBefore(light, body.firstChild);
+
+    // What the file already says for this screen, where the picker did not write it
+    // and no picture can stand for it. It is a line of its own under the settings
+    if (screen.kept) {
+      var keep = document.createElement("button");
+      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
+      keep.title = screen.kept;
+      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
+      keep.onclick = function () { screen.shows = "keep"; draw(); };
+      side.appendChild(keep);
+    }
+    box.appendChild(side);
+  });
+}
+
+// ---- drawing the tab -------------------------------------------------------------------------
+
+// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
+// board's
+function renderScreensParts() {
+  renderScreensHead();
+  renderAssets();
+  var head = document.getElementById("screensHead");
+  // The band is the screen's coloured box, so it wears the board's chip like the others
+  head.querySelectorAll(".screen-box h3").forEach(function (band) {
+    band.insertBefore(boardIcon(), band.firstChild);
+    band.title = "Board setup, shared by every scene";
+  });
+  // Whether a screen is fitted and its size are the board's
+  if (!setupOn) {
+    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
+      .forEach(function (control) { control.disabled = true; });
+  }
+}
+
+function renderScreensHead() {
+  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
+    document.getElementById("screensHead").classList.remove("hubbed");
+    renderScreenBoxes();
+  }
+  screensHeadSteps.after.forEach(function (step) { step(); });
 }

@@ -6,7 +6,9 @@ import {
   boardResidue, clearResidue, copyKept, filterResidue, keptLights, keptNow, setKept
 } from "./03_kept.js";
 import {sectionLines, targetFor} from "./03_lines.js";
-import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, setLayout, wiring} from "./03_outputs.js";
+import {
+  CHANNELS, OUTPUTS, joinedItems, order, plainOrder, setLayout, wiring
+} from "./03_outputs.js";
 import {
   argsRead, boardTokens, entryParts, itemsNamed, lampsNamed, placesNamed, spanOf, unquotedColon
 } from "./03_reading.js";
@@ -21,7 +23,7 @@ import {
 } from "./07_board.js";
 import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
 import {
-  argsWritten, boardSet, onProgramPage, programNamed, setProgramPage
+  argsWritten, boardSet, onProgramPage, programNamed, programsReadSteps, setProgramPage
 } from "./19_board_settings.js";
 import {figureKey, placeFor, settingIn} from "./25_figures.js";
 import {programsKnown} from "./26_drive_programs.js";
@@ -158,7 +160,7 @@ var programWaiting = null;
 
 // Read the waiting program as readProgram() would have, once the programs are known, unless one
 // was chosen in the meantime. Still unknown, it stays on the board line and the page where it is
-export function readWaitingProgram() {
+function readWaitingProgram() {
   if (!programWaiting) return;
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
@@ -170,6 +172,7 @@ export function readWaitingProgram() {
   readProgram(named, argued);
   if (!boardSet.program) setProgramPage(page);
 }
+programsReadSteps.push(readWaitingProgram);
 
 // Take a file into the page, with its board line, its scenes and every entry kept in its scene
 function absorbFile(text) {
@@ -257,13 +260,6 @@ function wireAsRead(broken) {
   }), order);
   // The plain order is of the wiring just set
   setLayout(wiring, plainOrder());
-}
-
-// Every lamp in number order, an output broken out as its red, green and blue
-export function plainOrder() {
-  var plain = [];
-  wiring.forEach(function (one, out) { plain = plain.concat(placesOf(out)); });
-  return plain;
 }
 
 // ---- the wiring, in a comment of the page's own -------------------------------------------------

@@ -1,5 +1,3 @@
-import {active} from "./03_runs.js";
-
 // ---- colours ------------------------------------------------------------------------------------
 // Colours turned between hex, RGB and hue, the swatches and their words, and how bright a stretch
 // is drawn at its Brightness.
@@ -76,10 +74,6 @@ export function astrayOf(side) {
     return !(onOne && atStep[upTo[place]] === 1);
   });
 }
-
-// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
-// worked on, so only one stretch on the page is ever marked
-export function isPicked(run, at) { return run === active && run.picked === at; }
 
 // ---- choosing a colour ---------------------------------------------------------------------
 // Under the stretch it is for, twelve swatches and a custom one that opens a hue and

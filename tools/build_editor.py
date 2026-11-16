@@ -219,7 +219,8 @@ DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |c
 def joined(parts):
     """
     The parts as one script, in the order given, without their import lines and export keywords,
-    after checking each import names a part the board takes and something that part exports.
+    after checking each import names a part the board takes and something that part exports, and
+    that no parts import each other in a circle.
     """
     texts = {}
     for part in parts:
@@ -236,7 +237,9 @@ def joined(parts):
             if exported:
                 exports[part].add(name)
     script = ""
+    sources = {}
     for part, text in texts.items():
+        sources[part] = []
         for names, source in IMPORT.findall(text):
             source = os.path.normpath(os.path.join(os.path.dirname(part), source))
             if source not in texts:
@@ -245,8 +248,29 @@ def joined(parts):
                 if name and name not in exports[source]:
                     sys.exit("{} imports {} from {}, which does not export it".format(
                         part, name, source))
+            sources[part].append(source)
         script += EXPORT.sub("", IMPORT.sub("", text))
+    check_no_circle(sources)
     return script
+
+
+def check_no_circle(sources):
+    """Refuse parts that import each other in a circle, naming the circle. sources holds the parts
+    each part imports."""
+    done = set()
+
+    def visit(part, path):
+        if part in path:
+            circle = path[path.index(part):] + [part]
+            sys.exit("These parts import each other in a circle: {}".format(" -> ".join(circle)))
+        if part in done:
+            return
+        for source in sources[part]:
+            visit(source, path + [part])
+        done.add(part)
+
+    for part in sources:
+        visit(part, [])
 
 
 def picker(board_dir, repo_dir, version):
