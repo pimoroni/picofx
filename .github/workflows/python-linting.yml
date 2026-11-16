@@ -50,7 +50,7 @@ jobs:
       with:
         node-version: '22'
 
-    # The drive's copy of the picker is minified by the esbuild pinned in tools/picker
+    # The drive's picker and editor are minified by the esbuild pinned in tools/picker
     - name: Install esbuild
       shell: bash
       run: npm ci --prefix tools/picker

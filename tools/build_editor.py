@@ -13,9 +13,9 @@ catalogue.js alone. The parts and pages are
 committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
 
-editor/picker.html is kept whole and readable, so it opens from disk as it is. The drive's copy
-has its style and script minified by the esbuild pinned in tools/picker, which
-npm ci --prefix tools/picker installs.
+editor/picker.html is kept whole and readable, so it opens from disk as it is. The drive's copies
+of the picker and the text editor have their style and script minified by the esbuild pinned in
+tools/picker, which npm ci --prefix tools/picker installs.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
@@ -224,7 +224,7 @@ def picker(board_dir, repo_dir, version):
     return text
 
 
-# The esbuild the drive's copy of the picker is minified with, pinned in tools/picker/package.json
+# The esbuild the drive's picker and editor are minified with, pinned in tools/picker/package.json
 ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
 
 # The oldest browsers the drive's copy has to run in. Only Chromium-based ones can write to the
@@ -564,8 +564,8 @@ def main():
     sources = {"CATALOGUE": generated[catalogue_path],
                "PICKER": minified(repo_dir, generated[os.path.join(editor_dir, "picker.html")])}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
-        sources["EDITOR"] = f.read().replace("__BOARD_NAME__", board["name"]).replace(
-            "__VERSION__", version)
+        sources["EDITOR"] = minified(repo_dir, f.read().replace("__BOARD_NAME__", board["name"])
+                                     .replace("__VERSION__", version))
     declared = board_declares(args.board_dir)
     if declared and declared["detect"]:
         sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,
