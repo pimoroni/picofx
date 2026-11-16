@@ -35,36 +35,35 @@ committed.
 ## Layout
 
 - `page.html` is the page's head, stylesheet and markup. The build fills in `__BOARD_NAME__`,
-  `__VERSION__` and `__BUILD__`, the board's description and the version, which `01_looks.js`
+  `__VERSION__` and `__BUILD__`, the board's description and the version, which `looks.js`
   reads.
-- Every other file is a part: a numbered module, which runs after the parts it imports, as
-  `05_strips.js` after `04_scenes.js`.
+- Every other file is a part: a module, which runs after the parts it imports, as `strips.js`
+  after `scenes.js`.
 - A folder named after a feature (`screens`, `hub`, `sound`, `sensor`, `discover`, `firmware`) is
   taken only by a board whose description has that feature. Inside another, as
-  `discover/screens/`, it is taken only where the board has both. Its parts are numbered among
-  the rest, so `12_screens.js` loads between `11_tabs.js` and `13_sound.js`.
-- A board can add parts of its own in its `editor/picker/` folder. They join the shared parts by
-  number, and must not share a name with one.
-- `99_start.js` is last. It draws the page once every part is in place.
+  `discover/screens/`, it is taken only where the board has both.
+- A board can add parts of its own in its `editor/picker/` folder. They join the shared parts,
+  and must not share a name with one.
+- `start.js` is last. It draws the page once every part is in place.
 
 ## Parts
 
 Each part imports what it uses from the parts that declare it, and exports what other parts use:
 
 ```js
-import {draw} from "./00_draw.js";
-import {pick, runs} from "./03_runs.js";
+import {draw} from "./draw.js";
+import {pick, runs} from "./runs.js";
 
 export function renderStripBar(where, run) { ... }
 ```
 
 The build checks every import names a part the board takes and something that part exports, and
 refuses parts that import each other in a circle. It then bundles the parts, each after every
-part it imports and otherwise in number order, with `99_start.js` last. A part's top-level
+part it imports and otherwise in name order, with `start.js` last. A part's top-level
 statements run in that order, so a statement may only use what the parts it imports have made.
 
 Nothing may depend on the order two independent parts run in. A list that parts add steps to
-keeps them in an order its owner states, through `addStep()` in `00_draw.js`, such as
+keeps them in an order its owner states, through `addStep()` in `draw.js`, such as
 `DRAW_AFTER` for the draw and `BODY_ORDER` for a scene's share of each part. Building with
 `PICKER_REVERSE_TIES=1` runs independent parts the other way round, to check.
 
@@ -72,9 +71,9 @@ A variable is written only by the part that declares it. Other parts call that p
 to change it, such as `activate()`, `setLayout()` or `setPrograms()`.
 
 A part for every board never imports from a feature folder. It reaches a feature's code through
-a hook the feature fills in: `screenHooks` and `firmwareHooks` in `07_board.js`, `sceneHooks`
-in `04_scenes.js` for the sensor part, and `discoverKinds` in `discover/28_discover.js` for each
-kind of example other than a program.
+a hook the feature fills in: `screenHooks` and `firmwareHooks` in `board.js`, `sceneHooks` in
+`scenes.js` for the sensor part, and `discoverKinds` in `discover/discover.js` for each kind of
+example other than a program.
 
 After moving code between parts, rewrite the imports and check them:
 
@@ -87,9 +86,9 @@ A part that needs work done by a later one offers a list or an object, and the l
 its function to it:
 
 - `drawSteps.before` and `drawSteps.after`, run on every `draw()`, and `drawParts`, the named
-  steps between them that `DRAW_ORDER` in `00_draw.js` puts in order, and `paintSteps`.
-- `stripDrawing` in `05_strips.js`, `screenParts` in `screens/12_screens.js` and `hubParts` in
-  `hub/15_hub.js`, which the later parts of the strips, screens and hub fill in.
+  steps between them that `DRAW_ORDER` in `draw.js` puts in order, and `paintSteps`.
+- `stripDrawing` in `strips.js`, `screenParts` in `screens/screens.js` and `hubParts` in
+  `hub/hub.js`, which the later parts of the strips, screens and hub fill in.
 - `programsReadingSteps` and `programsReadSteps`, as the drive's programs are read and once they
   are.
 - `chosenSteps`, for the settings drawn under a chosen stretch.

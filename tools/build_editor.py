@@ -179,14 +179,14 @@ def check_release_branch(page):
         sys.exit("picker.html has Discover, but its DISCOVER_BRANCH line could not be read")
     if found.group(1) != RELEASE_BRANCH:
         sys.exit("Discover fetches examples from {}, and a release takes them from {}. Set "
-                 "DISCOVER_BRANCH in boards/editor/picker/discover/28_discover.js".format(
+                 "DISCOVER_BRANCH in boards/editor/picker/discover/discover.js".format(
                      found.group(1), RELEASE_BRANCH))
 
 
 def board_parts(picker_folders, board):
     """
-    The board's numbered parts in number order, from the shared parts and any of its own, a
-    feature folder's only where it has it. A feature folder inside another, as discover/screens/,
+    The board's parts in name order, from the shared parts and any of its own, a feature
+    folder's only where it has it. A feature folder inside another, as discover/screens/,
     is taken only where the board has both. A part of the board's own adds to the shared ones.
     """
     folders = []
@@ -204,7 +204,7 @@ def board_parts(picker_folders, board):
 
     for folder in picker_folders:
         take(folder)
-    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.js"))]
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "*.js"))]
     names = [os.path.basename(part) for part in parts]
     twice = sorted({name for name in names if names.count(name) > 1})
     if twice:
@@ -218,7 +218,7 @@ DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |c
 
 
 # The part that draws the page once every other part is in place, which runs last
-START_PART = "99_start.js"
+START_PART = "start.js"
 
 # The page --dev writes beside picker.html, loading the parts as modules so a change to one shows
 # on reload. Modules load only from a server, as python3 -m http.server at the repository's root
@@ -300,7 +300,7 @@ def check_no_circle(sources):
 def picker(board_dir, repo_dir, version):
     """
     The board's picker three times, from page.html with the board and the version filled in and
-    the numbered parts: picker.html, with the parts bundled into one readable script whose names
+    the parts: picker.html, with the parts bundled into one readable script whose names
     stay global, so it opens from disk; the drive's page, the parts bundled into a function for
     minified() to shorten; and the page that loads the parts as modules, for working on them.
     """
