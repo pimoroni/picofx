@@ -220,7 +220,19 @@ button.round svg{display:block}
 .run svg .span:hover{fill:rgba(0,133,125,.07)}
 
 /* What the picked section is playing */
-.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
+.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem;
+ background:var(--panel)}
+/* Pointing at its stretch, the panel is drawn in the colour the stretch is picked in, and its
+   point is a square turned on its corner over the top edge, filled to hide the edge under it.
+   --notch is measured from the panel's outer edge, so the square's 14px sits 2px + 7px left */
+.chosen.pointing{position:relative;border:2px solid var(--accent);
+ padding:calc(.6rem - 1px) calc(.8rem - 1px)}
+.chosen.pointing::before{content:"";position:absolute;top:-8px;left:calc(var(--notch) - 9px);
+ width:12px;height:12px;background:inherit;border-top:2px solid var(--accent);
+ border-left:2px solid var(--accent);transform:rotate(45deg);border-top-left-radius:2px}
+/* Nothing looks picked while the board is set up */
+body.setupall .chosen.pointing{border-color:var(--line)}
+body.setupall .chosen.pointing::before{display:none}
 .chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
 .chosen .who b{color:var(--ink);font-size:.92rem}
 /* The gallery. A card shows what a look does, and a tap puts it on the stretch being worked on */
@@ -472,7 +484,7 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
 .scenebody{border:1px solid transparent;border-radius:12px;padding:0}
 .scenebody.framed{border:1.5px solid var(--frame);border-top-left-radius:0;
  background:var(--panel);padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
-.scenebody.framed .panel,.scenebody.framed #wiringRow{background:#faf9f7}
+.scenebody.framed .panel,.scenebody.framed #wiringRow,.scenebody.framed .chosen{background:#faf9f7}
 
 /* What one scene is called, and how long it holds */
 .sceneset{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;
@@ -3935,6 +3947,46 @@ var chosenSteps = [];
 function renderChosen(where, run) {
   renderChosenPanel(where, run);
   chosenSteps.forEach(function (step) { step(where, run); });
+  pointFrom(where, run);
+}
+
+// ---- the chosen stretch's panel, pointing at its stretch -------------------------------------
+
+// How far the point stays from the panel's corners, and the least of a stretch it points at
+var NOTCH_INSET = 14;
+
+// Make the chosen stretch's panel point up at its stretch in the bar above. The panel is pointed
+// again whenever its size changes, which is also when a hidden tab is shown, and when a long
+// strip's bar scrolls under it
+function pointFrom(where, run) {
+  var box = document.getElementById(where);
+  var panel = box && box.querySelector(".chosen");
+  var bar = document.getElementById((run.id || run.name) + "Bar");
+  if (!panel || !bar) return;
+  function point() { pointAt(panel, bar.querySelectorAll(".sec")[run.picked]); }
+  point();
+  if (window.ResizeObserver) new ResizeObserver(point).observe(panel);
+  var scroller = bar.querySelector(".scroller");
+  if (scroller) scroller.addEventListener("scroll", point);
+}
+
+// Point a panel at the middle of the part of a stretch's cell in view. It points at nothing where
+// the cell is scrolled out of view, or is not picked since another run is being worked on
+function pointAt(panel, cell) {
+  if (cell && !cell.classList.contains("picked")) cell = null;
+  var from = panel.getBoundingClientRect();
+  var shown = cell ? cell.getBoundingClientRect() : null;
+  var view = cell && cell.closest(".scroller") ? cell.closest(".scroller").getBoundingClientRect()
+                                                : shown;
+  var left = shown ? Math.max(shown.left, view.left) : 0;
+  var right = shown ? Math.min(shown.right, view.right) : 0;
+  var pointing = !!shown && from.width > 0 && right - left >= NOTCH_INSET;
+  panel.classList.toggle("pointing", pointing);
+  if (!pointing) return;
+  // A stretch at either end of the bar is pointed at as near its middle as the corners allow
+  var middle = Math.min(Math.max((left + right) / 2, from.left + NOTCH_INSET),
+                        from.right - NOTCH_INSET);
+  panel.style.setProperty("--notch", (middle - from.left) + "px");
 }
 
 function renderChosenPanel(where, run) {

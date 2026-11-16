@@ -1294,6 +1294,46 @@ var chosenSteps = [];
 function renderChosen(where, run) {
   renderChosenPanel(where, run);
   chosenSteps.forEach(function (step) { step(where, run); });
+  pointFrom(where, run);
+}
+
+// ---- the chosen stretch's panel, pointing at its stretch -------------------------------------
+
+// How far the point stays from the panel's corners, and the least of a stretch it points at
+var NOTCH_INSET = 14;
+
+// Make the chosen stretch's panel point up at its stretch in the bar above. The panel is pointed
+// again whenever its size changes, which is also when a hidden tab is shown, and when a long
+// strip's bar scrolls under it
+function pointFrom(where, run) {
+  var box = document.getElementById(where);
+  var panel = box && box.querySelector(".chosen");
+  var bar = document.getElementById((run.id || run.name) + "Bar");
+  if (!panel || !bar) return;
+  function point() { pointAt(panel, bar.querySelectorAll(".sec")[run.picked]); }
+  point();
+  if (window.ResizeObserver) new ResizeObserver(point).observe(panel);
+  var scroller = bar.querySelector(".scroller");
+  if (scroller) scroller.addEventListener("scroll", point);
+}
+
+// Point a panel at the middle of the part of a stretch's cell in view. It points at nothing where
+// the cell is scrolled out of view, or is not picked since another run is being worked on
+function pointAt(panel, cell) {
+  if (cell && !cell.classList.contains("picked")) cell = null;
+  var from = panel.getBoundingClientRect();
+  var shown = cell ? cell.getBoundingClientRect() : null;
+  var view = cell && cell.closest(".scroller") ? cell.closest(".scroller").getBoundingClientRect()
+                                                : shown;
+  var left = shown ? Math.max(shown.left, view.left) : 0;
+  var right = shown ? Math.min(shown.right, view.right) : 0;
+  var pointing = !!shown && from.width > 0 && right - left >= NOTCH_INSET;
+  panel.classList.toggle("pointing", pointing);
+  if (!pointing) return;
+  // A stretch at either end of the bar is pointed at as near its middle as the corners allow
+  var middle = Math.min(Math.max((left + right) / 2, from.left + NOTCH_INSET),
+                        from.right - NOTCH_INSET);
+  panel.style.setProperty("--notch", (middle - from.left) + "px");
 }
 
 function renderChosenPanel(where, run) {
