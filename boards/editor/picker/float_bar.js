@@ -3,6 +3,7 @@ import {boardSet, onProgramPage} from "./board_settings.js";
 import {DRAW_AFTER, addStep, drawSteps} from "./draw.js";
 import {escapeHtml} from "./file_preview.js";
 import {programTitle} from "./program.js";
+import {closeSaveMenu} from "./save_menu.js";
 import {state} from "./scenes.js";
 
 // ---- the bar along the top ----------------------------------------------------------------------
@@ -60,7 +61,7 @@ function floatHeader(away) {
   floatShown = away;
   var buttons = floatBar.querySelector(".floatbuttons");
   // The save menu is placed under its arrow as it opens, so one open is closed for the move
-  document.getElementById("saveMenu").hidden = true;
+  closeSaveMenu();
   FLOAT_MOVED.forEach(function (id) {
     var one = document.getElementById(id);
     if (away) {

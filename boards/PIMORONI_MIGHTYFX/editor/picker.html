@@ -2099,9 +2099,9 @@ body:has(>dialog.firmwaresheet[open]){overflow:hidden}
  <span class="setuphead" id="setupHead"></span>
  <span id="status"></span>
  <button id="open" class="primary">Open FX drive</button>
- <button id="save" disabled>Save to board</button>
+ <button id="save" disabled>Save to board</button><button type="button" id="saveArrow" class="savearrow" title="Save settings" aria-haspopup="true" aria-expanded="false" aria-controls="saveMenu">&#9662;</button>
  <button id="check" disabled>Check board</button>
-</header>
+<div id="saveMenu" class="savemenu" role="group" aria-label="Save settings" hidden></div></header>
 <main>
 
 <div id="banner"></div>
@@ -9659,73 +9659,74 @@ function rememberRead(text) {
 }
 
 // boards/editor/picker/save_menu.js
-function saveMenu() {
-  var menu = document.getElementById("saveMenu");
-  menu.textContent = "";
-  function choice(words, hint, on, flip, refused) {
-    var label = document.createElement("label");
-    label.className = "savechoice" + (refused ? " refused" : "");
-    var box = document.createElement("input");
-    box.type = "checkbox";
-    box.checked = on;
-    box.disabled = !!refused;
-    box.onchange = function() {
+var saveMenu = document.getElementById("saveMenu");
+var saveArrow = document.getElementById("saveArrow");
+function saveChoice(words, hint, on, flip, refused) {
+  var box = h("input", {
+    type: "checkbox",
+    checked: on,
+    disabled: !!refused,
+    onchange: function() {
       flip(box.checked);
       draw();
-    };
-    label.appendChild(box);
-    var said = document.createElement("span");
-    said.innerHTML = words + "<small>" + (refused || hint) + "</small>";
-    label.appendChild(said);
-    menu.appendChild(label);
-  }
-  choice(
-    "Play saves without an eject",
-    boardSet.program ? "saving restarts the board and runs the program" : "the first save after turning this on still needs an eject",
-    boardSet.reload,
-    function(on) {
-      boardSet.reload = on;
-    },
-    null
-  );
-  choice(
-    "Keep the drive hidden at start",
-    "double-press Boot to show it",
-    boardSet.driveHidden,
-    function(on) {
-      boardSet.driveHidden = on;
-    },
-    driveMeansSomething() ? null : "always shown while a program runs"
+    }
+  });
+  return h(
+    "label",
+    { className: "savechoice" + (refused ? " refused" : "") },
+    box,
+    h("span", {}, words, h("small", {}, refused || hint))
   );
 }
-(function() {
-  var save = document.getElementById("save");
-  var arrow = document.createElement("button");
-  arrow.type = "button";
-  arrow.id = "saveArrow";
-  arrow.className = "savearrow";
-  arrow.textContent = "\u25BE";
-  arrow.title = "Save settings";
-  save.parentNode.insertBefore(arrow, save.nextSibling);
-  var menu = document.createElement("div");
-  menu.id = "saveMenu";
-  menu.className = "savemenu";
-  menu.hidden = true;
-  document.querySelector("header").appendChild(menu);
-  arrow.onclick = function() {
-    menu.hidden = !menu.hidden;
-    if (menu.hidden) return;
-    var within = menu.offsetParent.getBoundingClientRect();
-    var under = arrow.getBoundingClientRect();
-    menu.style.left = "auto";
-    menu.style.right = within.right - under.right + "px";
-    menu.style.top = under.bottom - within.top + 6 + "px";
-  };
-  document.addEventListener("click", function(event) {
-    if (!menu.hidden && !menu.contains(event.target) && event.target !== arrow) menu.hidden = true;
-  });
-})();
-addStep(drawSteps.after, DRAW_AFTER, "saveMenu", saveMenu);
+function renderSaveMenu() {
+  replace(
+    saveMenu,
+    saveChoice(
+      "Play saves without an eject",
+      boardSet.program ? "saving restarts the board and runs the program" : "the first save after turning this on still needs an eject",
+      boardSet.reload,
+      function(on) {
+        boardSet.reload = on;
+      },
+      null
+    ),
+    saveChoice(
+      "Keep the drive hidden at start",
+      "double-press Boot to show it",
+      boardSet.driveHidden,
+      function(on) {
+        boardSet.driveHidden = on;
+      },
+      driveMeansSomething() ? null : "always shown while a program runs"
+    )
+  );
+}
+function showSaveMenu(shown) {
+  saveMenu.hidden = !shown;
+  saveArrow.setAttribute("aria-expanded", shown ? "true" : "false");
+}
+function closeSaveMenu() {
+  showSaveMenu(false);
+}
+saveArrow.onclick = function() {
+  showSaveMenu(saveMenu.hidden);
+  if (saveMenu.hidden) return;
+  var within = saveMenu.offsetParent.getBoundingClientRect();
+  var under = saveArrow.getBoundingClientRect();
+  saveMenu.style.left = "auto";
+  saveMenu.style.right = within.right - under.right + "px";
+  saveMenu.style.top = under.bottom - within.top + 6 + "px";
+};
+document.addEventListener("click", function(event) {
+  if (saveMenu.hidden || saveMenu.contains(event.target) || saveArrow.contains(event.target)) return;
+  closeSaveMenu();
+});
+document.addEventListener("keydown", function(event) {
+  if (event.key !== "Escape" || saveMenu.hidden) return;
+  closeSaveMenu();
+  saveArrow.focus();
+});
+addStep(drawSteps.after, DRAW_AFTER, "saveMenu", renderSaveMenu);
 
 // boards/editor/picker/screens/screens.js
 var SCREEN_NAMES = {};
@@ -12388,7 +12389,7 @@ function floatHeader(away) {
   if (away === floatShown) return;
   floatShown = away;
   var buttons = floatBar.querySelector(".floatbuttons");
-  document.getElementById("saveMenu").hidden = true;
+  closeSaveMenu();
   FLOAT_MOVED.forEach(function(id) {
     var one = document.getElementById(id);
     if (away) {

@@ -1999,9 +1999,9 @@ body:has(>dialog.firmwaresheet[open]){overflow:hidden}
  <span class="setuphead" id="setupHead"></span>
  <span id="status"></span>
  <button id="open" class="primary">Open FX drive</button>
- <button id="save" disabled>Save to board</button>
+ <button id="save" disabled>Save to board</button><button type="button" id="saveArrow" class="savearrow" title="Save settings" aria-haspopup="true" aria-expanded="false" aria-controls="saveMenu">&#9662;</button>
  <button id="check" disabled>Check board</button>
-</header>
+<div id="saveMenu" class="savemenu" role="group" aria-label="Save settings" hidden></div></header>
 <main>
 
 <div id="banner"></div>
