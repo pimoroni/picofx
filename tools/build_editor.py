@@ -13,6 +13,10 @@ catalogue.js alone. The parts and pages are
 committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
 
+editor/picker.html is kept whole and readable, so it opens from disk as it is. The drive's copy
+has its style and script minified by the esbuild pinned in tools/picker, which
+npm ci --prefix tools/picker installs.
+
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
 
@@ -34,6 +38,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 import types
 import zlib
@@ -217,6 +222,38 @@ def picker(board_dir, repo_dir, version):
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))
     return text
+
+
+# The esbuild the drive's copy of the picker is minified with, pinned in tools/picker/package.json
+ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
+
+# The oldest browsers the drive's copy has to run in. Only Chromium-based ones can write to the
+# drive, but Safari and Firefox have to run far enough to say so
+BROWSERS = "chrome100,edge100,firefox100,safari15"
+
+# A style or script written in the page, as opposed to one it loads from a file
+INLINE = re.compile(r"(<(style|script)>)(.*?)(</\2>)", re.DOTALL)
+
+
+def minified(repo_dir, page):
+    """The drive's copy of a page, its style and script minified by the pinned esbuild. Names at
+    the top of the script are kept, since the parts share them as globals."""
+    tool = os.path.join(repo_dir, ESBUILD)
+    if not os.path.exists(tool):
+        sys.exit("esbuild is missing, so install it with: npm ci --prefix tools/picker")
+
+    def minify(block):
+        loader = "css" if block.group(2) == "style" else "js"
+        done = subprocess.run([tool, "--loader=" + loader, "--minify", "--charset=ascii",
+                               "--target=" + BROWSERS, "--log-level=warning"],
+                              input=block.group(3), capture_output=True, text=True,
+                              encoding="utf-8")
+        if done.returncode:
+            sys.exit("esbuild could not minify the page's {}:\n{}".format(block.group(2),
+                                                                         done.stderr))
+        return block.group(1) + done.stdout + block.group(4)
+
+    return INLINE.sub(minify, page)
 
 
 # The tables a board's class declares its connectors in, each a tuple
@@ -525,7 +562,7 @@ def main():
         return
 
     sources = {"CATALOGUE": generated[catalogue_path],
-               "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
+               "PICKER": minified(repo_dir, generated[os.path.join(editor_dir, "picker.html")])}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = f.read().replace("__BOARD_NAME__", board["name"]).replace(
             "__VERSION__", version)

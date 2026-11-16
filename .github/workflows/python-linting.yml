@@ -45,6 +45,16 @@ jobs:
           git diff --exit-code -- "$board/manual/MANUAL.md" "$board/fx_libs/fx_manual.py"
         done
 
+    - name: Install Node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '22'
+
+    # The drive's copy of the picker is minified by the esbuild pinned in tools/picker
+    - name: Install esbuild
+      shell: bash
+      run: npm ci --prefix tools/picker
+
     - name: Check Each Board's Editor Is Rebuilt
       shell: bash
       run: |

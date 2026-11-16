@@ -1,0 +1,7 @@
+{
+ "name": "picker-build",
+ "private": true,
+ "dependencies": {
+  "esbuild": "0.28.2"
+ }
+}
