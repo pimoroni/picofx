@@ -46,9 +46,15 @@ export function renderStripBar(where, run) { ... }
 ```
 
 The build checks every import names a part the board takes and something that part exports, and
-refuses parts that import each other in a circle. It then joins the parts into one script in
-number order, without the import and export lines. A part's top-level statements run in that
-order, so a statement may only use what a part before it has made.
+refuses parts that import each other in a circle. It then joins the parts into one script,
+without the import and export lines, each part after every part it imports and otherwise in
+number order, with `99_start.js` last. A part's top-level statements run in that order, so a
+statement may only use what the parts it imports have made.
+
+Nothing may depend on the order two independent parts run in. A list that parts add steps to
+keeps them in an order its owner states, through `addStep()` in `00_draw.js`, such as
+`DRAW_AFTER` for the draw and `BODY_ORDER` for a scene's share of each part. Building with
+`PICKER_REVERSE_TIES=1` runs independent parts the other way round, to check.
 
 A variable is written only by the part that declares it. Other parts call that part's function
 to change it, such as `activate()`, `setLayout()` or `setPrograms()`.

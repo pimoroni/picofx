@@ -1,4 +1,4 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "./00_draw.js";
 import {BOARD, lookNamed, toggle} from "./01_looks.js";
 import {runs} from "./03_runs.js";
 import {
@@ -369,7 +369,7 @@ function renderSceneRow() {
 
 window.addEventListener("resize", spanTray);
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "sceneTray", function () {
   renderScenes();
   renderSceneSettings();
 });

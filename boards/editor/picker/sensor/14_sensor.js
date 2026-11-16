@@ -1,14 +1,14 @@
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "../00_draw.js";
 import {filterResidue} from "../03_kept.js";
 import {boardTokens, unquoted} from "../03_reading.js";
 import {BOARD_CHIP_CLASSES, canEdit} from "../03_runs.js";
 import {PART_DRAWINGS, REMOTE_COLOURS} from "../04_scene_tray.js";
 import {
-  addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
+  BODY_ORDER, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
 } from "../04_scenes.js";
-import {boardLineSteps} from "../07_board.js";
+import {BOARD_LINE_AFTER, boardLineSteps} from "../07_board.js";
 import {boardBox, small} from "../08_setup.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
 import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
   remoteArtAt, remoteArtJoin
@@ -788,7 +788,7 @@ function remoteChoiceRead(button, said) {
   return "scene:" + sceneMark(scene);
 }
 
-boardLineSteps.after.push(function (line) {
+addStep(boardLineSteps.after, BOARD_LINE_AFTER, "sensor", function (line) {
   if (state.sensorKind === "none") return line;
   return (line || "board:") + " sensor=" + state.sensorKind;
 });
@@ -866,7 +866,7 @@ function readRemoteLines(bodies) {
 
 // A scene keeps its own choices of what triggers do, as it keeps its looks. Its card shows the
 // remote's or PIR Stick's icon where it changes any trigger, and Always on's whenever one is fitted
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "sensor", {
   capture: function (body) {
     body.remote = JSON.parse(JSON.stringify(state.remote));
     body.remoteRepeats = state.remoteRepeats.slice();
@@ -931,7 +931,7 @@ function sensorUnderName() {
   tab.insertBefore(named, tab.firstChild);
 }
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "sensor", function () {
   sensorUnderName();
   renderSensor();
 });
@@ -948,5 +948,5 @@ drawSteps.after.push(function () {
 }());
 
 TAB_NAMES.sensorPanel = "Sensor";
-TAB_PANELS.push("sensorPanel");
+addStep(TAB_PANELS, FEATURE_TABS, "sensor", "sensorPanel");
 keptOpen("sensorPanel");

@@ -1,11 +1,13 @@
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_BEFORE, addStep, draw, drawSteps} from "../00_draw.js";
 import {spoken} from "../03_lines.js";
-import {bodyParts, capture, frozen, namesOf, state} from "../04_scenes.js";
+import {BODY_ORDER, bodyParts, capture, frozen, namesOf, state} from "../04_scenes.js";
 import {
   HUB_PLACES, hubHeadSteps, hubParts, pickPlace, placePicked, placeThere, placeTurnForChosen,
   placeUnder, placesSaid, placesThere
 } from "./15_hub.js";
-import {LOOK_START, assetSteps, freshLook, kindOf, pictureSaid} from "../screens/12_screens.js";
+import {
+  ASSET_ORDER, LOOK_START, assetSteps, freshLook, kindOf, pictureSaid
+} from "../screens/12_screens.js";
 import {pictureOffset} from "../screens/13_screen_art.js";
 import {ANCHOR_NAMES, groundSaid, placingTokens, playingTokens} from "../screens/14_screen_text.js";
 import {lightRow} from "../screens/16_screen_settings.js";
@@ -65,7 +67,7 @@ state.hubLight = 1;
 var placeLookHomes = {};
 HUB_PLACES.forEach(function (place) { placeLookHomes[place] = state.places[place].look; });
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "hubGroups", {
   capture: function (body) {
     HUB_PLACES.forEach(function (place) {
       body.places[place].look = Object.assign({}, state.places[place].look);
@@ -84,7 +86,7 @@ bodyParts.push({
 
 // ---- each scene keeps its groups ---------------------------------------------------------------
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "hubGroups", {
   capture: function (body) {
     HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
   },
@@ -145,7 +147,7 @@ function settleGroups() {
   });
 }
 
-drawSteps.before.push(settleGroups);
+addStep(drawSteps.before, DRAW_BEFORE, "hubGroups", settleGroups);
 
 // ---- pictures go to groups ---------------------------------------------------------------------
 
@@ -166,7 +168,7 @@ function breakingUp(places) {
 
 // Under each picture, the groups and the positions on their own, then all. A picture on a
 // group shows on every member, and pressing it again takes it off
-assetSteps.push(function () {
+addStep(assetSteps, ASSET_ORDER, "hubGroups", function () {
   if (!state.hub.on) return;
   var targets = sendTargets();
   document.querySelectorAll("#assets .asset:not(.offasset)").forEach(function (cell) {

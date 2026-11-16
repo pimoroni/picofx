@@ -1,9 +1,9 @@
 import {banner} from "../00_banner.js";
-import {draw} from "../00_draw.js";
+import {addStep, draw} from "../00_draw.js";
 import {SWATCHES, WORDS, fieldColour, hexOf, rgbInk, takeApart} from "../01_colours.js";
 import {toggle} from "../01_looks.js";
 import {spoken} from "../03_lines.js";
-import {bodyParts, namesOf, state} from "../04_scenes.js";
+import {BODY_ORDER, bodyParts, namesOf, state} from "../04_scenes.js";
 import {screenHooks} from "../07_board.js";
 import {driveTrouble, nameShown} from "../18_drive.js";
 import {escapeHtml} from "../18_file_preview.js";
@@ -11,8 +11,8 @@ import {copyTile} from "../22_program.js";
 import {isExampleMedia, mediaHome, scanMedia} from "../26_drive_files.js";
 import {copyToOwn, folderAt} from "../26_drive_programs.js";
 import {
-  SCREENS, assetSteps, freshLook, kindOf, mediaNamed, pictureSaid, screenButton, screenParts,
-  screenUnder, screensPaired
+  ASSET_ORDER, SCREENS, assetSteps, freshLook, kindOf, mediaNamed, pictureSaid, screenButton,
+  screenParts, screenUnder, screensPaired
 } from "./12_screens.js";
 import {
   canvasPixels, drawingInk, mediaArt, pairCanvas, panelPreview, pictureOffset, styleChoices,
@@ -43,7 +43,7 @@ screenHooks.panelPreview = panelPreview;
 var lookHomes = {};
 SCREENS.forEach(function (letter) { lookHomes["screen" + letter] = state.screens[letter].look; });
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "screenSettings", {
   capture: function (body) {
     SCREENS.forEach(function (letter) {
       body.screens[letter].look = Object.assign({}, state.screens[letter].look);
@@ -752,7 +752,7 @@ export function chosenAfresh(held) {
 // needs. A narrower one is drawn at its true size, never scaled up, in a square tile at least, so
 // a small picture looks as small as it is. The rows line up at the bottom, which keeps the pick
 // rows in line. The name, a still's type and the size show over the picture on hover
-assetSteps.push(function () {
+addStep(assetSteps, ASSET_ORDER, "screenSettings", function () {
   document.getElementById("assets").classList.add("wholeassets");
   document.querySelectorAll("#assets .asset").forEach(function (cell) {
     var media = mediaNamed(cell.dataset.name);

@@ -1,4 +1,4 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "./00_draw.js";
 import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {BLINK} from "./02_blink.js";
@@ -14,14 +14,14 @@ import {
 } from "./03_reading.js";
 import {blank, fileHead, outs, runs, settle} from "./03_runs.js";
 import {
-  apply, blankBody, bodyParts, capture, sceneMark, settleLoneScene, state
+  BODY_ORDER, apply, blankBody, bodyParts, capture, sceneMark, settleLoneScene, state
 } from "./04_scenes.js";
 import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./05_strips.js";
 import {
-  NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
-  setNotFittedRead, stripDescribed
+  BOARD_LINE_AFTER, NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead,
+  saidNotFitted, setNotFittedRead, stripDescribed
 } from "./07_board.js";
-import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
+import {CONNECT_ORDER, WROTE_KEY, connectSteps, drive} from "./18_drive.js";
 import {
   argsWritten, boardSet, onProgramPage, programNamed, programsReadSteps, setProgramPage
 } from "./19_board_settings.js";
@@ -584,7 +584,7 @@ function readLights(bodies) {
 
 // ---- kept entries travel with their scene -----------------------------------------------------
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "readback", {
   capture: function (body) {
     body.kept = copyKept(keptNow);
     body.notes = JSON.parse(JSON.stringify(notesNow));
@@ -625,7 +625,7 @@ function heldOfToken(token) {
 }
 
 // The board line's tokens this page does not hold, after its own
-boardLineSteps.after.push(function (line) {
+addStep(boardLineSteps.after, BOARD_LINE_AFTER, "readback", function (line) {
   // A strip or screen whose setting the page writes itself leaves out any kept for it, which
   // coming later would be the one the board takes
   var lower = (line || "").toLowerCase();
@@ -722,7 +722,7 @@ function markKeptLights() {
   });
 }
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "readback", function () {
   renderKept();
   markKeptLights();
 });
@@ -730,7 +730,7 @@ drawSteps.after.push(function () {
 // ---- when the drive is opened -----------------------------------------------------------------
 
 // A file this page wrote opens straight in. Any other asks first, saying what would be kept
-connectSteps.push(async function () {
+addStep(connectSteps, CONNECT_ORDER, "readback", async function () {
   var text = await (await drive.fileHandle.getFile()).text();
   if (!text.trim()) return;
 

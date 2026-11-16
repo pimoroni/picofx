@@ -1,9 +1,11 @@
 import {banner} from "../00_banner.js";
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
 import {entryParts, unquoted} from "../03_reading.js";
-import {allBodies, bodyParts, driveParts, frozen, state} from "../04_scenes.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {
+  BODY_ORDER, DRIVE_ORDER, allBodies, bodyParts, driveParts, frozen, state
+} from "../04_scenes.js";
+import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
 import {nameShown} from "../18_drive.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
 import {
@@ -233,7 +235,7 @@ var SOUND_SAMPLES = 96;
 
 // ---- each scene keeps its own sound -------------------------------------------------------------
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "sound", {
   capture: function (body) {
     body.sound = state.sound;
     body.soundLoop = state.soundLoop;
@@ -308,7 +310,7 @@ function readSound(bodies) {
 
 var soundsFound = [];
 
-driveParts.push({
+addStep(driveParts, DRIVE_ORDER, "sound", {
   begin: function () { soundsFound = []; },
   file: async function (name, handle) {
     if (!/\.wav$/i.test(name)) return false;
@@ -657,7 +659,7 @@ function kindUnderName() {
   tab.insertBefore(named, tab.firstChild);
 }
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "sound", function () {
   kindUnderName();
   renderSound();
 });
@@ -675,5 +677,5 @@ drawSteps.after.push(function () {
 }());
 
 TAB_NAMES.soundPanel = "Sound";
-TAB_PANELS.push("soundPanel");
+addStep(TAB_PANELS, FEATURE_TABS, "sound", "soundPanel");
 keptOpen("soundPanel");

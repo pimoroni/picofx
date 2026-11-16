@@ -1,10 +1,11 @@
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../00_draw.js";
 import {
-  allBodies, apply, bodyParts, driveParts, otherScenes, slotAt, state, store
+  BODY_ORDER, DRIVE_ORDER, allBodies, apply, bodyParts, driveParts, otherScenes, slotAt, state,
+  store
 } from "../04_scenes.js";
-import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
+import {BOARD_LINE_AFTER, SCREEN_SIZES, boardLineSteps} from "../07_board.js";
 import {tabSwatches} from "../11_tabs.js";
-import {assetSteps, screensHeadSteps} from "../screens/12_screens.js";
+import {ASSET_ORDER, HEAD_AFTER, assetSteps, screensHeadSteps} from "../screens/12_screens.js";
 import {mediaArt} from "../screens/13_screen_art.js";
 import {chosenAfresh} from "../screens/16_screen_settings.js";
 
@@ -94,7 +95,7 @@ export function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
 
 // ---- each scene keeps what the hub's positions show ------------------------------------------
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "hub", {
   capture: function (body) {
     body.places = {};
     HUB_PLACES.forEach(function (place) {
@@ -136,7 +137,7 @@ bodyParts.push({
   read: function () { return hubParts.read.apply(null, arguments); }
 });
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "hub", {
   entries: function (body, lines) {
     if (!state.hub.on) return lines;
     hubParts.placeGroups(body).forEach(function (group) { lines.push(hubParts.hubEntry(group)); });
@@ -145,7 +146,7 @@ bodyParts.push({
   }
 });
 
-boardLineSteps.after.push(function (line) {
+addStep(boardLineSteps.after, BOARD_LINE_AFTER, "hub", function (line) {
   if (!state.hub.on) return line;
   var rest = line.replace(/^board: ?/, "").replace(/\bscreen[ab]=\S+ ?/g, "").trim();
   // The connector the screens come through, then each size fitted and where, such as hubA-D=2.8
@@ -161,7 +162,7 @@ boardLineSteps.after.push(function (line) {
 
 // ---- a picture deleted from the drive ---------------------------------------------------------
 
-driveParts.push({
+addStep(driveParts, DRIVE_ORDER, "hub", {
   // A picture still listed was not deleted. One that was comes off every hub position showing it
   gone: function (name) {
     if (state.media.some(function (one) { return one.name === name; })) return;
@@ -188,14 +189,14 @@ screensHeadSteps.instead.push(function () {
   return true;
 });
 
-screensHeadSteps.after.push(function () {
+addStep(screensHeadSteps.after, HEAD_AFTER, "hub", function () {
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
   facts.appendChild(hubParts.hubSwitch());
 });
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
-assetSteps.push(function () {
+addStep(assetSteps, ASSET_ORDER, "hub", function () {
   var box = document.getElementById("assets");
   box.classList.toggle("hubbed", state.hub.on);
   if (!state.hub.on) return;
@@ -242,7 +243,7 @@ assetSteps.push(function () {
 // The Off card's buttons are the hub's groups and positions on their own where a hub is on, then
 // all, as a picture's are. A group turns off as one, and turning it back on empties it, breaking it
 // up where splitsOverAlways() says, as taking a group's picture off does
-assetSteps.push(function () {
+addStep(assetSteps, ASSET_ORDER, "hub", function () {
   var cell = document.querySelector("#assets .offasset");
   if (!cell || !state.hub.on) return;
   cell.title = "Turn a hub position or group off in this scene";
@@ -327,9 +328,11 @@ tabSwatches.screensPanel = function (swatch) {
   }).join(", ");
 };
 
-drawSteps.before.push(function () { HUB_PLACES.forEach(placeTurnForChosen); });
+addStep(drawSteps.before, DRAW_BEFORE, "hubTurns", function () {
+  HUB_PLACES.forEach(placeTurnForChosen);
+});
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "hub", function () {
   // Under the tab's name, the hub and the size of its panels, in no more room than the name's
   var under = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel] .tabunder");
   if (!under || !state.hub.on) return;

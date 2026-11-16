@@ -1,6 +1,6 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
-import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
+import {BOARD_LINE_AFTER, SCREEN_SIZES, boardLineSteps} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";
 import {renderPreview} from "./18_file_preview.js";
 
@@ -53,7 +53,7 @@ export function argsWritten(path) {
 // Whether keeping the drive hidden means anything, as a program has it shown while it runs
 export function driveMeansSomething() { return !boardSet.program; }
 
-boardLineSteps.after.push(function (line) {
+addStep(boardLineSteps.after, BOARD_LINE_AFTER, "boardSettings", function (line) {
   var tokens = [];
   if (boardSet.program) {
     tokens.push("program=" + boardSet.program);
@@ -194,7 +194,7 @@ function programNote() {
     "program is missing or stops, with the reason in errors.txt."));
 }
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "boardSettings", function () {
   document.body.classList.toggle("programmed", !!boardSet.program);
   programNote();
 });

@@ -1,4 +1,4 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "./00_draw.js";
 import {boardSet, driveMeansSomething} from "./19_board_settings.js";
 
 // ---- how the board takes a save, on the save button ----------------------------------------------
@@ -64,4 +64,4 @@ function saveMenu() {
   });
 }());
 
-drawSteps.after.push(saveMenu);
+addStep(drawSteps.after, DRAW_AFTER, "saveMenu", saveMenu);

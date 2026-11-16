@@ -1,5 +1,5 @@
 import {banner} from "../00_banner.js";
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "../00_draw.js";
 import {BOARD} from "../01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS, firmwareHooks} from "../07_board.js";
@@ -884,7 +884,7 @@ async function discoverDownloadChosen(kind) {
   draw();
 }
 
-drawSteps.after.push(discoverRenderBrowser);
+addStep(drawSteps.after, DRAW_AFTER, "discover", discoverRenderBrowser);
 
 // The gallery over the page, with a way back, the section shown, a card for each example under
 // its section's name, and a bar at its foot saying what is chosen beside Download

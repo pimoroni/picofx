@@ -1,4 +1,4 @@
-import {draw, holdDrawing} from "./00_draw.js";
+import {addStep, draw, holdDrawing} from "./00_draw.js";
 import {BOARD, canPlay, keyOf, lookNamed} from "./01_looks.js";
 import {targetFor} from "./03_lines.js";
 import {
@@ -236,9 +236,11 @@ export function brokenSaid() {
 
 // ---- what the file says about the board -------------------------------------------------
 // The parts below add their own steps to the board line, what each readies before it is
-// written and what each makes of the line written so far, both in the order the parts come
+// written and what each makes of the line written so far. The after steps go in the order
+// stated, which is the order their words are written in
 
 export var boardLineSteps = {before: [], after: []};
+export var BOARD_LINE_AFTER = ["sensor", "hub", "boardSettings", "readback"];
 
 export function boardLine() {
   boardLineSteps.before.forEach(function (step) { step(); });
@@ -280,13 +282,14 @@ export function setNotFittedRead(names) {
 
 // The names of what the board fits by default and has been taken off, as a step from each part
 export var notFittedSteps = [];
+export var NOT_FITTED_ORDER = ["board", "screens"];
 
 // A strip as the board describes it, with its tab's name and whether it is fitted by default
 export function stripDescribed(run) {
   return BOARD.strips.filter(function (strip) { return strip.name === run.name; })[0];
 }
 
-notFittedSteps.push(function () {
+addStep(notFittedSteps, NOT_FITTED_ORDER, "board", function () {
   return runs.filter(function (run) {
     return run.strip && !run.there && stripDescribed(run).fitted;
   }).map(function (run) { return stripDescribed(run).tab; });

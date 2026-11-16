@@ -1,7 +1,7 @@
 import {banner} from "./00_banner.js";
-import {draw} from "./00_draw.js";
+import {addStep, draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
+import {CONNECT_ORDER, connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {
   PROGRAMS, boardSet, programNamed, programsReadSteps, programsReadingSteps, setPrograms
 } from "./19_board_settings.js";
@@ -417,7 +417,7 @@ export var programsKnown = false;
 
 // The program effects.txt names is read first, so the file is read back with it known, and the rest
 // without holding up the steps after
-connectSteps.push(async function () {
+addStep(connectSteps, CONNECT_ORDER, "drivePrograms", async function () {
   programsKnown = false;
   await readNamedProgram();
   readDrivePrograms();

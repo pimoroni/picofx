@@ -188,8 +188,9 @@ export function overwriteQuestion() {
   return "The file on the board has changed since it was opened here. Overwrite those changes?";
 }
 
-// What the parts below read off a drive once it is open, each awaited in the order the parts come
+// What the parts below read off a drive once it is open, each awaited in the order stated
 export var connectSteps = [];
+export var CONNECT_ORDER = ["driveFiles", "drivePrograms", "readback", "firmware"];
 
 export async function connect(fresh) {
   var dir = await pickDrive(fresh);

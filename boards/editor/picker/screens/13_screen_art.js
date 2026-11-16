@@ -1,8 +1,8 @@
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../00_draw.js";
 import {WORDS, rgbInk} from "../01_colours.js";
 import {capture, state} from "../04_scenes.js";
 import {LED_PANELS} from "../10_led_sections.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
 import {
   BOARD_INK, CHIN_INK, DRAWN, EMPTY_INK, FRAME_INK, FRAME_WIDE, GROUND_INK, HOLE_EDGE, HOLE_INK,
   MODULE, NAME_INK, PANEL_INK, PANEL_PX, PER_MM, PRINTED, SCREENS, drawingArts, freshLook, kindOf,
@@ -150,7 +150,7 @@ var pictureReading = null;
 // The pictures any scene puts on a screen or a hub position, calculated once a draw
 var shownThisDraw = null;
 
-drawSteps.before.push(function () { shownThisDraw = null; });
+addStep(drawSteps.before, DRAW_BEFORE, "screenShown", function () { shownThisDraw = null; });
 
 function picturesShown() {
   if (shownThisDraw) return shownThisDraw;
@@ -274,11 +274,11 @@ function sizesUnderName() {
 
 // A picture newly chosen is given its starting turn before anything else is drawn, since
 // writing the file applies every scene in turn and would take it as already chosen
-drawSteps.before.push(function () {
+addStep(drawSteps.before, DRAW_BEFORE, "screenTurns", function () {
   SCREENS.forEach(function (letter) { screenParts.turnForChosen(letter); });
 });
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "screens", function () {
   sizesUnderName();
   screenParts.renderTab();
 });
@@ -299,7 +299,7 @@ drawSteps.after.push(function () {
 // A board with no screen ports keeps the panel out of sight, for the parts that draw into it
 if (SCREENS.length) {
   TAB_NAMES.screensPanel = "Screens";
-  TAB_PANELS.push("screensPanel");
+  addStep(TAB_PANELS, FEATURE_TABS, "screens", "screensPanel");
   keptOpen("screensPanel");
 } else {
   document.getElementById("screensPanel").hidden = true;

@@ -1,7 +1,7 @@
-import {draw, drawSteps} from "../00_draw.js";
+import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../00_draw.js";
 import {BOARD} from "../01_looks.js";
 import {firmwareHooks} from "../07_board.js";
-import {connectSteps} from "../18_drive.js";
+import {CONNECT_ORDER, connectSteps} from "../18_drive.js";
 
 // ---- firmware updates ----------------------------------------------------------------------------
 // The Update available button beside the version in the page's header, and the sheet it opens. Once
@@ -433,11 +433,11 @@ function renderFirmwareDialog() {
   }
 }
 
-drawSteps.before.push(renderFirmwareButton);
-drawSteps.after.push(renderFirmwareDialog);
+addStep(drawSteps.before, DRAW_BEFORE, "firmware", renderFirmwareButton);
+addStep(drawSteps.after, DRAW_AFTER, "firmware", renderFirmwareDialog);
 
 // Check once a drive is open, since only then is the page known to be the one the board carries.
 // The fetch is not awaited, so a slow network holds up no step after it
-connectSteps.push(async function () {
+addStep(connectSteps, CONNECT_ORDER, "firmware", async function () {
   checkFirmware();
 });

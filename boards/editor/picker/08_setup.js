@@ -1,4 +1,4 @@
-import {draw, drawSteps, paintAll} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps, paintAll} from "./00_draw.js";
 import {outputSaid} from "./03_outputs.js";
 import {BOARD_CHIP_CLASSES, active, canEdit, outs, settle, setupOn} from "./03_runs.js";
 import {stretchCount} from "./04_led_panels.js";
@@ -149,7 +149,7 @@ function renderLeds(where, run) {
 }
 stripDrawing.leds = renderLeds;
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "setup", function () {
   renderOutFacts();
   // What is not the board stands back while it is set up
   document.body.classList.toggle("setupall", setupOn);

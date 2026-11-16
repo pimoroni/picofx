@@ -1,4 +1,4 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps} from "./00_draw.js";
 import {astrayOf} from "./01_colours.js";
 import {BOARD} from "./01_looks.js";
 import {
@@ -357,7 +357,7 @@ function gatherFromThree(out) {
   }
 }
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "wiring", function () {
   renderConnectors();
   playSlide();
 });

@@ -1,5 +1,10 @@
-import {allBodies, bodyParts, driveParts, otherScenes, state} from "../04_scenes.js";
-import {boardLineSteps, notFittedSteps, screenHooks, screensFitted} from "../07_board.js";
+import {addStep} from "../00_draw.js";
+import {
+  BODY_ORDER, DRIVE_ORDER, allBodies, bodyParts, driveParts, otherScenes, state
+} from "../04_scenes.js";
+import {
+  NOT_FITTED_ORDER, boardLineSteps, notFittedSteps, screenHooks, screensFitted
+} from "../07_board.js";
 import {isHiddenName, nameShown} from "../18_drive.js";
 import {isExampleMedia, mediaHome} from "../26_drive_files.js";
 import {argumentFrom, openingString} from "../26_drive_programs.js";
@@ -102,10 +107,12 @@ export var DRAWN = 210;
 // The Screens tab's head, a box for each screen. A part that draws the head another way
 // registers on instead, saying whether it did, and one that adds to either on after
 export var screensHeadSteps = {instead: [], after: []};
+export var HEAD_AFTER = ["hub", "screenPair"];
 
 // What the parts after this one add to the pictures on the drive, each after the one before, such
 // as the hub's positions, the whole pictures and the hub's groups
 export var assetSteps = [];
+export var ASSET_ORDER = ["hub", "screenSettings", "hubGroups", "discover"];
 
 // What the screens parts after this one lend to this one and the art, filled in as they load:
 // madeDrawing(name) from the art, screenEntry(letter, body) and readScreens(bodies) from the text,
@@ -127,7 +134,7 @@ export function kindOf(shows) {
 
 // ---- each scene keeps what its screens show ---------------------------------------------------
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "screens", {
   capture: function (body) {
     body.screens = {};
     SCREENS.forEach(function (letter) {
@@ -198,12 +205,12 @@ boardLineSteps.before.push(function () {
 
 // A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
 // the ports are the hub's, so neither is listed
-notFittedSteps.push(function () {
+addStep(notFittedSteps, NOT_FITTED_ORDER, "screens", function () {
   if (state.hub.on) return [];
   return SCREENS.filter(function (letter) { return !state.screens[letter].there; }).map(screenShown);
 });
 
-driveParts.push({
+addStep(driveParts, DRIVE_ORDER, "screens", {
   begin: function () { setMediaFound([]); },
   file: async function (name, handle) {
     if (/\.gif$/i.test(name)) mediaFound.push({ name: name, kind: "gif", handle: handle });

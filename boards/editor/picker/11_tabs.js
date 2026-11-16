@@ -1,4 +1,4 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {active, runs, setSetupMode, setupOn} from "./03_runs.js";
 import {renderChosen} from "./04_led_panels.js";
@@ -32,6 +32,8 @@ BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.
 // is for has their tabs first and opens on the first one fitted
 export var TAB_PANELS = LED_PANELS.slice();
 if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
+// The tabs the feature parts add after the LED ones, in this order
+export var FEATURE_TABS = ["screens", "sound", "sensor"];
 
 export var chosenTab = "outPanel";
 if (BOARD.strips_first) {
@@ -47,7 +49,7 @@ function chosenTakesLooks() {
 
 // A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
 // Edit board and changing scene each put back a stretch of their own, which can be another tab's
-drawSteps.before.push(function () {
+addStep(drawSteps.before, DRAW_BEFORE, "tabs", function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
 });
 
@@ -157,7 +159,7 @@ export function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "tabs", function () {
   if (!active.strip) setLastOutputRun(active);
   if (active.strip) renderChosen("outChosen", lastOutputRun);
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {

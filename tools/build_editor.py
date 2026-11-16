@@ -216,9 +216,13 @@ DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |c
                       re.MULTILINE)
 
 
+# The part that draws the page once every other part is in place, which runs last
+START_PART = "99_start.js"
+
+
 def joined(parts):
     """
-    The parts as one script, in the order given, without their import lines and export keywords,
+    The parts as one script in script_order(), without their import lines and export keywords,
     after checking each import names a part the board takes and something that part exports, and
     that no parts import each other in a circle.
     """
@@ -236,7 +240,6 @@ def joined(parts):
             owners[name] = part
             if exported:
                 exports[part].add(name)
-    script = ""
     sources = {}
     for part, text in texts.items():
         sources[part] = []
@@ -249,9 +252,26 @@ def joined(parts):
                     sys.exit("{} imports {} from {}, which does not export it".format(
                         part, name, source))
             sources[part].append(source)
-        script += EXPORT.sub("", IMPORT.sub("", text))
     check_no_circle(sources)
-    return script
+    order = script_order(list(texts), sources, bool(os.environ.get("PICKER_REVERSE_TIES")))
+    return "".join(EXPORT.sub("", IMPORT.sub("", texts[part])) for part in order)
+
+
+def script_order(parts, sources, reverse_ties=False):
+    """
+    The parts in the order they run: a part after every part it imports, and otherwise in the
+    order given, or with reverse_ties the other way round, which a check uses to show nothing
+    depends on the order independent parts run in. The start part runs last whatever the order,
+    since it draws the page once every part is in place. sources holds the parts each part
+    imports.
+    """
+    order = []
+    rest = [part for part in parts if os.path.basename(part) != START_PART]
+    while len(order) < len(rest):
+        ready = [part for part in rest if part not in order and
+                 all(source in order for source in sources[part])]
+        order.append(ready[-1] if reverse_ties else ready[0])
+    return order + [part for part in parts if os.path.basename(part) == START_PART]
 
 
 def check_no_circle(sources):

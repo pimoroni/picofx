@@ -104,18 +104,21 @@ function mostPlayedOn(among) {
 // A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
 // length are the board's, so they sit outside the body and are not captured. The parts below
 // keep their own share of a scene in the body too, and each runs after the runs' own, in the
-// order the parts come. A part registers how it captures, applies and blanks that share,
+// order BODY_ORDER states. A part registers how it captures, applies and blanks that share,
 // whether the share has content, and how it adds to the scene's lines. It also registers how
 // it reads its share back from a file's board line and kept lines, and the names of what it
 // plays. A scene's tab shows the icon and name a part gives where the scene sets it, and when
 // the first scene is made, a part keeps back for Always on what is meant for every scene
 export var bodyParts = [];
+export var BODY_ORDER = ["screens", "sound", "sensor", "hub", "screenSettings", "hubGroups",
+                         "screenPair", "readback"];
 
 // The parts that keep files on the FX drive, each registering how a walk of the drive finds
 // them (begin, then file or folder for each entry, then land), what it found as text to tell
 // one walk from the next, and how the scenes let go of a deleted file before the drive is walked
 // again (forget) and after it (gone)
 export var driveParts = [];
+export var DRIVE_ORDER = ["screens", "sound", "hub"];
 
 export function capture() {
   var body = {look: mostPlayed(), active: active.name, runs: {},

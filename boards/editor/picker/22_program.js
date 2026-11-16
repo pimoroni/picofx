@@ -1,5 +1,5 @@
 import {banner} from "./00_banner.js";
-import {draw, drawSteps, paintAll} from "./00_draw.js";
+import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {spoken} from "./03_lines.js";
 import {state} from "./04_scenes.js";
@@ -986,11 +986,11 @@ function renderPageSwitch() {
 
 // Before anything is drawn, as the effects' parts measure themselves and measure nothing while
 // the program page hides them
-drawSteps.before.push(function () {
+addStep(drawSteps.before, DRAW_BEFORE, "program", function () {
   document.body.classList.toggle("programpage", onProgramPage);
 });
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "program", function () {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();

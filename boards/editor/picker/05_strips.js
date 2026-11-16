@@ -1,4 +1,4 @@
-import {draw, drawSteps, paintAll} from "./00_draw.js";
+import {DRAW_AFTER, addStep, draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD, lookNamed} from "./01_looks.js";
 import {filterKept, filterResidue} from "./03_kept.js";
 import {startColour} from "./03_lines.js";
@@ -164,7 +164,7 @@ settle();
 // facts, bar(where, run) its bar, and fit() every strip's bar to the width it has
 export var stripDrawing = {leds: function () {}, bar: function () {}, fit: function () {}};
 
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "strips", function () {
   // The outputs' settings are for the stretch being worked on, which while a strip is picked is
   // under that strip instead
   if (active.strip) document.getElementById("outChosen").textContent = "";

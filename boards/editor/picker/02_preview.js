@@ -1,4 +1,4 @@
-import {draw, drawParts, paintAll, paintSteps} from "./00_draw.js";
+import {PAINT_ORDER, addStep, draw, drawParts, paintAll, paintSteps} from "./00_draw.js";
 import {blinkDuty, blinkSpeed, keyOf, lookNamed, withSection} from "./01_looks.js";
 import {BLINK, blinkWord} from "./02_blink.js";
 import {
@@ -383,7 +383,7 @@ function clearPainters() {
 drawParts.clearPainters = clearPainters;
 
 // Light every lamp the painters hold as its run plays at the beat
-paintSteps.push(function () {
+addStep(paintSteps, PAINT_ORDER, "lamps", function () {
   var lit = {};
   runs.forEach(function (run) { lit[run.name] = litRun(run); });
   painters.forEach(function (one) { one.paint(lit[one.run.name]); });

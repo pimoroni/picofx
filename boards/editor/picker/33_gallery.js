@@ -1,4 +1,4 @@
-import {draw, drawParts, paintSteps} from "./00_draw.js";
+import {PAINT_ORDER, addStep, draw, drawParts, paintSteps} from "./00_draw.js";
 import {LOOKS, canPlay, isBanked, lookNamed, whyNot} from "./01_looks.js";
 import {beat, livePlay, painters} from "./02_preview.js";
 import {paletteMark, takesColour, targetFor} from "./03_lines.js";
@@ -75,7 +75,7 @@ function paintCards() {
     });
   });
 }
-paintSteps.push(paintCards);
+addStep(paintSteps, PAINT_ORDER, "cards", paintCards);
 
 // The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
 // stretch can play

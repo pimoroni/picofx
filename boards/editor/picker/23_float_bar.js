@@ -1,5 +1,5 @@
 import {bannerSteps} from "./00_banner.js";
-import {drawSteps} from "./00_draw.js";
+import {DRAW_AFTER, addStep, drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
 import {escapeHtml} from "./18_file_preview.js";
 import {boardSet, onProgramPage} from "./19_board_settings.js";
@@ -82,7 +82,7 @@ function floatHeader(away) {
 }
 
 // The page in the middle as the header's tabs name it, with the scene or the program chosen
-drawSteps.after.push(function () {
+addStep(drawSteps.after, DRAW_AFTER, "floatBar", function () {
   var shown = onProgramPage ? (boardSet.program ? programTitle(boardSet.program) : "")
             : !state.scenes.length ? ""
             : state.at < 0 ? "Always on" : state.scenes[state.at].name;

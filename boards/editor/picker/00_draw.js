@@ -1,8 +1,30 @@
+// ---- steps in a stated order ----------------------------------------------------------------
+// A part adds its steps to another part's lists by name, and each list keeps them in the order
+// its owner states, whatever order the parts load in.
+
+// Add a step to a list where its name falls in the list's order, after any step already added
+// under that name or one before it. A name the order does not hold is refused, so no step is lost
+export function addStep(steps, order, name, step) {
+  var at = order.indexOf(name);
+  if (at < 0) throw new Error("No place in its list's order for the step " + name);
+  // The names of the steps so far, where a step added without one is taken as before every name
+  var names = steps.stepNames || (steps.stepNames = steps.map(function () { return null; }));
+  var place = names.findIndex(function (one) { return one !== null && order.indexOf(one) > at; });
+  if (place < 0) place = steps.length;
+  steps.splice(place, 0, step);
+  names.splice(place, 0, name);
+}
+
 // ---- drawing --------------------------------------------------------------------------------
 // The parts below add their own steps to a draw, what each readies before the page is drawn and
-// what each draws after the outputs, both in the order the parts come
+// what each draws after the outputs, each list in the order stated here
 
 export var drawSteps = {before: [], after: []};
+export var DRAW_BEFORE = ["tabs", "screenShown", "screenTurns", "hubTurns", "hubGroups",
+                          "screenPair", "program", "firmware"];
+export var DRAW_AFTER = ["sceneTray", "strips", "setup", "wiring", "tabs", "screens", "sound",
+                         "sensor", "tabSwatches", "hub", "boardSettings", "saveMenu", "program",
+                         "floatBar", "readback", "discover", "firmware", "start"];
 
 // What a draw does between its before and after steps, by name, each filled in by the part that
 // draws it. Those named in DRAW_ORDER go in that order, which matters: the chosen stretch's panel
@@ -11,8 +33,10 @@ export var drawParts = {};
 var DRAW_ORDER = ["clearPainters", "clearCardFaces", "clearKin", "galleries", "bars", "sides",
                   "chosen", "preview"];
 
-// The steps paintAll() takes, each lighting part of the page at the beat
+// The steps paintAll() takes, each lighting part of the page at the beat, the lamps before the
+// cards
 export var paintSteps = [];
+export var PAINT_ORDER = ["lamps", "cards"];
 
 // Whether drawing waits, while the page is changed in a way a draw would store half done
 var drawHeld = false;

@@ -1,4 +1,4 @@
-import {drawSteps, paintAll} from "./00_draw.js";
+import {DRAW_AFTER, addStep, drawSteps, paintAll} from "./00_draw.js";
 import {painters} from "./02_preview.js";
 import {inkAt} from "./03_runs.js";
 import {LED_PANELS, runsOfPanel} from "./10_led_sections.js";
@@ -38,4 +38,4 @@ function liveSwatch(swatch, panel) {
 LED_PANELS.forEach(function (panel) { tabSwatches[panel] = liveSwatch; });
 
 // The swatches are made after the page has painted, so are painted now or show dark a frame
-drawSteps.after.push(paintAll);
+addStep(drawSteps.after, DRAW_AFTER, "tabSwatches", paintAll);

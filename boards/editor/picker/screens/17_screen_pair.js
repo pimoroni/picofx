@@ -1,7 +1,7 @@
-import {draw, drawSteps} from "../00_draw.js";
-import {bodyParts, state} from "../04_scenes.js";
+import {DRAW_BEFORE, addStep, draw, drawSteps} from "../00_draw.js";
+import {BODY_ORDER, bodyParts, state} from "../04_scenes.js";
 import {
-  PAIR_SHARED, PAIR_SHARED_LOOK, SCREENS, screenShown, screenUnder, screensHeadSteps,
+  HEAD_AFTER, PAIR_SHARED, PAIR_SHARED_LOOK, SCREENS, screenShown, screenUnder, screensHeadSteps,
   screensPaired
 } from "./12_screens.js";
 import {picturesMatch, readPairedScreens} from "./14_screen_text.js";
@@ -34,7 +34,7 @@ function settlePair() {
   PAIR_SHARED_LOOK.forEach(function (key) { to.look[key] = from.look[key]; });
 }
 
-drawSteps.before.push(settlePair);
+addStep(drawSteps.before, DRAW_BEFORE, "screenPair", settlePair);
 
 // Pair or part the two screens. Pairing gives B what A shows, or gives A what B shows where A
 // shows nothing. A takes its own starting turn first, then B's pace and style. Parting leaves B
@@ -54,7 +54,7 @@ function togglePair() {
 
 // ---- each scene keeps whether its screens are paired ------------------------------------------
 
-bodyParts.push({
+addStep(bodyParts, BODY_ORDER, "screenPair", {
   capture: function (body) { body.screensPaired = state.screensPaired; },
   apply: function (body) { state.screensPaired = !!body.screensPaired; },
   blank: function (body) { body.screensPaired = false; },
@@ -65,7 +65,7 @@ bodyParts.push({
 // Under each screen's panel, where a hub position has its group's numbers, is a toggle and a line
 // saying which screen it is paired with. The two toggles always show the same
 
-screensHeadSteps.after.push(function () {
+addStep(screensHeadSteps.after, HEAD_AFTER, "screenPair", function () {
   if (SCREENS.length < 2 || state.hub.on) return;
   var fitted = SCREENS.every(function (letter) { return state.screens[letter].there; });
   if (!fitted) return;

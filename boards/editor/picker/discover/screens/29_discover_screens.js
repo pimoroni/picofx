@@ -1,3 +1,4 @@
+import {addStep} from "../../00_draw.js";
 import {state} from "../../04_scenes.js";
 import {escapeHtml} from "../../18_file_preview.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia} from "../../26_drive_files.js";
@@ -7,7 +8,7 @@ import {
   discoverKinds, discoverPictureSaid, discoverPill, discoverPlaceBar, discoverThumbImage,
   discoverThumbs
 } from "../28_discover.js";
-import {assetSteps, drawingSaid, mediaNamed} from "../../screens/12_screens.js";
+import {ASSET_ORDER, assetSteps, drawingSaid, mediaNamed} from "../../screens/12_screens.js";
 import {drawingInk} from "../../screens/13_screen_art.js";
 import {copyDrawing} from "../../screens/16_screen_settings.js";
 
@@ -17,7 +18,7 @@ import {copyDrawing} from "../../screens/16_screen_settings.js";
 // downloaded again, and carries its mark, Update or the firmware it needs. 28_discover.js does
 // the rest. build_editor.py takes this folder only for a board with screens.
 
-assetSteps.push(function () {
+addStep(assetSteps, ASSET_ORDER, "discover", function () {
   var box = document.getElementById("assets");
   if (!state.fileHandle) return;
   discoverPlaceBar(box, "drawing");
