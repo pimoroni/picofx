@@ -1159,10 +1159,13 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
 .facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
 /* The outputs' setup hint sits on the line of their box, which it fits at the page's full width.
-   On a narrower page it wraps, so the whole of it still shows */
-#outFacts{display:flex;align-items:center;margin-top:0}
-#outFacts .chip{flex:0 0 auto;white-space:nowrap}
-#outFacts .hint{min-width:0;flex:1 1 0}
+   On a narrower page it is cut short with its whole text kept in its tooltip, so the line never
+   grows taller, and where too little of it would show it is left out */
+#outFacts{display:flex;align-items:center;margin-top:0;container-type:inline-size}
+#outFacts .chip{flex:0 1 auto;min-width:0;white-space:nowrap}
+#outFacts .chip small{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#outFacts .hint{min-width:0;flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (max-width:600px){#outFacts .hint{display:none}}
 /* A run's zoom, steps and Join all, at the right of the row naming its wiring or its strip */
 .headsteps{margin-left:auto;display:flex;align-items:center;gap:.35rem;flex:none}
 .headsteps .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);

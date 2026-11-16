@@ -114,6 +114,8 @@ function renderOutFacts() {
       (breaking.length > 1 ? " Arrows split or rejoin an output's three lights."
        : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it."
        : "");
+    // Cut short on a narrow page, the hint is whole in its tooltip
+    hint.title = hint.textContent;
     box.appendChild(hint);
   }
   // The outputs' controls are for whichever side was last worked on, as the tools are
