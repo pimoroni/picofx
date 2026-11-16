@@ -126,7 +126,7 @@ function paintPalette(swatches, lines) {
   swatches.textContent = "";
   (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function (said) {
     var chip = document.createElement("span");
-    chip.className = "repeatchip";
+    chip.className = "palettechip";
     chip.style.background = inkOf(said.slice(7));
     chip.title = said.slice(7);
     swatches.appendChild(chip);

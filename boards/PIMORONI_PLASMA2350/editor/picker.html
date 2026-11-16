@@ -65,18 +65,11 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 /* A tab whose section cannot be used just now, which still opens to say why */
 .ledtab.blocked{opacity:.45}
-.head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
-.head .gap{flex:1}
-/* The row of settings that belongs to the bar, which the run above it is cut into. As tall as
-   the step buttons, so a side without them starts its bar level with one that has them */
-.head.cutting{margin-top:.9rem;min-height:1.75rem}
-.head.cutting .what{font-size:.82rem;color:var(--dim)}
-
 /* Zoomed in, the bar is wider than the room it has and scrolls inside it. The padding
    and the pull back up leave the labels above a cut somewhere to be drawn */
 .scroller{overflow-x:auto;overflow-y:hidden;padding-top:1.2rem;margin-top:-1.2rem}
-/* That pull reaches over the buttons in the row above, so they sit on top to take their clicks */
-.head.cutting button{position:relative;z-index:1}
+/* A strip's bar keeps that room clear of the strip drawn above it, with the bar's own margin */
+.stripbar{margin-top:.3rem}
 .scroller::-webkit-scrollbar{height:9px}
 .scroller::-webkit-scrollbar-thumb{background:#cfc9bf;border-radius:99px}
 .scroller::-webkit-scrollbar-track{background:#f0eeea;border-radius:99px}
@@ -152,8 +145,9 @@ button.round svg{display:block}
  border-left:1px solid #c9c3b9}
 .sec.narrow .says{font-size:.6rem}
 /* The outputs' stretches as cards holding their lamps, evenly spaced so a cut falls between two,
-   over a thin band of what the stretch plays. A cut can be made anywhere over the lamps and band */
-.bar.carded{margin-top:0}
+   over a thin band of what the stretch plays. A cut can be made anywhere over the lamps and band.
+   The room above the cards holds a cut's label and its cross, clear of the row above */
+.bar.carded{margin-top:.75rem}
 .bar.carded .sec{display:flex;flex-direction:column}
 .cardlamps{display:flex;padding:.55rem 0 .3rem}
 /* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
@@ -203,11 +197,6 @@ button.round svg{display:block}
 .ticks span{flex:1;text-align:center;font:400 .6rem/1.4 system-ui,sans-serif;
  color:var(--dim);min-width:0;overflow:hidden}
 
-.tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
- font-size:.85rem;color:var(--dim)}
-.tools input[type=number]{width:3.4rem;padding:.25rem .3rem;border:1px solid var(--line);
- border-radius:7px;font:inherit;font-size:.85rem;text-align:center}
-.tools .gap{flex:1}
 
 /* The run itself, above the bar it is cut by */
 .run{background:var(--panel);border:1px solid var(--line);border-radius:10px;
@@ -351,8 +340,6 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
 .side.empty>div[id$="Bar"]{display:none}
 #sideB .sidehead{flex-direction:row-reverse}
 
-/* A count that wraps makes its side taller than the other, so it never wraps */
-.head.cutting .what{white-space:nowrap}
 .sidehead{display:flex;align-items:baseline;gap:.5rem;font:600 .82rem system-ui,sans-serif;
  margin:0 0 .35rem;flex-wrap:nowrap;white-space:nowrap;min-width:0;height:1.35rem}
 .sidehead span{font-weight:400;font-size:.75rem;color:var(--dim);min-width:0;
@@ -633,14 +620,15 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
 .sceneset select.scenethen{max-width:9rem;font-weight:600}
 .sceneset.alwaysnote{display:flex;align-items:center;font-size:.74rem;line-height:1.35;
  color:var(--dim)}
-/* The tools under a run, in the screens' button style. Split and Repeat are each one outlined
-   group read as a sentence, words then number then the buttons that act, divided as the
-   screens' segmented choices are. The screens' rules are repeated for the pages with none */
-.stretchtools{gap:.5rem .8rem}
-.stretchtools .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
- padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
- align-items:center;gap:.35rem;cursor:pointer}
-.stretchtools .stoggle:disabled{opacity:.4;cursor:default}
+/* Split into, on a strip's chosen stretch beside its Reverse, in the screens' button style. It is
+   one outlined group read as a sentence, words then number then the buttons that act, divided as
+   the screens' segmented choices are. The screens' rules are repeated for the pages with none */
+.chosen .who .stretchtools{display:inline-flex;margin-left:auto;flex:none}
+.chosen .who .stretchtools + .direction{margin-left:0}
+/* On a narrow page the buttons move under the stretch's name, whole, rather than squeeze it */
+.chosen .who.withway{flex-wrap:wrap;row-gap:.4rem}
+.chosen .who .direction{flex:none}
+.stretchtools .toolsays,.stretchtools .toolact{white-space:nowrap}
 .stretchtools .toolset{display:inline-flex;align-items:stretch;border:1.5px solid var(--line);
  border-radius:8px;overflow:hidden;background:var(--panel);font:600 .76rem system-ui,sans-serif}
 .stretchtools .toolsays{display:inline-flex;align-items:center;gap:.35rem;padding:0 .45rem 0 .55rem;
@@ -648,14 +636,11 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
 .stretchtools .toolset input[type=number]{width:2.6rem;margin:.18rem .3rem .18rem 0;padding:.1rem .2rem;
  font:inherit;border:1px solid var(--line);border-radius:6px;text-align:center}
 .stretchtools .toolact{border:0;border-left:1px solid var(--line);border-radius:0;
- background:var(--panel);padding:.28rem .55rem;font:inherit;color:var(--accent);cursor:pointer}
+ background:var(--panel);padding:.28rem .55rem;font:inherit;color:var(--ink);cursor:pointer}
 .stretchtools .toolact:hover:enabled{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .stretchtools .toolact:disabled{color:var(--dim);opacity:.5;cursor:default}
-/* What Repeat copies, a swatch a stretch, and on the bar while it is pointed at */
-.repeatchips{display:inline-flex;align-items:center;gap:2px;padding-right:.45rem}
-.repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
-.repeatchip.nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 2px,#d8d2c8 2px,
- #d8d2c8 3.5px)}
+/* A colour of a palette, beside its slider */
+.palettechip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 /* A cut's cross sits above the bar, in the room already kept there for where a new cut would
    fall. The two never show at once, since one is pointed at on a cut and the other inside a
    stretch. So the bar keeps no room under it for the cross */
@@ -670,8 +655,6 @@ body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
    default. Otherwise a bar of a hundred labelled stretches widens the page to fit them all, and
    the strip drawn above it grows too, since the bar is what scrolls */
 #tabStack > *{min-width:0}
-.bar > .sec.repeatfrom{outline:2px dashed var(--accent);outline-offset:-2px}
-.bar > .sec.repeatover{opacity:.35}
 /* A setting's icon before its name, a line drawing in the name's grey */
 .chosen .tuning label.withicon{display:inline-flex;align-items:center;gap:.4rem}
 .settingicon{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;
@@ -724,7 +707,6 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
    lights as well as around the turns, so where it begins and ends is readable */
 .striprun{overflow-x:auto;padding:.2rem 0 .1rem}
 .striprun svg{display:block}
-.strip .head{margin-bottom:.3rem}
 .strip .lamps{gap:.18rem}
 
 /* How many lights are on a strip, which is a fact about the board and not the scene */
@@ -733,6 +715,7 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .leds input{font:inherit;font-size:.8rem;width:4.5rem;padding:.24rem .4rem;
  border-radius:7px;border:1px solid var(--line);background:var(--bg);color:inherit}
 .leds .says{margin-left:.2rem}
+.leds .stretchcount{white-space:nowrap}
 
 /* Lines read from the board's file that no setting here stands for, carried as written */
 .keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
@@ -1201,9 +1184,8 @@ body.scenesintab #looks>.shelf{margin-top:0}
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once */
 body.setupall #tabs,body.setupall #sceneTabRow,
-body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar]:not(.sides *),
-body.setupall [id$=Tools],body.setupall [id$=Chosen],
-body.setupall .headsteps{opacity:.35;pointer-events:none}
+body.setupall #looks,body.setupall [id$=Bar]:not(.sides *),body.setupall [id$=Chosen],
+body.setupall .headsteps,body.setupall .stretchcount{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */
 body.setupall #assets,body.setupall #screensSays,
@@ -1819,7 +1801,6 @@ body.discovermodal{overflow:hidden}
     <div id="monoBar"></div>
    </div>
   </div>
-  <div id="outTools"></div>
   <div id="outChosen"></div>
  </details>
 
@@ -3908,16 +3889,13 @@ function iconButton(drawing, says, off, done) {
   return made;
 }
 
-function renderCutting(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  box.className = "head cutting";
+// A strip's count of stretches, said after its chip. Zoomed in, the bar shows only some of them
+function stretchCount(run) {
   var says = document.createElement("span");
-  says.className = "what";
+  says.className = "stretchcount";
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
-  box.appendChild(says);
+  return says;
 }
 
 // The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
@@ -4124,10 +4102,9 @@ function draw() {
   renderBar("outBar", outs);
   renderBar("monoBar", mono);
 
-  // Both sides are in the one panel, so one set of tools serves whichever was last worked
+  // Both sides are in the one panel, so one stretch's settings serve whichever was last worked
   // on rather than a set under each
   renderSides();
-  renderTools("outTools", active);
   renderChosen("outChosen", active);
 
   renderPreview();
@@ -5557,26 +5534,6 @@ function splitSection(run, ways) {
   draw();
 }
 
-// The picked stretch and the ones after it, many in all, repeated over the rest of the run
-function repeatSections(run, many) {
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  if (!pattern.length) return;
-  remember(run);
-  var kept = run.sections.slice(0, run.picked + many);
-  var at = pattern[pattern.length - 1].to + 1;
-  var i = 0;
-  while (at < run.count) {
-    var from = pattern[i % pattern.length];
-    var wide = widthOf(from);
-    kept.push({from: at, to: Math.min(run.count - 1, at + wide - 1), look: from.look,
-               pace: from.pace, mood: from.mood, colour: from.colour});
-    at += wide;
-    i++;
-  }
-  run.sections = kept;
-  draw();
-}
-
 function renderStripBar(where, run) {
   var box = document.getElementById(where);
   var was = box.querySelector(".scroller");
@@ -5925,9 +5882,9 @@ function zoomTo(run, want, at, from) {
 }
 
 // ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting, filling and joining it
-// all back keep what it played. splitSection() and repeatSections() copy only its look, pace,
-// setting and colour, and joinAll() starts from one stretch playing nothing
+// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
+// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
+// stretch playing nothing
 function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,
@@ -5947,24 +5904,10 @@ function divide(run, ways) {
   draw();
 }
 
-function fill(run, many) {
-  // It runs to the run's count, which the outputs do not keep
-  run.count = run.lamps.length;
-  var pattern = run.sections.slice(run.picked, run.picked + many).map(playsOf);
-  var kept = run.picked + many;
-  repeatSections(run, many);
-  for (var made = kept; made < run.sections.length; made++) {
-    Object.assign(run.sections[made], playsOf(pattern[(made - kept) % pattern.length]));
-  }
-  draw();
-}
-
-// ---- the tools under a run -------------------------------------------------------------------
-// One row for the outputs, the mono lights and the strips alike, in the screens' button style.
-// It splits the stretch picked into a number of parts or into lengths of a number of lights, joins
-// them all back, and repeats the stretches from the picked one to the end of the run. Each is
-// one outlined group read as a sentence, its words first, then its number, then the buttons
-// that act, so a number is never apart from what it is for.
+// ---- splitting a strip's chosen stretch ------------------------------------------------------
+// The chosen stretch's panel splits it into a number of parts or into lengths of a number of
+// lights, in the screens' button style. It is one outlined group read as a sentence, its words
+// first, then its number, then the buttons that act, so the number is never apart from them.
 
 // The picked stretch cut every so many lights from its start, a shorter one last where they
 // do not divide it evenly
@@ -6008,17 +5951,13 @@ function toolNumber(value, low, high, focus, change) {
   return box;
 }
 
-function renderTools(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  // Splitting and repeating earn their place along a strip's many LEDs. The outputs are few,
-  // and are cut one at a time between their lamps
-  if (!run.strip) return;
+// The Split into group for a strip's chosen stretch, shown in its panel. Splitting earns its place
+// along a strip's many LEDs, while the outputs are few and cut one at a time between their lamps
+function splitTools(where, run) {
   var section = run.sections[run.picked];
   var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("div");
-  row.className = "tools stretchtools";
+  var row = document.createElement("span");
+  row.className = "stretchtools";
 
   var ways = run.ways || 3;
   var split = toolGroup("&#9986;", "Split into");
@@ -6035,45 +5974,7 @@ function renderTools(where, run) {
   lengths.onclick = function () { divideLengths(run, ways); };
   split.appendChild(lengths);
   row.appendChild(split);
-
-  var many = run.pattern || 2;
-  var repeat = toolGroup("&#8649;", "Repeat");
-  repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
-                                function (value) { run.pattern = value; }));
-  // What it copies, a swatch for each stretch of the pattern, since a result that looks like
-  // what was there says nothing of what was taken
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  var chips = document.createElement("span");
-  chips.className = "repeatchips";
-  pattern.forEach(function (section) {
-    var look = lookNamed(section.look);
-    var chip = document.createElement("span");
-    chip.className = "repeatchip" + (look ? "" : " nothing");
-    if (look) chip.style.background = washFor(run, section, look);
-    chip.title = look ? look.name : "Nothing";
-    chips.appendChild(chip);
-  });
-  repeat.appendChild(chips);
-  var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the selected stretch" + (many === 1 ? "" : many === 2
-                        ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated to the end of the run, replacing what is there");
-  along.onclick = function () { fill(run, many); };
-  repeat.appendChild(along);
-  // Pointed at, the bar outlines what it copies and fades what it would replace
-  function marking(on) {
-    barCells(run).forEach(function (cell, at) {
-      cell.classList.toggle("repeatfrom", on && at >= run.picked && at < run.picked + many);
-      cell.classList.toggle("repeatover", on && at >= run.picked + many);
-    });
-  }
-  repeat.onmouseenter = function () { marking(true); };
-  repeat.onmouseleave = function () { marking(false); };
-  repeat.addEventListener("focusin", function () { marking(true); });
-  repeat.addEventListener("focusout", function () { marking(false); });
-  row.appendChild(repeat);
-
-  box.appendChild(row);
+  return row;
 }
 
 // A run's stretches as its bar draws them, in order
@@ -6122,9 +6023,7 @@ function toolAct(words, off, act, title) {
                       "<span class='says'>" + strip.says + "</span></summary>" +
                       "<div class='leds' id='" + id + "Leds'></div>" +
                       "<div class='run striprun' id='" + id + "Run'></div>" +
-                      "<div class='head' id='" + id + "Cut'></div>" +
-                      "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Tools'></div>" +
+                      "<div class='stripbar' id='" + id + "Bar'></div>" +
                       "<div id='" + id + "Chosen'></div>";
     after.parentNode.insertBefore(panel, after.nextSibling);
     after = panel;
@@ -6141,12 +6040,9 @@ settle();
 // ---- drawing the page -------------------------------------------------------------------
 
 drawSteps.after.push(function () {
-  // The outputs' tools and settings are for the stretch being worked on, which while a
-  // strip is picked is under that strip instead
-  if (active.strip) {
-    document.getElementById("outTools").textContent = "";
-    document.getElementById("outChosen").textContent = "";
-  }
+  // The outputs' settings are for the stretch being worked on, which while a strip is picked is
+  // under that strip instead
+  if (active.strip) document.getElementById("outChosen").textContent = "";
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     // A strip made too short to zoom has no zoom buttons, so it is not left zoomed in
     if (run.lamps.length <= ZOOMS_OVER) {
@@ -6155,14 +6051,9 @@ drawSteps.after.push(function () {
     }
     renderLeds(run.id + "Leds", run);
     renderStrip(run.id + "Run", run);
-    renderCutting(run.id + "Cut", run);
     renderStripBar(run.id + "Bar", run);
-    document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
-    if (run === active) {
-      renderTools(run.id + "Tools", run);
-      renderChosen(run.id + "Chosen", run);
-    }
+    if (run === active) renderChosen(run.id + "Chosen", run);
   });
   fitBars();
   // The page painted what it drew before these were made, so a fresh bead would hold the
@@ -7277,6 +7168,7 @@ chosenSteps.push(function (where, run) {
   while (who.firstChild) named.appendChild(who.firstChild);
   who.appendChild(named);
   who.classList.add("withway");
+  if (run.strip) who.appendChild(splitTools(where, run));
   who.appendChild(directionToggle(run, section));
 });
 
@@ -7766,6 +7658,7 @@ function renderLeds(where, run) {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
+  box.appendChild(stretchCount(run));
   headSteps(box, run);
 }
 
@@ -7798,7 +7691,7 @@ drawSteps.after.push(function () {
 
 var SLIDE_MS = 420;
 
-// The connectors sit under both sides of the outputs, before their tools and settings
+// The connectors sit under both sides of the outputs, before the chosen stretch's settings
 (function () {
   var row = document.createElement("div");
   row.id = "wiringRow";
@@ -7842,7 +7735,7 @@ function bringForward(keys, on) {
   });
 }
 
-// Lay the connectors over the stretch's tools and settings, which stand back while setting up,
+// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
 // so entering and leaving Edit board moves nothing below them. The connectors cover the whole
 // of the settings, and the panel only grows by what they need beyond that room
 function overlapBelow(box) {
@@ -8195,19 +8088,15 @@ function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-// Each section is only ever seen on its own here, so each keeps its own tools and settings
+// Each section is only ever seen on its own here, so each keeps its own stretch's settings
 // whichever is worked on, and none changes height when another tab is chosen. The outputs'
 // are for whichever of their two sides was last worked on
 var lastOutputRun = outs;
 
 drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;
-  if (active.strip) {
-    renderTools("outTools", lastOutputRun);
-    renderChosen("outChosen", lastOutputRun);
-  }
+  if (active.strip) renderChosen("outChosen", lastOutputRun);
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderTools(run.id + "Tools", run);
     renderChosen(run.id + "Chosen", run);
   });
   renderLedTabs();
@@ -13092,7 +12981,7 @@ function paintPalette(swatches, lines) {
   swatches.textContent = "";
   (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function (said) {
     var chip = document.createElement("span");
-    chip.className = "repeatchip";
+    chip.className = "palettechip";
     chip.style.background = inkOf(said.slice(7));
     chip.title = said.slice(7);
     swatches.appendChild(chip);

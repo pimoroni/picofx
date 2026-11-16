@@ -1276,16 +1276,13 @@ function iconButton(drawing, says, off, done) {
   return made;
 }
 
-function renderCutting(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  box.className = "head cutting";
+// A strip's count of stretches, said after its chip. Zoomed in, the bar shows only some of them
+function stretchCount(run) {
   var says = document.createElement("span");
-  says.className = "what";
+  says.className = "stretchcount";
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
-  box.appendChild(says);
+  return says;
 }
 
 // The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
@@ -1492,10 +1489,9 @@ function draw() {
   renderBar("outBar", outs);
   renderBar("monoBar", mono);
 
-  // Both sides are in the one panel, so one set of tools serves whichever was last worked
+  // Both sides are in the one panel, so one stretch's settings serve whichever was last worked
   // on rather than a set under each
   renderSides();
-  renderTools("outTools", active);
   renderChosen("outChosen", active);
 
   renderPreview();

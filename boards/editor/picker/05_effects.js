@@ -493,26 +493,6 @@ function splitSection(run, ways) {
   draw();
 }
 
-// The picked stretch and the ones after it, many in all, repeated over the rest of the run
-function repeatSections(run, many) {
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  if (!pattern.length) return;
-  remember(run);
-  var kept = run.sections.slice(0, run.picked + many);
-  var at = pattern[pattern.length - 1].to + 1;
-  var i = 0;
-  while (at < run.count) {
-    var from = pattern[i % pattern.length];
-    var wide = widthOf(from);
-    kept.push({from: at, to: Math.min(run.count - 1, at + wide - 1), look: from.look,
-               pace: from.pace, mood: from.mood, colour: from.colour});
-    at += wide;
-    i++;
-  }
-  run.sections = kept;
-  draw();
-}
-
 function renderStripBar(where, run) {
   var box = document.getElementById(where);
   var was = box.querySelector(".scroller");
@@ -861,9 +841,9 @@ function zoomTo(run, want, at, from) {
 }
 
 // ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting, filling and joining it
-// all back keep what it played. splitSection() and repeatSections() copy only its look, pace,
-// setting and colour, and joinAll() starts from one stretch playing nothing
+// Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
+// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
+// stretch playing nothing
 function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,
@@ -883,24 +863,10 @@ function divide(run, ways) {
   draw();
 }
 
-function fill(run, many) {
-  // It runs to the run's count, which the outputs do not keep
-  run.count = run.lamps.length;
-  var pattern = run.sections.slice(run.picked, run.picked + many).map(playsOf);
-  var kept = run.picked + many;
-  repeatSections(run, many);
-  for (var made = kept; made < run.sections.length; made++) {
-    Object.assign(run.sections[made], playsOf(pattern[(made - kept) % pattern.length]));
-  }
-  draw();
-}
-
-// ---- the tools under a run -------------------------------------------------------------------
-// One row for the outputs, the mono lights and the strips alike, in the screens' button style.
-// It splits the stretch picked into a number of parts or into lengths of a number of lights, joins
-// them all back, and repeats the stretches from the picked one to the end of the run. Each is
-// one outlined group read as a sentence, its words first, then its number, then the buttons
-// that act, so a number is never apart from what it is for.
+// ---- splitting a strip's chosen stretch ------------------------------------------------------
+// The chosen stretch's panel splits it into a number of parts or into lengths of a number of
+// lights, in the screens' button style. It is one outlined group read as a sentence, its words
+// first, then its number, then the buttons that act, so the number is never apart from them.
 
 // The picked stretch cut every so many lights from its start, a shorter one last where they
 // do not divide it evenly
@@ -944,17 +910,13 @@ function toolNumber(value, low, high, focus, change) {
   return box;
 }
 
-function renderTools(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  // Splitting and repeating earn their place along a strip's many LEDs. The outputs are few,
-  // and are cut one at a time between their lamps
-  if (!run.strip) return;
+// The Split into group for a strip's chosen stretch, shown in its panel. Splitting earns its place
+// along a strip's many LEDs, while the outputs are few and cut one at a time between their lamps
+function splitTools(where, run) {
   var section = run.sections[run.picked];
   var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("div");
-  row.className = "tools stretchtools";
+  var row = document.createElement("span");
+  row.className = "stretchtools";
 
   var ways = run.ways || 3;
   var split = toolGroup("&#9986;", "Split into");
@@ -971,45 +933,7 @@ function renderTools(where, run) {
   lengths.onclick = function () { divideLengths(run, ways); };
   split.appendChild(lengths);
   row.appendChild(split);
-
-  var many = run.pattern || 2;
-  var repeat = toolGroup("&#8649;", "Repeat");
-  repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
-                                function (value) { run.pattern = value; }));
-  // What it copies, a swatch for each stretch of the pattern, since a result that looks like
-  // what was there says nothing of what was taken
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  var chips = document.createElement("span");
-  chips.className = "repeatchips";
-  pattern.forEach(function (section) {
-    var look = lookNamed(section.look);
-    var chip = document.createElement("span");
-    chip.className = "repeatchip" + (look ? "" : " nothing");
-    if (look) chip.style.background = washFor(run, section, look);
-    chip.title = look ? look.name : "Nothing";
-    chips.appendChild(chip);
-  });
-  repeat.appendChild(chips);
-  var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the selected stretch" + (many === 1 ? "" : many === 2
-                        ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated to the end of the run, replacing what is there");
-  along.onclick = function () { fill(run, many); };
-  repeat.appendChild(along);
-  // Pointed at, the bar outlines what it copies and fades what it would replace
-  function marking(on) {
-    barCells(run).forEach(function (cell, at) {
-      cell.classList.toggle("repeatfrom", on && at >= run.picked && at < run.picked + many);
-      cell.classList.toggle("repeatover", on && at >= run.picked + many);
-    });
-  }
-  repeat.onmouseenter = function () { marking(true); };
-  repeat.onmouseleave = function () { marking(false); };
-  repeat.addEventListener("focusin", function () { marking(true); });
-  repeat.addEventListener("focusout", function () { marking(false); });
-  row.appendChild(repeat);
-
-  box.appendChild(row);
+  return row;
 }
 
 // A run's stretches as its bar draws them, in order
@@ -1058,9 +982,7 @@ function toolAct(words, off, act, title) {
                       "<span class='says'>" + strip.says + "</span></summary>" +
                       "<div class='leds' id='" + id + "Leds'></div>" +
                       "<div class='run striprun' id='" + id + "Run'></div>" +
-                      "<div class='head' id='" + id + "Cut'></div>" +
-                      "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Tools'></div>" +
+                      "<div class='stripbar' id='" + id + "Bar'></div>" +
                       "<div id='" + id + "Chosen'></div>";
     after.parentNode.insertBefore(panel, after.nextSibling);
     after = panel;
@@ -1077,12 +999,9 @@ settle();
 // ---- drawing the page -------------------------------------------------------------------
 
 drawSteps.after.push(function () {
-  // The outputs' tools and settings are for the stretch being worked on, which while a
-  // strip is picked is under that strip instead
-  if (active.strip) {
-    document.getElementById("outTools").textContent = "";
-    document.getElementById("outChosen").textContent = "";
-  }
+  // The outputs' settings are for the stretch being worked on, which while a strip is picked is
+  // under that strip instead
+  if (active.strip) document.getElementById("outChosen").textContent = "";
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     // A strip made too short to zoom has no zoom buttons, so it is not left zoomed in
     if (run.lamps.length <= ZOOMS_OVER) {
@@ -1091,14 +1010,9 @@ drawSteps.after.push(function () {
     }
     renderLeds(run.id + "Leds", run);
     renderStrip(run.id + "Run", run);
-    renderCutting(run.id + "Cut", run);
     renderStripBar(run.id + "Bar", run);
-    document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
-    if (run === active) {
-      renderTools(run.id + "Tools", run);
-      renderChosen(run.id + "Chosen", run);
-    }
+    if (run === active) renderChosen(run.id + "Chosen", run);
   });
   fitBars();
   // The page painted what it drew before these were made, so a fresh bead would hold the
@@ -2213,5 +2127,6 @@ chosenSteps.push(function (where, run) {
   while (who.firstChild) named.appendChild(who.firstChild);
   who.appendChild(named);
   who.classList.add("withway");
+  if (run.strip) who.appendChild(splitTools(where, run));
   who.appendChild(directionToggle(run, section));
 });

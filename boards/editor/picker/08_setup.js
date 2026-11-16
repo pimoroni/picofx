@@ -227,6 +227,7 @@ function renderLeds(where, run) {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
+  box.appendChild(stretchCount(run));
   headSteps(box, run);
 }
 

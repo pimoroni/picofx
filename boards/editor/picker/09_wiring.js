@@ -7,7 +7,7 @@
 
 var SLIDE_MS = 420;
 
-// The connectors sit under both sides of the outputs, before their tools and settings
+// The connectors sit under both sides of the outputs, before the chosen stretch's settings
 (function () {
   var row = document.createElement("div");
   row.id = "wiringRow";
@@ -51,7 +51,7 @@ function bringForward(keys, on) {
   });
 }
 
-// Lay the connectors over the stretch's tools and settings, which stand back while setting up,
+// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
 // so entering and leaving Edit board moves nothing below them. The connectors cover the whole
 // of the settings, and the panel only grows by what they need beyond that room
 function overlapBelow(box) {
