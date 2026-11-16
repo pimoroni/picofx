@@ -110,13 +110,14 @@ function renderOutFacts() {
     var hint = document.createElement("span");
     hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag each light to match its position in your build." +
-      (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
-       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
-                           "mono lights, or rejoins them." : "");
-    hint.title = hint.textContent;
+    hint.textContent = "Drag lights to match your build." +
+      (breaking.length > 1 ? " Arrows split or rejoin an output's three lights."
+       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it."
+       : "");
     box.appendChild(hint);
   }
+  // The outputs' controls are for whichever side was last worked on, as the tools are
+  headSteps(box, active.strip ? lastOutputRun : active);
 }
 
 // What a strip is built as, its length and what follows it on the board line
@@ -226,6 +227,7 @@ function renderLeds(where, run) {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
+  headSteps(box, run);
 }
 
 // ---- turning setup on ------------------------------------------------------------------------

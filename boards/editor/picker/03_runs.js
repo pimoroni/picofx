@@ -1236,14 +1236,38 @@ function crossing(out, colour) {
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
-function zoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  row.appendChild(iconButton(BACK, "Undo", !run.was.length,
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !run.undone.length,
-                             function () { stepOn(run); }));
+// Add the run's controls at the right of its header row, the box naming its wiring or its strip.
+// A long strip zooms first, then come the steps back and on, then Join all as a quick reset
+function headSteps(row, run) {
+  var steps = document.createElement("span");
+  steps.className = "headsteps";
+
+  // Zooming is only any use where there are more lights than a panel can show. The
+  // buttons hold the middle of the view, since a press has no place on the run to hold
+  if (run.strip && run.count > ZOOMS_OVER) {
+    steps.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
+                                 }));
+    var said = document.createElement("span");
+    said.className = "howfar";
+    said.textContent = Math.round(zoomOf(run) * 100) + "%";
+    steps.appendChild(said);
+    steps.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
+                                 }));
+  }
+
+  steps.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
+                               function () { stepBack(run); }));
+  steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
+                               function () { stepOn(run); }));
+  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                        "merge into one stretch, keeping the selected stretch's look");
+  join.onclick = function () { joinAll(run); };
+  steps.appendChild(join);
+  row.appendChild(steps);
 }
 
 var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
@@ -1274,11 +1298,6 @@ function renderCutting(where, run) {
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
   box.appendChild(says);
-  // The steps the two sides share go on the cutting row of the side at the right, as a strip
-  // keeps its own on its cutting row. That is the second side while it has lamps
-  var first = MONO_FIRST ? mono : outs, second = MONO_FIRST ? outs : mono;
-  var right = second.lamps.length ? second : first;
-  if (where === (right === mono ? "monoCut" : "outCut")) zoomAndSteps(box, active);
 }
 
 // The chosen stretch's panel. The parts below add to whatever it drew, each after the one before

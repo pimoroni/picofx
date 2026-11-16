@@ -619,34 +619,6 @@ function renderStripBar(where, run) {
   }
 }
 
-function stripZoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-
-  // Zooming is only any use where there are more lights than a panel can show. The
-  // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.count > ZOOMS_OVER) {
-    row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                               function () {
-                                 zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                               }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    row.appendChild(said);
-    row.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                               function () {
-                                 zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                               }));
-  }
-
-  row.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                             function () { stepOn(run); }));
-}
-
 function hexOf(rgb) {
   return rgb.map(function (v) {
     return ("0" + Math.round(v).toString(16)).slice(-2);
@@ -997,11 +969,6 @@ function renderTools(where, run) {
   split.appendChild(lengths);
   row.appendChild(split);
 
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  row.appendChild(join);
-
   var many = run.pattern || 2;
   var repeat = toolGroup("&#8649;", "Repeat");
   repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
@@ -1121,10 +1088,7 @@ drawSteps.after.push(function () {
     }
     renderLeds(run.id + "Leds", run);
     renderStrip(run.id + "Run", run);
-    // The count of stretches, then the zoom and the steps beside it, all the drawing's own, so
-    // the bar scrolls when zoomed in
     renderCutting(run.id + "Cut", run);
-    stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
     renderStripBar(run.id + "Bar", run);
     document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";

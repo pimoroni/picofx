@@ -1198,21 +1198,27 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .boardchip select option{color:var(--ink)}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
 .facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
-/* The outputs' setup hint stays on the line of their box, so setting up moves no lamp, and
-   is cut short where the page is too narrow, its whole saying in its tooltip */
+/* The outputs' setup hint sits on the line of their box, which it fits at the page's full width.
+   On a narrower page it wraps, so the whole of it still shows */
 #outFacts{display:flex;align-items:center;margin-top:0}
 #outFacts .chip{flex:0 0 auto;white-space:nowrap}
 /* With the sides unnamed the lamps sit under the board's box at a strip's spacing, their
    own margin being for the heading and adding to the box's inside the sides */
 #sides.unnamed .run{margin-top:0}
-#outFacts .hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
- flex:1 1 0;width:0}
+#outFacts .hint{min-width:0;flex:1 1 0}
+/* A run's zoom, steps and Join all, at the right of the row naming its wiring or its strip */
+.headsteps{margin-left:auto;display:flex;align-items:center;gap:.35rem;flex:none}
+.headsteps .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
+ padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
+ align-items:center;gap:.35rem;cursor:pointer}
+.headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once */
 body.setupall #tabs,body.setupall #sceneTabRow,
 body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
-body.setupall [id$=Tools],body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
+body.setupall [id$=Tools],body.setupall [id$=Chosen],
+body.setupall .headsteps{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */
 body.setupall #assets,body.setupall #screensSays,
@@ -3862,14 +3868,38 @@ function crossing(out, colour) {
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
-function zoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  row.appendChild(iconButton(BACK, "Undo", !run.was.length,
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !run.undone.length,
-                             function () { stepOn(run); }));
+// Add the run's controls at the right of its header row, the box naming its wiring or its strip.
+// A long strip zooms first, then come the steps back and on, then Join all as a quick reset
+function headSteps(row, run) {
+  var steps = document.createElement("span");
+  steps.className = "headsteps";
+
+  // Zooming is only any use where there are more lights than a panel can show. The
+  // buttons hold the middle of the view, since a press has no place on the run to hold
+  if (run.strip && run.count > ZOOMS_OVER) {
+    steps.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
+                                 }));
+    var said = document.createElement("span");
+    said.className = "howfar";
+    said.textContent = Math.round(zoomOf(run) * 100) + "%";
+    steps.appendChild(said);
+    steps.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
+                                 function () {
+                                   zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
+                                 }));
+  }
+
+  steps.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
+                               function () { stepBack(run); }));
+  steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
+                               function () { stepOn(run); }));
+  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                        "merge into one stretch, keeping the selected stretch's look");
+  join.onclick = function () { joinAll(run); };
+  steps.appendChild(join);
+  row.appendChild(steps);
 }
 
 var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
@@ -3900,11 +3930,6 @@ function renderCutting(where, run) {
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
   box.appendChild(says);
-  // The steps the two sides share go on the cutting row of the side at the right, as a strip
-  // keeps its own on its cutting row. That is the second side while it has lamps
-  var first = MONO_FIRST ? mono : outs, second = MONO_FIRST ? outs : mono;
-  var right = second.lamps.length ? second : first;
-  if (where === (right === mono ? "monoCut" : "outCut")) zoomAndSteps(box, active);
 }
 
 // The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
@@ -5648,34 +5673,6 @@ function renderStripBar(where, run) {
   }
 }
 
-function stripZoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-
-  // Zooming is only any use where there are more lights than a panel can show. The
-  // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.count > ZOOMS_OVER) {
-    row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                               function () {
-                                 zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                               }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    row.appendChild(said);
-    row.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                               function () {
-                                 zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                               }));
-  }
-
-  row.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                             function () { stepOn(run); }));
-}
-
 function hexOf(rgb) {
   return rgb.map(function (v) {
     return ("0" + Math.round(v).toString(16)).slice(-2);
@@ -6026,11 +6023,6 @@ function renderTools(where, run) {
   split.appendChild(lengths);
   row.appendChild(split);
 
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  row.appendChild(join);
-
   var many = run.pattern || 2;
   var repeat = toolGroup("&#8649;", "Repeat");
   repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
@@ -6150,10 +6142,7 @@ drawSteps.after.push(function () {
     }
     renderLeds(run.id + "Leds", run);
     renderStrip(run.id + "Run", run);
-    // The count of stretches, then the zoom and the steps beside it, all the drawing's own, so
-    // the bar scrolls when zoomed in
     renderCutting(run.id + "Cut", run);
-    stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
     renderStripBar(run.id + "Bar", run);
     document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
@@ -7647,13 +7636,14 @@ function renderOutFacts() {
     var hint = document.createElement("span");
     hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag each light to match its position in your build." +
-      (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
-       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
-                           "mono lights, or rejoins them." : "");
-    hint.title = hint.textContent;
+    hint.textContent = "Drag lights to match your build." +
+      (breaking.length > 1 ? " Arrows split or rejoin an output's three lights."
+       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it."
+       : "");
     box.appendChild(hint);
   }
+  // The outputs' controls are for whichever side was last worked on, as the tools are
+  headSteps(box, active.strip ? lastOutputRun : active);
 }
 
 // What a strip is built as, its length and what follows it on the board line
@@ -7763,6 +7753,7 @@ function renderLeds(where, run) {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
+  headSteps(box, run);
 }
 
 // ---- turning setup on ------------------------------------------------------------------------

@@ -1198,21 +1198,27 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .boardchip select option{color:var(--ink)}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
 .facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
-/* The outputs' setup hint stays on the line of their box, so setting up moves no lamp, and
-   is cut short where the page is too narrow, its whole saying in its tooltip */
+/* The outputs' setup hint sits on the line of their box, which it fits at the page's full width.
+   On a narrower page it wraps, so the whole of it still shows */
 #outFacts{display:flex;align-items:center;margin-top:0}
 #outFacts .chip{flex:0 0 auto;white-space:nowrap}
 /* With the sides unnamed the lamps sit under the board's box at a strip's spacing, their
    own margin being for the heading and adding to the box's inside the sides */
 #sides.unnamed .run{margin-top:0}
-#outFacts .hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
- flex:1 1 0;width:0}
+#outFacts .hint{min-width:0;flex:1 1 0}
+/* A run's zoom, steps and Join all, at the right of the row naming its wiring or its strip */
+.headsteps{margin-left:auto;display:flex;align-items:center;gap:.35rem;flex:none}
+.headsteps .stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
+ padding:.28rem .55rem;font:600 .76rem system-ui,sans-serif;color:var(--ink);display:inline-flex;
+ align-items:center;gap:.35rem;cursor:pointer}
+.headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once */
 body.setupall #tabs,body.setupall #sceneTabRow,
 body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
-body.setupall [id$=Tools],body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
+body.setupall [id$=Tools],body.setupall [id$=Chosen],
+body.setupall .headsteps{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */
 body.setupall #assets,body.setupall #screensSays,
