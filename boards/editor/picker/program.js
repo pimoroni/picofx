@@ -4,13 +4,13 @@ import {
   PROGRAMS, argsFor, boardSet, onProgramPage, programNamed, programsReadingSteps, setProgramPage,
   setPrograms
 } from "./board_settings.js";
+import {h, replace} from "./dom.js";
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps, paintAll} from "./draw.js";
 import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./drive.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
   programsReading, removeProgram, thumbImages
 } from "./drive_programs.js";
-import {escapeHtml} from "./file_preview.js";
 import {spoken} from "./lines.js";
 import {BOARD} from "./looks.js";
 import {state} from "./scenes.js";
@@ -76,22 +76,14 @@ function programGroupFolded(title) {
 
 // A group's heading, pressed to fold or open it. It shows the group's name and what it holds
 export function foldHead(title, says, open, toggle) {
-  var head = document.createElement("button");
-  head.type = "button";
-  head.className = "gallery-head foldhead" + (open ? " open" : "");
-  head.setAttribute("aria-expanded", open);
-  head.appendChild(document.createTextNode(title));
-  if (says) {
-    var said = document.createElement("span");
-    said.className = "says";
-    said.textContent = says;
-    head.appendChild(said);
-  }
-  head.onclick = function () {
-    toggle();
-    draw();
-  };
-  return head;
+  return h("button", {
+    type: "button", className: "gallery-head foldhead" + (open ? " open" : ""),
+    "aria-expanded": String(open),
+    onclick: function () {
+      toggle();
+      draw();
+    }
+  }, title, says ? h("span", {className: "says"}, says) : null);
 }
 
 // Round holes cut through a filled shape, one at each point, as a path's own subpaths
@@ -172,13 +164,8 @@ function featureNamed(key) {
 }
 
 export function featureIcon(key) {
-  var feature = featureNamed(key);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = feature[3];
-  return icon;
+  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+                       html: featureNamed(key)[3]});
 }
 
 // What a program uses, read from its source
@@ -202,10 +189,7 @@ export function programTitle(path) {
 var THUMB_W = 160, THUMB_H = 120;
 
 function thumbCanvas(kind, seed, uses) {
-  var canvas = document.createElement("canvas");
-  canvas.width = THUMB_W;
-  canvas.height = THUMB_H;
-  canvas.className = "progthumb";
+  var canvas = h("canvas", {width: THUMB_W, height: THUMB_H, className: "progthumb"});
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
 }
@@ -555,71 +539,58 @@ export var programView = null;
 // A card's copy tile, in the bin's place on an example, which has none, or beside the bin on the
 // user's own. An example is customised and one of the user's own duplicated, into the folder named
 export function copyTile(example, file, folder, copy) {
-  var tile = document.createElement("span");
-  tile.className = "bin copytile" + (example ? " alone" : "");
-  tile.textContent = "\u29c9";
-  tile.title = (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder +
-               " folder";
-  tile.onclick = function (e) {
-    e.stopPropagation();
-    copy();
-  };
-  return tile;
+  return h("span", {
+    className: "bin copytile" + (example ? " alone" : ""),
+    title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder +
+           " folder",
+    onclick: function (e) {
+      e.stopPropagation();
+      copy();
+    }
+  }, "\u29c9");
 }
 
 // A program as a card, as the looks are, its thumbnail over its name, and what it uses as a row
 // of small drawings along the foot of the thumbnail
 export function programCard(path) {
-  var card = document.createElement("button");
-  card.type = "button";
-  card.className = "progcard" + (boardSet.program === path ? " picked" : "");
-  card.dataset.path = path;
-  card.appendChild(programThumb(path));
   var uses = usesOf(path);
-  if (uses.length) {
-    var row = document.createElement("span");
-    row.className = "proguses";
-    uses.forEach(function (key) { row.appendChild(featureIcon(key)); });
-    card.appendChild(row);
-  }
-  var name = document.createElement("span");
-  name.className = "progname";
-  name.textContent = programTitle(path);
-  card.appendChild(name);
-  card.title = ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
-    uses.map(function (key) { return featureNamed(key)[1]; }).join(", ") : "");
-  // Picked again, the program is put back, leaving none chosen
-  card.onclick = function () {
-    boardSet.program = boardSet.program === path ? null : path;
-    draw();
-  };
-  // A copy to change, which takes the original's place where it was chosen
   var example = !!(programNamed(path) || {}).example;
   var file = path.split("/").pop();
-  if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function () {
-    try {
-      var copy = await copyProgram(path);
-      setPrograms(await drivePrograms(drive.dirHandle, true));
-      if (boardSet.program === path) boardSet.program = copy;
-      banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
-             "change it.");
-    } catch (e) {
-      banner("Could not copy " + path.split("/").pop() + ". " + await driveTrouble(e, path), true);
+  var card = h("button", {
+    type: "button",
+    className: "progcard" + (boardSet.program === path ? " picked" : ""),
+    "data-path": path,
+    title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
+      uses.map(function (key) { return featureNamed(key)[1]; }).join(", ") : ""),
+    // Picked again, the program is put back, leaving none chosen
+    onclick: function () {
+      boardSet.program = boardSet.program === path ? null : path;
+      draw();
     }
-    draw();
-  }));
-  // Check if the program is the user's own, which can be deleted as the effects' media can
-  if (!example) {
-    var bin = document.createElement("span");
-    bin.className = "bin";
-    bin.textContent = "\u00d7";
-    bin.title = "Delete " + path.split("/").pop() + " from the FX drive";
-    bin.onclick = function (e) {
-      e.stopPropagation();
-      removeProgram(path);
-    };
-    card.appendChild(bin);
-  }
+  }, programThumb(path),
+     uses.length ? h("span", {className: "proguses"}, uses.map(featureIcon)) : null,
+     h("span", {className: "progname"}, programTitle(path)),
+     // A copy to change, which takes the original's place where it was chosen
+     drive.dirHandle ? copyTile(example, file, OWN_FOLDER, async function () {
+       try {
+         var copy = await copyProgram(path);
+         setPrograms(await drivePrograms(drive.dirHandle, true));
+         if (boardSet.program === path) boardSet.program = copy;
+         banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
+                "change it.");
+       } catch (e) {
+         banner("Could not copy " + file + ". " + await driveTrouble(e, path), true);
+       }
+       draw();
+     }) : null,
+     // Check if the program is the user's own, which can be deleted as the effects' media can
+     example ? null : h("span", {
+       className: "bin", title: "Delete " + file + " from the FX drive",
+       onclick: function (e) {
+         e.stopPropagation();
+         removeProgram(path);
+       }
+     }, "\u00d7"));
   programCardSteps.forEach(function (step) { step(card, path); });
   return card;
 }
@@ -659,11 +630,8 @@ function programPicture(path) {
   if (onScreen && shown.length) {
     if (shown.length < 2) return framedPanel(path, shown[0]);
     // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
-    var both = document.createElement("div");
-    both.className = "twopanels";
-    both.appendChild(framedPanel(path, shown[0]));
-    both.appendChild(framedPanel(path, shown[1]));
-    return both;
+    return h("div", {className: "twopanels"},
+             framedPanel(path, shown[0]), framedPanel(path, shown[1]));
   }
   var big = programThumb(path);
   big.classList.add("big");
@@ -681,103 +649,80 @@ function emptyPicture() {
 
 // The line along the preview's top, saying what the board runs, with the way to choose none
 function heroNote(path) {
-  var note = document.createElement("div");
-  note.className = "programnote";
-  note.appendChild(boardIcon());
-  var said = document.createElement("span");
-  said.textContent = path
-    ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are " +
-      "kept, and play if the program is missing or stops, with the reason in errors.txt."
-    : "No program chosen, so the board plays the effects. Choose one below to run it instead.";
-  note.appendChild(said);
-  if (path) {
-    var none = document.createElement("button");
-    none.type = "button";
-    none.className = "progchoosenone";
-    none.textContent = "Choose none";
-    none.onclick = function () {
-      boardSet.program = null;
-      draw();
-    };
-    note.appendChild(none);
+  return h("div", {className: "programnote"}, boardIcon(),
+           h("span", {}, path
+             ? "The board runs " + path.split("/").pop() + " instead of the effects. The " +
+               "effects are kept, and play if the program is missing or stops, with the reason " +
+               "in errors.txt."
+             : "No program chosen, so the board plays the effects. Choose one below to run it " +
+               "instead."),
+           path ? h("button", {
+             type: "button", className: "progchoosenone",
+             onclick: function () {
+               boardSet.program = null;
+               draw();
+             }
+           }, "Choose none") : null);
+}
+
+// What a picked program does, what it needs and what it takes, or before one is picked, what
+// choosing one does
+function programWords(path) {
+  if (!path) {
+    var taken = ["outputs"];
+    if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
+    if (BOARD.sound) taken.push("sound");
+    return h("div", {className: "progwords"},
+             h("h3", {}, "Choose a program"),
+             h("p", {}, "A program takes over the whole board, its " + spoken(taken) +
+                        ", while it runs."));
   }
-  return note;
+  var program = programNamed(path) || {};
+  var uses = usesOf(path);
+  return h("div", {className: "progwords"},
+           h("h3", {}, programTitle(path)),
+           h("p", {}, program.does || "No description."),
+           h("p", {className: "progwhere"},
+             path + (program.example ? ", built in" : ", on the drive")),
+           // What it uses, each drawn and named, as the filter below names them
+           uses.length ? h("div", {className: "herouses"}, uses.map(function (key) {
+             return h("span", {}, featureIcon(key), featureNamed(key)[1]);
+           })) : null,
+           argsFor(path, false));
 }
 
 // The picked program large, with what it does, what it needs and what it takes. With none picked
 // the box keeps its size, an empty panel in the picture's place, so choosing one moves nothing
 function programHero(path) {
-  var hero = document.createElement("div");
-  hero.className = "proghero" + (path ? "" : " unchosen");
-  hero.appendChild(heroNote(path));
-  var body = document.createElement("div");
-  body.className = "herobody";
-  hero.appendChild(body);
-  var picture = document.createElement("div");
-  picture.className = "progpicture";
-  picture.appendChild(path ? programPicture(path) : emptyPicture());
-  body.appendChild(picture);
-  if (!path) {
-    var waiting = document.createElement("div");
-    waiting.className = "progwords";
-    var taken = ["outputs"];
-    if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
-    if (BOARD.sound) taken.push("sound");
-    waiting.innerHTML = "<h3>Choose a program</h3><p>A program takes over the whole board, its " +
-                        spoken(taken) + ", while it runs.</p>";
-    body.appendChild(waiting);
-    return hero;
-  }
-  var words = document.createElement("div");
-  words.className = "progwords";
-  var program = programNamed(path) || {};
-  words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3>" +
-                    "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
-                    "<p class='progwhere'>" + escapeHtml(path) +
-                    (program.example ? ", built in" : ", on the drive") + "</p>";
-  // What it uses, each drawn and named, as the filter below names them
-  var uses = document.createElement("div");
-  uses.className = "herouses";
-  usesOf(path).forEach(function (key) {
-    var one = document.createElement("span");
-    one.appendChild(featureIcon(key));
-    one.appendChild(document.createTextNode(featureNamed(key)[1]));
-    uses.appendChild(one);
-  });
-  if (uses.children.length) words.appendChild(uses);
-  words.appendChild(argsFor(path, false));
-  body.appendChild(words);
-  return hero;
+  return h("div", {className: "proghero" + (path ? "" : " unchosen")},
+           heroNote(path),
+           h("div", {className: "herobody"},
+             h("div", {className: "progpicture"}, path ? programPicture(path) : emptyPicture()),
+             programWords(path)));
 }
 
-function renderProgramView() {
-  programView.textContent = "";
-  if (!onProgramPage) return;
-  programView.appendChild(programHero(boardSet.program));
+// The programs under the picked one, grouped and filtered, or what keeps them from being listed
+function programListing() {
   // Check if the drive is not open. The programs are the drive's, so none is listed until it is
   if (!drive.dirHandle) {
-    var closed = document.createElement("p");
-    closed.className = "prognone";
-    closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
-                                           : "This browser cannot open the FX drive, so " +
-                                             "programs cannot be listed. Use Chrome or Edge.";
-    programView.appendChild(closed);
-    return;
+    return h("p", {className: "prognone"},
+             CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
+                               : "This browser cannot open the FX drive, so programs cannot be " +
+                                 "listed. Use Chrome or Edge.");
   }
   // Check if the drive's Python files are still being read. Each is read in turn, which takes a
   // while, so the count is shown once the files are counted
   if (programsReading || !programsKnown) {
-    var reading = document.createElement("p");
-    reading.className = "prognone";
-    reading.textContent = "Reading the Python files on the drive" + (programsReading
-      ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "...");
-    programView.appendChild(reading);
-    return;
+    return h("p", {className: "prognone"},
+             "Reading the Python files on the drive" + (programsReading
+               ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "..."));
   }
-  programView.appendChild(featureFilter());
+  var parts = [featureFilter()];
   var shown = 0;
   var listed = 0;
-  function group(title, paths) {
+  offeredGroups().forEach(function (offered) {
+    var title = offered[0];
+    var paths = offered[1];
     listed += paths.length;
     var kept = paths.filter(passesFilter);
     // The user's own is always there, as the effects' are, saying how to start one where empty
@@ -785,31 +730,32 @@ function renderProgramView() {
     if (!kept.length && !own) return;
     shown += kept.length;
     var open = !programGroupFolded(title);
-    programView.appendChild(foldHead(title, groupSays(title), open, function () {
+    parts.push(foldHead(title, groupSays(title), open, function () {
       programsFolded[title] = open;
     }));
     if (!open) return;
     if (own && !paths.length) {
-      var empty = document.createElement("p");
-      empty.className = "prognone";
-      empty.textContent = "None yet. Customise an example to make one.";
-      programView.appendChild(empty);
+      parts.push(h("p", {className: "prognone"}, "None yet. Customise an example to make one."));
     }
-    if (!kept.length) return;
-    var grid = document.createElement("div");
-    grid.className = "proggrid";
-    kept.forEach(function (path) { grid.appendChild(programCard(path)); });
-    programView.appendChild(grid);
-  }
-  offeredGroups().forEach(function (offered) { group(offered[0], offered[1]); });
+    if (kept.length) parts.push(h("div", {className: "proggrid"}, kept.map(programCard)));
+  });
   if (!shown) {
-    var none = document.createElement("p");
-    none.className = "prognone";
-    none.textContent = listed ? "Every program here needs hardware that is not ticked."
-                              : "There are no programs on this drive.";
-    programView.appendChild(none);
+    parts.push(h("p", {className: "prognone"},
+                 listed ? "Every program here needs hardware that is not ticked."
+                        : "There are no programs on this drive."));
   }
-  programViewSteps.forEach(function (step) { step(); });
+  return parts;
+}
+
+function renderProgramView() {
+  if (!onProgramPage) {
+    replace(programView);
+    return;
+  }
+  replace(programView, programHero(boardSet.program), programListing());
+  if (drive.dirHandle && programsKnown && !programsReading) {
+    programViewSteps.forEach(function (step) { step(); });
+  }
 }
 programsReadingSteps.push(renderProgramView);
 
@@ -856,48 +802,37 @@ function offeredPaths() {
 }
 
 function featureFilter() {
-  var row = document.createElement("div");
-  row.className = "featurefilter";
-  var said = document.createElement("span");
-  said.textContent = "With:";
-  row.appendChild(said);
   var chips = chipFeatures();
-  chips.forEach(function (feature) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "featurechip" + (had(feature[0]) ? " on" : "");
-    chip.dataset.feature = feature[0];
-    chip.title = had(feature[0]) ? "Showing programs that use " + feature[1]
-                                 : "Hiding programs that need " + feature[1];
-    chip.appendChild(featureIcon(feature[0]));
-    chip.appendChild(document.createTextNode(feature[2]));
-    chip.onclick = function () {
-      var at = unhad.indexOf(feature[0]);
-      if (at >= 0) unhad.splice(at, 1);
-      else unhad.push(feature[0]);
-      draw();
-    };
-    row.appendChild(chip);
-  });
-  // Buttons to turn every chip on, or every chip off for ticking what is to hand. They are kept
-  // together in one box where the row wraps
-  var clears = document.createElement("div");
-  clears.className = "featureclears";
-  row.appendChild(clears);
-  [["all", function () { return []; }],
-   ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
-    .forEach(function (one) {
-      var choice = document.createElement("button");
-      choice.type = "button";
-      choice.className = "featureclear";
-      choice.textContent = one[0];
-      choice.onclick = function () {
-        unhad = one[1]();
-        draw();
-      };
-      clears.appendChild(choice);
-    });
-  return row;
+  return h("div", {className: "featurefilter"},
+           h("span", {}, "With:"),
+           chips.map(function (feature) {
+             return h("button", {
+               type: "button", className: "featurechip" + (had(feature[0]) ? " on" : ""),
+               "data-feature": feature[0],
+               title: had(feature[0]) ? "Showing programs that use " + feature[1]
+                                      : "Hiding programs that need " + feature[1],
+               onclick: function () {
+                 var at = unhad.indexOf(feature[0]);
+                 if (at >= 0) unhad.splice(at, 1);
+                 else unhad.push(feature[0]);
+                 draw();
+               }
+             }, featureIcon(feature[0]), feature[2]);
+           }),
+           // Buttons to turn every chip on, or every chip off for ticking what is to hand. They
+           // are kept together in one box where the row wraps
+           h("div", {className: "featureclears"},
+             [["all", function () { return []; }],
+              ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
+               .map(function (one) {
+                 return h("button", {
+                   type: "button", className: "featureclear",
+                   onclick: function () {
+                     unhad = one[1]();
+                     draw();
+                   }
+                 }, one[0]);
+               })));
 }
 
 // ---- moving between the two pages ---------------------------------------------------------------
@@ -919,70 +854,48 @@ function toProgram() {
 // The effects summed up small in a live swatch of the outputs, as their own tab has. It is painted
 // every frame from what the lamps play, so it never stops on whichever frame a redraw caught
 function effectsFace() {
-  var face = document.createElement("span");
-  face.className = "effectsface";
-  var swatch = document.createElement("span");
-  swatch.className = "accswatch";
+  var swatch = h("span", {className: "accswatch"});
   tabSwatch(swatch, "outPanel");
-  face.appendChild(swatch);
-  return face;
+  return h("span", {className: "effectsface"}, swatch);
 }
 
 function renderPageSwitch() {
   var inHeader = document.getElementById("headSwitch");
-  inHeader.textContent = "";
   var program = boardSet.program;
   // Split under the header, the tabs are drawn as the tabs off its foot are
   inHeader.className = "headswitch headsplit headtabs";
   // Two tabs, each showing what it would run, with the page shown marked. They sit small in the
   // header where the page's name is, taking no room from the page
-  [["effects", "Effects"],
-   ["program", "Programs", program ? programTitle(program) : ""]].forEach(function (one) {
-    // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
-    // element taking the click and the keyboard
-    var cover = document.createElement("div");
-    cover.setAttribute("role", "button");
-    cover.tabIndex = 0;
-    cover.onkeydown = function (event) {
-      if (event.key === "Enter" || event.key === " ") cover.onclick();
-    };
-    cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
-    cover.dataset.page = one[0];
+  replace(inHeader, [["effects", "Effects"],
+                     ["program", "Programs", program ? programTitle(program) : ""]].map(function (one) {
     // With no program chosen its tab shows a starfield, or the lamps lit on a board without screens
     var face = one[0] === "effects" ? effectsFace()
              : program ? programThumb(program)
              : thumbCanvas(SCREEN_PORTS.length ? "stars" : "outputs:rainbow", 3);
     face.classList.add("coverface");
-    cover.appendChild(face);
-    var words = document.createElement("span");
-    // Only a program's name is said under its tab
-    words.innerHTML = "<b>" + one[1] + "</b>" +
-                      (one[2] ? "<small>" + escapeHtml(one[2]) + "</small>" : "");
-    cover.appendChild(words);
-    cover.onclick = one[0] === "effects" ? toEffects : toProgram;
-    inHeader.appendChild(cover);
-  });
+    // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
+    // element taking the click and the keyboard. Only a program's name is said under its tab
+    var cover = h("div", {
+      role: "button", tabIndex: 0,
+      className: "cover" + ((one[0] === "program") === onProgramPage ? " on" : ""),
+      "data-page": one[0],
+      onkeydown: function (event) {
+        if (event.key === "Enter" || event.key === " ") cover.onclick();
+      },
+      onclick: one[0] === "effects" ? toEffects : toProgram
+    }, face, h("span", {}, h("b", {}, one[1]), one[2] ? h("small", {}, one[2]) : null));
+    return cover;
+  }));
 }
 
-(function () {
-  // In the header after the page's name. What follows the name is gathered into one group, so a
-  // wide header can set name, tabs and group on a single line
-  var headSwitch = document.createElement("span");
-  headSwitch.id = "headSwitch";
-  headSwitch.className = "headswitch";
-  var named = document.querySelector("header h1");
-  var actions = document.createElement("span");
-  actions.id = "headActions";
-  actions.className = "headactions";
-  while (named.nextSibling) actions.appendChild(named.nextSibling);
-  named.parentNode.appendChild(headSwitch);
-  named.parentNode.appendChild(actions);
-  programView = document.createElement("div");
-  programView.id = "programView";
-  programView.className = "programview";
-  var body = document.getElementById("sceneBody");
-  body.parentNode.insertBefore(programView, body.nextSibling);
-}());
+// In the header after the page's name. What follows the name is gathered into one group, so a
+// wide header can set name, tabs and group on a single line
+var headActions = h("span", {id: "headActions", className: "headactions"});
+var pageName = document.querySelector("header h1");
+while (pageName.nextSibling) headActions.appendChild(pageName.nextSibling);
+pageName.after(h("span", {id: "headSwitch", className: "headswitch"}), headActions);
+programView = h("div", {id: "programView", className: "programview"});
+document.getElementById("sceneBody").after(programView);
 
 // Before anything is drawn, as the effects' parts measure themselves and measure nothing while
 // the program page hides them

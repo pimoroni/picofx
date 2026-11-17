@@ -1,4 +1,5 @@
 import {BOARD_LINE_AFTER, SCREEN_SIZES, boardLineSteps} from "./board.js";
+import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "./draw.js";
 import {renderPreview} from "./file_preview.js";
 import {state} from "./scenes.js";
@@ -94,78 +95,54 @@ var ARGUMENT_CHOICES = {
 export function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
-  var box = document.createElement("div");
-  box.className = "progargs";
   var named = !!program.args;
   var taken = program.args || given.map(function (arg, at) {
     return {name: "Argument " + (at + 1), kind: "text"};
   });
-  taken.forEach(function (argument, at) {
-    var label = document.createElement("label");
-    label.textContent = argument.name;
+  return h("div", {className: "progargs"}, taken.map(function (argument, at) {
     if (ARGUMENT_CHOICES[argument.kind]) {
       var choices = ARGUMENT_CHOICES[argument.kind](argument);
       if (given[at] === undefined) {
         given[at] = argument.kind === "size" ? sizeOffered(argument)
                                              : argument.default || choices[0][0];
       }
-      var choice = document.createElement("select");
-      choice.disabled = !!locked;
-      choices.forEach(function (offered) {
-        var option = document.createElement("option");
-        option.value = offered[0];
-        option.innerHTML = offered[1];
-        option.selected = given[at] === offered[0];
-        choice.appendChild(option);
-      });
-      choice.onchange = function () {
-        given[at] = choice.value;
-        draw();
-      };
-      label.appendChild(choice);
-      box.appendChild(label);
-      return;
+      var choice = h("select", {
+        disabled: !!locked,
+        onchange: function () {
+          given[at] = choice.value;
+          draw();
+        }
+      }, choices.map(function (offered) {
+        return h("option", {value: offered[0], selected: given[at] === offered[0],
+                            html: offered[1]});
+      }));
+      return h("label", {}, argument.name, choice);
     }
     if (given[at] === undefined && "default" in argument) given[at] = argument.default;
-    var field = document.createElement("input");
-    field.value = given[at] || "";
-    field.disabled = !!locked;
-    field.oninput = function () {
-      given[at] = field.value;
-      renderPreview();
-    };
-    field.onchange = function () { draw(); };
-    label.appendChild(field);
+    var field = h("input", {
+      value: given[at] || "", disabled: !!locked,
+      oninput: function () {
+        given[at] = field.value;
+        renderPreview();
+      },
+      onchange: function () { draw(); }
+    });
     // Check if the argument was added by hand, so it can be taken away again and the rest move up
-    if (!named) {
-      var gone = document.createElement("button");
-      gone.type = "button";
-      gone.className = "progless";
-      gone.innerHTML = "&times;";
-      gone.title = "Remove this argument";
-      gone.disabled = !!locked;
-      gone.onclick = function () {
+    return h("label", {}, argument.name, field, named ? null : h("button", {
+      type: "button", className: "progless", title: "Remove this argument", disabled: !!locked,
+      onclick: function () {
         given.splice(at, 1);
         draw();
-      };
-      label.appendChild(gone);
-    }
-    box.appendChild(label);
-  });
-  if (!named) {
-    var more = document.createElement("button");
-    more.type = "button";
-    more.className = "progmore";
-    more.textContent = "+ an argument";
-    more.disabled = !!locked;
-    more.title = "Passed to the program in sys.argv";
-    more.onclick = function () {
+      }
+    }, "×"));
+  }), named ? null : h("button", {
+    type: "button", className: "progmore", disabled: !!locked,
+    title: "Passed to the program in sys.argv",
+    onclick: function () {
       given.push("");
       draw();
-    };
-    box.appendChild(more);
-  }
-  return box;
+    }
+  }, "+ an argument"));
 }
 
 // ---- the effects, while a program runs --------------------------------------------------------
@@ -175,23 +152,18 @@ export function argsFor(path, locked) {
 function programNote() {
   var note = document.getElementById("programNote");
   if (!note) {
-    note = document.createElement("div");
-    note.id = "programNote";
-    note.className = "programnote";
+    note = h("div", {id: "programNote", className: "programnote"});
     // Above the gallery, or above what a page has stacked it in
-    var looks = document.getElementById("looksStack") || document.getElementById("looks");
-    looks.parentNode.insertBefore(note, looks);
+    (document.getElementById("looksStack") || document.getElementById("looks")).before(note);
   }
   note.hidden = !boardSet.program;
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
-  note.textContent = "";
-  note.appendChild(boardIcon());
-  note.appendChild(document.createTextNode(
-    "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
-                                                 : boardSet.program) +
-    " instead of the effects. The effects are kept, and play if the " +
-    "program is missing or stops, with the reason in errors.txt."));
+  replace(note, boardIcon(),
+          "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
+                                                       : boardSet.program) +
+          " instead of the effects. The effects are kept, and play if the " +
+          "program is missing or stops, with the reason in errors.txt.");
 }
 
 addStep(drawSteps.after, DRAW_AFTER, "boardSettings", function () {

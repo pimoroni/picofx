@@ -8132,96 +8132,78 @@ var ARGUMENT_CHOICES = {
 function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
-  var box = document.createElement("div");
-  box.className = "progargs";
   var named2 = !!program.args;
   var taken = program.args || given.map(function(arg, at) {
     return { name: "Argument " + (at + 1), kind: "text" };
   });
-  taken.forEach(function(argument, at) {
-    var label = document.createElement("label");
-    label.textContent = argument.name;
+  return h("div", { className: "progargs" }, taken.map(function(argument, at) {
     if (ARGUMENT_CHOICES[argument.kind]) {
       var choices = ARGUMENT_CHOICES[argument.kind](argument);
       if (given[at] === void 0) {
         given[at] = argument.kind === "size" ? sizeOffered(argument) : argument.default || choices[0][0];
       }
-      var choice = document.createElement("select");
-      choice.disabled = !!locked;
-      choices.forEach(function(offered) {
-        var option = document.createElement("option");
-        option.value = offered[0];
-        option.innerHTML = offered[1];
-        option.selected = given[at] === offered[0];
-        choice.appendChild(option);
-      });
-      choice.onchange = function() {
-        given[at] = choice.value;
-        draw();
-      };
-      label.appendChild(choice);
-      box.appendChild(label);
-      return;
+      var choice = h("select", {
+        disabled: !!locked,
+        onchange: function() {
+          given[at] = choice.value;
+          draw();
+        }
+      }, choices.map(function(offered) {
+        return h("option", {
+          value: offered[0],
+          selected: given[at] === offered[0],
+          html: offered[1]
+        });
+      }));
+      return h("label", {}, argument.name, choice);
     }
     if (given[at] === void 0 && "default" in argument) given[at] = argument.default;
-    var field = document.createElement("input");
-    field.value = given[at] || "";
-    field.disabled = !!locked;
-    field.oninput = function() {
-      given[at] = field.value;
-      renderPreview();
-    };
-    field.onchange = function() {
-      draw();
-    };
-    label.appendChild(field);
-    if (!named2) {
-      var gone = document.createElement("button");
-      gone.type = "button";
-      gone.className = "progless";
-      gone.innerHTML = "&times;";
-      gone.title = "Remove this argument";
-      gone.disabled = !!locked;
-      gone.onclick = function() {
+    var field = h("input", {
+      value: given[at] || "",
+      disabled: !!locked,
+      oninput: function() {
+        given[at] = field.value;
+        renderPreview();
+      },
+      onchange: function() {
+        draw();
+      }
+    });
+    return h("label", {}, argument.name, field, named2 ? null : h("button", {
+      type: "button",
+      className: "progless",
+      title: "Remove this argument",
+      disabled: !!locked,
+      onclick: function() {
         given.splice(at, 1);
         draw();
-      };
-      label.appendChild(gone);
-    }
-    box.appendChild(label);
-  });
-  if (!named2) {
-    var more = document.createElement("button");
-    more.type = "button";
-    more.className = "progmore";
-    more.textContent = "+ an argument";
-    more.disabled = !!locked;
-    more.title = "Passed to the program in sys.argv";
-    more.onclick = function() {
+      }
+    }, "\xD7"));
+  }), named2 ? null : h("button", {
+    type: "button",
+    className: "progmore",
+    disabled: !!locked,
+    title: "Passed to the program in sys.argv",
+    onclick: function() {
       given.push("");
       draw();
-    };
-    box.appendChild(more);
-  }
-  return box;
+    }
+  }, "+ an argument"));
 }
 function programNote() {
   var note = document.getElementById("programNote");
   if (!note) {
-    note = document.createElement("div");
-    note.id = "programNote";
-    note.className = "programnote";
-    var looks = document.getElementById("looksStack") || document.getElementById("looks");
-    looks.parentNode.insertBefore(note, looks);
+    note = h("div", { id: "programNote", className: "programnote" });
+    (document.getElementById("looksStack") || document.getElementById("looks")).before(note);
   }
   note.hidden = !boardSet.program;
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
-  note.textContent = "";
-  note.appendChild(boardIcon());
-  note.appendChild(document.createTextNode(
+  replace(
+    note,
+    boardIcon(),
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")" : boardSet.program) + " instead of the effects. The effects are kept, and play if the program is missing or stops, with the reason in errors.txt."
-  ));
+  );
 }
 addStep(drawSteps.after, DRAW_AFTER, "boardSettings", function() {
   document.body.classList.toggle("programmed", !!boardSet.program);
@@ -10276,22 +10258,15 @@ function programGroupFolded(title) {
   return !!(listed && listed[2]);
 }
 function foldHead(title, says, open, toggle2) {
-  var head = document.createElement("button");
-  head.type = "button";
-  head.className = "gallery-head foldhead" + (open ? " open" : "");
-  head.setAttribute("aria-expanded", open);
-  head.appendChild(document.createTextNode(title));
-  if (says) {
-    var said = document.createElement("span");
-    said.className = "says";
-    said.textContent = says;
-    head.appendChild(said);
-  }
-  head.onclick = function() {
-    toggle2();
-    draw();
-  };
-  return head;
+  return h("button", {
+    type: "button",
+    className: "gallery-head foldhead" + (open ? " open" : ""),
+    "aria-expanded": String(open),
+    onclick: function() {
+      toggle2();
+      draw();
+    }
+  }, title, says ? h("span", { className: "says" }, says) : null);
 }
 function holes(points, radius) {
   return points.map(function(at) {
@@ -10402,13 +10377,12 @@ function featureNamed(key) {
   })[0];
 }
 function featureIcon(key) {
-  var feature = featureNamed(key);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = feature[3];
-  return icon;
+  return h("svg:svg", {
+    viewBox: "0 0 24 24",
+    class: "featureicon",
+    "aria-hidden": "true",
+    html: featureNamed(key)[3]
+  });
 }
 function usesOf(path) {
   var program = programNamed(path);
@@ -10422,10 +10396,7 @@ function programTitle(path) {
 }
 var THUMB_W = 160, THUMB_H = 120;
 function thumbCanvas(kind, seed, uses) {
-  var canvas = document.createElement("canvas");
-  canvas.width = THUMB_W;
-  canvas.height = THUMB_H;
-  canvas.className = "progthumb";
+  var canvas = h("canvas", { width: THUMB_W, height: THUMB_H, className: "progthumb" });
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
 }
@@ -10751,66 +10722,59 @@ function programThumb(path) {
 }
 var programView = null;
 function copyTile(example, file, folder, copy) {
-  var tile = document.createElement("span");
-  tile.className = "bin copytile" + (example ? " alone" : "");
-  tile.textContent = "\u29C9";
-  tile.title = (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder + " folder";
-  tile.onclick = function(e) {
-    e.stopPropagation();
-    copy();
-  };
-  return tile;
+  return h("span", {
+    className: "bin copytile" + (example ? " alone" : ""),
+    title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder + " folder",
+    onclick: function(e) {
+      e.stopPropagation();
+      copy();
+    }
+  }, "\u29C9");
 }
 function programCard(path) {
-  var card = document.createElement("button");
-  card.type = "button";
-  card.className = "progcard" + (boardSet.program === path ? " picked" : "");
-  card.dataset.path = path;
-  card.appendChild(programThumb(path));
   var uses = usesOf(path);
-  if (uses.length) {
-    var row = document.createElement("span");
-    row.className = "proguses";
-    uses.forEach(function(key) {
-      row.appendChild(featureIcon(key));
-    });
-    card.appendChild(row);
-  }
-  var name = document.createElement("span");
-  name.className = "progname";
-  name.textContent = programTitle(path);
-  card.appendChild(name);
-  card.title = ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " + uses.map(function(key) {
-    return featureNamed(key)[1];
-  }).join(", ") : "");
-  card.onclick = function() {
-    boardSet.program = boardSet.program === path ? null : path;
-    draw();
-  };
   var example = !!(programNamed(path) || {}).example;
   var file = path.split("/").pop();
-  if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function() {
-    try {
-      var copy = await copyProgram(path);
-      setPrograms(await drivePrograms(drive.dirHandle, true));
-      if (boardSet.program === path) boardSet.program = copy;
-      banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to change it.");
-    } catch (e) {
-      banner("Could not copy " + path.split("/").pop() + ". " + await driveTrouble(e, path), true);
-    }
-    draw();
-  }));
-  if (!example) {
-    var bin = document.createElement("span");
-    bin.className = "bin";
-    bin.textContent = "\xD7";
-    bin.title = "Delete " + path.split("/").pop() + " from the FX drive";
-    bin.onclick = function(e) {
-      e.stopPropagation();
-      removeProgram(path);
-    };
-    card.appendChild(bin);
-  }
+  var card = h(
+    "button",
+    {
+      type: "button",
+      className: "progcard" + (boardSet.program === path ? " picked" : ""),
+      "data-path": path,
+      title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " + uses.map(function(key) {
+        return featureNamed(key)[1];
+      }).join(", ") : ""),
+      // Picked again, the program is put back, leaving none chosen
+      onclick: function() {
+        boardSet.program = boardSet.program === path ? null : path;
+        draw();
+      }
+    },
+    programThumb(path),
+    uses.length ? h("span", { className: "proguses" }, uses.map(featureIcon)) : null,
+    h("span", { className: "progname" }, programTitle(path)),
+    // A copy to change, which takes the original's place where it was chosen
+    drive.dirHandle ? copyTile(example, file, OWN_FOLDER, async function() {
+      try {
+        var copy = await copyProgram(path);
+        setPrograms(await drivePrograms(drive.dirHandle, true));
+        if (boardSet.program === path) boardSet.program = copy;
+        banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to change it.");
+      } catch (e) {
+        banner("Could not copy " + file + ". " + await driveTrouble(e, path), true);
+      }
+      draw();
+    }) : null,
+    // Check if the program is the user's own, which can be deleted as the effects' media can
+    example ? null : h("span", {
+      className: "bin",
+      title: "Delete " + file + " from the FX drive",
+      onclick: function(e) {
+        e.stopPropagation();
+        removeProgram(path);
+      }
+    }, "\xD7")
+  );
   programCardSteps.forEach(function(step2) {
     step2(card, path);
   });
@@ -10846,11 +10810,12 @@ function programPicture(path) {
   });
   if (onScreen && shown.length) {
     if (shown.length < 2) return framedPanel(path, shown[0]);
-    var both = document.createElement("div");
-    both.className = "twopanels";
-    both.appendChild(framedPanel(path, shown[0]));
-    both.appendChild(framedPanel(path, shown[1]));
-    return both;
+    return h(
+      "div",
+      { className: "twopanels" },
+      framedPanel(path, shown[0]),
+      framedPanel(path, shown[1])
+    );
   }
   var big = programThumb(path);
   big.classList.add("big");
@@ -10863,121 +10828,121 @@ function emptyPicture() {
   return big;
 }
 function heroNote(path) {
-  var note = document.createElement("div");
-  note.className = "programnote";
-  note.appendChild(boardIcon());
-  var said = document.createElement("span");
-  said.textContent = path ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are kept, and play if the program is missing or stops, with the reason in errors.txt." : "No program chosen, so the board plays the effects. Choose one below to run it instead.";
-  note.appendChild(said);
-  if (path) {
-    var none = document.createElement("button");
-    none.type = "button";
-    none.className = "progchoosenone";
-    none.textContent = "Choose none";
-    none.onclick = function() {
-      boardSet.program = null;
-      draw();
-    };
-    note.appendChild(none);
-  }
-  return note;
+  return h(
+    "div",
+    { className: "programnote" },
+    boardIcon(),
+    h("span", {}, path ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are kept, and play if the program is missing or stops, with the reason in errors.txt." : "No program chosen, so the board plays the effects. Choose one below to run it instead."),
+    path ? h("button", {
+      type: "button",
+      className: "progchoosenone",
+      onclick: function() {
+        boardSet.program = null;
+        draw();
+      }
+    }, "Choose none") : null
+  );
 }
-function programHero(path) {
-  var hero = document.createElement("div");
-  hero.className = "proghero" + (path ? "" : " unchosen");
-  hero.appendChild(heroNote(path));
-  var body = document.createElement("div");
-  body.className = "herobody";
-  hero.appendChild(body);
-  var picture = document.createElement("div");
-  picture.className = "progpicture";
-  picture.appendChild(path ? programPicture(path) : emptyPicture());
-  body.appendChild(picture);
+function programWords(path) {
   if (!path) {
-    var waiting = document.createElement("div");
-    waiting.className = "progwords";
     var taken = ["outputs"];
     if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
     if (BOARD.sound) taken.push("sound");
-    waiting.innerHTML = "<h3>Choose a program</h3><p>A program takes over the whole board, its " + spoken(taken) + ", while it runs.</p>";
-    body.appendChild(waiting);
-    return hero;
+    return h(
+      "div",
+      { className: "progwords" },
+      h("h3", {}, "Choose a program"),
+      h("p", {}, "A program takes over the whole board, its " + spoken(taken) + ", while it runs.")
+    );
   }
-  var words = document.createElement("div");
-  words.className = "progwords";
   var program = programNamed(path) || {};
-  words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3><p>" + escapeHtml(program.does || "No description.") + "</p><p class='progwhere'>" + escapeHtml(path) + (program.example ? ", built in" : ", on the drive") + "</p>";
-  var uses = document.createElement("div");
-  uses.className = "herouses";
-  usesOf(path).forEach(function(key) {
-    var one = document.createElement("span");
-    one.appendChild(featureIcon(key));
-    one.appendChild(document.createTextNode(featureNamed(key)[1]));
-    uses.appendChild(one);
-  });
-  if (uses.children.length) words.appendChild(uses);
-  words.appendChild(argsFor(path, false));
-  body.appendChild(words);
-  return hero;
+  var uses = usesOf(path);
+  return h(
+    "div",
+    { className: "progwords" },
+    h("h3", {}, programTitle(path)),
+    h("p", {}, program.does || "No description."),
+    h(
+      "p",
+      { className: "progwhere" },
+      path + (program.example ? ", built in" : ", on the drive")
+    ),
+    // What it uses, each drawn and named, as the filter below names them
+    uses.length ? h("div", { className: "herouses" }, uses.map(function(key) {
+      return h("span", {}, featureIcon(key), featureNamed(key)[1]);
+    })) : null,
+    argsFor(path, false)
+  );
 }
-function renderProgramView() {
-  programView.textContent = "";
-  if (!onProgramPage) return;
-  programView.appendChild(programHero(boardSet.program));
+function programHero(path) {
+  return h(
+    "div",
+    { className: "proghero" + (path ? "" : " unchosen") },
+    heroNote(path),
+    h(
+      "div",
+      { className: "herobody" },
+      h("div", { className: "progpicture" }, path ? programPicture(path) : emptyPicture()),
+      programWords(path)
+    )
+  );
+}
+function programListing() {
   if (!drive.dirHandle) {
-    var closed = document.createElement("p");
-    closed.className = "prognone";
-    closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it." : "This browser cannot open the FX drive, so programs cannot be listed. Use Chrome or Edge.";
-    programView.appendChild(closed);
-    return;
+    return h(
+      "p",
+      { className: "prognone" },
+      CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it." : "This browser cannot open the FX drive, so programs cannot be listed. Use Chrome or Edge."
+    );
   }
   if (programsReading || !programsKnown) {
-    var reading = document.createElement("p");
-    reading.className = "prognone";
-    reading.textContent = "Reading the Python files on the drive" + (programsReading ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "...");
-    programView.appendChild(reading);
-    return;
+    return h(
+      "p",
+      { className: "prognone" },
+      "Reading the Python files on the drive" + (programsReading ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "...")
+    );
   }
-  programView.appendChild(featureFilter());
+  var parts = [featureFilter()];
   var shown = 0;
   var listed = 0;
-  function group(title, paths) {
+  offeredGroups().forEach(function(offered) {
+    var title = offered[0];
+    var paths = offered[1];
     listed += paths.length;
     var kept = paths.filter(passesFilter);
     var own = title === OWN_GROUP;
     if (!kept.length && !own) return;
     shown += kept.length;
     var open = !programGroupFolded(title);
-    programView.appendChild(foldHead(title, groupSays(title), open, function() {
+    parts.push(foldHead(title, groupSays(title), open, function() {
       programsFolded[title] = open;
     }));
     if (!open) return;
     if (own && !paths.length) {
-      var empty = document.createElement("p");
-      empty.className = "prognone";
-      empty.textContent = "None yet. Customise an example to make one.";
-      programView.appendChild(empty);
+      parts.push(h("p", { className: "prognone" }, "None yet. Customise an example to make one."));
     }
-    if (!kept.length) return;
-    var grid = document.createElement("div");
-    grid.className = "proggrid";
-    kept.forEach(function(path) {
-      grid.appendChild(programCard(path));
-    });
-    programView.appendChild(grid);
-  }
-  offeredGroups().forEach(function(offered) {
-    group(offered[0], offered[1]);
+    if (kept.length) parts.push(h("div", { className: "proggrid" }, kept.map(programCard)));
   });
   if (!shown) {
-    var none = document.createElement("p");
-    none.className = "prognone";
-    none.textContent = listed ? "Every program here needs hardware that is not ticked." : "There are no programs on this drive.";
-    programView.appendChild(none);
+    parts.push(h(
+      "p",
+      { className: "prognone" },
+      listed ? "Every program here needs hardware that is not ticked." : "There are no programs on this drive."
+    ));
   }
-  programViewSteps.forEach(function(step2) {
-    step2();
-  });
+  return parts;
+}
+function renderProgramView() {
+  if (!onProgramPage) {
+    replace(programView);
+    return;
+  }
+  replace(programView, programHero(boardSet.program), programListing());
+  if (drive.dirHandle && programsKnown && !programsReading) {
+    programViewSteps.forEach(function(step2) {
+      step2();
+    });
+  }
 }
 programsReadingSteps.push(renderProgramView);
 var programViewSteps = [];
@@ -11010,52 +10975,51 @@ function offeredPaths() {
   return offered;
 }
 function featureFilter() {
-  var row = document.createElement("div");
-  row.className = "featurefilter";
-  var said = document.createElement("span");
-  said.textContent = "With:";
-  row.appendChild(said);
   var chips = chipFeatures();
-  chips.forEach(function(feature) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "featurechip" + (had(feature[0]) ? " on" : "");
-    chip.dataset.feature = feature[0];
-    chip.title = had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1];
-    chip.appendChild(featureIcon(feature[0]));
-    chip.appendChild(document.createTextNode(feature[2]));
-    chip.onclick = function() {
-      var at = unhad.indexOf(feature[0]);
-      if (at >= 0) unhad.splice(at, 1);
-      else unhad.push(feature[0]);
-      draw();
-    };
-    row.appendChild(chip);
-  });
-  var clears = document.createElement("div");
-  clears.className = "featureclears";
-  row.appendChild(clears);
-  [
-    ["all", function() {
-      return [];
-    }],
-    ["none", function() {
-      return chips.map(function(feature) {
-        return feature[0];
-      });
-    }]
-  ].forEach(function(one) {
-    var choice = document.createElement("button");
-    choice.type = "button";
-    choice.className = "featureclear";
-    choice.textContent = one[0];
-    choice.onclick = function() {
-      unhad = one[1]();
-      draw();
-    };
-    clears.appendChild(choice);
-  });
-  return row;
+  return h(
+    "div",
+    { className: "featurefilter" },
+    h("span", {}, "With:"),
+    chips.map(function(feature) {
+      return h("button", {
+        type: "button",
+        className: "featurechip" + (had(feature[0]) ? " on" : ""),
+        "data-feature": feature[0],
+        title: had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1],
+        onclick: function() {
+          var at = unhad.indexOf(feature[0]);
+          if (at >= 0) unhad.splice(at, 1);
+          else unhad.push(feature[0]);
+          draw();
+        }
+      }, featureIcon(feature[0]), feature[2]);
+    }),
+    // Buttons to turn every chip on, or every chip off for ticking what is to hand. They
+    // are kept together in one box where the row wraps
+    h(
+      "div",
+      { className: "featureclears" },
+      [
+        ["all", function() {
+          return [];
+        }],
+        ["none", function() {
+          return chips.map(function(feature) {
+            return feature[0];
+          });
+        }]
+      ].map(function(one) {
+        return h("button", {
+          type: "button",
+          className: "featureclear",
+          onclick: function() {
+            unhad = one[1]();
+            draw();
+          }
+        }, one[0]);
+      })
+    )
+  );
 }
 function toEffects() {
   setProgramPage(false);
@@ -11067,58 +11031,39 @@ function toProgram() {
   draw();
 }
 function effectsFace() {
-  var face = document.createElement("span");
-  face.className = "effectsface";
-  var swatch = document.createElement("span");
-  swatch.className = "accswatch";
+  var swatch = h("span", { className: "accswatch" });
   tabSwatch(swatch, "outPanel");
-  face.appendChild(swatch);
-  return face;
+  return h("span", { className: "effectsface" }, swatch);
 }
 function renderPageSwitch() {
   var inHeader = document.getElementById("headSwitch");
-  inHeader.textContent = "";
   var program = boardSet.program;
   inHeader.className = "headswitch headsplit headtabs";
-  [
+  replace(inHeader, [
     ["effects", "Effects"],
     ["program", "Programs", program ? programTitle(program) : ""]
-  ].forEach(function(one) {
-    var cover = document.createElement("div");
-    cover.setAttribute("role", "button");
-    cover.tabIndex = 0;
-    cover.onkeydown = function(event) {
-      if (event.key === "Enter" || event.key === " ") cover.onclick();
-    };
-    cover.className = "cover" + (one[0] === "program" === onProgramPage ? " on" : "");
-    cover.dataset.page = one[0];
+  ].map(function(one) {
     var face = one[0] === "effects" ? effectsFace() : program ? programThumb(program) : thumbCanvas(SCREEN_PORTS.length ? "stars" : "outputs:rainbow", 3);
     face.classList.add("coverface");
-    cover.appendChild(face);
-    var words = document.createElement("span");
-    words.innerHTML = "<b>" + one[1] + "</b>" + (one[2] ? "<small>" + escapeHtml(one[2]) + "</small>" : "");
-    cover.appendChild(words);
-    cover.onclick = one[0] === "effects" ? toEffects : toProgram;
-    inHeader.appendChild(cover);
-  });
+    var cover = h("div", {
+      role: "button",
+      tabIndex: 0,
+      className: "cover" + (one[0] === "program" === onProgramPage ? " on" : ""),
+      "data-page": one[0],
+      onkeydown: function(event) {
+        if (event.key === "Enter" || event.key === " ") cover.onclick();
+      },
+      onclick: one[0] === "effects" ? toEffects : toProgram
+    }, face, h("span", {}, h("b", {}, one[1]), one[2] ? h("small", {}, one[2]) : null));
+    return cover;
+  }));
 }
-(function() {
-  var headSwitch = document.createElement("span");
-  headSwitch.id = "headSwitch";
-  headSwitch.className = "headswitch";
-  var named2 = document.querySelector("header h1");
-  var actions = document.createElement("span");
-  actions.id = "headActions";
-  actions.className = "headactions";
-  while (named2.nextSibling) actions.appendChild(named2.nextSibling);
-  named2.parentNode.appendChild(headSwitch);
-  named2.parentNode.appendChild(actions);
-  programView = document.createElement("div");
-  programView.id = "programView";
-  programView.className = "programview";
-  var body = document.getElementById("sceneBody");
-  body.parentNode.insertBefore(programView, body.nextSibling);
-})();
+var headActions = h("span", { id: "headActions", className: "headactions" });
+var pageName = document.querySelector("header h1");
+while (pageName.nextSibling) headActions.appendChild(pageName.nextSibling);
+pageName.after(h("span", { id: "headSwitch", className: "headswitch" }), headActions);
+programView = h("div", { id: "programView", className: "programview" });
+document.getElementById("sceneBody").after(programView);
 addStep(drawSteps.before, DRAW_BEFORE, "program", function() {
   document.body.classList.toggle("programpage", onProgramPage);
 });
