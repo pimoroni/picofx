@@ -1,0 +1,8 @@
+/* A screen showing Always on's picture in a scene, in the striped and dashed frame its lamps wear */
+.holder.under{border:1px dashed var(--dashed);border-radius:var(--radius);
+ background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 6px,var(--line) 6px,var(--line) 12px)}
+.screens-head{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);
+ margin-bottom:var(--space-6)}
+.holder{flex-shrink:0;line-height:0}
+.screenssays{margin:0 0 var(--space-5)}
+.place .holder{zoom:.55}

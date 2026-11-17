@@ -1,0 +1,26 @@
+/* A tab whose section cannot be used just now, which still opens to say why */
+.ledtab.blocked{opacity:.45}
+/* A panel in the tabs' grid may be narrower than its content, which a grid item is not by
+   default. Otherwise a bar of a hundred labelled stretches widens the page to fit them all, and
+   the strip drawn above it grows too, since the bar is what scrolls */
+#tabStack > *{min-width:0}
+/* ---- the LED sections as tabs, a row of names with a line under the one chosen and each
+   with its swatch, so they read as parts of one board and not as scenes ---- */
+.ledtabs{display:flex;gap:var(--space-7);border-bottom:1px solid var(--line);
+ margin:0 0 var(--space-6)}
+/* On a narrow page the LED tabs' swatches give way, so the row stays inside the page */
+.ledtabs .ledtab{flex:0 1 auto;min-width:0}
+/* Every tab's section in one grid cell, laid out whether seen or not, so the cell is as
+   tall as the tallest and choosing a tab moves nothing below it */
+.tabstack{display:grid}
+.tabstack>.panel{grid-area:1/1;margin:0;align-self:start}
+.tabstack>.tabhidden{visibility:hidden;pointer-events:none}
+/* The chosen tab names the section, so the section has no heading of its own */
+.panel.tabbed>summary{display:none}
+/* The looks stand back where the tab shown is one they mean nothing for, staying where
+   they are so the tabs do not move */
+body.nolooks #looks{opacity:.3;pointer-events:none}
+/* In the box of the section they are for, the looks are hidden with it, every section keeping
+   its place so the tabs' place stays as tall as the tallest */
+body.looksbelow #looks{margin:var(--space-6) 0 0}
+

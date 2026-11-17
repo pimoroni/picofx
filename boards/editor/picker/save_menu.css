@@ -1,0 +1,5 @@
+.savechoice{display:flex;gap:var(--space-4);align-items:flex-start;padding:var(--space-3) 0;
+ font-size:var(--text-m)}
+.savechoice small{display:block;font-size:var(--text-s);color:var(--dim)}
+.savechoice.refused{color:var(--dim)}
+

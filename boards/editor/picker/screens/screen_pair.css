@@ -1,0 +1,4 @@
+/* The pair toggle under each screen's panel, made as a hub position's group numbers are, and in
+   both screens' colours while on */
+.pairplace{display:flex;flex-direction:column;align-items:center;gap:var(--space-1)}
+.groupseg button.pairon{background:linear-gradient(90deg,var(--strip),var(--screenB))}

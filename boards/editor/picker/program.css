@@ -1,0 +1,141 @@
+/* An effects page or a program page. The program page takes the effects view's place whole */
+.programview{display:none}
+body.programpage .programview{display:block}
+canvas.progthumb{display:block;background:var(--dark)}
+/* The chosen program, or the space it will take, the same size either way so choosing one moves
+   nothing on the page. What the board runs is said along its top */
+.proghero{display:flex;flex-direction:column;margin:var(--space-5) 0 var(--space-6);background:#fff;
+ border:1.5px solid var(--board);border-radius:var(--radius-xl);overflow:hidden}
+.proghero.unchosen{border-style:dashed}
+/* Two lines' room, so a note that wraps takes no more than one that does not */
+.proghero .programnote{margin:0;border:0;border-bottom:1.5px dashed var(--board);border-radius:0;
+ align-items:center;box-sizing:border-box;min-height:calc(2 * 1.5 * .85rem + 1.1rem)}
+.proghero .programnote span{flex:1}
+.progchoosenone{flex:none;font:inherit;font-size:var(--text-m);
+ padding:var(--space-2) var(--space-4);
+ border:1px solid var(--board);border-radius:var(--radius);background:#fff;color:var(--board);
+ cursor:pointer}
+.herobody{display:flex;gap:var(--space-6);align-items:flex-start;padding:var(--space-5)}
+.progpicture{flex:none;width:16rem;height:210px;display:flex;align-items:center;
+ justify-content:center}
+.proghero .progthumb.big{width:16rem;height:12rem;border-radius:var(--radius);flex:none}
+/* A pair's two panels side by side, each drawn at six tenths so both fit the picture's place */
+.twopanels{display:flex;gap:var(--space-3);align-items:center}
+.progwords{min-width:0}
+.progwords h3{margin:var(--space-1) 0 var(--space-3);font-size:var(--text-xl)}
+.progwords p{margin:0 0 var(--space-4);font-size:var(--text-m)}
+.progwords .progwhere{font-size:var(--text-m);color:var(--dim)}
+.progcard .progthumb{width:100%;height:auto;aspect-ratio:4/3}
+.featureicon .fs{fill:currentColor}
+.proguses{position:absolute;right:4px;top:calc(100% - 2.1rem - 26px);display:flex;gap:2px}
+.proguses .featureicon{width:22px;height:22px;padding:2px;border-radius:var(--radius-xs);color:#fff;
+ background:var(--overlay)}
+.herouses{display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-6);
+ margin:var(--space-1) 0 var(--space-3);font-size:var(--text-m)}
+.herouses span{display:inline-flex;align-items:center;gap:var(--space-3);color:var(--board)}
+.prognone{font-size:var(--text-m);color:var(--dim)}
+.effectsface{display:flex;align-items:center;justify-content:center;background:var(--dark);
+ padding:0 var(--space-4);border-radius:var(--radius)}
+.effectsface .accswatch{width:100%;height:.8rem;margin:0}
+
+/* Two covers for what runs, each showing what it would run */
+.cover{display:flex;align-items:center;gap:var(--space-6);padding:var(--space-4) var(--space-5);
+ border:2px solid var(--line);
+ border-radius:var(--radius-xl);background:#fff;text-align:left;cursor:pointer;font:inherit;
+ color:var(--ink);
+ opacity:.7}
+.cover:hover{opacity:1}
+.cover.on{opacity:1;border-color:var(--accent);box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.cover[data-page=program].on{border-color:var(--board)}
+.cover .coverface{width:5.6rem;height:4.2rem;flex:none;border-radius:var(--radius)}
+.cover b{display:block;font-size:var(--text-l)}
+.cover small{display:block;font-size:var(--text-m);color:var(--dim)}
+
+.headswitch{display:flex;gap:var(--space-4);margin-right:auto}
+header h1+.headswitch{margin-left:var(--space-4)}
+.headswitch:empty{display:none}
+@media (max-width:1180px){
+ header .headswitch{order:10;flex:1 0 100%;margin:0}
+ header h1+.headswitch{margin-left:0}
+ header .headswitch .cover{flex:1;
+ padding:var(--space-2) var(--space-4) var(--space-2) var(--space-2)}
+ header .headswitch .cover .coverface{width:2.1rem;height:1.55rem}
+ }
+/* Tabs that hang from the header's foot, with the chosen one open onto the page */
+.headswitch.headtabs{align-self:flex-end;margin-bottom:-1px;gap:var(--space-2)}
+.headswitch.headtabs .cover{border:1.5px solid var(--line);border-bottom:0;
+ border-radius:var(--radius-l) var(--radius-l) 0 0;background:var(--surface-2);opacity:1;
+ color:var(--dim);
+ padding:var(--space-3) var(--space-5) var(--space-3) var(--space-3)}
+/* The chosen tab and the chosen scene carry one mark, a band painted in the background from the
+   outer edge under a top border made clear, running the width of the top. Every tab keeps the
+   same border, so nothing in a tab moves when it is chosen */
+.headswitch.headtabs .cover.on{color:var(--ink);border-top-color:transparent;--band:var(--accent);
+ background:linear-gradient(var(--band),var(--band)) 0 0 / 100% 3px no-repeat border-box,
+            var(--bg)}
+.headswitch.headtabs .cover[data-page=program].on{--band:var(--board)}
+.headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
+@media (max-width:1180px){
+ .headswitch.headtabs{margin-top:var(--space-4)}
+}
+/* The row is always the header's whole width, so it never fits beside the title and rejoins its
+   line on a wide window, and its padding narrows the tabs to the column */
+.headswitch.headsplit{order:10;flex:1 0 100%;margin:0 0 -1px;align-self:auto;
+ box-sizing:border-box;padding:0 max(0px, calc((100% - 57.2rem) / 2))}
+/* The tab's right edge is as close as its left, so the scenes' button sits as far in from it
+   as the picture does from the other side */
+.headswitch.headsplit .cover{flex:1;padding-right:var(--space-3)}
+/* A narrow window shrinks the other header covers, but these tabs keep their size, so they are
+   one height at every width */
+@media (max-width:1180px){
+ header .headswitch.headsplit{margin:0 0 -1px}
+ header .headswitch.headsplit .cover{padding:var(--space-3) var(--space-3) var(--space-3) var(--space-3)}
+ header .headswitch.headsplit .cover .coverface{width:2.6rem;height:1.95rem}
+}
+/* What follows the page's name, as one group at the header's right */
+.headactions{display:flex;align-items:center;gap:var(--space-5);margin-left:auto;flex-wrap:wrap;
+ justify-content:flex-end}
+/* On a window wide enough for all three, the name, the tabs over the column and the group share
+   one line, and the name and group sit down on the tabs' line */
+header.oneline{flex-wrap:nowrap;align-items:flex-end}
+/* The buttons keep the header's own top padding above and below them, and the tabs run from the
+   buttons' top edge to the header's foot, so the tabs' height follows from the buttons'. Both
+   figures are measured and set by the page, --headgap below the buttons and --tabheight */
+header.oneline h1{flex:1 1 0;margin:0 0 var(--headgap,.8rem);white-space:nowrap;
+ line-height:var(--buttonheight,2.3rem)}
+header.oneline .headactions{flex:1 1 0;margin:0 0 var(--headgap,.8rem);flex-wrap:nowrap}
+.headactions button{white-space:nowrap}
+header.oneline .headswitch.headsplit{order:0;flex:0 0 57.2rem;padding:0;margin:0 0 -1px}
+header .headswitch.headsplit .cover{height:var(--tabheight,3.1rem);padding-top:0;
+ padding-bottom:0}
+/* The cover fills the tab, with a picture the tab's height less an inset at a screen's
+   shape and a label a size up. A program's name sits beside its label, so the label
+   never moves when one is picked */
+header .headswitch.headsplit .cover .coverface{height:calc(var(--tabheight,3.1rem) - .6rem);
+ width:calc((var(--tabheight,3.1rem) - .6rem) * 4 / 3)}
+.headswitch.headsplit .cover>span{display:flex;align-items:baseline;gap:var(--space-4);min-width:0}
+.headswitch.headsplit .cover b{font-size:var(--text-l)}
+.headswitch.headsplit .cover small{font-size:var(--text-m);max-width:none;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis}
+
+/* The way into scenes, at the end of the effects tab while there are none, the row it had above
+   the gallery gone */
+body.scenesintab #tabs{display:none}
+/* With nothing above it the gallery comes up under the tabs, the kind tabs' empty row taken out */
+body.scenesintab #looks>.tabs.sides:empty{display:none}
+/* Drawn as the scenes' button is, placed at the tab's end */
+.headswitch .cover .plus{margin-left:auto;flex:none;opacity:1}
+.headswitch .cover:not(.on) .plus{display:none}
+
+.headswitch .cover{gap:var(--space-4);
+ padding:var(--space-2) var(--space-4) var(--space-2) var(--space-3);border-radius:var(--radius-l);
+ box-shadow:none}
+.headswitch .cover .coverface{width:2.6rem;height:1.95rem;border-radius:var(--radius-s)}
+.headswitch .cover b{font-size:var(--text-m);line-height:1.15}
+.headswitch .cover small{font-size:var(--text-xs);line-height:1.2;max-width:8.5rem;
+ white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis}
+.headswitch .cover b{white-space:nowrap}
+.headswitch .effectsface{padding:0 var(--space-2)}
+.headswitch .effectsface .accswatch{height:.5rem}
+

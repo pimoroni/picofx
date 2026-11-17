@@ -1,0 +1,6 @@
+/* The board's outputs as it lights them while a save is written */
+.spots{display:inline-flex;gap:var(--space-3);margin-left:var(--space-5);vertical-align:middle}
+.spots i{display:block;width:.85rem;height:.85rem;border-radius:var(--radius-xs);
+ border:1px solid rgba(138,100,21,.45);
+ background:rgba(138,100,21,.12)}
+.spots i.lit{background:#fff;border-color:var(--hold);box-shadow:0 0 6px 1px rgba(255,255,255,.9)}

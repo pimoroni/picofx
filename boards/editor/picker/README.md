@@ -106,6 +106,9 @@ can have a stylesheet of its own beside it, of the same name, as `sound/sound.cs
 after those of the parts it imports, and is taken only where the board takes its part. The build
 refuses a stylesheet with no part beside it.
 
+A rule goes in the stylesheet of the part that draws what it styles. `page.css` keeps the tokens,
+the page's frame and the rules for what several parts draw.
+
 Use the tokens declared on `:root` in `page.css` rather than literal values:
 
 - `--space-1` to `--space-7` for gaps, margins and padding, .125rem to 1.5rem.

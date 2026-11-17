@@ -1,0 +1,14 @@
+.s-target{color:var(--strip)}
+.s-effect{color:#0a7f78;font-weight:600}
+.s-value{color:#a8500a}
+.s-name{color:var(--ink)}
+.s-punc{color:var(--dim-strong)}
+.s-colon{color:var(--ink);font-weight:700}
+.s-comment{color:var(--dim);font-style:italic}
+.s-scene{color:#7b3fb8;font-weight:600}
+
+/* A line the board named, marked in the file where the page still writes it as the board read
+   it, the board's words after it */
+.file .s-problem{background:var(--warn-bg);box-shadow:0 0 0 2px var(--warn-bg);
+ border-radius:var(--radius-xs)}
+.file .s-said{color:var(--warn);font-style:italic}

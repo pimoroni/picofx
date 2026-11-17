@@ -106,9 +106,6 @@ body.discovermodal{overflow:hidden}
 .discovershade .asset .kind,.discovershade .asset .label,
 .discovershade .asset .drawingtitle{display:none}
 .discovershade .asset .progname{display:block}
-.discoverkind{position:absolute;left:4px;bottom:4px;z-index:2;font-size:var(--text-xs);
- padding:0 var(--space-3);
- border-radius:var(--radius-xs);background:var(--overlay);color:#fff}
 .discoversounds .sound{width:auto}
 /* What an example does, two lines kept for it so every card in a row is one height */
 .discoverdoes{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;

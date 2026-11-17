@@ -1,0 +1,18 @@
+/* The picked program's arguments */
+.progargs{display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-6);
+ margin:calc(-1 * var(--space-1)) 0 var(--space-4) var(--space-5);
+ font-size:var(--text-m);color:var(--dim)}
+.progargs label{display:flex;align-items:center;gap:var(--space-3)}
+.progargs input,.progargs select{font:inherit;font-size:var(--text-m);width:9rem;
+ padding:var(--space-2) var(--space-3);
+ border:1px solid var(--line);border-radius:var(--radius-s);color:var(--ink);background:#fff}
+.progargs select{width:auto}
+/* The cross taking away an argument added by hand */
+.progless{font:inherit;font-size:var(--text-m);line-height:1;padding:var(--space-1) var(--space-3);
+ border:1px solid var(--line);
+ border-radius:var(--radius-s);background:#fff;color:var(--dim);cursor:pointer}
+.progless:hover{border-color:var(--warn);color:var(--warn)}
+.progmore{font:inherit;font-size:var(--text-m);padding:var(--space-2) var(--space-4);
+ border:1px dashed var(--board);
+ border-radius:var(--radius);background:none;color:var(--board);cursor:pointer}
+

@@ -1,0 +1,11 @@
+/* As tall as while editing, when it holds the length and order to change, so the strip below
+   stays put as the board is edited */
+.panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
+/* A strip's bar keeps that room clear of the strip drawn above it, with the bar's own margin */
+.stripbar{margin-top:var(--space-3)}
+/* How many lights are on a strip, which is a fact about the board and not the scene */
+.leds{display:flex;align-items:center;gap:var(--space-4);font-size:var(--text-m);color:var(--dim);
+ margin:0 0 var(--space-5)}
+.leds input{font:inherit;font-size:var(--text-m);width:4.5rem;padding:var(--space-2) var(--space-3);
+ border-radius:var(--radius);border:1px solid var(--line);background:var(--bg);color:inherit}
+.leds .says{margin-left:var(--space-2)}
