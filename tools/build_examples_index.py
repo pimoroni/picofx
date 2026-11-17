@@ -19,9 +19,11 @@ indexed, so an example still being written is left out until it is committed.
 
     python3 tools/build_examples_index.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_examples_index.py --check boards/PIMORONI_MIGHTYFX
+    python3 tools/build_examples_index.py --fresh boards/PIMORONI_MIGHTYFX
 
---check writes nothing and fails if the index is stale. A board whose description names no
-"examples_index" has none, and is passed over.
+--check writes nothing and fails if the index is stale. --fresh writes the index with no earlier
+versions or paths, for a release whose examples no drive has held before. A board whose
+description names no "examples_index" has none, and is passed over.
 """
 
 import argparse
@@ -244,8 +246,12 @@ def main():
     parser.add_argument("--from", dest="seed", metavar="INDEX",
                         help="an index to carry earlier versions forward from, in place of the "
                              "board's own")
+    parser.add_argument("--fresh", action="store_true",
+                        help="carry no earlier versions or paths forward")
     parser.add_argument("board_dir", help="a board directory holding editor/fx_board.json")
     args = parser.parse_args()
+    if args.fresh and (args.seed or args.check):
+        parser.error("--fresh takes neither --from nor --check")
 
     repo_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     with open(os.path.join(args.board_dir, DESCRIPTION), encoding="utf-8") as handle:
@@ -256,7 +262,7 @@ def main():
     base = board["examples_index"][:board["examples_index"].rfind("/") + 1]
     previous = None
     seed = args.seed or index_path
-    if os.path.exists(seed):
+    if os.path.exists(seed) and not args.fresh:
         with open(seed, encoding="utf-8") as handle:
             previous = json.load(handle)
     text = build(repo_dir, base, previous)
