@@ -587,7 +587,11 @@ body.setupall .bar.carded .sec .cut{display:none}
    that its two lines fit the tab */
 .sceneset{min-height:2rem}
 .scenetab .sceneset{margin:0;flex-wrap:nowrap}
-.scenetab .sceneset input[type=text]{width:10rem}
+/* Where long scene names widen the scene after, only the name gives way, so no choice is cut
+   short and "s, then" stays on one line */
+.scenetab .sceneset > *{flex-shrink:0}
+.scenetab .sceneset .sunit{white-space:nowrap}
+.scenetab .sceneset input[type=text]{width:10rem;flex-shrink:1;min-width:6rem}
 /* How the scene ends and the scene after it, chosen in the inputs' style */
 .sceneset select{border:1px solid var(--line);border-radius:7px;background:#fff;
  padding:.3rem .35rem;font:inherit;color:var(--ink);min-width:0}
