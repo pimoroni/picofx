@@ -17124,7 +17124,7 @@ function assetTile(media) {
   );
 }
 function renderAssets() {
-  document.getElementById("screensSays").textContent = !state.fileHandle ? "open the FX drive to see its pictures and drawings" : !state.scanned ? "reading the drive..." : state.media.length ? "one set of pictures, each shown on A, B or both" : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
+  document.getElementById("screensSays").textContent = !state.fileHandle ? "open the FX drive to see its pictures and drawings" : !state.scanned ? "reading the drive..." : state.media.length ? SCREENS.length > 1 ? "one set of pictures, each shown on A, B or both" : "pictures to show on the screen" : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
   var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
   var parts = grouped ? [] : [h("div", { className: "offhead" }, offCard())];

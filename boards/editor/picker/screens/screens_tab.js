@@ -118,7 +118,8 @@ function renderAssets() {
     : !state.scanned
       ? "reading the drive..."
       : state.media.length
-        ? "one set of pictures, each shown on A, B or both"
+        ? SCREENS.length > 1 ? "one set of pictures, each shown on A, B or both"
+                             : "pictures to show on the screen"
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
   // Grouped once the drive is open, and the user's own group always heads the gallery
   var grouped = !!state.fileHandle;
