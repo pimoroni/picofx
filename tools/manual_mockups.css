@@ -363,6 +363,13 @@
 .mockup .runs.setup .sec { border-color: var(--line); box-shadow: none; }
 .mockup .runs.setup .sec > :not(.cardlamps):not(.stripbeads) { opacity: 0.3; }
 
+/* The wires from the connectors up to the lights, faint as the picker draws them, kept to one
+   width as the picture scales them across */
+.mockup .wiring { position: relative; }
+.mockup .wiring .run { min-width: 0; }
+.mockup .wirelines { position: absolute; left: 0; width: 100%; z-index: 2; overflow: visible; }
+.mockup .wirelines path { fill: none; stroke: #3f5a6b; stroke-width: 1.6; opacity: 0.16; vector-effect: non-scaling-stroke; }
+
 /* The board's edge under the lights while it is set up, its connectors, and what its wiring says */
 .mockup .wireboard { margin: 1.6rem 0 0.5rem; padding: 0.3rem 0.6rem 0.15rem; border-radius: 6px; background: #2a2d30; }
 .mockup .connectors { display: flex; justify-content: space-between; }

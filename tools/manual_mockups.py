@@ -130,6 +130,17 @@ THUMB_TINTS = ["#1f6feb", "#a347d1", "#c2570f", "#0a7f78", "#b8324a", "#6b7f1a"]
 
 HATCH = "hatch"
 
+# The wiring picture's layout in rem, from manual_mockups.css, which places the ends of its wires.
+# A picture has no layout to measure, so the wires are drawn for the manual's full width, where
+# the runs are 43.5rem wide, and scale with the picture at any other
+WIRE_WIDTH = 43.5
+RUN_GAP = 1
+CARD_BORDER = 0.125
+BOARD_SIDE = 0.6
+PLUG_WIDTH = 2.2
+LAMP_FOOT = 3.71
+PLUG_TOP = 7.47
+
 
 def selected_items(text):
     """The comma-separated items in a line, each with whether a * marks it selected."""
@@ -265,7 +276,7 @@ def tab_preview(name, preview):
         return ('<span class="tabsays">{}</span><span class="tabscreens">{}</span>'.format(
             html.escape(", ".join(sizes)), "<i></i>" * max(len(sizes), 1)))
     if name == "Sound":
-        return '<span class="tabsays">silence</span><span class="tabsound {}"></span>'.format(HATCH)
+        return '<span class="tabsays">nothing</span><span class="tabsound {}"></span>'.format(HATCH)
     # The Sensor tab names what is fitted, with no picture
     if name == "Sensor":
         return '<span class="tabsays">{}</span>'.format(html.escape(preview or "none"))
@@ -494,14 +505,38 @@ def mockup_cards(text, mono, group):
     return '{}<div class="gallery">{}</div>'.format(head, "".join(cards))
 
 
+def wire_lines(counts):
+    """The wires from each connector to the light it feeds, as the picker draws them, faint curves
+    leaving the connector straight up and meeting the light straight down. Each run takes its
+    share of the width by its count of lights."""
+    room = WIRE_WIDTH - RUN_GAP * (len(counts) - 1)
+    lamps = []
+    left = 0
+    for count in counts:
+        width = room * count / sum(counts)
+        inside = width - 2 * CARD_BORDER
+        lamps.extend(left + CARD_BORDER + (at + 0.5) * inside / count for at in range(count))
+        left += width + RUN_GAP
+    total = len(lamps)
+    step = (WIRE_WIDTH - 2 * BOARD_SIDE - PLUG_WIDTH) / max(total - 1, 1)
+    plugs = [BOARD_SIDE + PLUG_WIDTH / 2 + at * step for at in range(total)]
+    tall = PLUG_TOP - LAMP_FOOT
+    paths = "".join('<path d="M{0:.2f} {2:.2f}C{0:.2f} {3:.2f} {1:.2f} {3:.2f} {1:.2f} 0"/>'.format(
+        plug, lamp, tall, tall / 2) for plug, lamp in zip(plugs, lamps))
+    return ('<svg class="wirelines" viewBox="0 0 {} {:.2f}" preserveAspectRatio="none" '
+            'style="top:{}rem;height:{:.2f}rem" aria-hidden="true">{}</svg>').format(
+                WIRE_WIDTH, tall, LAMP_FOOT, tall, paths)
+
+
 def mockup_wiring(text, look):
     """The lights while the board is set up, a tile each in a stretch's card, over the board's
-    edge with its connectors, written as their labels with a bar between the two sides,
-    "1, 2, 3, 4, 5, 6 | RGB". The first side is mono where look starts "mono ", and look
-    colours the lights as the picker would show it playing. The board's edge says the lights are
-    in wiring order, so Reset wiring is greyed."""
+    edge with its connectors and a wire from each connector to its light, written as their labels
+    with a bar between the two sides, "1, 2, 3, 4, 5, 6 | RGB". The first side is mono where look
+    starts "mono ", and look colours the lights as the picker would show it playing. The board's
+    edge says the lights are in wiring order, so Reset wiring is greyed."""
     sides = []
     connectors = []
+    counts = []
     for at, group in enumerate(text.split("|")):
         labels = [label.strip() for label in group.split(",")]
         mono = look.startswith("mono ") and at == 0
@@ -510,12 +545,14 @@ def mockup_wiring(text, look):
         side = mockup_run("mono" if mono else "colour", "", played, labels)
         sides.append(side)
         connectors.extend(labels)
+        counts.append(len(labels))
     plugs = "".join('<span class="plug"><b>{}</b></span>'.format(html.escape(label))
                     for label in connectors)
-    return ('<div class="runs setup">{}</div><div class="wireboard"><div class="connectors">{}</div>'
-            '<div class="wirefoot"><span>All lights are in wiring order. Hover over a light or '
-            'connector to highlight its wire.</span><span class="wirereset off">Reset wiring</span>'
-            '</div></div>').format("".join(sides), plugs)
+    return ('<div class="wiring"><div class="runs setup">{}</div>{}<div class="wireboard">'
+            '<div class="connectors">{}</div><div class="wirefoot"><span>All lights are in wiring '
+            'order. Hover over a light or connector to highlight its wire.</span>'
+            '<span class="wirereset off">Reset wiring</span></div></div></div>').format(
+                "".join(sides), wire_lines(counts), plugs)
 
 
 def mockup_strip_setup(text):
