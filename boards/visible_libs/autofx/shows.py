@@ -449,7 +449,7 @@ class Graphics:
     # all of which have owners while a drawing plays beside them
     IMPORTS = ("math", "random", "time", "picovector")
 
-    def __init__(self, name, code, width, height, ground, errors, fps=None, paused=False,
+    def __init__(self, name, code, width, height, background, errors, fps=None, paused=False,
                  line=0, style=None):
         # The canvas, made to this size and handed over by begin()
         self.width = width
@@ -459,7 +459,7 @@ class Graphics:
         self.__line = line          # The entry's, which a stop's message names
         self.__code = code
         self.__style = style
-        self.__ground = ground
+        self.__background = background
         self.__errors = errors
         self.__frame_ms = None if not fps else max(1, int(1000 / fps))
         self.__draw = None
@@ -522,7 +522,7 @@ class Graphics:
 
         original = builtins.__import__
 
-        def guarded(name, *args, **kwargs):
+        def checked_import(name, *args, **kwargs):
             if name.split(".")[0] not in self.IMPORTS:
                 raise ImportError("a drawing can only import {}, so {} was refused".format(
                     ", ".join(self.IMPORTS), name))
@@ -531,12 +531,12 @@ class Graphics:
         # Clear the canvas to the background, so beginning again gives a blank canvas to a
         # drawing that paints incrementally. It comes before the file runs, so what the
         # file paints as it loads is kept
-        self.image.pen = self.__ground
+        self.image.pen = self.__background
         self.image.clear()
 
         namespace = {"__name__": self.__name, "__file__": self.__name, "canvas": self.image,
                      "style": self.__style, "ticks": 0, "ticks_delta": 0}
-        builtins.__import__ = guarded
+        builtins.__import__ = checked_import
         try:
             exec(self.__code, namespace)
         finally:
@@ -751,10 +751,10 @@ def __make_drawing(code, target, at, channels, screens, settings, fps, asleep):
     height = settings.get("height") or height
 
     channel = channels[0]
-    ground = (picovector.color.rgb(*channel.background)
-              if channel.background is not None else picovector.color.black)
+    background = (picovector.color.rgb(*channel.background)
+                  if channel.background is not None else picovector.color.black)
 
-    return Graphics(target, code, width, height, ground, REPORTING_TO[0], fps=fps,
+    return Graphics(target, code, width, height, background, REPORTING_TO[0], fps=fps,
                     paused=asleep, line=at, style=settings.get("style"))
 
 
