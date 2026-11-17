@@ -66,9 +66,9 @@ class WavReader:
         if wav_file.read(4) != b"WAVE":
             raise ValueError("not a WAV file")
 
-        # Each chunk is an ID and a size, padded to an even length. Only the format and the
-        # samples are read, and anything else is stepped over, such as the LIST chunk an
-        # audio editor keeps its tags in
+        # Each chunk starts with an ID and a size, and its body is padded to an even length.
+        # Only the format and the samples are read. Anything else is stepped over, such as
+        # the LIST chunk an audio editor keeps its tags in
         has_format = False
         while True:
             header = wav_file.read(8)
@@ -102,7 +102,7 @@ class WavReader:
         if audio_format == 0xFFFE and len(fields) >= 26:
             audio_format = struct.unpack_from("<H", fields, 24)[0]
 
-        # PCM, at the two sample sizes the I2S peripheral takes
+        # Check if the audio is PCM at a sample size machine.I2S takes, 16 or 32 bits
         if audio_format != 1 or self.bits_per_sample not in (16, 32):
             raise ValueError("only 16-bit or 32-bit PCM audio is supported")
         if num_channels not in (1, 2):
@@ -110,8 +110,8 @@ class WavReader:
 
         self.format = I2S.MONO if num_channels == 1 else I2S.STEREO
 
-        # if sample_rate != 44_100 and sample_rate != 48_000:
-        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
+        # if self.sample_rate != 44_100 and self.sample_rate != 48_000:
+        #    raise ValueError(f"WAV sample rate of {self.sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
 
     def seek(self, pos):
         return self.wav_file.seek(pos + self.offset)

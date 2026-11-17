@@ -34,9 +34,10 @@
 #define PIMORONI_MIGHTYFX_PSRAM_CS_PIN 19
 
 // --- CLOCK ---
-// 225MHz, from the SDK's vcocalc.py. The SPI divides clk_peri by an even number, so a screen
-// driven at 37.5MHz needs clk_peri raised to the system clock and that clock a multiple of 75MHz.
-// 225MHz is the only one between the stock 150MHz and 300MHz.
+// 225MHz, from the SDK's vcocalc.py, to draw faster on the screens. set_sys_clock_khz() leaves
+// clk_peri on the 48MHz USB clock, so the screens' SPI runs as at the stock 150MHz. 225MHz is also
+// the only multiple of 75MHz between 150MHz and 300MHz, which a screen at 37.5MHz needs clk_peri to
+// be, raised to this clock with machine.freq(225_000_000, 225_000_000).
 #ifndef SYS_CLK_HZ
 #define PLL_SYS_REFDIV 2
 #define PLL_SYS_VCO_FREQ_HZ (1350000000)

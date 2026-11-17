@@ -29,12 +29,13 @@ class SPCE:
 
 
 class SPCEPort(ScreenPort):
-    """One of the board's SP/CE connectors, built by the board and handed out.
+    """
+    One of the board's SP/CE connectors, built by the board and handed out.
 
-    A screen connector is a screen port and is built as one. Every other declaration
-    leaves the bus and the pins alone and hands the five GPIOs out through the property
-    that names what they are for, so spending a connector is visible in the call that
-    declared it.
+    A screen connector is a screen port and is built as one. No other declaration makes
+    a bus. Each hands the five GPIOs out through the property that names what they are
+    for, or builds a motor driver on them, so spending a connector is visible in the call
+    that declared it.
     """
 
     def __init__(self, name, mode, pins, pio=None, sm=None):
@@ -72,7 +73,8 @@ class SPCEPort(ScreenPort):
 
     @property
     def pins(self):
-        """The connector's five GPIOs, in the order DC, CS, SCK, MOSI, BL.
+        """
+        The connector's five GPIOs, in the order DC, CS, SCK, MOSI, BL.
 
         What a breakout plugged in here is built from. Only a connector declared SPCE.GPIO
         or SPCE.GPIO_PWM offers them.
@@ -85,7 +87,9 @@ class SPCEPort(ScreenPort):
 
     @property
     def pins_along(self):
-        """The connector's five GPIOs in the order they sit along it from its GND end, BL, DC, MOSI, SCK, CS.
+        """
+        The connector's five GPIOs in the order they sit along it from its GND end, BL, DC,
+        MOSI, SCK, CS.
 
         For wiring that follows the connector. Only a connector declared SPCE.GPIO or
         SPCE.GPIO_PWM offers them.
@@ -95,7 +99,8 @@ class SPCEPort(ScreenPort):
 
     @property
     def hub_selects(self):
-        """The connector's five GPIOs, as the chip selects a hub addresses panels with.
+        """
+        The connector's five GPIOs, as the chip selects a hub addresses panels with.
 
         They come in the order of the hub's B to F labels, CS, SCK, MOSI, DC, BL. Only a
         connector declared SPCE.HUB_SELECTS offers them, as that declaration spends it on
@@ -110,7 +115,9 @@ class SPCEPort(ScreenPort):
 
     @property
     def driver(self):
-        """The motor driver breakout on this connector, built where it is declared SPCE.MOTOR_DRIVER.
+        """
+        The motor driver breakout on this connector, built where it is declared
+        SPCE.MOTOR_DRIVER.
 
         Its motors are driven by a PIO, so no LED output loses its PWM channel to them.
         """
@@ -180,7 +187,7 @@ class SPCEPort(ScreenPort):
         # Whatever is plugged in next meets the level these pins were left at, and high
         # on a motor input drives it before that thing's own code has run
         if self.__pins is not None:
-            for pin in self.__pins:     # All five, another port's chip selects among them
+            for pin in self.__pins:     # All five, including any that are another port's chip selects
                 pin.init(Pin.IN, Pin.PULL_DOWN)
 
 
@@ -284,7 +291,7 @@ class MightyFX:
     SERVO_STRIP_L = 44
     SERVO_STRIP_R = 45
 
-    # Strips take PIO 1, leaving PIO 0 to the I2S audio every board builds
+    # Strips take PIO 1, so PIO 0 is left to the I2S audio
     STRIP_PIO = 1
 
     # Motor drivers and servos take PIO 2 as clusters, one state machine for each SP/CE
@@ -314,13 +321,13 @@ class MightyFX:
     # the programs that go online. Every Mighty FX carries one
     WIRELESS = True
 
-    # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
-    # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
+    # How long a strip takes to power up once the rail is on. It misses any frame sent sooner.
+    # A 64 LED panel took a frame after 5ms and not after 2ms, so this is double 5ms
     RAIL_SETTLE_MS = 10
 
     SENSOR_PIN = 46
 
-    # The receiver takes PIO 1's last state machine, the strips taking them from zero
+    # An IR receiver takes PIO 1's last state machine, since the strips take them from zero
     SENSOR_PIO = 1
     SENSOR_SM = 3
     V_SENSE_PIN = 47
@@ -339,7 +346,7 @@ class MightyFX:
                  servo_l=None, servo_r=None, sensor=None, init_i2c=True, i2c_freq=100000,
                  init_wav=True, wav_root="/"):
         # What a build claims starts empty, so one that raises partway hands back what it
-        # took before the error reaches the caller. Left to the collector, the boot button's
+        # took before the error reaches the caller. Left to the collector, the Boot button's
         # handler would hold the board, and with it every state machine the board took
         self.spce_a = self.spce_b = None
         self.__switch = None
@@ -363,16 +370,16 @@ class MightyFX:
         # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
 
-        # A connector declared for PWM drives its DC, CS, SCK and MOSI lines, holding
-        # channels some LED outputs share. BL stays a plain line, so it claims nothing.
+        # A connector declared for PWM drives its DC, CS, SCK and MOSI lines, so it holds
+        # channels some LED outputs share. BL stays a plain line and claims nothing.
         claimed = {}
         for port_name, mode, pins in (("A", spce_a, self.SPCE_A_PINS), ("B", spce_b, self.SPCE_B_PINS)):
             if mode == SPCE.GPIO_PWM:
                 for pin in pins[:4]:
                     claimed[self.__pwm_channel(pin)] = (port_name, pin)
 
-        # A DisabledLED stands in for any channel a connector holds, so lighting it
-        # reports. It takes the pin too, held off, or that signal would show on the LED.
+        # A DisabledLED stands in for any channel a connector holds, so lighting it prints
+        # why it cannot. It also drives the pin off, or the connector's PWM signal would show.
         self.outputs = []
         for index, rgb_pins in enumerate(self.OUT_PINS):
             leds = []
@@ -394,7 +401,7 @@ class MightyFX:
         self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
 
         # A strip carries its length and a servo its calibration, so one setting names
-        # the role and what it needs. Anything else is left alone, no pin claimed.
+        # the role and what it needs. A connector given neither is left alone and claims no pin.
         declared_servos = []
         for letter, pin, strip, servo in (
                 ("L", self.SERVO_STRIP_L, strip_l, servo_l),
@@ -414,8 +421,8 @@ class MightyFX:
             elif servo is not None:
                 declared_servos.append((letter, pin, servo))
 
-        # The servos share one cluster, leaving each connector's PWM channel to the backlight it
-        # shares. It is built before the motor drivers, as the first cluster on the PIO sets the
+        # The servos share one cluster, so each connector's PWM channel is left to the SP/CE
+        # backlight on the same channel. It is built before the motor drivers, as the first cluster on the PIO sets the
         # 32 pins it reaches, and the servos' window holds either port's pins too
         if declared_servos:
             from servo import Calibration, ServoCluster
@@ -428,7 +435,7 @@ class MightyFX:
                     self.__servo_cluster.calibration(index, calibration)
                 self.__servos[letter] = __ClusterServo(self.__servo_cluster, index)
 
-        # The rail stays down until enable_rail(), so nothing on the header is live before then
+        # The rail stays off until enable_rail(), so nothing on the L and R connectors is live before then
 
         # Each port owns its bus and pins, and screens are created against them
         self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS, self.CLUSTER_PIO, self.SPCE_A_MOTOR_SM)
@@ -465,8 +472,8 @@ class MightyFX:
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants. Its refills come from Python
-        # between screen frames, which two screens playing GIFs held up by as much as 100ms,
-        # so the ring holds twice that
+        # between screen frames, and two screens playing GIFs held them up by as much as
+        # 100ms, so the ring holds twice that
         if init_wav:
             self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN,
                                    root=wav_root, ibuf_ms=200)
@@ -587,12 +594,12 @@ class MightyFX:
 
     @property
     def strip_l(self):
-        """The LED strip on the L connector, declared as MightyFX(strip_l=60), or MightyFX(strip_l=(60, "rgb")) for one taking its colours in another order. Shown by update()."""
+        """The LED strip on the L connector, declared as MightyFX(strip_l=60), or MightyFX(strip_l=(60, "rgb")) for one taking its colours in another order. Shown by its update()."""
         return self.__declared(self.__strips, "strip", "L")
 
     @property
     def strip_r(self):
-        """The LED strip on the R connector, declared as MightyFX(strip_r=60), or MightyFX(strip_r=(60, "rgb")) for one taking its colours in another order. Shown by update()."""
+        """The LED strip on the R connector, declared as MightyFX(strip_r=60), or MightyFX(strip_r=(60, "rgb")) for one taking its colours in another order. Shown by its update()."""
         return self.__declared(self.__strips, "strip", "R")
 
     @property
@@ -639,8 +646,8 @@ class MightyFX:
         self.__release()
 
     def __release(self):
-        # Hands back what a build claimed, in the order the hardware wants, and runs over a build
-        # that stopped partway, which has no ports where it failed before them
+        # Hand back what a build claimed, in the order the hardware wants. A build that stopped
+        # partway may have no ports yet, so only the ports it made are released
         ports = [port for port in (self.spce_a, self.spce_b) if port is not None]
 
         # The handler holds this board, so once detached a board left behind can be collected
@@ -683,8 +690,8 @@ class MightyFX:
         for port in ports:
             port.backlight_off()
 
-        # A panel keeps scanning its frame, so anything later driving the backlight
-        # would show it again. After the light is out, so nothing is seen going dark.
+        # A panel keeps scanning its frame, so anything later driving the backlight would
+        # show it again. This runs after the light is out, so nothing is seen going dark.
         for port in ports:
             port.stop_panels()
 

@@ -58,7 +58,7 @@ function ci_pimoroni_picovector_clone {
 }
 
 # Read from the board's own cmake so a new board needs no list here. An unknown
-# board answers yes, leaving ci_cmake_configure to report the bad name.
+# board answers yes, and ci_cmake_configure then reports the bad name.
 function ci_board_uses_picovector {
     BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
     [ ! -f "$BOARD_CMAKE" ] || grep -qi picovector "$BOARD_CMAKE"
@@ -99,7 +99,7 @@ function ci_pimoroni_aye_arr_clone {
     cd "$CI_BUILD_ROOT"
 }
 
-# Hosted pure-Python packages a board names in its own board-packages.list, each cloned
+# Hosted pure-Python packages a board names in its own board-packages.list. Each is cloned
 # under its module name so require() finds the manifest.py inside it. Adding one is a row
 # in that list rather than a function here.
 function ci_fetch_packages {
@@ -170,7 +170,7 @@ function ci_prepare_all {
     ci_pimoroni_aye_arr_clone
     ci_pimoroni_lsm6ds3_clone
     ci_pimoroni_qwstpad_clone
-    # Every board's packages where none was named, as the clones above are unconditional
+    # A named board fetches its own packages, and with none named every board's are fetched
     for LIST in "$CI_PROJECT_ROOT"/boards/${BOARD:-*}/board-packages.list; do
         ci_fetch_packages "$LIST"
     done

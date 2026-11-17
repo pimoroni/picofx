@@ -30,7 +30,7 @@ jobs:
             board: PIMORONI_MIGHTYFX
 
     env:
-      # A release's files carry its tag behind a v, such as tiny_fx-v1.1.1-libraries-only.zip
+      # A release's files carry its tag after a v, such as tiny_fx-v1.1.1-libraries-only.zip
       RELEASE_FILE: ${{matrix.shortname}}-${{github.event.release.tag_name && format('v{0}', github.event.release.tag_name) || github.sha}}
       ROOT_DIR: "picofx"
       BOARD_DIR: "picofx/boards/${{matrix.board}}"
