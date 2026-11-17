@@ -275,12 +275,10 @@ class FatReader:
         # The drive offset and bytes of the entry a path leads to, through any folders.
         # `directory=` says whether the last part must be a folder or file, and None takes either
         runs = [(0, self.__root_at, self.__root_bytes)]
-        parts = [part for part in name.split("/") if part]
+        parts = [part for part in name.split("/") if part and part != "."]
         if not parts or ".." in parts:
             raise OSError(errno.ENOENT)
         for depth, part in enumerate(parts):
-            if part == ".":
-                continue
             found = self.__find_in(runs, part.lower())
             if found is None:
                 raise OSError(errno.ENOENT)
