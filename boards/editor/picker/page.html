@@ -148,7 +148,7 @@ button.round svg{display:block}
 .bar.carded{margin-top:.75rem}
 .bar.carded .sec{display:flex;flex-direction:column}
 .cardlamps{display:flex;padding:.55rem 0 .3rem}
-/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
    without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
@@ -260,7 +260,7 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-/* ---- the lamps in Edit board ---- */
+/* ---- the lamps in the wiring view ---- */
 
 /* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
    stretches are the scene's, so only the lamps answer the pointer */
@@ -1293,7 +1293,7 @@ details[open]>summary .accswatch{display:none}
 .ledtab:hover{color:var(--ink)}
 .ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .ledtab .accswatch{margin:0}
-/* On a narrow page the LED tabs' swatches give way, so the row keeps Edit board inside it */
+/* On a narrow page the LED tabs' swatches give way, so the row stays inside the page */
 .ledtabs .ledtab{flex:0 1 auto;min-width:0}
 .ledtab b{white-space:nowrap}
 .ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}

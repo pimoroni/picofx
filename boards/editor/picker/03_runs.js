@@ -1057,8 +1057,8 @@ function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
-// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
-// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in the wiring view too,
+// so setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
 function carded(run) {
   return !run.strip;
 }

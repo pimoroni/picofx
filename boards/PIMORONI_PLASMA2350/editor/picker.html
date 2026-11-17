@@ -148,7 +148,7 @@ button.round svg{display:block}
 .bar.carded{margin-top:.75rem}
 .bar.carded .sec{display:flex;flex-direction:column}
 .cardlamps{display:flex;padding:.55rem 0 .3rem}
-/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
    without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
@@ -260,7 +260,7 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-/* ---- the lamps in Edit board ---- */
+/* ---- the lamps in the wiring view ---- */
 
 /* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
    stretches are the scene's, so only the lamps answer the pointer */
@@ -1293,7 +1293,7 @@ details[open]>summary .accswatch{display:none}
 .ledtab:hover{color:var(--ink)}
 .ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .ledtab .accswatch{margin:0}
-/* On a narrow page the LED tabs' swatches give way, so the row keeps Edit board inside it */
+/* On a narrow page the LED tabs' swatches give way, so the row stays inside the page */
 .ledtabs .ledtab{flex:0 1 auto;min-width:0}
 .ledtab b{white-space:nowrap}
 .ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}
@@ -3727,8 +3727,8 @@ function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
-// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
-// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in the wiring view too,
+// so setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
 function carded(run) {
   return !run.strip;
 }
@@ -7375,8 +7375,8 @@ function boardLine() {
 }
 
 // ---- what is not fitted, in a comment of the page's own ---------------------------------
-// The board line names a strip or screen only where a scene plays on it, so one taken off in
-// Edit board writes the same file as one fitted and left unused. Where something the board fits
+// The board line names a strip or screen only where a scene plays on it, so one removed writes
+// the same file as one fitted and left unused. Where something the board fits
 // by default has been taken off, the page lists it by the name its tab or box shows in a comment
 // of its own, which autofx passes over, and reads it back so a reload does not fit it again
 
@@ -7738,8 +7738,8 @@ function bringForward(keys, on) {
   });
 }
 
-// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
-// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// Lay the connectors over the chosen stretch's settings, which stand back in the wiring view, so
+// opening and closing it moves nothing below them. The connectors cover the whole
 // of the settings, and the panel only grows by what they need beyond that room
 function overlapBelow(box) {
   var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -
@@ -8021,11 +8021,11 @@ function chosenTakesLooks() {
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
-// A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
-// Edit board and changing scene each put back a stretch of their own, which can be another tab's
+// A look goes to the stretch being worked on, so that stays in the section shown. Closing the
+// wiring view and changing scene each put back a stretch of their own, which can be another tab's
 drawSteps.before.push(function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
-  // A strip fitted or taken off where it is shown changes whether the looks are for this tab
+  // A strip added or removed where it is shown changes whether the looks are for this tab
   showChosen();
 });
 
@@ -8799,7 +8799,7 @@ boardLineSteps.before.push(function () {
   });
 });
 
-// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
+// A screen removed, for the page's comment on what is not fitted. On a Screen Hub
 // the ports are the hub's, so neither is listed
 notFittedSteps.push(function () {
   if (state.hub.on) return [];
@@ -11606,7 +11606,7 @@ function renderSceneSettings() {
 // ---- how the board takes a save, on the save button ----------------------------------------------
 // Whether a save plays without an eject, and whether the drive stays hidden at start, are about
 // saving, so they are set where the drive is saved to, in a menu on a small arrow joined to the
-// save button. Neither waits for Edit board, as neither is how the board is built
+// save button
 
 function saveMenu() {
   var menu = document.getElementById("saveMenu");

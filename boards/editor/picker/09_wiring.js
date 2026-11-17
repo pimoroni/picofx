@@ -51,8 +51,8 @@ function bringForward(keys, on) {
   });
 }
 
-// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
-// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// Lay the connectors over the chosen stretch's settings, which stand back in the wiring view, so
+// opening and closing it moves nothing below them. The connectors cover the whole
 // of the settings, and the panel only grows by what they need beyond that room
 function overlapBelow(box) {
   var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -

@@ -32,11 +32,11 @@ function chosenTakesLooks() {
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
-// A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
-// Edit board and changing scene each put back a stretch of their own, which can be another tab's
+// A look goes to the stretch being worked on, so that stays in the section shown. Closing the
+// wiring view and changing scene each put back a stretch of their own, which can be another tab's
 drawSteps.before.push(function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
-  // A strip fitted or taken off where it is shown changes whether the looks are for this tab
+  // A strip added or removed where it is shown changes whether the looks are for this tab
   showChosen();
 });
 

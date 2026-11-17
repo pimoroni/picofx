@@ -333,9 +333,8 @@ driveParts.push({
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
-// The choice of two screens or a hub, which takes both connectors. Choosing goes into Edit board
-// to make the change. It sits at the top of the tab, where the outputs and strips have their
-// board box, and at that box's size
+// The choice of two screens or a hub, which takes both connectors. It sits at the top of the
+// tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
   var row = document.createElement("div");
   row.className = "hubswitch";

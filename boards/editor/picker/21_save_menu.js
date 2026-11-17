@@ -2,7 +2,7 @@
 // ---- how the board takes a save, on the save button ----------------------------------------------
 // Whether a save plays without an eject, and whether the drive stays hidden at start, are about
 // saving, so they are set where the drive is saved to, in a menu on a small arrow joined to the
-// save button. Neither waits for Edit board, as neither is how the board is built
+// save button
 
 function saveMenu() {
   var menu = document.getElementById("saveMenu");

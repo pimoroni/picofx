@@ -635,7 +635,7 @@ boardLineSteps.before.push(function () {
   });
 });
 
-// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
+// A screen removed, for the page's comment on what is not fitted. On a Screen Hub
 // the ports are the hub's, so neither is listed
 notFittedSteps.push(function () {
   if (state.hub.on) return [];
