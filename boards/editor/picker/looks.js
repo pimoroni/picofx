@@ -120,6 +120,7 @@ function withoutColour(line) {
 export function toggle(icon, words, on, flip, title, refused) {
   return h("button", {
     type: "button", className: "stoggle" + (on && !refused ? " on" : ""), "data-words": words,
+    "aria-pressed": String(!!on && !refused),
     title: title, disabled: !!refused,
     onclick: function () { flip(!on); draw(); }
   }, h("span", {"aria-hidden": "true", html: icon}), " " + words);

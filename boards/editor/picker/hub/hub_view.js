@@ -23,6 +23,7 @@ function hubSwitch() {
      [[false, "A screen on each connector"], [true, "A Screen Hub across both"]].map(function (pair) {
        return h("button", {
          type: "button", className: state.hub.on === pair[0] ? "on" : "",
+         "aria-pressed": String(state.hub.on === pair[0]),
          onclick: function () {
            state.hub.on = pair[0];
            draw();

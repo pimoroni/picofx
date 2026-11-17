@@ -7123,6 +7123,7 @@ function toggle(icon, words, on, flip, title, refused) {
     type: "button",
     className: "stoggle" + (on && !refused ? " on" : ""),
     "data-words": words,
+    "aria-pressed": String(!!on && !refused),
     title,
     disabled: !!refused,
     onclick: function() {
@@ -11800,7 +11801,11 @@ function renderOutFacts() {
     var said = "Drag lights to match your build." + (breaking.length > 1 ? " Arrows split or rejoin an output's three lights." : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it." : "");
     hint = h("span", { className: "hint", title: said }, said);
   }
-  replace(box, boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint);
+  var chip = boardBox("outPanel", ["Wiring", small(brokenSaid())]);
+  chip.setAttribute("role", "button");
+  chip.setAttribute("tabindex", "0");
+  chip.setAttribute("aria-pressed", String(setupOn));
+  replace(box, chip, hint);
   headSteps(box, active.strip ? lastOutputRun : active);
 }
 function stripBuilt(run) {
@@ -11891,6 +11896,14 @@ document.addEventListener("click", function(event) {
   if (!event.target.closest("#outFacts .boardchip")) return;
   setSetup(!setupOn);
   draw();
+});
+document.addEventListener("keydown", function(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  if (!event.target.matches || !event.target.matches("#outFacts .boardchip")) return;
+  event.preventDefault();
+  setSetup(!setupOn);
+  draw();
+  document.querySelector("#outFacts .boardchip").focus();
 });
 var TAB_NAMES = { outPanel: BOARD.output_words.tab };
 BOARD.strips.forEach(function(strip) {
@@ -13723,6 +13736,7 @@ function programCard(path) {
     {
       type: "button",
       className: "progcard" + (boardSet.program === path ? " picked" : ""),
+      "aria-pressed": String(boardSet.program === path),
       "data-path": path,
       title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " + uses.map(function(key) {
         return featureNamed(key)[1];
@@ -13967,6 +13981,7 @@ function featureFilter() {
       return h("button", {
         type: "button",
         className: "featurechip" + (had(feature[0]) ? " on" : ""),
+        "aria-pressed": String(had(feature[0])),
         "data-feature": feature[0],
         title: had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1],
         onclick: function() {
@@ -15152,6 +15167,7 @@ function discoverChips(offers) {
       return h("button", {
         type: "button",
         className: "featurechip" + (had(feature[0]) ? " on" : ""),
+        "aria-pressed": String(had(feature[0])),
         "data-feature": feature[0],
         title: had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1],
         onclick: function() {
@@ -18182,6 +18198,7 @@ function segment(options, chosen, choose2, title) {
       html: option[1],
       className: option[0] === chosen ? "on" : "",
       disabled: !!option[2],
+      "aria-pressed": String(option[0] === chosen),
       onclick: function() {
         choose2(option[0]);
         draw();
@@ -18267,6 +18284,7 @@ function placementFold(key, held, size) {
       type: "button",
       className: look.anchor === at ? "on" : "",
       title: name,
+      "aria-pressed": String(look.anchor === at),
       onclick: function() {
         look.anchor = at;
         look.x = "";
@@ -18341,6 +18359,7 @@ function backgroundFold(key, held) {
       return h("button", {
         type: "button",
         className: !open && chosen === name ? "on" : "",
+        "aria-pressed": String(!open && chosen === name),
         style: { background: rgbInk(WORDS[name]) },
         title: name,
         onclick: function() {
@@ -18353,6 +18372,7 @@ function backgroundFold(key, held) {
     h("button", {
       type: "button",
       className: "custom" + (open ? " on" : ""),
+      "aria-pressed": String(!!open),
       style: { "--picked": look.customBg || null },
       title: "custom: pick a colour or type a hex code",
       onclick: function() {
@@ -19137,6 +19157,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function() {
         return h("button", {
           className: on.indexOf(place) >= 0 ? "lit" : "",
           disabled: !placeThere(place),
+          "aria-pressed": String(on.indexOf(place) >= 0),
           onclick: function() {
             var held = state.places[place];
             held.shows = held.shows !== name ? name : null;
@@ -19148,6 +19169,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function() {
       // Every position at once, or off every one where it shows on all
       h("button", {
         className: "all" + (on.length && on.length === placesThere().length ? " lit" : ""),
+        "aria-pressed": String(!!on.length && on.length === placesThere().length),
         disabled: !placesThere().length,
         onclick: function() {
           var everywhere = on.length === placesThere().length;
@@ -19185,6 +19207,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function() {
     return h("button", {
       type: "button",
       className: off ? "lit" : "",
+      "aria-pressed": String(off),
       style: { background: off && target.ink ? target.ink : null },
       title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places) : target.name + ", on its own",
       onclick: function() {
@@ -19196,6 +19219,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function() {
   }), h("button", {
     type: "button",
     className: everywhere ? "lit" : "",
+    "aria-pressed": String(!!everywhere),
     title: everywhere ? "Back on at every position" : "Off at every group and every position on its own, keeping the groups",
     disabled: !placesThere().length,
     onclick: function() {
@@ -19390,6 +19414,7 @@ addStep(assetSteps, ASSET_ORDER, "hubGroups", function() {
         type: "button",
         "data-target": target.name,
         className: shown ? "lit" : "",
+        "aria-pressed": String(!!shown),
         style: { background: shown && target.ink ? target.ink : null },
         title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places) : target.name + ", on its own",
         onclick: function() {
@@ -19407,6 +19432,7 @@ addStep(assetSteps, ASSET_ORDER, "hubGroups", function() {
     }), h("button", {
       type: "button",
       className: "all" + (everywhere ? " lit" : ""),
+      "aria-pressed": String(!!everywhere),
       title: everywhere ? "Off every position" : "On every group and every position on its own, keeping the groups",
       disabled: !placesThere().length,
       onclick: function() {
@@ -19481,6 +19507,7 @@ hubHeadSteps.push(function() {
       return h("button", {
         type: "button",
         className: inIt ? "on" : "",
+        "aria-pressed": String(inIt),
         style: { background: inIt ? GROUP_INKS[number] : null },
         disabled: !fits,
         title: !fits ? "Group " + number + " holds " + state.hub.sizes[membersOfGroup(number)[0]] + '" panels, and ' + place + " is " + state.hub.sizes[place] + '"' : inIt ? "Remove " + place + " from group " + number + ", keeping what it shows" : "Put " + place + " in group " + number + (!membersOfGroup(number).length ? "" : state.places[membersOfGroup(number)[0]].shows ? ", to show what the group shows" : state.places[place].shows ? ", taking what " + place + " shows" : ""),
@@ -19759,6 +19786,7 @@ function hubSwitch() {
       return h("button", {
         type: "button",
         className: state.hub.on === pair[0] ? "on" : "",
+        "aria-pressed": String(state.hub.on === pair[0]),
         onclick: function() {
           state.hub.on = pair[0];
           draw();
@@ -19980,6 +20008,7 @@ addStep(screensHeadSteps.after, HEAD_AFTER, "screenPair", function() {
       h("span", { className: "groupseg" }, h("button", {
         type: "button",
         className: !fromAlways.length && screensPaired() ? "on pairon" : "",
+        "aria-pressed": String(!fromAlways.length && screensPaired()),
         title: fromAlways.length ? "Pairs this scene's own pictures on both screens" : "Show Screen A's picture or drawing on both screens in step.",
         disabled: fromAlways.length > 0,
         onclick: function() {
@@ -20041,6 +20070,7 @@ function offCard() {
       var screen = state.screens[letter];
       return h("button", {
         className: screen.off ? "lit" + (letter === "B" ? " b" : "") : "",
+        "aria-pressed": String(!!screen.off),
         disabled: !screen.there,
         onclick: function() {
           screen.off = !screen.off;
@@ -20080,6 +20110,7 @@ function assetTile(media) {
       var lit = on[letter];
       return h("button", {
         className: lit ? "lit" + (letter === "B" ? " b" : "") : "",
+        "aria-pressed": String(!!lit),
         disabled: !state.screens[letter].there,
         style: { opacity: state.screens[letter].there ? null : ".3" },
         onclick: function() {
@@ -20228,6 +20259,7 @@ function screenBox(letter) {
     screen.kept ? h("button", {
       className: "keep" + (screen.shows === "keep" ? " picked" : ""),
       title: screen.kept,
+      "aria-pressed": String(screen.shows === "keep"),
       onclick: function() {
         screen.shows = "keep";
         draw();
@@ -21374,6 +21406,7 @@ function soundHead() {
     h("button", {
       type: "button",
       className: "stoggle" + (looping ? " on" : "") + (under ? " frozen" : ""),
+      "aria-pressed": String(!!looping),
       title: under ? "Set on the Always on tab" : state.sound ? "Loop the sound instead of playing it once" : "No sound chosen",
       disabled: !state.sound,
       onclick: function() {
@@ -21493,6 +21526,7 @@ function flatLine(colour) {
 function soundKeptTile() {
   return h("button", {
     className: "sound" + (state.sound ? "" : " picked"),
+    "aria-pressed": String(!state.sound),
     title: state.soundKept,
     onclick: function() {
       state.sound = null;
@@ -21701,6 +21735,7 @@ function hearButton(name) {
   return h("span", {
     className: "hear" + (playing ? " playing" : ""),
     role: "button",
+    "aria-pressed": String(playing),
     title: (playing ? "Stop " : "Play ") + nameShown(name) + " here",
     onclick: function(event) {
       event.stopPropagation();
@@ -21756,6 +21791,7 @@ function soundTile(name) {
     "button",
     {
       className: "sound" + (picked ? " picked" : "") + (name === soundUnder() ? " under" : ""),
+      "aria-pressed": String(!!picked),
       onclick: function() {
         state.sound = name;
         state.soundOff = false;
@@ -21885,6 +21921,7 @@ function discoverSoundFace(path) {
     h("span", {
       className: "hear" + (playing ? " playing" : ""),
       role: "button",
+      "aria-pressed": String(!!playing),
       title: (playing ? "Stop " : "Play ") + sound.title + " here",
       onclick: function(e) {
         e.stopPropagation();
@@ -21949,6 +21986,7 @@ function renderColourPick(box, run) {
       return h("button", {
         type: "button",
         className: "swatch" + (chosenWord === name ? " on" : ""),
+        "aria-pressed": String(chosenWord === name),
         style: { background: rgbInk(WORDS[name]) },
         title: name,
         onclick: function() {
@@ -21963,6 +22001,7 @@ function renderColourPick(box, run) {
     h("button", {
       type: "button",
       className: "swatch custom" + (open ? " on" : ""),
+      "aria-pressed": String(!!open),
       style: { "--picked": kept ? atBrightness(kept.colour, kept.level) : null },
       title: "any hue and saturation, with its own brightness",
       onclick: function() {
@@ -22279,6 +22318,7 @@ chosenSteps.push(function(where, run) {
         h("button", {
           type: "button",
           className: "blinkchip" + (at === blinks.at ? " on" : ""),
+          "aria-pressed": String(at === blinks.at),
           style: { "--chip": hex },
           title: (at === blinks.at ? "the colour being edited below, " : "change ") + (blinkNamed(hex) || hex),
           onclick: function() {

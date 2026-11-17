@@ -124,7 +124,12 @@ function renderOutFacts() {
     // Cut short on a narrow page, the hint is whole in its tooltip
     hint = h("span", {className: "hint", title: said}, said);
   }
-  replace(box, boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint);
+  // The Wiring chip opens and closes the wiring view, so it is a toggle the keyboard can reach
+  var chip = boardBox("outPanel", ["Wiring", small(brokenSaid())]);
+  chip.setAttribute("role", "button");
+  chip.setAttribute("tabindex", "0");
+  chip.setAttribute("aria-pressed", String(setupOn));
+  replace(box, chip, hint);
   // The outputs' controls are for whichever side was last worked on, as the tools are
   headSteps(box, active.strip ? lastOutputRun : active);
 }

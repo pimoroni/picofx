@@ -83,6 +83,7 @@ addStep(screensHeadSteps.after, HEAD_AFTER, "screenPair", function () {
     var place = h("div", {className: "pairplace"},
       h("span", {className: "groupseg"}, h("button", {
         type: "button", className: !fromAlways.length && screensPaired() ? "on pairon" : "",
+        "aria-pressed": String(!fromAlways.length && screensPaired()),
         title: fromAlways.length ? "Pairs this scene's own pictures on both screens"
                                  : "Show Screen A's picture or drawing on both screens in step.",
         disabled: fromAlways.length > 0,

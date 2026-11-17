@@ -209,6 +209,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
     replace(cell.querySelector(".pick"), HUB_PLACES.map(function (place) {
       return h("button", {
         className: on.indexOf(place) >= 0 ? "lit" : "", disabled: !placeThere(place),
+        "aria-pressed": String(on.indexOf(place) >= 0),
         onclick: function () {
           var held = state.places[place];
           held.shows = held.shows !== name ? name : null;
@@ -220,6 +221,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
     // Every position at once, or off every one where it shows on all
     h("button", {
       className: "all" + (on.length && on.length === placesThere().length ? " lit" : ""),
+      "aria-pressed": String(!!on.length && on.length === placesThere().length),
       disabled: !placesThere().length,
       onclick: function () {
         var everywhere = on.length === placesThere().length;
@@ -259,7 +261,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
   replace(cell.querySelector(".pick"), hubParts.sendTargets().map(function (target) {
     var off = target.places.every(function (place) { return state.places[place].off; });
     return h("button", {
-      type: "button", className: off ? "lit" : "",
+      type: "button", className: off ? "lit" : "", "aria-pressed": String(off),
       style: {background: off && target.ink ? target.ink : null},
       title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
                         : target.name + ", on its own",
@@ -270,7 +272,7 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
       }
     }, target.name);
   }), h("button", {
-    type: "button", className: everywhere ? "lit" : "",
+    type: "button", className: everywhere ? "lit" : "", "aria-pressed": String(!!everywhere),
     title: everywhere ? "Back on at every position"
                       : "Off at every group and every position on its own, keeping the groups",
     disabled: !placesThere().length,

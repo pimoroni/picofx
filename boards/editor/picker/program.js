@@ -559,6 +559,7 @@ export function programCard(path) {
   var card = h("button", {
     type: "button",
     className: "progcard" + (boardSet.program === path ? " picked" : ""),
+    "aria-pressed": String(boardSet.program === path),
     "data-path": path,
     title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
       uses.map(function (key) { return featureNamed(key)[1]; }).join(", ") : ""),
@@ -808,6 +809,7 @@ function featureFilter() {
            chips.map(function (feature) {
              return h("button", {
                type: "button", className: "featurechip" + (had(feature[0]) ? " on" : ""),
+               "aria-pressed": String(had(feature[0])),
                "data-feature": feature[0],
                title: had(feature[0]) ? "Showing programs that use " + feature[1]
                                       : "Hiding programs that need " + feature[1],

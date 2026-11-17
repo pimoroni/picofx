@@ -1148,6 +1148,7 @@ function discoverChips(offers) {
            used.map(function (feature) {
              return h("button", {
                type: "button", className: "featurechip" + (had(feature[0]) ? " on" : ""),
+               "aria-pressed": String(had(feature[0])),
                "data-feature": feature[0],
                title: had(feature[0]) ? "Showing programs that use " + feature[1]
                                       : "Hiding programs that need " + feature[1],

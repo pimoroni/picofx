@@ -51,6 +51,7 @@ function renderColourPick(box, run) {
     offered.map(function (name) {
       return h("button", {
         type: "button", className: "swatch" + (chosenWord === name ? " on" : ""),
+        "aria-pressed": String(chosenWord === name),
         style: {background: rgbInk(WORDS[name])}, title: name,
         onclick: function () {
           live().colour = "#" + hexOf(WORDS[name]);
@@ -63,6 +64,7 @@ function renderColourPick(box, run) {
     // brightness already set, and custom comes back at its own
     h("button", {
       type: "button", className: "swatch custom" + (open ? " on" : ""),
+      "aria-pressed": String(!!open),
       style: {"--picked": kept ? atBrightness(kept.colour, kept.level) : null},
       title: "any hue and saturation, with its own brightness",
       onclick: function () {
@@ -380,6 +382,7 @@ chosenSteps.push(function (where, run) {
     blinks.colours.map(function (hex, at) {
       return [h("button", {
                 type: "button", className: "blinkchip" + (at === blinks.at ? " on" : ""),
+                "aria-pressed": String(at === blinks.at),
                 style: {"--chip": hex},
                 title: (at === blinks.at ? "the colour being edited below, " : "change ") +
                        (blinkNamed(hex) || hex),

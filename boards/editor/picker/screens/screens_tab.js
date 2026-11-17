@@ -57,7 +57,7 @@ function offCard() {
        var screen = state.screens[letter];
        return h("button", {
          className: screen.off ? "lit" + (letter === "B" ? " b" : "") : "",
-         disabled: !screen.there,
+         "aria-pressed": String(!!screen.off), disabled: !screen.there,
          onclick: function () {
            screen.off = !screen.off;
            if (screen.off) screen.shows = null;
@@ -92,7 +92,7 @@ function assetTile(media) {
        var lit = on[letter];
        return h("button", {
          className: lit ? "lit" + (letter === "B" ? " b" : "") : "",
-         disabled: !state.screens[letter].there,
+         "aria-pressed": String(!!lit), disabled: !state.screens[letter].there,
          style: {opacity: state.screens[letter].there ? null : ".3"},
          onclick: function () {
            // Tapping the lit one again takes the picture off this scene's screen, falling back
@@ -240,6 +240,7 @@ function screenBox(letter) {
            // no picture can stand for it. It is a line of its own under the settings
            screen.kept ? h("button", {
              className: "keep" + (screen.shows === "keep" ? " picked" : ""), title: screen.kept,
+             "aria-pressed": String(screen.shows === "keep"),
              onclick: function () { screen.shows = "keep"; draw(); }
            }, h("b", {}, "Keep as is"), h("code", {}, screen.kept)) : null);
 }

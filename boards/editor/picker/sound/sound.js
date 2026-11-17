@@ -76,6 +76,7 @@ function soundHead() {
            h("button", {
              type: "button",
              className: "stoggle" + (looping ? " on" : "") + (under ? " frozen" : ""),
+             "aria-pressed": String(!!looping),
              title: under ? "Set on the Always on tab"
                   : state.sound ? "Loop the sound instead of playing it once" : "No sound chosen",
              disabled: !state.sound,
@@ -196,7 +197,7 @@ function flatLine(colour) {
 
 function soundKeptTile() {
   return h("button", {
-    className: "sound" + (state.sound ? "" : " picked"),
+    className: "sound" + (state.sound ? "" : " picked"), "aria-pressed": String(!state.sound),
     title: state.soundKept,
     onclick: function () {
       state.sound = null;
@@ -429,7 +430,7 @@ function hearButton(name) {
   // A tile is a button already, so this is a plain element taking the click, as its cross is
   return h("span", {
     className: "hear" + (playing ? " playing" : ""),
-    role: "button",
+    role: "button", "aria-pressed": String(playing),
     title: (playing ? "Stop " : "Play ") + nameShown(name) + " here",
     onclick: function (event) {
       event.stopPropagation();
@@ -492,6 +493,7 @@ function soundTile(name) {
   var info = state.soundInfo[name];
   var tile = h("button", {
     className: "sound" + (picked ? " picked" : "") + (name === soundUnder() ? " under" : ""),
+    "aria-pressed": String(!!picked),
     onclick: function () {
       state.sound = name;
       state.soundOff = false;

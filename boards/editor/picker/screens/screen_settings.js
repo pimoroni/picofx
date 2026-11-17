@@ -91,6 +91,7 @@ function segment(options, chosen, choose, title) {
     return h("button", {
       type: "button", "data-value": option[0], html: option[1],
       className: option[0] === chosen ? "on" : "", disabled: !!option[2],
+      "aria-pressed": String(option[0] === chosen),
       onclick: function () { choose(option[0]); draw(); }
     });
   }));
@@ -166,6 +167,7 @@ function placementFold(key, held, size) {
   }, ANCHOR_NAMES.map(function (name, at) {
     return h("button", {
       type: "button", className: look.anchor === at ? "on" : "", title: name,
+      "aria-pressed": String(look.anchor === at),
       onclick: function () {
         look.anchor = at;
         look.x = "";
@@ -238,6 +240,7 @@ function backgroundFold(key, held) {
       // them. A colour keeps the brightness already set
       return h("button", {
         type: "button", className: !open && chosen === name ? "on" : "",
+        "aria-pressed": String(!open && chosen === name),
         style: {background: rgbInk(WORDS[name])}, title: name,
         onclick: function () {
           look.bg = groundHex(WORDS[name], parts.value);
@@ -247,7 +250,7 @@ function backgroundFold(key, held) {
       }, h("b", {}, name));
     }),
     h("button", {
-      type: "button", className: "custom" + (open ? " on" : ""),
+      type: "button", className: "custom" + (open ? " on" : ""), "aria-pressed": String(!!open),
       style: {"--picked": look.customBg || null},
       title: "custom: pick a colour or type a hex code",
       onclick: function () {

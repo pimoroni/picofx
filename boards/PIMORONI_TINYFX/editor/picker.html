@@ -6419,6 +6419,7 @@ function toggle(icon, words, on, flip, title, refused) {
     type: "button",
     className: "stoggle" + (on && !refused ? " on" : ""),
     "data-words": words,
+    "aria-pressed": String(!!on && !refused),
     title,
     disabled: !!refused,
     onclick: function() {
@@ -11096,7 +11097,11 @@ function renderOutFacts() {
     var said = "Drag lights to match your build." + (breaking.length > 1 ? " Arrows split or rejoin an output's three lights." : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it." : "");
     hint = h("span", { className: "hint", title: said }, said);
   }
-  replace(box, boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint);
+  var chip = boardBox("outPanel", ["Wiring", small(brokenSaid())]);
+  chip.setAttribute("role", "button");
+  chip.setAttribute("tabindex", "0");
+  chip.setAttribute("aria-pressed", String(setupOn));
+  replace(box, chip, hint);
   headSteps(box, active.strip ? lastOutputRun : active);
 }
 function stripBuilt(run) {
@@ -11187,6 +11192,14 @@ document.addEventListener("click", function(event) {
   if (!event.target.closest("#outFacts .boardchip")) return;
   setSetup(!setupOn);
   draw();
+});
+document.addEventListener("keydown", function(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  if (!event.target.matches || !event.target.matches("#outFacts .boardchip")) return;
+  event.preventDefault();
+  setSetup(!setupOn);
+  draw();
+  document.querySelector("#outFacts .boardchip").focus();
 });
 var TAB_NAMES = { outPanel: BOARD.output_words.tab };
 BOARD.strips.forEach(function(strip) {
@@ -13019,6 +13032,7 @@ function programCard(path) {
     {
       type: "button",
       className: "progcard" + (boardSet.program === path ? " picked" : ""),
+      "aria-pressed": String(boardSet.program === path),
       "data-path": path,
       title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " + uses.map(function(key) {
         return featureNamed(key)[1];
@@ -13263,6 +13277,7 @@ function featureFilter() {
       return h("button", {
         type: "button",
         className: "featurechip" + (had(feature[0]) ? " on" : ""),
+        "aria-pressed": String(had(feature[0])),
         "data-feature": feature[0],
         title: had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1],
         onclick: function() {
@@ -14448,6 +14463,7 @@ function discoverChips(offers) {
       return h("button", {
         type: "button",
         className: "featurechip" + (had(feature[0]) ? " on" : ""),
+        "aria-pressed": String(had(feature[0])),
         "data-feature": feature[0],
         title: had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1],
         onclick: function() {
@@ -17221,6 +17237,7 @@ function soundHead() {
     h("button", {
       type: "button",
       className: "stoggle" + (looping ? " on" : "") + (under ? " frozen" : ""),
+      "aria-pressed": String(!!looping),
       title: under ? "Set on the Always on tab" : state.sound ? "Loop the sound instead of playing it once" : "No sound chosen",
       disabled: !state.sound,
       onclick: function() {
@@ -17340,6 +17357,7 @@ function flatLine(colour) {
 function soundKeptTile() {
   return h("button", {
     className: "sound" + (state.sound ? "" : " picked"),
+    "aria-pressed": String(!state.sound),
     title: state.soundKept,
     onclick: function() {
       state.sound = null;
@@ -17548,6 +17566,7 @@ function hearButton(name) {
   return h("span", {
     className: "hear" + (playing ? " playing" : ""),
     role: "button",
+    "aria-pressed": String(playing),
     title: (playing ? "Stop " : "Play ") + nameShown(name) + " here",
     onclick: function(event) {
       event.stopPropagation();
@@ -17603,6 +17622,7 @@ function soundTile(name) {
     "button",
     {
       className: "sound" + (picked ? " picked" : "") + (name === soundUnder() ? " under" : ""),
+      "aria-pressed": String(!!picked),
       onclick: function() {
         state.sound = name;
         state.soundOff = false;
@@ -17732,6 +17752,7 @@ function discoverSoundFace(path) {
     h("span", {
       className: "hear" + (playing ? " playing" : ""),
       role: "button",
+      "aria-pressed": String(!!playing),
       title: (playing ? "Stop " : "Play ") + sound.title + " here",
       onclick: function(e) {
         e.stopPropagation();
@@ -17796,6 +17817,7 @@ function renderColourPick(box, run) {
       return h("button", {
         type: "button",
         className: "swatch" + (chosenWord === name ? " on" : ""),
+        "aria-pressed": String(chosenWord === name),
         style: { background: rgbInk(WORDS[name]) },
         title: name,
         onclick: function() {
@@ -17810,6 +17832,7 @@ function renderColourPick(box, run) {
     h("button", {
       type: "button",
       className: "swatch custom" + (open ? " on" : ""),
+      "aria-pressed": String(!!open),
       style: { "--picked": kept ? atBrightness(kept.colour, kept.level) : null },
       title: "any hue and saturation, with its own brightness",
       onclick: function() {
@@ -18126,6 +18149,7 @@ chosenSteps.push(function(where, run) {
         h("button", {
           type: "button",
           className: "blinkchip" + (at === blinks.at ? " on" : ""),
+          "aria-pressed": String(at === blinks.at),
           style: { "--chip": hex },
           title: (at === blinks.at ? "the colour being edited below, " : "change ") + (blinkNamed(hex) || hex),
           onclick: function() {

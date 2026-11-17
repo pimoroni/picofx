@@ -185,6 +185,7 @@ addStep(assetSteps, ASSET_ORDER, "hubGroups", function () {
       });
       return h("button", {
         type: "button", "data-target": target.name, className: shown ? "lit" : "",
+        "aria-pressed": String(!!shown),
         style: {background: shown && target.ink ? target.ink : null},
         title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
                           : target.name + ", on its own",
@@ -202,6 +203,7 @@ addStep(assetSteps, ASSET_ORDER, "hubGroups", function () {
       }, target.name);
     }), h("button", {
       type: "button", className: "all" + (everywhere ? " lit" : ""),
+      "aria-pressed": String(!!everywhere),
       title: everywhere ? "Off every position"
                         : "On every group and every position on its own, keeping the groups",
       disabled: !placesThere().length,
@@ -286,7 +288,7 @@ hubHeadSteps.push(function () {
       var inIt = groupOf(place) === number;
       var fits = sizeFits(place, number);
       return h("button", {
-        type: "button", className: inIt ? "on" : "",
+        type: "button", className: inIt ? "on" : "", "aria-pressed": String(inIt),
         style: {background: inIt ? GROUP_INKS[number] : null},
         disabled: !fits,
         title: !fits ? "Group " + number + " holds " +

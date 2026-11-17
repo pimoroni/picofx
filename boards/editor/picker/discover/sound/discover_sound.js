@@ -43,6 +43,7 @@ function discoverSoundFace(path) {
            h("small", {}, sound.seconds ? sound.seconds + "s" : "WAV file"),
            h("span", {
              className: "hear" + (playing ? " playing" : ""), role: "button",
+             "aria-pressed": String(!!playing),
              title: (playing ? "Stop " : "Play ") + sound.title + " here",
              onclick: function (e) {
                e.stopPropagation();
