@@ -833,6 +833,9 @@ function sceneHeading(scene) {
 // after a blank line, lines above the board line. Each is a list of functions giving lines
 var fileHead = {under: [], above: []};
 
+// The line a file with no entries ends in, so the board has nothing to play
+var NOTHING_PLAYING = "# Nothing is playing yet.";
+
 function currentText() {
   store();
   var lines = entriesOf(state.always.body);
@@ -852,7 +855,7 @@ function currentText() {
   var board = boardLine();
   if (board) head.push(board, "");
   return HEADER + head.join("\n") + "\n" +
-         (lines.length ? lines.join("\n") : "# Nothing is playing yet.");
+         (lines.length ? lines.join("\n") : NOTHING_PLAYING);
 }
 
 drawSteps.after.push(function () {

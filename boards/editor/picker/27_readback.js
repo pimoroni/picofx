@@ -6,7 +6,7 @@
 // screens, sound and the lights out of the kept lines.
 
 // The lines this page writes of its own accord, which a file read back does not keep
-var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
+var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat([NOTHING_PLAYING]);
 
 // The tokens on the board line that this page does not hold itself, kept as written
 var boardResidue = [];

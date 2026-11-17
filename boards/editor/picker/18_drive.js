@@ -33,8 +33,13 @@ function saving(text) {
 // The parts that also show what banner() says, each given its text and warn as banner() is
 var bannerSteps = [];
 
+// The text of the save the banner reports on, or null where it reports on something else. An edit
+// after that save takes the banner down
+var reportedSave = null;
+
 function banner(text, warn, detail) {
   stopSpots();
+  reportedSave = null;
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
   box.textContent = "";
@@ -186,7 +191,8 @@ async function waitForBoard(before, nothingYet) {
   return before;
 }
 
-function sayWhatHappened(said, also) {
+// nothing= says the save plays nothing, as a file with no entries does
+function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot " +
            "once to play the save. If the lights have already changed, the " +
@@ -195,7 +201,8 @@ function sayWhatHappened(said, also) {
   else if (said)
     banner("The board reported problems:", true, said);
   else
-    banner("Playing on the board. No problems reported." + (also || ""));
+    banner((nothing ? "Nothing is playing on the board." : "Playing on the board.") +
+           " No problems reported." + (also || ""));
 }
 
 async function openDrive(fresh) {
@@ -360,6 +367,7 @@ document.getElementById("save").onclick = async function () {
     if (/\bprogram=/.test(onBoard)) {
       // A program keeps the board busy, so neither an eject nor a press reaches it
       banner("Saved. The board is running a program, so press Reset to play this change." + hides);
+      reportedSave = text;
       return;
     }
     // Check if a board that plays each save itself is given a program
@@ -367,6 +375,7 @@ document.getElementById("save").onclick = async function () {
       // The board restarts to run the program, so there is no answer to wait for
       banner("Saved. The board is restarting to run the program." +
              hides);
+      reportedSave = text;
       return;
     }
     if (errorsBefore === undefined) {
@@ -375,15 +384,18 @@ document.getElementById("save").onclick = async function () {
                "it. Future saves will play automatically."
              : "Eject the FX drive to play it. Then double-press " +
                "Boot to show the drive again and press 'Check board'.") + hides);
+      reportedSave = text;
       return;
     }
     banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
+    // No change to errors.txt after a while says nothing yet, as the board may still be loading
     var said = await waitForBoard(was, function () {
-      banner("Playing on the board. Checking for problems...", "hold");
+      banner("Saved. Checking the board for problems...", "hold");
     });
-    sayWhatHappened(said, hides);
+    sayWhatHappened(said, hides, text.slice(-NOTHING_PLAYING.length) === NOTHING_PLAYING);
     if (said !== CHECKING) takeAnswer(said, text);
+    if (!said) reportedSave = text;
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "QuotaExceededError") {
@@ -425,6 +437,11 @@ document.getElementById("check").onclick = async function () {
 };
 
 document.getElementById("open").onclick = function () { openDrive(false); };
+
+// Check if the page has changed since the save the banner reports on
+drawSteps.after.push(function () {
+  if (reportedSave !== null && currentText() !== reportedSave) banner("");
+});
 
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;

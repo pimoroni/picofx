@@ -5053,6 +5053,9 @@ function sceneHeading(scene) {
 // after a blank line, lines above the board line. Each is a list of functions giving lines
 var fileHead = {under: [], above: []};
 
+// The line a file with no entries ends in, so the board has nothing to play
+var NOTHING_PLAYING = "# Nothing is playing yet.";
+
 function currentText() {
   store();
   var lines = entriesOf(state.always.body);
@@ -5072,7 +5075,7 @@ function currentText() {
   var board = boardLine();
   if (board) head.push(board, "");
   return HEADER + head.join("\n") + "\n" +
-         (lines.length ? lines.join("\n") : "# Nothing is playing yet.");
+         (lines.length ? lines.join("\n") : NOTHING_PLAYING);
 }
 
 drawSteps.after.push(function () {
@@ -10962,8 +10965,13 @@ function saving(text) {
 // The parts that also show what banner() says, each given its text and warn as banner() is
 var bannerSteps = [];
 
+// The text of the save the banner reports on, or null where it reports on something else. An edit
+// after that save takes the banner down
+var reportedSave = null;
+
 function banner(text, warn, detail) {
   stopSpots();
+  reportedSave = null;
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
   box.textContent = "";
@@ -11115,7 +11123,8 @@ async function waitForBoard(before, nothingYet) {
   return before;
 }
 
-function sayWhatHappened(said, also) {
+// nothing= says the save plays nothing, as a file with no entries does
+function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot " +
            "once to play the save. If the lights have already changed, the " +
@@ -11124,7 +11133,8 @@ function sayWhatHappened(said, also) {
   else if (said)
     banner("The board reported problems:", true, said);
   else
-    banner("Playing on the board. No problems reported." + (also || ""));
+    banner((nothing ? "Nothing is playing on the board." : "Playing on the board.") +
+           " No problems reported." + (also || ""));
 }
 
 async function openDrive(fresh) {
@@ -11289,6 +11299,7 @@ document.getElementById("save").onclick = async function () {
     if (/\bprogram=/.test(onBoard)) {
       // A program keeps the board busy, so neither an eject nor a press reaches it
       banner("Saved. The board is running a program, so press Reset to play this change." + hides);
+      reportedSave = text;
       return;
     }
     // Check if a board that plays each save itself is given a program
@@ -11296,6 +11307,7 @@ document.getElementById("save").onclick = async function () {
       // The board restarts to run the program, so there is no answer to wait for
       banner("Saved. The board is restarting to run the program." +
              hides);
+      reportedSave = text;
       return;
     }
     if (errorsBefore === undefined) {
@@ -11304,15 +11316,18 @@ document.getElementById("save").onclick = async function () {
                "it. Future saves will play automatically."
              : "Eject the FX drive to play it. Then double-press " +
                "Boot to show the drive again and press 'Check board'.") + hides);
+      reportedSave = text;
       return;
     }
     banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
+    // No change to errors.txt after a while says nothing yet, as the board may still be loading
     var said = await waitForBoard(was, function () {
-      banner("Playing on the board. Checking for problems...", "hold");
+      banner("Saved. Checking the board for problems...", "hold");
     });
-    sayWhatHappened(said, hides);
+    sayWhatHappened(said, hides, text.slice(-NOTHING_PLAYING.length) === NOTHING_PLAYING);
     if (said !== CHECKING) takeAnswer(said, text);
+    if (!said) reportedSave = text;
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "QuotaExceededError") {
@@ -11354,6 +11369,11 @@ document.getElementById("check").onclick = async function () {
 };
 
 document.getElementById("open").onclick = function () { openDrive(false); };
+
+// Check if the page has changed since the save the banner reports on
+drawSteps.after.push(function () {
+  if (reportedSave !== null && currentText() !== reportedSave) banner("");
+});
 
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
@@ -13385,6 +13405,11 @@ function binButton(name, kind) {
   return bin;
 }
 
+// A count of files of one kind, its word taken from the plural what=, such as "1 sound"
+function filesCounted(count, what) {
+  return count + " " + (count === 1 ? what.replace(/s$/, "") : what);
+}
+
 async function addFiles(kinds, what, takes) {
   var picked;
   try {
@@ -13429,7 +13454,7 @@ async function addFiles(kinds, what, takes) {
       trouble = trouble || e;
       if (e.name === "QuotaExceededError") {
         refused = refused.concat(picked.slice(i + 1).map(function (p) { return p.name; }));
-        banner("The FX drive filled up: " + landed + " " + what + " copied, no room for " +
+        banner("The FX drive filled up: " + filesCounted(landed, what) + " copied, no room for " +
                refused.join(", ") + ". Delete something from it and try again.", true);
         break;
       }
@@ -13442,14 +13467,15 @@ async function addFiles(kinds, what, takes) {
   });
   var reason = trouble ? ". " + await driveTrouble(trouble) : "";
   if (refused.length && landed)
-    banner(landed + " copied. These could not be copied: " + refused.join(", ") + reason, true);
+    banner(filesCounted(landed, what) + " copied. These could not be copied: " +
+           refused.join(", ") + reason, true);
   else if (refused.length)
     banner("Nothing copied: " + refused.join(", ") + reason, true);
   else if (unoffered.length)
     banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
            "A drawing's opening string has a Drawing: line with its name.", true);
   else if (landed)
-    banner(landed + " " + what + " copied to the drive.");
+    banner(filesCounted(landed, what) + " copied to the drive.");
   draw();
 }
 
@@ -14017,7 +14043,7 @@ async function readDrivePrograms() {
 // screens, sound and the lights out of the kept lines.
 
 // The lines this page writes of its own accord, which a file read back does not keep
-var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
+var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat([NOTHING_PLAYING]);
 
 // The tokens on the board line that this page does not hold itself, kept as written
 var boardResidue = [];
