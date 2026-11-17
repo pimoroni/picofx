@@ -4,6 +4,7 @@ import {
   CAN_REACH_A_DRIVE, CHECKING, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking, openDrive,
   overwriteQuestion, playsItself, readErrors, sayWhatHappened, waitForBoard, waitForReturn
 } from "./drive.js";
+import {BOARD} from "./looks.js";
 import {NOTHING_PLAYING, currentText} from "./writing.js";
 
 // ---- the file, painted -----------------------------------------------------------------------
@@ -134,10 +135,23 @@ document.getElementById("save").onclick = async function () {
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
-    // Check if the board is running a program
+    // Check if the board is running a program, which keeps it busy, so neither an eject nor a
+    // press of Boot reaches it
     if (/\bprogram=/.test(onBoard)) {
-      // A program keeps the board busy, so neither an eject nor a press reaches it
-      banner("Saved. The board is running a program, so press Reset to play this change." + hides);
+      // Check if the file it started with lets a save restart it, as it does unless it says
+      // reload=manual. The board then reads the new file as at power on
+      if (playsItself(onBoard)) {
+        var running = /\bprogram=/.test(text);
+        banner("Saved. The board is restarting to play this change...", "hold");
+        var returned = await waitForReturn();
+        banner((!returned ? "Saved. The board is restarting to play this change."
+                : running ? "Running the program on the board."
+                : "The board has restarted and is playing this change.") + hides);
+        setReportedSave(text);
+        return;
+      }
+      banner("Saved. The board is running a program, so press " + BOARD.release.reset_button +
+             " to play this change." + hides);
       setReportedSave(text);
       return;
     }

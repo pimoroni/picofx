@@ -1,5 +1,6 @@
 import {banner} from "./banner.js";
 import {draw} from "./draw.js";
+import {BOARD} from "./looks.js";
 import {state} from "./scenes.js";
 
 // ---- the drive, and what the board says back ----------------------------------------------------
@@ -168,7 +169,8 @@ export function sayWhatHappened(said, also, nothing) {
     banner("No response from the board yet. Eject the FX drive or press Boot " +
            "once to play the save. If the lights have already changed, the " +
            "board has played it but this computer is showing an old copy of the " +
-           "drive. Press Reset on the board so the computer sees what it wrote.", true);
+           "drive. Press " + BOARD.release.reset_button + " on the board so the computer sees " +
+           "what it wrote.", true);
   else if (said)
     banner("The board reported problems:", true, said);
   else

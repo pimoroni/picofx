@@ -14,7 +14,7 @@
     "mighty_fx_drive": "Mighty FX"
    },
    "bootloader_drive": "RP2350",
-   "reset_button": "RST"
+   "reset_button": "Reset"
   },
   "examples_index": "examples/mighty_fx/index.json",
   "outputs": [
@@ -10011,7 +10011,7 @@ async function waitForReturn() {
 }
 function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
-    banner("No response from the board yet. Eject the FX drive or press Boot once to play the save. If the lights have already changed, the board has played it but this computer is showing an old copy of the drive. Press Reset on the board so the computer sees what it wrote.", true);
+    banner("No response from the board yet. Eject the FX drive or press Boot once to play the save. If the lights have already changed, the board has played it but this computer is showing an old copy of the drive. Press " + BOARD.release.reset_button + " on the board so the computer sees what it wrote.", true);
   else if (said)
     banner("The board reported problems:", true, said);
   else
@@ -12580,7 +12580,15 @@ document.getElementById("save").onclick = async function() {
     });
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard) ? " The drive will be hidden next time the board starts. Double-press Boot to show it." : "";
     if (/\bprogram=/.test(onBoard)) {
-      banner("Saved. The board is running a program, so press Reset to play this change." + hides);
+      if (playsItself(onBoard)) {
+        var running = /\bprogram=/.test(text);
+        banner("Saved. The board is restarting to play this change...", "hold");
+        var returned = await waitForReturn();
+        banner((!returned ? "Saved. The board is restarting to play this change." : running ? "Running the program on the board." : "The board has restarted and is playing this change.") + hides);
+        setReportedSave(text);
+        return;
+      }
+      banner("Saved. The board is running a program, so press " + BOARD.release.reset_button + " to play this change." + hides);
       setReportedSave(text);
       return;
     }
