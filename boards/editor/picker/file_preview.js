@@ -8,7 +8,7 @@ import {currentText} from "./writing.js";
 
 // ---- the file, painted -----------------------------------------------------------------------
 
-export function escapeHtml(text) {
+function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 

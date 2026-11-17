@@ -1,3 +1,4 @@
+import {h, replace} from "./dom.js";
 import {drawParts} from "./draw.js";
 import {targetFor} from "./lines.js";
 import {lookNamed} from "./looks.js";
@@ -9,25 +10,19 @@ import {NOTCH_INSET, active, chosenSteps, mono, outs} from "./runs.js";
 // Outputs panel sized to the lamps they hold.
 
 export function iconButton(drawing, says, off, done) {
-  var made = document.createElement("button");
-  made.className = "round";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.disabled = off;
-  made.innerHTML = "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.5' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + drawing + "</svg>";
-  made.onclick = done;
-  return made;
+  return h("button", {
+    className: "round", title: says, "aria-label": says, disabled: off, onclick: done,
+    html: "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' " +
+          "stroke='currentColor' stroke-width='1.5' stroke-linecap='round' " +
+          "stroke-linejoin='round'>" + drawing + "</svg>"
+  });
 }
 
 // A strip's count of stretches, said after its chip. Zoomed in, the bar shows only some of them
 export function stretchCount(run) {
-  var says = document.createElement("span");
-  says.className = "stretchcount";
-  says.textContent = "Cut into " + run.sections.length +
-                     (run.sections.length === 1 ? " stretch" : " stretches");
-  return says;
+  return h("span", {className: "stretchcount"},
+           "Cut into " + run.sections.length +
+           (run.sections.length === 1 ? " stretch" : " stretches"));
 }
 
 export function renderChosen(where, run) {
@@ -73,51 +68,32 @@ function pointAt(panel, cell) {
 function renderChosenPanel(where, run) {
   var box = document.getElementById(where);
   if (!box) return;
-  box.textContent = "";
   var section = run.sections[run.picked];
-  if (!section) return;
-  var wrap = document.createElement("div");
-  wrap.className = "chosen";
-  var who = document.createElement("div");
-  who.className = "who";
+  if (!section) {
+    replace(box);
+    return;
+  }
   var first = run.lamps[section.from];
-  who.innerHTML = "<b>" + targetFor(run, section).selector + "</b>, " +
-                  widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") +
-                  ", " + (first && first.colour ? "colour" : "mono");
-  wrap.appendChild(who);
-
   var look = lookNamed(section.look);
-  if (look) {
-    var tuning = document.createElement("div");
-    tuning.className = "tuning";
-    tuning.appendChild(labelled(look.solid ? "Brightness" : "Speed"));
-    tuning.appendChild(slider(look.solid ? "mood" : "pace"));
-    if (!look.solid) {
-      tuning.appendChild(labelled(look.mood));
-      tuning.appendChild(slider("mood"));
-    }
-    wrap.appendChild(tuning);
-  }
-  box.appendChild(wrap);
+  replace(box, h("div", {className: "chosen"},
+    h("div", {className: "who"}, h("b", {}, targetFor(run, section).selector),
+      ", " + widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") +
+      ", " + (first && first.colour ? "colour" : "mono")),
+    look ? h("div", {className: "tuning"},
+                h("label", {}, look.solid ? "Brightness" : "Speed"),
+                slider(look.solid ? "mood" : "pace"),
+                look.solid ? null : [h("label", {}, look.mood), slider("mood")])
+         : null));
 
-  function labelled(words) {
-    var label = document.createElement("label");
-    label.textContent = words;
-    return label;
-  }
   function slider(key) {
-    var range = document.createElement("input");
-    range.type = "range";
-    range.min = 0;
-    range.max = 1;
-    range.step = 0.01;
-    range.value = section[key];
-    range.dataset.focus = where + "-" + key;
-    // Through the run, as a page that makes the stretches afresh leaves this one behind
-    range.oninput = function () {
-      run.sections[run.picked][key] = Number(range.value);
-      drawParts.preview();
-    };
+    var range = h("input", {
+      type: "range", min: 0, max: 1, step: 0.01, value: section[key], "data-focus": where + "-" + key,
+      // Through the run, as a page that makes the stretches afresh leaves this one behind
+      oninput: function () {
+        run.sections[run.picked][key] = Number(range.value);
+        drawParts.preview();
+      }
+    });
     return range;
   }
 }

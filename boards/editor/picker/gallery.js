@@ -1,4 +1,5 @@
 import {lampsMovable} from "./board.js";
+import {h, replace} from "./dom.js";
 import {PAINT_ORDER, addStep, draw, drawParts, paintSteps} from "./draw.js";
 import {groupOpen, groupsOpen} from "./drive_files.js";
 import {LOOK_GROUPS} from "./figures.js";
@@ -15,47 +16,34 @@ import {
   setShowing, showing, stretchFor, uncut
 } from "./runs.js";
 import {state, stretchUnder, underSaid} from "./scenes.js";
-import {beneath, carded, cutPoint, washOf} from "./stretch_bar.js";
+import {carded, cellSays, cutPoint, washOf} from "./stretch_bar.js";
 import {bringForward, crossing, moveLamp, showKin} from "./wiring.js";
 
 // ---- the look gallery ---------------------------------------------------------------------------
 // The cards of the looks the chosen stretch can play, in their groups, each lit as it plays.
 
 function lookCard(isMono, look, on) {
-  var card = document.createElement("div");
-  card.className = "card" + (on ? " picked" : "") + (look.name ? "" : " nothing");
-  var face = document.createElement("div");
-  face.className = "face";
+  var cells = [];
   if (look.name) {
-    var cells = [];
-    for (var i = 0; i < CARD_LIGHTS; i++) {
-      var cell = document.createElement("span");
-      face.appendChild(cell);
-      cells.push(cell);
-    }
+    for (var i = 0; i < CARD_LIGHTS; i++) cells.push(h("span"));
     cardFaces.push({cells: cells, look: look, mono: isMono,
                     key: (isMono ? "m" : "c") + "-" + look.name});
   }
-  card.appendChild(face);
-  var name = document.createElement("div");
-  name.className = "name";
-  name.textContent = look.name || "Nothing";
-  card.appendChild(name);
-
+  var coloured = !isMono && takesColour(lookNamed(look.name));
   // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
   // so Nothing there is not the same as off
-  card.title = look.name ? look.name + ": apply it to the selected stretch"
-             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
-             : "turn a stretch off";
-  card.onclick = function () {
-    var run = galleryRun(isMono);
-    landLook(run, stretchFor(run, isMono), look.name);
-  };
-  if (!isMono && takesColour(lookNamed(look.name))) {
-    card.appendChild(paletteMark());
-    card.title += ". You can choose its colour";
-  }
-  return card;
+  return h("div", {
+    className: "card" + (on ? " picked" : "") + (look.name ? "" : " nothing"),
+    title: (look.name ? look.name + ": apply it to the selected stretch"
+            : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
+            : "turn a stretch off") + (coloured ? ". You can choose its colour" : ""),
+    onclick: function () {
+      var run = galleryRun(isMono);
+      landLook(run, stretchFor(run, isMono), look.name);
+    }
+  }, h("div", {className: "face"}, cells),
+     h("div", {className: "name"}, look.name || "Nothing"),
+     coloured ? paletteMark() : null);
 }
 
 // The looks a run of several lamps can play, a banked one dealing its banks along it
@@ -84,13 +72,6 @@ function renderGalleries() {
   // has. Without this the cards would be for lights that are not there
   if (!haveKind(showing) && haveKind(!showing)) setShowing(!showing);
 
-  var box = document.getElementById("looks");
-  box.textContent = "";
-
-  var tabs = document.createElement("div");
-  tabs.className = "tabs sides";
-  box.appendChild(tabs);
-
   var run = galleryRun(showing);
   var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
   var lamp = section && run.lamps[section.from];
@@ -100,24 +81,20 @@ function renderGalleries() {
   // it landed, so the card says so and does not take it only to quietly drop it
   var target = section ? targetFor(run, section) : null;
 
-  var shelf = document.createElement("div");
-  shelf.className = "shelf bare";
-  box.appendChild(shelf);
-
-  var looks = document.createElement("div");
-  looks.className = "gallery";
-  spanning().concat([{name: null}]).forEach(function (look) {
-    var can = !look.name || !target || canPlay(look, target);
-    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
-    var card = lookCard(showing, look, on);
-    if (!can) {
-      card.className += " cannot";
-      card.onclick = null;
-      card.title = whyNot(look, target);
-    }
-    looks.appendChild(card);
-  });
-  shelf.appendChild(looks);
+  replace(document.getElementById("looks"),
+          h("div", {className: "tabs sides"}),
+          h("div", {className: "shelf bare"},
+            h("div", {className: "gallery"}, spanning().concat([{name: null}]).map(function (look) {
+              var can = !look.name || !target || canPlay(look, target);
+              var on = can && lamp && lamp.colour === !showing && section.look === look.name;
+              var card = lookCard(showing, look, on);
+              if (!can) {
+                card.className += " cannot";
+                card.onclick = null;
+                card.title = whyNot(look, target);
+              }
+              return card;
+            }))));
   groupGallery();
 }
 drawParts.galleries = renderGalleries;
@@ -209,13 +186,9 @@ function groupGallery() {
   if (rest.length) groups.push({name: "More", says: "", looks: rest});
   groups = groups.filter(function (group) { return group.looks.length; });
 
-  var holder = document.createElement("div");
-  holder.className = "groupedlooks";
-  groups.forEach(function (group, at) {
+  flat.replaceWith(h("div", {className: "groupedlooks"}, groups.map(function (group, at) {
     // Each heading folds its group, all starting open. Nothing sits beside the first heading
     // and not in it, so it is never folded away
-    var head = document.createElement("div");
-    head.className = "gallery-head lookshead";
     var key = "looks:" + group.name;
     var open = groupOpen([key, "", [], false]);
     var fold = foldHead(group.name, group.says, open, function () {
@@ -223,20 +196,12 @@ function groupGallery() {
     });
     // The row is the heading here, the button only its part that folds
     fold.classList.remove("gallery-head");
-    head.appendChild(fold);
-    if (at === 0 && nothing) {
-      nothing.classList.add("small");
-      head.appendChild(nothing);
-    }
-    holder.appendChild(head);
-    if (!open) return;
-    var row = document.createElement("div");
-    row.className = "gallery";
-    row.dataset.group = group.name;
-    group.looks.forEach(function (name) { row.appendChild(cards[name]); });
-    holder.appendChild(row);
-  });
-  flat.parentNode.replaceChild(holder, flat);
+    if (at === 0 && nothing) nothing.classList.add("small");
+    return [h("div", {className: "gallery-head lookshead"}, fold, at === 0 ? nothing : null),
+            open ? h("div", {className: "gallery", "data-group": group.name},
+                     group.looks.map(function (name) { return cards[name]; }))
+                 : null];
+  })));
 }
 
 // Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
@@ -251,81 +216,69 @@ function setUpLamp(one, lamp, channel) {
 }
 
 function renderBar(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar" + (carded(run) ? " carded" : "");
   var faces = [];
+  replace(document.getElementById(where),
+          h("div", {className: "scroller"},
+            h("div", {className: "bar" + (carded(run) ? " carded" : "")},
+              run.sections.map(function (section, at) {
+                return [barCell(run, section, at, faces),
+                        at < run.sections.length - 1 ? barEdge(run, at, where) : null];
+              }))));
+  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
+}
 
-  run.sections.forEach(function (section, at) {
-    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
-    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
-    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
-    cell.style.flex = widthOf(section) + " 1 0";
-    var first = run.lamps[section.from];
-    cell.title = (first && first.colour ? "colour" : "mono") + ", " +
-                 targetFor(run, section).selector;
-    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
-
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title = under.tip;
-
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
-                     beneath(under);
-    cell.appendChild(says);
-
-    // Where this stretch can be cut, one place between two lamps
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var i = section.from; i < section.to; i++) {
-      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
-    }
-    cell.appendChild(inside);
-
-    cell.onclick = function () {
+// A stretch of the outputs as a card, its lamps where carded, over its look's wash and named,
+// with its places to cut
+function barCell(run, section, at, faces) {
+  var first = run.lamps[section.from];
+  var lamps = carded(run) ? cardLamps(run, section, faces) : null;
+  var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
+  var cuts = [];
+  // Where this stretch can be cut, one place between two lamps
+  for (var i = section.from; i < section.to; i++) {
+    cuts.push(cutPoint(run, i, widthOf(section), section.from));
+  }
+  // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
+  return h(carded(run) && canEdit("outPanel") ? "div" : "button", {
+    className: "sec" + (run === active && run.picked === at ? " picked" : ""),
+    style: {flex: widthOf(section) + " 1 0"},
+    title: under ? under.tip
+                 : (first && first.colour ? "colour" : "mono") + ", " +
+                   targetFor(run, section).selector,
+    onclick: function () {
       if (dragged) return;
       pick(run, at);
       draw();
-    };
-    bar.appendChild(cell);
-
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click \u00d7 to remove it";
-      edge.onmousedown = function (event) {
-        event.preventDefault();
-        remember(run);
-        // The stretch being resized is the one being worked on, whichever side it is on
-        pick(run, at);
-        // The bar is rebuilt on every move, so what is held onto is where the bar lives
-        // and not the bar itself, which would be a node already thrown away
-        setHolding({run: run, which: at, where: where, had: run.sections.length});
-        edge.classList.add("holding");
-      };
-      // Taking the cut out is its own target, so it is never confused with moving it
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\u00d7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function (event) { event.stopPropagation(); };
-      drop.onclick = function (event) {
-        event.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
     }
-  });
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
+  }, lamps, washOf(run, section, look, under), cellSays(look, widthOf(section), under),
+     h("span", {className: "cuts"}, cuts));
+}
+
+// The cut a stretch shares with the next, dragged to move it or clicked to take it out
+function barEdge(run, at, where) {
+  var edge = h("div", {
+    className: "edge", title: "drag to move this cut, or click \u00d7 to remove it",
+    onmousedown: function (event) {
+      event.preventDefault();
+      remember(run);
+      // The stretch being resized is the one being worked on, whichever side it is on
+      pick(run, at);
+      // The bar is rebuilt on every move, so what is held onto is where the bar lives
+      // and not the bar itself, which would be a node already thrown away
+      setHolding({run: run, which: at, where: where, had: run.sections.length});
+      edge.classList.add("holding");
+    }
+  }, // Taking the cut out is its own target, so it is never confused with moving it
+     h("button", {
+       className: "drop", title: "remove this cut and join the two stretches",
+       onmousedown: function (event) { event.stopPropagation(); },
+       onclick: function (event) {
+         event.stopPropagation();
+         uncut(run, at);
+       }
+     }, "\u00d7"));
+  return edge;
 }
 drawParts.bars = function () {
   renderBar("outBar", outs);
@@ -336,26 +289,21 @@ drawParts.bars = function () {
 // in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
 // to drag to its place on the build, and an output that breaks out has its arrow on its tiles
 function cardLamps(run, section, faces) {
-  var row = document.createElement("span");
-  row.className = "cardlamps";
   var wiring = canEdit("outPanel");
+  var playing = lookNamed(section.look);
+  var lamps = [];
   for (var at = section.from; at <= section.to; at++) {
     var lamp = run.lamps[at];
-    var one = document.createElement("span");
     var channel = !lamp.colour && isChannel(lamp);
+    faces[at] = h("i");
     // A broken-out channel is marked in its channel's colour
-    one.className = "cardlamp" + (channel ? " chan" : "");
-    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-    var playing = lookNamed(section.look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces[at] = face;
+    var one = h("span", {
+      className: "cardlamp" + (channel ? " chan" : ""),
+      style: {"--chan": channel ? CHANNEL_INKS[lamp.channel] : null},
+      title: selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at))
+    }, faces[at], h("b", {}, shortName(lamp)));
     if (wiring) setUpLamp(one, lamp, channel);
-    row.appendChild(one);
+    lamps.push(one);
   }
-  return row;
+  return h("span", {className: "cardlamps"}, lamps);
 }

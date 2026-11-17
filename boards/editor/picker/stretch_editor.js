@@ -3,6 +3,7 @@ import {standingIn} from "./board.js";
 import {
   FAINTEST, WORDS, atBrightness, detented, fieldColour, hexOf, hexRgb, rgbInk, takeApart
 } from "./colours.js";
+import {h, replace} from "./dom.js";
 import {draw} from "./draw.js";
 import {
   FIGURES_KEPT, figureKey, figureSaid, figureWay, figuresOpen, linesAt, placeFor, setFiguresOpen,
@@ -33,76 +34,54 @@ function renderColourPick(box, run) {
   // Each reaches the live one through the run when it fires
   function live() { return run.sections[run.picked]; }
   var remembered = run.id + ":" + section.from;
-  var wrap = document.createElement("div");
-  wrap.className = "colourpick groundpick";
-
-  var swatches = document.createElement("div");
-  swatches.className = "sswatches";
   var offered = swatchesFor(run, section);
   var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
   var chosenWord = offered.filter(function (name) {
     return hexOf(WORDS[name]) === chosenHex;
   })[0] || null;
-  offered.forEach(function (name) {
-    var swatch = document.createElement("button");
-    swatch.type = "button";
-    swatch.className = "swatch" + (chosenWord === name ? " on" : "");
-    swatch.style.background = rgbInk(WORDS[name]);
-    swatch.title = name;
-    var tag = document.createElement("b");
-    tag.textContent = name;
-    swatch.appendChild(tag);
-    swatch.onclick = function () {
-      live().colour = "#" + hexOf(WORDS[name]);
-      live().custom = false;
-      draw();
-    };
-    swatches.appendChild(swatch);
-  });
-
-  // The last one is not a colour but the way to every other one
-  var custom = document.createElement("button");
-  custom.type = "button";
-  custom.className = "swatch custom" + (section.custom || !chosenWord ? " on" : "");
-  // Its middle is the custom colour at its own brightness, kept while a swatch is chosen, and
-  // empty until there is one
-  if (section.custom || !chosenWord) {
+  var open = section.custom || !chosenWord;
+  // The custom swatch's middle is the custom colour at its own brightness, kept while a swatch is
+  // chosen, and empty until there is one
+  if (open) {
     customColours[remembered] = {colour: section.colour || "#ffffff",
                                  level: section.level === undefined ? 1 : section.level};
   }
   var kept = customColours[remembered];
-  if (kept) custom.style.setProperty("--picked", atBrightness(kept.colour, kept.level));
-  custom.title = "any hue and saturation, with its own brightness";
-  var ctag = document.createElement("b");
-  ctag.textContent = "custom";
-  custom.appendChild(ctag);
-  // A swatch keeps the brightness already set, and custom comes back at its own
-  custom.onclick = function () {
-    live().custom = true;
-    if (kept) {
-      live().colour = kept.colour;
-      live().level = kept.level;
-    }
-    draw();
-  };
-  swatches.appendChild(custom);
-  wrap.appendChild(swatches);
+  var swatches = h("div", {className: "sswatches"},
+    offered.map(function (name) {
+      return h("button", {
+        type: "button", className: "swatch" + (chosenWord === name ? " on" : ""),
+        style: {background: rgbInk(WORDS[name])}, title: name,
+        onclick: function () {
+          live().colour = "#" + hexOf(WORDS[name]);
+          live().custom = false;
+          draw();
+        }
+      }, h("b", {}, name));
+    }),
+    // The last one is not a colour but the way to every other one. A swatch keeps the
+    // brightness already set, and custom comes back at its own
+    h("button", {
+      type: "button", className: "swatch custom" + (open ? " on" : ""),
+      style: {"--picked": kept ? atBrightness(kept.colour, kept.level) : null},
+      title: "any hue and saturation, with its own brightness",
+      onclick: function () {
+        live().custom = true;
+        if (kept) {
+          live().colour = kept.colour;
+          live().level = kept.level;
+        }
+        draw();
+      }
+    }, h("b", {}, "custom")));
 
   // The field, open only while custom is the choice. Hue across and saturation down, at
   // full value throughout, so a colour means the same thing at any brightness
-  var holds = document.createElement("div");
-  var open = section.custom || !chosenWord;
-  holds.className = "customholds scustom";
-  holds.style.display = open ? "" : "none";
   var parts = takeApart(hexRgb(section.colour || "#ffffff"));
-  var field = document.createElement("div");
-  field.className = "field";
-  var at = document.createElement("div");
-  at.className = "at";
-  at.style.left = (parts.hue / 360 * 100) + "%";
-  at.style.top = ((1 - parts.sat) * 100) + "%";
-  at.style.background = rgbInk(fieldColour(parts.hue, parts.sat));
-  field.appendChild(at);
+  var at = h("div", {className: "at", style: {left: parts.hue / 360 * 100 + "%",
+                                              top: (1 - parts.sat) * 100 + "%",
+                                              background: rgbInk(fieldColour(parts.hue, parts.sat))}});
+  var field = h("div", {className: "field"}, at);
 
   // Held down and dragged. Only the mark and the box move while the pointer is down, so
   // the field is never rebuilt under it
@@ -128,55 +107,44 @@ function renderColourPick(box, run) {
     if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
   };
   field.onpointerup = function () { draw(); };
-  holds.appendChild(field);
 
   // A hex is how a colour arrives from somewhere else, so it is typed rather than hunted
   // for. It is the colour as written, at the stretch's brightness, as a screen's background
   // has it, so one typed in sets the colour and the brightness both
-  var typed = document.createElement("div");
-  typed.className = "hexline";
-  var label = document.createElement("label");
-  label.textContent = "Hex";
-  typed.appendChild(label);
-  var hex = document.createElement("input");
-  hex.type = "text";
-  hex.maxLength = 7;
+  var hex = h("input", {
+    type: "text", maxLength: 7, value: atBrightness(section.colour || "#ffffff", section.level),
+    title: "the colour as written, at its brightness. Paste a colour " +
+           "in to set the hue, saturation and brightness below",
+    oninput: function () {
+      var said = hex.value.replace("#", "").trim();
+      if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
+      var typedRgb = hexRgb("#" + said.toLowerCase());
+      var got = takeApart(typedRgb);
+      var rgb = fieldColour(got.hue, got.sat);
+      live().colour = "#" + hexOf(rgb);
+      live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
+      live().custom = true;
+      at.style.left = (got.hue / 360 * 100) + "%";
+      at.style.top = ((1 - got.sat) * 100) + "%";
+      at.style.background = rgbInk(rgb);
+      preview.style.background = "#" + said.toLowerCase();
+      renderPreview();
+    },
+    onblur: function () { draw(); }
+  });
   hex.spellcheck = false;
-  hex.value = atBrightness(section.colour || "#ffffff", section.level);
-  hex.title = "the colour as written, at its brightness. Paste a colour " +
-              "in to set the hue, saturation and brightness below";
-  hex.oninput = function () {
-    var said = hex.value.replace("#", "").trim();
-    if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
-    var typedRgb = hexRgb("#" + said.toLowerCase());
-    var got = takeApart(typedRgb);
-    var rgb = fieldColour(got.hue, got.sat);
-    live().colour = "#" + hexOf(rgb);
-    live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
-    live().custom = true;
-    at.style.left = (got.hue / 360 * 100) + "%";
-    at.style.top = ((1 - got.sat) * 100) + "%";
-    at.style.background = rgbInk(rgb);
-    preview.style.background = "#" + said.toLowerCase();
-    renderPreview();
-  };
-  hex.onblur = function () { draw(); };
-  typed.appendChild(hex);
 
   // Beside the field, the hex over the colour itself, as large as the room allows, as a
   // screen's custom background has it
-  var side = document.createElement("div");
-  side.className = "scustomside";
-  side.appendChild(typed);
-  var preview = document.createElement("div");
-  preview.className = "scustompreview";
-  preview.style.background = atBrightness(section.colour || "#ffffff", section.level);
-  preview.title = "The colour as written, at its brightness";
-  side.appendChild(preview);
-  holds.appendChild(side);
-  wrap.appendChild(holds);
-
-  box.appendChild(wrap);
+  var preview = h("div", {
+    className: "scustompreview", title: "The colour as written, at its brightness",
+    style: {background: atBrightness(section.colour || "#ffffff", section.level)}
+  });
+  var holds = h("div", {className: "customholds scustom"}, field,
+                h("div", {className: "scustomside"},
+                  h("div", {className: "hexline"}, h("label", {}, "Hex"), hex), preview));
+  holds.style.display = open ? "" : "none";
+  box.appendChild(h("div", {className: "colourpick groundpick"}, swatches, holds));
 }
 
 function signalFace(name, key) {
@@ -213,37 +181,27 @@ function signalFace(name, key) {
 
 // A palette's colours, a swatch for each its lines name, drawn afresh as its slider moves
 function paintPalette(swatches, lines) {
-  swatches.textContent = "";
-  (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function (said) {
-    var chip = document.createElement("span");
-    chip.className = "palettechip";
-    chip.style.background = inkOf(said.slice(7));
-    chip.title = said.slice(7);
-    swatches.appendChild(chip);
-  });
+  replace(swatches, (lines.join(" ").match(/colour=[^\s:]+/g) || []).map(function (said) {
+    return h("span", {className: "palettechip", style: {background: inkOf(said.slice(7))},
+                      title: said.slice(7)});
+  }));
 }
 
 // The box a figure is typed in and its unit, each a cell of the sliders' grid
 function figureCells(said, unit, title, take) {
-  var box = document.createElement("input");
-  box.type = "text";
-  box.inputMode = "decimal";
-  box.className = "figurebox";
-  box.value = said;
-  box.title = title;
-  box.onchange = function () {
-    var typed = parseFloat(box.value.replace(",", "."));
-    if (!(typed > 0)) {
-      box.value = said;
-      return;
+  var box = h("input", {
+    type: "text", inputMode: "decimal", className: "figurebox", value: said, title: title,
+    onchange: function () {
+      var typed = parseFloat(box.value.replace(",", "."));
+      if (!(typed > 0)) {
+        box.value = said;
+        return;
+      }
+      take(typed);
+      draw();
     }
-    take(typed);
-    draw();
-  };
-  var units = document.createElement("span");
-  units.className = "figureunit";
-  units.textContent = unit;
-  return [box, units];
+  });
+  return [box, h("span", {className: "figureunit"}, unit)];
 }
 
 // The stretch's settings, with the colour choice in place of a slider that steps tones
@@ -253,11 +211,9 @@ chosenSteps.push(function (where, run) {
   var look = section && lookNamed(section.look);
   var memo = box && section && standingIn(run, section);
   if (memo) {
-    var note = document.createElement("div");
-    note.className = "standin";
-    note.textContent = look.name + ", replacing " + memo.look + ", " +
-                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
-    box.querySelector(".chosen").appendChild(note);
+    box.querySelector(".chosen").appendChild(h("div", {className: "standin"},
+      look.name + ", replacing " + memo.look + ", which mono lights cannot play. Rejoin to " +
+      "restore " + memo.look + "."));
   }
   // A count of stops may depend on the stretch, as Spread's lengths do on its lights
   if (box && look && look.detents) {
@@ -267,11 +223,7 @@ chosenSteps.push(function (where, run) {
   var wrap = box && box.querySelector(".chosen");
   if (!wrap || !look) return;
   var tuning = wrap.querySelector(".tuning");
-  if (!tuning) {
-    tuning = document.createElement("div");
-    tuning.className = "tuning";
-    wrap.appendChild(tuning);
-  }
+  if (!tuning) tuning = wrap.appendChild(h("div", {className: "tuning"}));
   // Solid's own slider is its brightness, so it gives way to the Brightness slider every look has
   if (look.solid) tuning.textContent = "";
   // A mono lamp has no colour to be given
@@ -316,26 +268,21 @@ chosenSteps.push(function (where, run) {
     after = ease.nextSibling;
   }
   SIGNAL_TIMINGS[look.name].forEach(function (part) {
-    var label = document.createElement("label");
-    label.className = "signalstate";
-    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
-    var range = document.createElement("input");
-    range.style.accentColor = SIGNAL_TINT[part[0]];
-    range.type = "range";
-    range.min = part[3];
-    range.max = part[4];
-    range.step = 0.5;
-    range.value = withSection(section, function () { return timingOf(look.name, part[0]); });
-    range.dataset.focus = where + "-timing-" + part[0];
-    range.dataset.timing = part[0];
-    range.title = "seconds, " + part[1].toLowerCase();
-    range.oninput = function () {
-      var mine = run.sections[run.picked];
-      mine.timings = Object.assign({}, mine.timings);
-      mine.timings[part[0]] = Number(range.value);
-      renderPreview();
-    };
-    tuning.insertBefore(label, after);
+    var range = h("input", {
+      style: {"accent-color": SIGNAL_TINT[part[0]]}, type: "range", min: part[3], max: part[4],
+      step: 0.5, value: withSection(section, function () { return timingOf(look.name, part[0]); }),
+      "data-focus": where + "-timing-" + part[0], "data-timing": part[0],
+      title: "seconds, " + part[1].toLowerCase(),
+      oninput: function () {
+        var mine = run.sections[run.picked];
+        mine.timings = Object.assign({}, mine.timings);
+        mine.timings[part[0]] = Number(range.value);
+        renderPreview();
+      }
+    });
+    tuning.insertBefore(h("label", {className: "signalstate",
+                                    html: signalFace(look.name, part[0])},
+                          h("span", {}, part[1])), after);
     tuning.insertBefore(range, after);
   });
 });
@@ -367,8 +314,8 @@ chosenSteps.push(function (where, run) {
       label.title = "how long each light takes to fade on and off, eased so it slows at the end";
     }
     label.classList.add("withicon");
-    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
-                                           "aria-hidden='true'>" + drawn + "</svg>");
+    label.prepend(h("svg:svg", {class: "settingicon", viewBox: "0 0 16 16", "aria-hidden": "true",
+                                html: drawn}));
   });
 });
 
@@ -379,19 +326,14 @@ chosenSteps.push(function (where, run) {
   if (!who || !section) return;
   var look = lookNamed(section.look);
   var under = look ? null : stretchUnder(run, section);
-  who.innerHTML = "";
-  var named = document.createElement("b");
-  named.textContent = look ? look.name : "Nothing";
-  who.appendChild(named);
   var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
-  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
+  replace(who, h("b", {}, look ? look.name : "Nothing"),
+          " on " + wherePlays(run, section, reversed));
   who.title = targetFor(run, section).selector;
   // A stretch the scene leaves empty says what the board plays there, and how to change it
   if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    who.parentNode.insertBefore(hint, who.nextSibling);
+    who.after(h("div", {className: "underhint"},
+                under.tip + " Choose a look to give this scene its own."));
   }
 });
 
@@ -401,9 +343,7 @@ chosenSteps.push(function (where, run) {
   var who = box && box.querySelector(".chosen .who");
   if (!section || !who) return;
   // The name and its count stay one piece of text, the toggle set apart at the end
-  var named = document.createElement("span");
-  while (who.firstChild) named.appendChild(who.firstChild);
-  who.appendChild(named);
+  who.appendChild(h("span", {}, Array.from(who.childNodes)));
   who.classList.add("withway");
   if (run.strip) who.appendChild(splitTools(where, run));
   who.appendChild(directionToggle(run, section));
@@ -433,55 +373,44 @@ chosenSteps.push(function (where, run) {
     draw();
   }
 
-  var row = document.createElement("div");
-  row.className = "blinklist";
-  var said = document.createElement("span");
-  said.className = "blinksay";
-  said.textContent = blinks.colours.length > 1 ? "Blinks through" : "Blinks in";
-  row.appendChild(said);
-  blinks.colours.forEach(function (hex, at) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
-    chip.style.setProperty("--chip", hex);
-    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") +
-                 (blinkNamed(hex) || hex);
-    chip.onclick = function () { choose(at); };
-    row.appendChild(chip);
-    if (blinks.colours.length > 1) {
-      var drop = document.createElement("button");
-      drop.type = "button";
-      drop.className = "blinkdrop";
-      drop.textContent = "\u00d7";
-      drop.title = "stop blinking in " + (blinkNamed(hex) || hex);
-      drop.onclick = function () {
+  var several = blinks.colours.length > 1;
+  pick.prepend(h("div", {className: "blinklist"},
+    h("span", {className: "blinksay"}, several ? "Blinks through" : "Blinks in"),
+    blinks.colours.map(function (hex, at) {
+      return [h("button", {
+                type: "button", className: "blinkchip" + (at === blinks.at ? " on" : ""),
+                style: {"--chip": hex},
+                title: (at === blinks.at ? "the colour being edited below, " : "change ") +
+                       (blinkNamed(hex) || hex),
+                onclick: function () { choose(at); }
+              }),
+              several ? h("button", {
+                type: "button", className: "blinkdrop",
+                title: "stop blinking in " + (blinkNamed(hex) || hex),
+                onclick: function () {
+                  var mine = live();
+                  mine.blinks.colours.splice(at, 1);
+                  var left = mine.blinks.colours;
+                  mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
+                  mine.colour = left[mine.blinks.at];
+                  mine.custom = !blinkNamed(mine.colour);
+                  if (left.length === 1) mine.blinks = undefined;
+                  draw();
+                }
+              }, "\u00d7") : null];
+    }),
+    // The colour added is a copy of the last, a custom one included, to be changed from there
+    h("button", {
+      type: "button", className: "blinkmore",
+      title: "blink through several colours, one per blink",
+      onclick: function () {
         var mine = live();
-        mine.blinks.colours.splice(at, 1);
-        var left = mine.blinks.colours;
-        mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
-        mine.colour = left[mine.blinks.at];
-        mine.custom = !blinkNamed(mine.colour);
-        if (left.length === 1) mine.blinks = undefined;
-        draw();
-      };
-      row.appendChild(drop);
-    }
-  });
-  var more = document.createElement("button");
-  more.type = "button";
-  more.className = "blinkmore";
-  more.textContent = "+ another colour";
-  more.title = "blink through several colours, one per blink";
-  // The colour added is a copy of the last, a custom one included, to be changed from there
-  more.onclick = function () {
-    var mine = live();
-    if (!mine.blinks) mine.blinks = {colours: [mine.colour], at: 0};
-    var colours = mine.blinks.colours;
-    colours.push(colours[colours.length - 1]);
-    choose(colours.length - 1);
-  };
-  row.appendChild(more);
-  pick.insertBefore(row, pick.firstChild);
+        if (!mine.blinks) mine.blinks = {colours: [mine.colour], at: 0};
+        var colours = mine.blinks.colours;
+        colours.push(colours[colours.length - 1]);
+        choose(colours.length - 1);
+      }
+    }, "+ another colour")));
 });
 
 chosenSteps.push(function (where, run) {
@@ -509,12 +438,11 @@ chosenSteps.push(function (where, run) {
         mine.timings[timing] = Math.round(typed * 100) / 100;
       });
     } else if (slider === "mood" && look.mood === "Palette") {
-      // A palette is its colours, not a number, so its slot shows them
-      var swatches = document.createElement("span");
-      swatches.className = "figurebox paletteswatches";
+      // A palette is its colours, not a number, so its slot shows them, across the box and unit
+      // columns from where the boxes start, being wider than a box
+      var swatches = h("span", {className: "figurebox paletteswatches",
+                                style: {"grid-column": "span 2"}});
       paintPalette(swatches, sectionLines(run, section, look));
-      // Across the box and unit columns, from where the boxes start, being wider than a box
-      swatches.style.gridColumn = "span 2";
       cells = [swatches, null];
     } else if (slider === "level") {
       var bright = section.level === undefined ? 1 : section.level;
@@ -556,9 +484,7 @@ chosenSteps.push(function (where, run) {
     // Check if the slider has no one figure
     if (!cells) {
       // Keep the row's cells, empty, so the columns stay whole
-      cells = [document.createElement("span"), document.createElement("span")];
-      cells[0].className = "figurebox";
-      cells[1].className = "figureunit";
+      cells = [h("span", {className: "figurebox"}), h("span", {className: "figureunit"})];
     }
     if (cells[0].tagName === "INPUT") {
       // A figure typed past the slider's end, wider than any it reaches, widens the box to fit
@@ -592,21 +518,17 @@ chosenSteps.push(function (where, run) {
   boxes.forEach(function (one) { one.box.style.width = (chars + 0.5) + "ch"; });
 
   // The drawer's handle, down the right of the sliders, which opens and shuts every figure
-  var handle = document.createElement("button");
-  handle.type = "button";
-  handle.className = "figurehandle";
-  handle.textContent = figuresOpen ? "\u203a" : "\u2039";
-  handle.title = figuresOpen ? "hide values" : "show values";
-  handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
-  handle.style.gridRow = "1 / span " + ranges.length;
-  handle.onclick = function () {
-    setFiguresOpen(!figuresOpen);
-    try {
-      window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
-    } catch (e) {
-      // Kept only for this visit where the page may not keep anything
+  tuning.appendChild(h("button", {
+    type: "button", className: "figurehandle", title: figuresOpen ? "hide values" : "show values",
+    "aria-expanded": figuresOpen ? "true" : "false", style: {"grid-row": "1 / span " + ranges.length},
+    onclick: function () {
+      setFiguresOpen(!figuresOpen);
+      try {
+        window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
+      } catch (e) {
+        // Kept only for this visit where the page may not keep anything
+      }
+      draw();
     }
-    draw();
-  };
-  tuning.appendChild(handle);
+  }, figuresOpen ? "\u203a" : "\u2039"));
 });

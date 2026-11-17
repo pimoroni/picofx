@@ -3,6 +3,7 @@ import {
   resetWiringInScenes, wiringChanged
 } from "./board.js";
 import {astrayOf} from "./colours.js";
+import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "./draw.js";
 import {iconButton} from "./led_panels.js";
 import {BOARD} from "./looks.js";
@@ -30,21 +31,19 @@ export function showKin(out, on) {
 // where the wiring can be changed, in the board's colour, and only on an output that breaks out
 export function crossing(out, colour) {
   if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
-  var made = document.createElement("button");
-  made.className = "cross boardarrow";
   var says = colour
     ? "split " + outputSaid(out) + " into three mono lights"
     : "rejoin " + outputSaid(out) + " as one colour light";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
-  made.onclick = function (event) {
-    event.stopPropagation();
-    if (colour) breakOut(out); else rejoin(out);
-  };
-  return made;
+  return h("button", {
+    className: "cross boardarrow", title: says, "aria-label": says,
+    html: "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
+          "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
+          "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>",
+    onclick: function (event) {
+      event.stopPropagation();
+      if (colour) breakOut(out); else rejoin(out);
+    }
+  });
 }
 
 // ---- the rows around the bar ---------------------------------------------------------------
@@ -52,35 +51,24 @@ export function crossing(out, colour) {
 // Add the run's controls at the right of its header row, the box naming its wiring or its strip.
 // A long strip zooms first, then come the steps back and on, then Join all as a quick reset
 export function headSteps(row, run) {
-  var steps = document.createElement("span");
-  steps.className = "headsteps";
-
-  // Zooming is only any use where there are more lights than a panel can show. The
-  // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.strip && run.count > ZOOMS_OVER) {
-    steps.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                                 function () {
-                                   zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                                 }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    steps.appendChild(said);
-    steps.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                                 function () {
-                                   zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                                 }));
-  }
-
-  steps.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                               function () { stepBack(run); }));
-  steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                               function () { stepOn(run); }));
   var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
                         "merge into one stretch, keeping the selected stretch's look");
   join.onclick = function () { joinAll(run); };
-  steps.appendChild(join);
-  row.appendChild(steps);
+  // Zooming is only any use where there are more lights than a panel can show. The
+  // buttons hold the middle of the view, since a press has no place on the run to hold
+  var zooms = run.strip && run.count > ZOOMS_OVER;
+  row.appendChild(h("span", {className: "headsteps"},
+    zooms ? [iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001, function () {
+               zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
+             }),
+             h("span", {className: "howfar"}, Math.round(zoomOf(run) * 100) + "%"),
+             iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9, function () {
+               zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
+             })]
+          : null,
+    iconButton(BACK, "Undo", !(run.was && run.was.length), function () { stepBack(run); }),
+    iconButton(ON, "Redo", !(run.undone && run.undone.length), function () { stepOn(run); }),
+    join));
 }
 
 // ---- the wiring, while the board is set up ------------------------------------------------
@@ -92,12 +80,7 @@ export function headSteps(row, run) {
 var SLIDE_MS = 420;
 
 // The connectors sit under both sides of the outputs, before the chosen stretch's settings
-(function () {
-  var row = document.createElement("div");
-  row.id = "wiringRow";
-  var sides = document.getElementById("sides");
-  sides.parentNode.insertBefore(row, sides.nextSibling);
-}());
+document.getElementById("sides").after(h("div", {id: "wiringRow"}));
 
 // Every lamp in the order the board wires them, an output's own lamp or its three channels
 function wiredLamps() {
@@ -148,49 +131,14 @@ function overlapBelow(box) {
 
 function renderConnectors() {
   var box = document.getElementById("wiringRow");
-  box.textContent = "";
+  replace(box);
   box.style.marginBottom = "";
   box.style.minHeight = "";
   var old = document.getElementById("wiringLines");
-  if (old) old.parentNode.removeChild(old);
+  if (old) old.remove();
   // A board whose outputs are its own LEDs has no wiring to show
   document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
   if (!setupOn || !BOARD.wiring_order) return;
-
-  var row = document.createElement("div");
-  row.className = "wireconnectors";
-  wiring.forEach(function (one, out) {
-    var block = document.createElement("div");
-    block.className = "wireconnector";
-    var pins = document.createElement("div");
-    pins.className = "wirepins";
-    var keys = [];
-    // A mono output is one light on one pin, with no channel to mark
-    var single = OUTPUTS[out].mono;
-    placesOf(out).forEach(function (place) {
-      var pin = document.createElement("span");
-      var key = lampKey(place);
-      pin.className = "wirepin" + (place.channel === null ? " whole" : single ? " single" : "");
-      pin.dataset.key = key;
-      if (place.channel !== null && !single) pin.style.background = CHANNEL_INKS[place.channel];
-      pins.appendChild(pin);
-      keys.push(key);
-    });
-    block.appendChild(pins);
-    var name = document.createElement("b");
-    name.textContent = shortName({out: out, colour: true});
-    block.appendChild(name);
-    block.title = outputSaid(out) + (one.broken && !single ? ", broken out into three" : "");
-    // A pin is too small to aim at, so the connector is what is pointed at
-    block.addEventListener("mouseenter", function () { bringForward(keys, true); });
-    block.addEventListener("mouseleave", function () { bringForward(keys, false); });
-    row.appendChild(block);
-  });
-  // The board's edge holds its connectors and, under them, what the wiring order says
-  var board = document.createElement("div");
-  board.className = "wireboard";
-  board.appendChild(row);
-  box.appendChild(board);
 
   var side = wiredSide();
   var astray = astrayOf(side);
@@ -198,22 +146,44 @@ function renderConnectors() {
     var node = lampNode(lamp.key);
     if (node) node.classList.add("astray");
   });
-  var foot = document.createElement("div");
-  foot.className = "wirefoot";
-  var said = document.createElement("span");
-  said.innerHTML = (astray.length
-    ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
-      "order, numbered in bold. "
-    : "All lights are in wiring order. ") + brokenSentence() +
-    "Hover over a light or connector to highlight its wire.";
-  foot.appendChild(said);
   // The button stays while there is nothing to reset, so the board's edge never changes height
   var reset = resetWiringButton();
   reset.disabled = !wiringChanged(astray);
-  foot.appendChild(reset);
-  board.appendChild(foot);
+  // The board's edge holds its connectors and, under them, what the wiring order says
+  var tail = brokenSentence() + "Hover over a light or connector to highlight its wire.";
+  box.appendChild(h("div", {className: "wireboard"},
+    h("div", {className: "wireconnectors"}, wiring.map(connector)),
+    h("div", {className: "wirefoot"},
+      h("span", {}, astray.length
+        ? [h("b", {}, astray.length + " of " + side.order.length),
+           " lights are out of wiring order, numbered in bold. " + tail]
+        : "All lights are in wiring order. " + tail),
+      reset)));
   overlapBelow(box);
   drawLines();
+}
+
+// An output's connector on the board's edge, a pin for each light it feeds, named under them
+function connector(one, out) {
+  // A mono output is one light on one pin, with no channel to mark
+  var single = OUTPUTS[out].mono;
+  var keys = [];
+  var pins = placesOf(out).map(function (place) {
+    var key = lampKey(place);
+    keys.push(key);
+    return h("span", {
+      className: "wirepin" + (place.channel === null ? " whole" : single ? " single" : ""),
+      "data-key": key,
+      style: {background: place.channel !== null && !single ? CHANNEL_INKS[place.channel] : null}
+    });
+  });
+  // A pin is too small to aim at, so the connector is what is pointed at
+  return h("div", {
+    className: "wireconnector",
+    title: outputSaid(out) + (one.broken && !single ? ", broken out into three" : ""),
+    onmouseenter: function () { bringForward(keys, true); },
+    onmouseleave: function () { bringForward(keys, false); }
+  }, h("div", {className: "wirepins"}, pins), h("b", {}, shortName({out: out, colour: true})));
 }
 
 // Faint lines, never none. With no line at all, the lamps over a connector read as the ones
@@ -221,28 +191,24 @@ function renderConnectors() {
 function drawLines() {
   var panel = document.getElementById("outPanel");
   var from = panel.getBoundingClientRect();
-  var lines = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  lines.id = "wiringLines";
-  lines.setAttribute("class", "wirelines");
-  wiredLamps().forEach(function (lamp) {
-    var node = lampNode(lamp.key);
-    var pin = panel.querySelector(".wirepin[data-key='" + lamp.key + "']");
-    if (!node || !pin) return;
-    var top = node.getBoundingClientRect();
-    var bottom = pin.getBoundingClientRect();
-    var start = {x: bottom.left + bottom.width / 2 - from.left, y: bottom.top - from.top};
-    var end = {x: top.left + top.width / 2 - from.left, y: top.bottom - from.top};
-    var rise = (start.y - end.y) / 2;
-    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M" + start.x + " " + start.y + " C" + start.x + " " +
-                      (start.y - rise) + " " + end.x + " " + (end.y + rise) + " " + end.x +
-                      " " + end.y);
-    path.dataset.key = lamp.key;
-    path.style.stroke = lamp.channel === null || OUTPUTS[lamp.out].mono ? "var(--boardOuts)"
-                                                                        : CHANNEL_INKS[lamp.channel];
-    lines.appendChild(path);
-  });
-  panel.appendChild(lines);
+  panel.appendChild(h("svg:svg", {id: "wiringLines", class: "wirelines"},
+    wiredLamps().map(function (lamp) {
+      var node = lampNode(lamp.key);
+      var pin = panel.querySelector(".wirepin[data-key='" + lamp.key + "']");
+      if (!node || !pin) return null;
+      var top = node.getBoundingClientRect();
+      var bottom = pin.getBoundingClientRect();
+      var start = {x: bottom.left + bottom.width / 2 - from.left, y: bottom.top - from.top};
+      var end = {x: top.left + top.width / 2 - from.left, y: top.bottom - from.top};
+      var rise = (start.y - end.y) / 2;
+      return h("svg:path", {
+        d: "M" + start.x + " " + start.y + " C" + start.x + " " + (start.y - rise) + " " +
+           end.x + " " + (end.y + rise) + " " + end.x + " " + end.y,
+        "data-key": lamp.key,
+        style: {stroke: lamp.channel === null || OUTPUTS[lamp.out].mono
+                          ? "var(--boardOuts)" : CHANNEL_INKS[lamp.channel]}
+      });
+    })));
 }
 
 // ---- the move shown ------------------------------------------------------------------------
@@ -269,19 +235,17 @@ function brokenSentence() {
 // The button that puts the wiring back as the board comes, each lamp sliding to its place and a
 // rejoined output's lamp gathering from the middle of its three
 function resetWiringButton() {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "wirereset";
-  button.textContent = "Reset wiring";
-  button.title = "Rejoin every broken-out output and put every light back in wiring order";
-  button.onclick = function () {
-    slideFrom(null);
-    breakingOutputs().forEach(function (out) {
-      if (wiring[out].broken) gatherFromThree(out);
-    });
-    resetWiringInScenes();
-  };
-  return button;
+  return h("button", {
+    type: "button", className: "wirereset",
+    title: "Rejoin every broken-out output and put every light back in wiring order",
+    onclick: function () {
+      slideFrom(null);
+      breakingOutputs().forEach(function (out) {
+        if (wiring[out].broken) gatherFromThree(out);
+      });
+      resetWiringInScenes();
+    }
+  }, "Reset wiring");
 }
 
 // Where a lamp is within the outputs' panel. The page may scroll straight after a draw to
@@ -370,7 +334,5 @@ window.addEventListener("resize", function () { if (setupOn) draw(); });
 // Where the wiring cannot be changed an output's arrow is left out. What stands in its place
 // takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
 function noArrow() {
-  var none = document.createElement("span");
-  none.style.position = "absolute";
-  return none;
+  return h("span", {style: {position: "absolute"}});
 }

@@ -1,5 +1,5 @@
+import {h, replace} from "./dom.js";
 import {draw} from "./draw.js";
-import {escapeHtml} from "./file_preview.js";
 import {coloursWritten, takesColour} from "./lines.js";
 import {lookNamed} from "./looks.js";
 import {shortName, widthOf} from "./outputs.js";
@@ -21,23 +21,21 @@ export function washFor(run, section, look) {
 // A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
 // window onto Always on's own band where Always on plays there and over dark where it is off
 export function washOf(run, section, look, under) {
-  var wash = document.createElement("span");
   if (look || !under) {
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    return wash;
+    return h("span", {className: "lit" + (look ? "" : " nothing"),
+                      style: {background: look ? washFor(run, section, look) : null}});
   }
-  wash.className = "lit through";
   // Each run of lamps that show one thing is one pane
+  var panes = [];
   var wide = under.lamps.length;
   var start = 0;
   while (start < wide) {
     var end = start + 1;
     while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
-    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
+    panes.push(paneOnto(run, under.lamps[start], start, end, wide));
     start = end;
   }
-  return wash;
+  return h("span", {className: "lit through"}, panes);
 }
 
 // Whether two lamps under a scene show the same thing, nothing, off or one Always on stretch
@@ -49,25 +47,27 @@ function sameShowing(one, other) {
 // A pane over lamps start to end of a stretch wide lamps across. Over Always on's stretch it holds
 // that stretch's whole band, moved so the lamps under the pane line up with their own part of it
 function paneOnto(run, shows, start, end, wide) {
-  var pane = document.createElement("span");
-  pane.style.left = (start * 100 / wide) + "%";
-  pane.style.width = ((end - start) * 100 / wide) + "%";
-  if (!shows) pane.className = "empty";
-  else if (shows === "off") pane.className = "off";
-  else {
-    var band = document.createElement("span");
-    band.style.width = (widthOf(shows.section) * 100 / (end - start)) + "%";
-    band.style.left = (-shows.at * 100 / (end - start)) + "%";
-    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
-    pane.appendChild(band);
-  }
-  return pane;
+  return h("span", {
+    className: !shows ? "empty" : shows === "off" ? "off" : null,
+    style: {left: start * 100 / wide + "%", width: (end - start) * 100 / wide + "%"}
+  }, shows && shows !== "off" ? h("span", {style: {
+    width: widthOf(shows.section) * 100 / (end - start) + "%",
+    left: -shows.at * 100 / (end - start) + "%",
+    background: washFor(run, shows.section, lookNamed(shows.section.look))
+  }}) : null);
 }
 
-// The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
-// the stretch shows nothing at all
-export function beneath(under) {
-  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
+// The note under a cell's "Nothing" saying what shows through from Always on, or null where the
+// stretch shows nothing at all
+function beneath(under) {
+  return under ? h("span", {className: "beneath"}, under.note) : null;
+}
+
+// What a stretch's cell says, its look and its width, with what shows through it where it plays
+// nothing
+export function cellSays(look, wide, under) {
+  return h("span", {className: "says"}, (look ? look.name : "Nothing") + " ",
+           h("em", {}, wide), beneath(under));
 }
 
 // Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
@@ -77,18 +77,16 @@ export function carded(run) {
 }
 
 export function cutPoint(run, after, wide, from) {
-  var snip = document.createElement("i");
-  snip.className = "cut";
-  snip.style.left = ((after - from + 1) / wide * 100) + "%";
-  snip.style.width = "min(11px, " + (55 / wide) + "%)";
-  snip.dataset.says = shortName(run.lamps[after]) + " | " +
-                      shortName(run.lamps[after + 1]);
-  snip.title = "cut between " + snip.dataset.says.replace(" | ", " and ");
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    cutAt(run, after);
-  };
-  return snip;
+  var says = shortName(run.lamps[after]) + " | " + shortName(run.lamps[after + 1]);
+  return h("i", {
+    className: "cut",
+    style: {left: (after - from + 1) / wide * 100 + "%", width: "min(11px, " + 55 / wide + "%)"},
+    "data-says": says, title: "cut between " + says.replace(" | ", " and "),
+    onclick: function (event) {
+      event.stopPropagation();
+      cutAt(run, after);
+    }
+  });
 }
 
 export function zoomOf(run) { return run.zoom || 1; }
@@ -113,27 +111,18 @@ function splitSection(run, ways) {
 // A stretch's beads, each kept in beads by its LED's place on the strip so it can be lit as the
 // strip plays
 function stripBeads(run, section, beads) {
-  var row = document.createElement("span");
-  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line
-  row.className = "stripbeads" + (lookNamed(section.look) ? "" : " unset");
+  var rooms = [];
   for (var n = section.from; n <= section.to; n++) {
-    var room = document.createElement("i");
-    var bead = document.createElement("b");
-    room.appendChild(bead);
-    row.appendChild(room);
-    beads[n] = bead;
+    beads[n] = h("b");
+    rooms.push(h("i", {}, beads[n]));
   }
-  return row;
+  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line
+  return h("span", {className: "stripbeads" + (lookNamed(section.look) ? "" : " unset")}, rooms);
 }
 
 // One end of the strip's wire, the lead block before its first LED or the ring after its last
 function wireEnd(which) {
-  var end = document.createElement("span");
-  end.className = "wireend";
-  var mark = document.createElement("span");
-  mark.className = which;
-  end.appendChild(mark);
-  return end;
+  return h("span", {className: "wireend"}, h("span", {className: which}));
 }
 
 // Draw a strip's beads for the room each LED has, and run its wire between the two ends. Every
@@ -180,82 +169,20 @@ function renderStripBar(where, run) {
   var box = document.getElementById(where);
   var was = box.querySelector(".scroller");
   var kept = was ? was.scrollLeft : run.scrolled || 0;
-  box.textContent = "";
 
   // Zoomed in, the bar is wider than the room it has and scrolls inside it. That is
   // what puts a single light of a long strip within reach of a pointer
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar carded stripcards";
-  bar.style.width = (zoomOf(run) * 100) + "%";
   var beads = [];
-  bar.appendChild(wireEnd("lead"));
-
-  run.sections.forEach(function (section, at) {
-    var wide = widthOf(section);
-    var cell = document.createElement("button");
-    cell.className = "sec" + (isPicked(run, at) ? " picked" : "") +
-                     (wide * 40 < run.count * 8 ? " narrow" : "");
-    cell.style.flex = wide + " 1 0";
-    cell.title = "lights " + (section.from + 1) + " to " + (section.to + 1);
-    cell.appendChild(stripBeads(run, section, beads));
-
-    // Under its LEDs, a stretch is washed in a colour of its look and named
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title += ". " + under.tip;
-
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>" + beneath(under);
-    cell.appendChild(says);
-
-    // Where this stretch could be cut, one click to a place between two lights
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var n = section.from; n < section.to; n++) {
-      inside.appendChild(cutPoint(run, n, wide, section.from));
-    }
-    cell.appendChild(inside);
-
-    cell.onclick = function () { pick(run, at); draw(); };
-    bar.appendChild(cell);
-
-    // The cut this section shares with the next, dragged to move it or clicked to take it
-    // out, which joins the two either side
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click to remove it";
-      edge.onmousedown = function (e) {
-        e.preventDefault();
-        // The bar is rebuilt on every move, so what is held onto is where it lives and
-        // not the bar itself, which would be a node that has already been thrown away
-        setHolding({run: run, which: at, where: where, had: run.sections.length});
-        edge.classList.add("holding");
-      };
-      // Taking the cut out is its own target, so it is never confused with moving it
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\u00d7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function (e) { e.stopPropagation(); };
-      drop.onclick = function (e) {
-        e.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  bar.appendChild(wireEnd("tail"));
-  var line = document.createElement("span");
-  line.className = "stripwire";
-  bar.appendChild(line);
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
+  var bar = h("div", {className: "bar carded stripcards", style: {width: zoomOf(run) * 100 + "%"}},
+              wireEnd("lead"),
+              run.sections.map(function (section, at) {
+                return [stripCard(run, section, at, beads),
+                        at < run.sections.length - 1 ? stripEdge(run, at, where) : null];
+              }),
+              wireEnd("tail"),
+              h("span", {className: "stripwire"}));
+  var scroller = h("div", {className: "scroller"}, bar);
+  replace(box, scroller);
   scroller.scrollLeft = kept;
   scroller.onscroll = function () { run.scrolled = scroller.scrollLeft; };
   // The beads are drawn for the room the bar has, which a hidden tab shown or a page resized
@@ -283,6 +210,51 @@ function renderStripBar(where, run) {
     var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
     zoomTo(run, zoomOf(run) * (e.deltaY < 0 ? 1.25 : 0.8), at, e.clientX - box2.left);
   };
+}
+
+// A strip's stretch as a card, its LEDs over its look's wash, named, with its places to cut
+function stripCard(run, section, at, beads) {
+  var wide = widthOf(section);
+  var rooms = stripBeads(run, section, beads);
+  // Under its LEDs, a stretch is washed in a colour of its look and named
+  var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
+  var cuts = [];
+  // Where this stretch could be cut, one click to a place between two lights
+  for (var n = section.from; n < section.to; n++) cuts.push(cutPoint(run, n, wide, section.from));
+  return h("button", {
+    className: "sec" + (isPicked(run, at) ? " picked" : "") +
+               (wide * 40 < run.count * 8 ? " narrow" : ""),
+    style: {flex: wide + " 1 0"},
+    title: "lights " + (section.from + 1) + " to " + (section.to + 1) +
+           (under ? ". " + under.tip : ""),
+    onclick: function () { pick(run, at); draw(); }
+  }, rooms, washOf(run, section, look, under), cellSays(look, wide, under),
+     h("span", {className: "cuts"}, cuts));
+}
+
+// The cut a stretch shares with the next, dragged to move it or clicked to take it out, which
+// joins the two either side
+function stripEdge(run, at, where) {
+  var edge = h("div", {
+    className: "edge", title: "drag to move this cut, or click to remove it",
+    onmousedown: function (e) {
+      e.preventDefault();
+      // The bar is rebuilt on every move, so what is held onto is where it lives and
+      // not the bar itself, which would be a node that has already been thrown away
+      setHolding({run: run, which: at, where: where, had: run.sections.length});
+      edge.classList.add("holding");
+    }
+  }, // Taking the cut out is its own target, so it is never confused with moving it
+     h("button", {
+       className: "drop", title: "remove this cut and join the two stretches",
+       onmousedown: function (e) { e.stopPropagation(); },
+       onclick: function (e) {
+         e.stopPropagation();
+         uncut(run, at);
+       }
+     }, "×"));
+  return edge;
 }
 
 export function middleOfView(run) {
@@ -344,27 +316,19 @@ function divideLengths(run, each) {
 }
 
 export function toolButton(icon, words, off, act, title) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle";
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.disabled = off;
-  button.title = title;
-  button.dataset.act = act;
-  return button;
+  return h("button", {type: "button", className: "stoggle", disabled: off, title: title,
+                      "data-act": act},
+           h("span", {"aria-hidden": "true", html: icon}), " " + words);
 }
 
 function toolNumber(value, low, high, focus, change) {
-  var box = document.createElement("input");
-  box.type = "number";
-  box.min = low;
-  box.max = high;
-  box.value = value;
-  box.dataset.focus = focus;
-  box.onchange = function () {
-    change(Math.max(low, Math.min(high, Number(box.value) || low)));
-    draw();
-  };
+  var box = h("input", {
+    type: "number", min: low, max: high, value: value, "data-focus": focus,
+    onchange: function () {
+      change(Math.max(low, Math.min(high, Number(box.value) || low)));
+      draw();
+    }
+  });
   return box;
 }
 
@@ -373,25 +337,20 @@ function toolNumber(value, low, high, focus, change) {
 export function splitTools(where, run) {
   var section = run.sections[run.picked];
   var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("span");
-  row.className = "stretchtools";
-
   var ways = run.ways || 3;
-  var split = toolGroup("&#9986;", "Split into");
-  split.appendChild(toolNumber(ways, 1, Math.max(2, wide), where + "-ways",
-                               function (value) { run.ways = value; }));
   var parts = toolAct("stretches", wide < 2 || ways < 2, "split",
                       "split the selected stretch into " + ways + " equal parts");
   parts.onclick = function () { divide(run, Math.min(ways, wide)); };
-  split.appendChild(parts);
   var lengths = toolAct("lights each", ways >= wide, "lengths",
                         "split the selected stretch every " + ways +
                         (ways === 1 ? " light" : " lights") + ", with a " +
                         "shorter last stretch if it does not divide evenly");
   lengths.onclick = function () { divideLengths(run, ways); };
-  split.appendChild(lengths);
-  row.appendChild(split);
-  return row;
+  return h("span", {className: "stretchtools"},
+           toolGroup("&#9986;", "Split into",
+                     toolNumber(ways, 1, Math.max(2, wide), where + "-ways",
+                                function (value) { run.ways = value; }),
+                     parts, lengths));
 }
 
 // A run's stretches as its bar draws them, in order
@@ -401,26 +360,17 @@ export function barCells(run) {
 }
 
 // One outlined group, its icon and words, then what is put inside it
-function toolGroup(icon, words) {
-  var group = document.createElement("span");
-  group.className = "toolset";
-  var said = document.createElement("span");
-  said.className = "toolsays";
-  said.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  group.appendChild(said);
-  return group;
+function toolGroup(icon, words, ...inside) {
+  return h("span", {className: "toolset"},
+           h("span", {className: "toolsays"}, h("span", {"aria-hidden": "true", html: icon}),
+             " " + words),
+           inside);
 }
 
 // A button inside a group that does what the group says
 function toolAct(words, off, act, title) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "toolact";
-  button.textContent = words;
-  button.disabled = off;
-  button.title = title;
-  button.dataset.act = act;
-  return button;
+  return h("button", {type: "button", className: "toolact", disabled: off, title: title,
+                      "data-act": act}, words);
 }
 
 // A cut's label, which lights it falls between, is centred on the cut, so near either end of a

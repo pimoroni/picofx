@@ -4448,20 +4448,21 @@ settle();
 
 // boards/editor/picker/led_panels.js
 function iconButton(drawing, says, off, done) {
-  var made = document.createElement("button");
-  made.className = "round";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.disabled = off;
-  made.innerHTML = "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>" + drawing + "</svg>";
-  made.onclick = done;
-  return made;
+  return h("button", {
+    className: "round",
+    title: says,
+    "aria-label": says,
+    disabled: off,
+    onclick: done,
+    html: "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>" + drawing + "</svg>"
+  });
 }
 function stretchCount(run) {
-  var says = document.createElement("span");
-  says.className = "stretchcount";
-  says.textContent = "Cut into " + run.sections.length + (run.sections.length === 1 ? " stretch" : " stretches");
-  return says;
+  return h(
+    "span",
+    { className: "stretchcount" },
+    "Cut into " + run.sections.length + (run.sections.length === 1 ? " stretch" : " stretches")
+  );
 }
 function renderChosen(where, run) {
   renderChosenPanel(where, run);
@@ -4502,46 +4503,44 @@ function pointAt(panel, cell) {
 function renderChosenPanel(where, run) {
   var box = document.getElementById(where);
   if (!box) return;
-  box.textContent = "";
   var section = run.sections[run.picked];
-  if (!section) return;
-  var wrap = document.createElement("div");
-  wrap.className = "chosen";
-  var who = document.createElement("div");
-  who.className = "who";
+  if (!section) {
+    replace(box);
+    return;
+  }
   var first = run.lamps[section.from];
-  who.innerHTML = "<b>" + targetFor(run, section).selector + "</b>, " + widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") + ", " + (first && first.colour ? "colour" : "mono");
-  wrap.appendChild(who);
   var look = lookNamed(section.look);
-  if (look) {
-    var tuning = document.createElement("div");
-    tuning.className = "tuning";
-    tuning.appendChild(labelled(look.solid ? "Brightness" : "Speed"));
-    tuning.appendChild(slider(look.solid ? "mood" : "pace"));
-    if (!look.solid) {
-      tuning.appendChild(labelled(look.mood));
-      tuning.appendChild(slider("mood"));
-    }
-    wrap.appendChild(tuning);
-  }
-  box.appendChild(wrap);
-  function labelled(words) {
-    var label = document.createElement("label");
-    label.textContent = words;
-    return label;
-  }
+  replace(box, h(
+    "div",
+    { className: "chosen" },
+    h(
+      "div",
+      { className: "who" },
+      h("b", {}, targetFor(run, section).selector),
+      ", " + widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") + ", " + (first && first.colour ? "colour" : "mono")
+    ),
+    look ? h(
+      "div",
+      { className: "tuning" },
+      h("label", {}, look.solid ? "Brightness" : "Speed"),
+      slider(look.solid ? "mood" : "pace"),
+      look.solid ? null : [h("label", {}, look.mood), slider("mood")]
+    ) : null
+  ));
   function slider(key) {
-    var range = document.createElement("input");
-    range.type = "range";
-    range.min = 0;
-    range.max = 1;
-    range.step = 0.01;
-    range.value = section[key];
-    range.dataset.focus = where + "-" + key;
-    range.oninput = function() {
-      run.sections[run.picked][key] = Number(range.value);
-      drawParts.preview();
-    };
+    var range = h("input", {
+      type: "range",
+      min: 0,
+      max: 1,
+      step: 0.01,
+      value: section[key],
+      "data-focus": where + "-" + key,
+      // Through the run, as a page that makes the stretches afresh leaves this one behind
+      oninput: function() {
+        run.sections[run.picked][key] = Number(range.value);
+        drawParts.preview();
+      }
+    });
     return range;
   }
 }
@@ -6459,6 +6458,1004 @@ function workOn(panel) {
   if (run) pick(run, run.picked);
 }
 
+// boards/editor/picker/stretch_bar.js
+function washFor(run, section, look) {
+  var first = run.lamps[section.from];
+  return stretchWash(look, section, run, !!first && !first.colour);
+}
+function washOf(run, section, look, under) {
+  if (look || !under) {
+    return h("span", {
+      className: "lit" + (look ? "" : " nothing"),
+      style: { background: look ? washFor(run, section, look) : null }
+    });
+  }
+  var panes = [];
+  var wide = under.lamps.length;
+  var start = 0;
+  while (start < wide) {
+    var end = start + 1;
+    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
+    panes.push(paneOnto(run, under.lamps[start], start, end, wide));
+    start = end;
+  }
+  return h("span", { className: "lit through" }, panes);
+}
+function sameShowing(one, other) {
+  return one === other || !!(one && other && one.section && other.section && one.section === other.section);
+}
+function paneOnto(run, shows, start, end, wide) {
+  return h("span", {
+    className: !shows ? "empty" : shows === "off" ? "off" : null,
+    style: { left: start * 100 / wide + "%", width: (end - start) * 100 / wide + "%" }
+  }, shows && shows !== "off" ? h("span", { style: {
+    width: widthOf(shows.section) * 100 / (end - start) + "%",
+    left: -shows.at * 100 / (end - start) + "%",
+    background: washFor(run, shows.section, lookNamed(shows.section.look))
+  } }) : null);
+}
+function beneath(under) {
+  return under ? h("span", { className: "beneath" }, under.note) : null;
+}
+function cellSays(look, wide, under) {
+  return h(
+    "span",
+    { className: "says" },
+    (look ? look.name : "Nothing") + " ",
+    h("em", {}, wide),
+    beneath(under)
+  );
+}
+function carded(run) {
+  return !run.strip;
+}
+function cutPoint(run, after, wide, from) {
+  var says = shortName(run.lamps[after]) + " | " + shortName(run.lamps[after + 1]);
+  return h("i", {
+    className: "cut",
+    style: { left: (after - from + 1) / wide * 100 + "%", width: "min(11px, " + 55 / wide + "%)" },
+    "data-says": says,
+    title: "cut between " + says.replace(" | ", " and "),
+    onclick: function(event) {
+      event.stopPropagation();
+      cutAt(run, after);
+    }
+  });
+}
+function zoomOf(run) {
+  return run.zoom || 1;
+}
+function splitSection(run, ways) {
+  var section = run.sections[run.picked];
+  if (!section || ways < 2 || widthOf(section) < ways) return;
+  remember(run);
+  var made = [];
+  var edges = [];
+  for (var i = 0; i <= ways; i++) {
+    edges.push(section.from + Math.round(widthOf(section) * i / ways));
+  }
+  for (var g = 0; g < ways; g++) {
+    made.push({
+      from: edges[g],
+      to: edges[g + 1] - 1,
+      look: section.look,
+      pace: section.pace,
+      mood: section.mood,
+      colour: section.colour
+    });
+  }
+  run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
+  draw();
+}
+function stripBeads(run, section, beads) {
+  var rooms = [];
+  for (var n2 = section.from; n2 <= section.to; n2++) {
+    beads[n2] = h("b");
+    rooms.push(h("i", {}, beads[n2]));
+  }
+  return h("span", { className: "stripbeads" + (lookNamed(section.look) ? "" : " unset") }, rooms);
+}
+function wireEnd(which) {
+  return h("span", { className: "wireend" }, h("span", { className: which }));
+}
+function fitBeads(bar, beads) {
+  if (!beads.length || !bar.offsetWidth) return;
+  var room = Infinity;
+  beads.forEach(function(bead) {
+    room = Math.min(room, bead.parentNode.getBoundingClientRect().width);
+  });
+  var apart = (room - BEADS_JOIN_AT) / (BEAD_MOST + GAP_MOST - BEADS_JOIN_AT);
+  apart = Math.max(0, Math.min(1, apart));
+  var size = Math.min(BEAD_MOST, room - GAP_MOST * apart);
+  var wire = BEAD_MOST * 0.16;
+  bar.style.setProperty("--apart", apart);
+  bar.style.setProperty("--gap", GAP_MOST * apart + "px");
+  bar.style.setProperty("--fill", 1 - Math.min(1, GAP_MOST * apart));
+  bar.style.setProperty("--gapdrawn", apart > 0 ? "max(var(--gap), 1px)" : "0px");
+  bar.style.setProperty("--bead", size + "px");
+  bar.style.setProperty("--beadtall", BEAD_MOST + "px");
+  bar.style.setProperty("--wire", wire + "px");
+  bar.style.setProperty("--end", BEAD_MOST + "px");
+  var middle = beads[0].getBoundingClientRect();
+  var from = bar.getBoundingClientRect();
+  var lead = bar.querySelector(".wireend .lead").getBoundingClientRect();
+  var tail = bar.querySelector(".wireend .tail").getBoundingClientRect();
+  var line = bar.querySelector(".stripwire");
+  line.style.top = middle.top + middle.height / 2 - from.top - wire / 2 + "px";
+  line.style.height = wire + "px";
+  line.style.left = lead.left + lead.width / 2 - from.left + "px";
+  line.style.right = from.right - tail.left - tail.width / 2 + "px";
+  bar.style.setProperty("--wiremiddle", middle.top + middle.height / 2 - from.top + "px");
+}
+function renderStripBar(where, run) {
+  var box = document.getElementById(where);
+  var was = box.querySelector(".scroller");
+  var kept = was ? was.scrollLeft : run.scrolled || 0;
+  var beads = [];
+  var bar = h(
+    "div",
+    { className: "bar carded stripcards", style: { width: zoomOf(run) * 100 + "%" } },
+    wireEnd("lead"),
+    run.sections.map(function(section, at) {
+      return [
+        stripCard(run, section, at, beads),
+        at < run.sections.length - 1 ? stripEdge(run, at, where) : null
+      ];
+    }),
+    wireEnd("tail"),
+    h("span", { className: "stripwire" })
+  );
+  var scroller = h("div", { className: "scroller" }, bar);
+  replace(box, scroller);
+  scroller.scrollLeft = kept;
+  scroller.onscroll = function() {
+    run.scrolled = scroller.scrollLeft;
+  };
+  fitBeads(bar, beads);
+  if (window.ResizeObserver) new ResizeObserver(function() {
+    fitBeads(bar, beads);
+  }).observe(bar);
+  painters.push({ run, paint: function(all) {
+    beads.forEach(function(bead, n2) {
+      var one = all[n2] || { level: 0, ink: "#e4e0d9" };
+      bead.style.background = bead.style.color = one.nothing ? "#2a2d30" : inkAt(one);
+    });
+  } });
+  scroller.onwheel = function(e) {
+    if (run.count <= ZOOMS_OVER) return;
+    e.preventDefault();
+    var box2 = scroller.getBoundingClientRect();
+    var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
+    zoomTo(run, zoomOf(run) * (e.deltaY < 0 ? 1.25 : 0.8), at, e.clientX - box2.left);
+  };
+}
+function stripCard(run, section, at, beads) {
+  var wide = widthOf(section);
+  var rooms = stripBeads(run, section, beads);
+  var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
+  var cuts = [];
+  for (var n2 = section.from; n2 < section.to; n2++) cuts.push(cutPoint(run, n2, wide, section.from));
+  return h(
+    "button",
+    {
+      className: "sec" + (isPicked(run, at) ? " picked" : "") + (wide * 40 < run.count * 8 ? " narrow" : ""),
+      style: { flex: wide + " 1 0" },
+      title: "lights " + (section.from + 1) + " to " + (section.to + 1) + (under ? ". " + under.tip : ""),
+      onclick: function() {
+        pick(run, at);
+        draw();
+      }
+    },
+    rooms,
+    washOf(run, section, look, under),
+    cellSays(look, wide, under),
+    h("span", { className: "cuts" }, cuts)
+  );
+}
+function stripEdge(run, at, where) {
+  var edge = h(
+    "div",
+    {
+      className: "edge",
+      title: "drag to move this cut, or click to remove it",
+      onmousedown: function(e) {
+        e.preventDefault();
+        setHolding({ run, which: at, where, had: run.sections.length });
+        edge.classList.add("holding");
+      }
+    },
+    // Taking the cut out is its own target, so it is never confused with moving it
+    h("button", {
+      className: "drop",
+      title: "remove this cut and join the two stretches",
+      onmousedown: function(e) {
+        e.stopPropagation();
+      },
+      onclick: function(e) {
+        e.stopPropagation();
+        uncut(run, at);
+      }
+    }, "\xD7")
+  );
+  return edge;
+}
+function middleOfView(run) {
+  var scroller = document.querySelector("#" + run.id + "Bar .scroller");
+  if (!scroller) return 0.5;
+  var bar = scroller.querySelector(".bar");
+  return (scroller.scrollLeft + scroller.clientWidth / 2) / bar.offsetWidth;
+}
+function zoomTo(run, want, at, from) {
+  want = Math.round(want * 1e3) / 1e3;
+  if (Math.abs(want - 1) < 0.01) want = 1;
+  run.zoom = Math.max(1, Math.min(24, want));
+  draw();
+  var scroller = document.querySelector("#" + run.id + "Bar .scroller");
+  if (!scroller) return;
+  var bar = scroller.querySelector(".bar");
+  var to = at * bar.offsetWidth - (from === void 0 ? scroller.clientWidth / 2 : from);
+  scroller.scrollLeft = Math.max(0, to);
+  run.scrolled = scroller.scrollLeft;
+}
+function divide(run, ways) {
+  var section = run.sections[run.picked];
+  if (!section) return;
+  var had2 = playsOf(section);
+  var at = run.picked, count = run.sections.length;
+  splitSection(run, ways);
+  for (var made = at; made < at + run.sections.length - count + 1; made++) {
+    Object.assign(run.sections[made], playsOf(had2));
+  }
+  draw();
+}
+function divideLengths(run, each) {
+  var section = run.sections[run.picked];
+  if (!section || each < 1 || each >= widthOf(section)) return;
+  remember(run);
+  var had2 = playsOf(section);
+  var made = [];
+  for (var from = section.from; from <= section.to; from += each) {
+    made.push(Object.assign(
+      { from, to: Math.min(section.to, from + each - 1) },
+      playsOf(had2)
+    ));
+  }
+  run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
+  settle();
+  draw();
+}
+function toolButton(icon, words, off, act, title) {
+  return h(
+    "button",
+    {
+      type: "button",
+      className: "stoggle",
+      disabled: off,
+      title,
+      "data-act": act
+    },
+    h("span", { "aria-hidden": "true", html: icon }),
+    " " + words
+  );
+}
+function toolNumber(value, low, high, focus, change) {
+  var box = h("input", {
+    type: "number",
+    min: low,
+    max: high,
+    value,
+    "data-focus": focus,
+    onchange: function() {
+      change(Math.max(low, Math.min(high, Number(box.value) || low)));
+      draw();
+    }
+  });
+  return box;
+}
+function splitTools(where, run) {
+  var section = run.sections[run.picked];
+  var wide = section ? widthOf(section) : 1;
+  var ways = run.ways || 3;
+  var parts = toolAct(
+    "stretches",
+    wide < 2 || ways < 2,
+    "split",
+    "split the selected stretch into " + ways + " equal parts"
+  );
+  parts.onclick = function() {
+    divide(run, Math.min(ways, wide));
+  };
+  var lengths = toolAct(
+    "lights each",
+    ways >= wide,
+    "lengths",
+    "split the selected stretch every " + ways + (ways === 1 ? " light" : " lights") + ", with a shorter last stretch if it does not divide evenly"
+  );
+  lengths.onclick = function() {
+    divideLengths(run, ways);
+  };
+  return h(
+    "span",
+    { className: "stretchtools" },
+    toolGroup(
+      "&#9986;",
+      "Split into",
+      toolNumber(
+        ways,
+        1,
+        Math.max(2, wide),
+        where + "-ways",
+        function(value) {
+          run.ways = value;
+        }
+      ),
+      parts,
+      lengths
+    )
+  );
+}
+function barCells(run) {
+  var bar = run.strip ? run.id + "Bar" : run === mono ? "monoBar" : "outBar";
+  return Array.prototype.slice.call(document.querySelectorAll("#" + bar + " .bar > .sec"));
+}
+function toolGroup(icon, words, ...inside) {
+  return h(
+    "span",
+    { className: "toolset" },
+    h(
+      "span",
+      { className: "toolsays" },
+      h("span", { "aria-hidden": "true", html: icon }),
+      " " + words
+    ),
+    inside
+  );
+}
+function toolAct(words, off, act, title) {
+  return h("button", {
+    type: "button",
+    className: "toolact",
+    disabled: off,
+    title,
+    "data-act": act
+  }, words);
+}
+function fitBars() {
+  document.querySelectorAll(".scroller").forEach(function(scroller) {
+    var bar = scroller.querySelector(".bar");
+    if (!bar) return;
+    var zoomed = bar.style.width && parseFloat(bar.style.width) > 100;
+    scroller.style.overflowX = zoomed ? "auto" : "hidden";
+    scroller.classList.toggle("zoomed", !!zoomed);
+    var edges = bar.getBoundingClientRect();
+    bar.querySelectorAll(".cut").forEach(function(cut) {
+      var at = cut.getBoundingClientRect();
+      var middle = (at.left + at.right) / 2;
+      cut.classList.toggle("nearstart", middle - edges.left < 40);
+      cut.classList.toggle("nearend", edges.right - middle < 40);
+    });
+  });
+}
+stripDrawing.bar = renderStripBar;
+stripDrawing.fit = fitBars;
+function stretchWash(look, section, run, mono2) {
+  if (mono2) return MONO_WASH;
+  var inks = run && section ? coloursWritten(look, section, run) : [];
+  if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
+  if (inks.length > 1) return "linear-gradient(90deg," + inks.join(",") + ")";
+  return inks[0] || "rgba(138,131,120,0.16)";
+}
+
+// boards/editor/picker/wiring.js
+function showKin(out, on) {
+  (kinOf[out] || []).forEach(function(node) {
+    node.classList.toggle("kin", on);
+  });
+}
+function crossing(out, colour) {
+  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
+  var says = colour ? "split " + outputSaid(out) + " into three mono lights" : "rejoin " + outputSaid(out) + " as one colour light";
+  return h("button", {
+    className: "cross boardarrow",
+    title: says,
+    "aria-label": says,
+    html: "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>",
+    onclick: function(event) {
+      event.stopPropagation();
+      if (colour) breakOut(out);
+      else rejoin(out);
+    }
+  });
+}
+function headSteps(row, run) {
+  var join = toolButton(
+    "&#10231;",
+    "Join all",
+    run.sections.length < 2,
+    "join",
+    "merge into one stretch, keeping the selected stretch's look"
+  );
+  join.onclick = function() {
+    joinAll(run);
+  };
+  var zooms = run.strip && run.count > ZOOMS_OVER;
+  row.appendChild(h(
+    "span",
+    { className: "headsteps" },
+    zooms ? [
+      iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001, function() {
+        zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
+      }),
+      h("span", { className: "howfar" }, Math.round(zoomOf(run) * 100) + "%"),
+      iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9, function() {
+        zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
+      })
+    ] : null,
+    iconButton(BACK, "Undo", !(run.was && run.was.length), function() {
+      stepBack(run);
+    }),
+    iconButton(ON, "Redo", !(run.undone && run.undone.length), function() {
+      stepOn(run);
+    }),
+    join
+  ));
+}
+var SLIDE_MS = 420;
+document.getElementById("sides").after(h("div", { id: "wiringRow" }));
+function wiredLamps() {
+  var lamps = [];
+  wiring.forEach(function(one, out) {
+    lamps = lamps.concat(placesOf(out));
+  });
+  lamps.forEach(function(lamp) {
+    lamp.key = lampKey(lamp);
+  });
+  return lamps;
+}
+function wiredSide() {
+  var wired = wiredLamps();
+  var byKey = {};
+  wired.forEach(function(lamp) {
+    byKey[lamp.key] = lamp;
+  });
+  return { wiring: wired, order: order.map(function(place) {
+    return byKey[lampKey(place)];
+  }) };
+}
+function lampsShown() {
+  return Array.prototype.slice.call(document.querySelectorAll(
+    "#outBar .cardlamp[data-key], #monoBar .cardlamp[data-key]"
+  ));
+}
+function lampNode(key) {
+  return lampsShown().filter(function(node) {
+    return node.dataset.key === key;
+  })[0] || null;
+}
+function bringForward(keys, on) {
+  keys.forEach(function(key) {
+    document.querySelectorAll("#outPanel [data-key='" + key + "']").forEach(function(node) {
+      node.classList.toggle("wirehot", on);
+    });
+  });
+}
+function overlapBelow(box) {
+  var settings = document.getElementById("outChosen").getBoundingClientRect().bottom - box.getBoundingClientRect().bottom;
+  if (settings <= 0) return;
+  box.style.minHeight = Math.max(box.getBoundingClientRect().height, settings) + "px";
+  box.style.marginBottom = -settings + "px";
+}
+function renderConnectors() {
+  var box = document.getElementById("wiringRow");
+  replace(box);
+  box.style.marginBottom = "";
+  box.style.minHeight = "";
+  var old = document.getElementById("wiringLines");
+  if (old) old.remove();
+  document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
+  if (!setupOn || !BOARD.wiring_order) return;
+  var side = wiredSide();
+  var astray = astrayOf(side);
+  astray.forEach(function(lamp) {
+    var node = lampNode(lamp.key);
+    if (node) node.classList.add("astray");
+  });
+  var reset = resetWiringButton();
+  reset.disabled = !wiringChanged(astray);
+  var tail = brokenSentence() + "Hover over a light or connector to highlight its wire.";
+  box.appendChild(h(
+    "div",
+    { className: "wireboard" },
+    h("div", { className: "wireconnectors" }, wiring.map(connector)),
+    h(
+      "div",
+      { className: "wirefoot" },
+      h("span", {}, astray.length ? [
+        h("b", {}, astray.length + " of " + side.order.length),
+        " lights are out of wiring order, numbered in bold. " + tail
+      ] : "All lights are in wiring order. " + tail),
+      reset
+    )
+  ));
+  overlapBelow(box);
+  drawLines();
+}
+function connector(one, out) {
+  var single = OUTPUTS[out].mono;
+  var keys = [];
+  var pins = placesOf(out).map(function(place) {
+    var key = lampKey(place);
+    keys.push(key);
+    return h("span", {
+      className: "wirepin" + (place.channel === null ? " whole" : single ? " single" : ""),
+      "data-key": key,
+      style: { background: place.channel !== null && !single ? CHANNEL_INKS[place.channel] : null }
+    });
+  });
+  return h("div", {
+    className: "wireconnector",
+    title: outputSaid(out) + (one.broken && !single ? ", broken out into three" : ""),
+    onmouseenter: function() {
+      bringForward(keys, true);
+    },
+    onmouseleave: function() {
+      bringForward(keys, false);
+    }
+  }, h("div", { className: "wirepins" }, pins), h("b", {}, shortName({ out, colour: true })));
+}
+function drawLines() {
+  var panel = document.getElementById("outPanel");
+  var from = panel.getBoundingClientRect();
+  panel.appendChild(h(
+    "svg:svg",
+    { id: "wiringLines", class: "wirelines" },
+    wiredLamps().map(function(lamp) {
+      var node = lampNode(lamp.key);
+      var pin = panel.querySelector(".wirepin[data-key='" + lamp.key + "']");
+      if (!node || !pin) return null;
+      var top = node.getBoundingClientRect();
+      var bottom = pin.getBoundingClientRect();
+      var start = { x: bottom.left + bottom.width / 2 - from.left, y: bottom.top - from.top };
+      var end = { x: top.left + top.width / 2 - from.left, y: top.bottom - from.top };
+      var rise = (start.y - end.y) / 2;
+      return h("svg:path", {
+        d: "M" + start.x + " " + start.y + " C" + start.x + " " + (start.y - rise) + " " + end.x + " " + (end.y + rise) + " " + end.x + " " + end.y,
+        "data-key": lamp.key,
+        style: { stroke: lamp.channel === null || OUTPUTS[lamp.out].mono ? "var(--boardOuts)" : CHANNEL_INKS[lamp.channel] }
+      });
+    })
+  ));
+}
+var sliding = null;
+function moveLamp(move) {
+  slideFrom(lampKey(move.from));
+  moveLampInScenes(move);
+}
+function brokenSentence() {
+  var broken = breakingOutputs().some(function(out) {
+    return wiring[out].broken;
+  });
+  if (!broken) return "";
+  var said = brokenSaid();
+  return said.charAt(0).toUpperCase() + said.slice(1) + ". ";
+}
+function resetWiringButton() {
+  return h("button", {
+    type: "button",
+    className: "wirereset",
+    title: "Rejoin every broken-out output and put every light back in wiring order",
+    onclick: function() {
+      slideFrom(null);
+      breakingOutputs().forEach(function(out) {
+        if (wiring[out].broken) gatherFromThree(out);
+      });
+      resetWiringInScenes();
+    }
+  }, "Reset wiring");
+}
+function placeInPanel(node) {
+  var box = node.getBoundingClientRect();
+  var panel = document.getElementById("outPanel").getBoundingClientRect();
+  return { left: box.left - panel.left, top: box.top - panel.top };
+}
+function slideFrom(carried2) {
+  var was = {};
+  lampsShown().forEach(function(node) {
+    was[node.dataset.key] = placeInPanel(node);
+  });
+  sliding = { was, carried: carried2 };
+  window.setTimeout(function() {
+    sliding = null;
+  }, 0);
+}
+function playSlide() {
+  if (!sliding) return;
+  var was = sliding.was;
+  var carried2 = sliding.carried;
+  lampsShown().forEach(function(node) {
+    var from = was[node.dataset.key];
+    if (!from) return;
+    var to = placeInPanel(node);
+    var dx = from.left - to.left;
+    var dy = from.top - to.top;
+    if (!dx && !dy) return;
+    if (node.dataset.key === carried2) node.classList.add("moving");
+    node.style.transition = "none";
+    node.style.transform = "translate(" + dx + "px," + dy + "px)";
+    node.getBoundingClientRect();
+    node.style.transition = "transform " + SLIDE_MS + "ms cubic-bezier(.2,.7,.2,1)";
+    node.style.transform = "";
+    window.setTimeout(function() {
+      node.classList.remove("moving");
+      node.style.transition = "";
+    }, SLIDE_MS + 40);
+  });
+}
+function breakOut(out) {
+  slideFrom(null);
+  var whole = sliding.was[lampKey({ out, channel: null })];
+  if (whole) {
+    [0, 1, 2].forEach(function(channel) {
+      sliding.was[lampKey({ out, channel })] = whole;
+    });
+  }
+  breakOutInScenes(out);
+}
+function rejoin(out) {
+  slideFrom(null);
+  gatherFromThree(out);
+  rejoinInScenes(out);
+}
+function gatherFromThree(out) {
+  var three = [0, 1, 2].map(function(channel) {
+    return sliding.was[lampKey({ out, channel })];
+  }).filter(Boolean);
+  if (three.length) {
+    sliding.was[lampKey({ out, channel: null })] = {
+      left: three.reduce(function(sum, one) {
+        return sum + one.left;
+      }, 0) / three.length,
+      top: three.reduce(function(sum, one) {
+        return sum + one.top;
+      }, 0) / three.length
+    };
+  }
+}
+addStep(drawSteps.after, DRAW_AFTER, "wiring", function() {
+  renderConnectors();
+  playSlide();
+});
+window.addEventListener("resize", function() {
+  if (setupOn) draw();
+});
+function noArrow() {
+  return h("span", { style: { position: "absolute" } });
+}
+
+// boards/editor/picker/setup.js
+function stripChipChoice(run) {
+  var choice;
+  if (run.made === null) {
+    choice = h("select", {
+      title: "The strip's colour order. Change it if red shows as another colour",
+      onchange: function() {
+        stripSet(run, { order: choice.value });
+        draw();
+      }
+    }, STRIP_ORDERS.map(function(pair) {
+      return h("option", { value: pair[0], selected: (run.order || "") === pair[0] }, pair[1]);
+    }));
+    return choice;
+  }
+  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ? STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function(a, b) {
+    return a - b;
+  }) : STRIP_BRIGHTNESSES;
+  choice = h("select", {
+    title: "Overall strip brightness, applied on top of each stretch's level",
+    onchange: function() {
+      stripSet(run, { brightness: Number(choice.value) });
+      draw();
+    }
+  }, offered.map(function(brightness) {
+    return h(
+      "option",
+      { value: brightness, selected: brightness === run.brightness },
+      stripPercent(brightness) + (brightness === run.made ? " (default)" : "")
+    );
+  }));
+  return choice;
+}
+STRIPS.forEach(function(strip) {
+  BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id;
+});
+function unmark() {
+  document.querySelectorAll(".sec.picked, .card.picked").forEach(function(one) {
+    one.classList.remove("picked");
+  });
+}
+function boardBox(panel, parts) {
+  return h("span", {
+    className: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
+    title: "Board setup, shared by every scene"
+  }, boardIcon(), parts);
+}
+function small(words) {
+  return h("small", {}, words);
+}
+function boardIcon() {
+  return h("svg:svg", {
+    viewBox: "0 0 14 14",
+    width: "13",
+    height: "13",
+    class: "boardicon",
+    "aria-hidden": "true",
+    html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"
+  });
+}
+function renderOutFacts() {
+  var box = document.getElementById("outFacts");
+  var hint = null;
+  if (canEdit("outPanel")) {
+    var breaking = breakingOutputs();
+    var said = "Drag lights to match your build." + (breaking.length > 1 ? " Arrows split or rejoin an output's three lights." : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it." : "");
+    hint = h("span", { className: "hint", title: said }, said);
+  }
+  replace(box, boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint);
+  headSteps(box, active.strip ? lastOutputRun : active);
+}
+function stripBuilt(run) {
+  return run.leds + " LEDs, " + stripChipShown(run);
+}
+function renderLeds(where, run) {
+  var box = document.getElementById(where);
+  var panel = run.id + "Panel";
+  document.getElementById(panel).classList.toggle("stripout", !run.there);
+  if (!run.there) {
+    renderStripOut(box, run, panel);
+    return;
+  }
+  if (canEdit(panel)) {
+    renderStripChip(where, run);
+    var says = box.querySelector(".says");
+    if (says) box.removeChild(says);
+    var chip = box.querySelector(".chip");
+    chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
+    chip.title = "Board setup, shared by every scene";
+    chip.insertBefore(boardIcon(), chip.firstChild);
+    chip.appendChild(stripDrop(run));
+  } else {
+    replace(box, boardBox(panel, ["Strip", small(stripBuilt(run))]));
+  }
+  box.appendChild(stretchCount(run));
+  headSteps(box, run);
+}
+stripDrawing.leds = renderLeds;
+addStep(drawSteps.after, DRAW_AFTER, "setup", function() {
+  renderOutFacts();
+  document.body.classList.toggle("setupall", setupOn);
+  if (setupOn) unmark();
+  paintAll();
+});
+function renderStripChip(where, run) {
+  var count = h("input", {
+    type: "number",
+    min: STRIP_FEWEST,
+    max: STRIP_MOST,
+    value: run.leds,
+    onchange: function() {
+      var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) || STRIP_FEWEST));
+      if (want === run.leds) return;
+      stripSet(run, { leds: want });
+      settle();
+      draw();
+    }
+  });
+  replace(
+    document.getElementById(where),
+    h("div", { className: "chip strip" }, "Strip", count, small("LEDs"), stripChipChoice(run)),
+    h("span", { className: "says" }, "shared by every scene")
+  );
+}
+function renderStripOut(box, run, panel) {
+  var blocked = stripBlockedBy(run);
+  replace(
+    box,
+    boardBox(panel, ["Strip", small("not fitted")]),
+    blocked ? h("span", { className: "stripblocked says" }, blocked) : h("button", {
+      type: "button",
+      className: "addstrip",
+      disabled: !canEdit(panel),
+      onclick: function() {
+        stripThere(run, true);
+        workOn(panel);
+        draw();
+      }
+    }, "add this strip")
+  );
+}
+var lastOutputRun = outs;
+function setLastOutputRun(run) {
+  lastOutputRun = run;
+}
+
+// boards/editor/picker/tabs.js
+function setSetup(on) {
+  setSetupMode(on);
+  showChosen();
+}
+var TAB_NAMES = { outPanel: BOARD.output_words.tab };
+BOARD.strips.forEach(function(strip) {
+  TAB_NAMES[strip.name + "Panel"] = strip.tab;
+});
+var TAB_PANELS = LED_PANELS.slice();
+if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
+var FEATURE_TABS = ["screens", "sound", "sensor"];
+var chosenTab = "outPanel";
+if (BOARD.strips_first) {
+  firstFitted = STRIPS.filter(function(strip) {
+    return strip.there;
+  })[0];
+  if (firstFitted) chosenTab = firstFitted.id + "Panel";
+}
+function chosenTakesLooks() {
+  return LED_PANELS.indexOf(chosenTab) >= 0 && runsOfPanel(chosenTab).every(function(run) {
+    return run.there !== false;
+  });
+}
+addStep(drawSteps.before, DRAW_BEFORE, "tabs", function() {
+  if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
+});
+function showChosen() {
+  TAB_PANELS.forEach(function(panel) {
+    var node = document.getElementById(panel);
+    node.open = true;
+    node.hidden = false;
+    node.classList.toggle("tabhidden", panel !== chosenTab);
+    node.classList.add("tabbed");
+  });
+  document.body.classList.toggle("nolooks", !chosenTakesLooks());
+  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+  }
+}
+function holdTabsPlace() {
+  if (!document.body.classList.contains("looksbelow")) return;
+  var stack = document.getElementById("tabStack");
+  var looks = document.getElementById("looks");
+  var holder = looks.parentNode;
+  var withLooks = holder.getBoundingClientRect().height;
+  var after = looks.nextSibling;
+  holder.removeChild(looks);
+  var extra = withLooks - holder.getBoundingClientRect().height;
+  holder.insertBefore(looks, after);
+  stack.style.minHeight = "";
+  var tallest = 0;
+  TAB_PANELS.forEach(function(panel) {
+    var node = document.getElementById(panel);
+    var high = node.getBoundingClientRect().height;
+    if (LED_PANELS.indexOf(panel) >= 0 && !node.contains(looks)) high += extra;
+    tallest = Math.max(tallest, high);
+  });
+  stack.style.minHeight = tallest + "px";
+}
+var tabSwatches = {};
+function tabSwatch(swatch, panel) {
+  tabSwatches[panel](swatch, panel);
+}
+function tabBlocked(panel) {
+  var run = runsOfPanel(panel)[0];
+  return run && run.strip ? stripBlockedBy(run) : "";
+}
+function renderLedTabs() {
+  var bar = document.getElementById("ledTabs");
+  bar.textContent = "";
+  TAB_PANELS.forEach(function(panel) {
+    var tab = document.createElement("button");
+    tab.type = "button";
+    var blocked = tabBlocked(panel);
+    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
+    if (blocked) tab.title = blocked;
+    tab.dataset.panel = panel;
+    var name = document.createElement("b");
+    name.textContent = TAB_NAMES[panel];
+    tab.appendChild(name);
+    var swatch = document.createElement("span");
+    swatch.className = "accswatch";
+    tabSwatch(swatch, panel);
+    tab.appendChild(swatch);
+    tab.addEventListener("click", function() {
+      chosenTab = panel;
+      if (chosenTakesLooks()) workOn(panel);
+      showChosen();
+      draw();
+    });
+    bar.appendChild(tab);
+  });
+  var gap = document.createElement("span");
+  gap.className = "gap";
+  bar.appendChild(gap);
+  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function() {
+    var was = bar.getBoundingClientRect().top;
+    setSetup(!setupOn);
+    draw();
+    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
+  }));
+}
+function keptOpen(panel) {
+  var node = document.getElementById(panel);
+  node.addEventListener("toggle", function() {
+    if (!node.open) node.open = true;
+  });
+}
+LED_PANELS.forEach(keptOpen);
+addStep(drawSteps.after, DRAW_AFTER, "tabs", function() {
+  if (!active.strip) setLastOutputRun(active);
+  if (active.strip) renderChosen("outChosen", lastOutputRun);
+  runs.filter(function(run) {
+    return run.strip && run !== active;
+  }).forEach(function(run) {
+    renderChosen(run.id + "Chosen", run);
+  });
+  renderLedTabs();
+});
+(function() {
+  var bar = document.createElement("div");
+  bar.className = "ledtabs";
+  bar.id = "ledTabs";
+  var first = document.getElementById("outPanel");
+  first.parentNode.insertBefore(bar, first);
+  var stack = document.createElement("div");
+  stack.className = "tabstack";
+  stack.id = "tabStack";
+  first.parentNode.insertBefore(stack, first);
+  LED_PANELS.forEach(function(panel) {
+    stack.appendChild(document.getElementById(panel));
+  });
+  if (!/[?&]above\b/.test(location.search)) {
+    document.body.classList.add("looksbelow");
+    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+  }
+})();
+function setupButton(label, on, act) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "setupbutton" + (on ? " on" : "");
+  button.appendChild(boardIcon());
+  button.appendChild(document.createTextNode(label));
+  button.addEventListener("click", act);
+  return button;
+}
+var firstFitted;
+
+// boards/editor/picker/tab_swatches.js
+function liveSwatch(swatch, panel) {
+  swatch.textContent = "";
+  swatch.className = "accswatch liveswatch";
+  var absent = runsOfPanel(panel).every(function(run) {
+    return run.strip && run.there === false;
+  });
+  if (absent) swatch.classList.add("absent");
+  runsOfPanel(panel).forEach(function(run) {
+    var cells = run.lamps.map(function() {
+      var cell = document.createElement("span");
+      swatch.appendChild(cell);
+      return cell;
+    });
+    painters.push({ run, paint: function(all) {
+      cells.forEach(function(cell, at) {
+        var one = all[at];
+        cell.style.background = one && one.off ? "#2a2d30" : !one || one.nothing ? "transparent" : inkAt(one);
+      });
+    } });
+  });
+  swatch.title = "what the lights are showing";
+}
+LED_PANELS.forEach(function(panel) {
+  tabSwatches[panel] = liveSwatch;
+});
+addStep(drawSteps.after, DRAW_AFTER, "tabSwatches", paintAll);
+
 // boards/editor/picker/writing.js
 function entriesOf(body) {
   apply(body);
@@ -6674,1384 +7671,6 @@ document.getElementById("open").onclick = function() {
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page needs Chrome or Edge to reach the drive.");
-}
-
-// boards/editor/picker/stretch_bar.js
-function washFor(run, section, look) {
-  var first = run.lamps[section.from];
-  return stretchWash(look, section, run, !!first && !first.colour);
-}
-function washOf(run, section, look, under) {
-  var wash = document.createElement("span");
-  if (look || !under) {
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    return wash;
-  }
-  wash.className = "lit through";
-  var wide = under.lamps.length;
-  var start = 0;
-  while (start < wide) {
-    var end = start + 1;
-    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
-    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
-    start = end;
-  }
-  return wash;
-}
-function sameShowing(one, other) {
-  return one === other || !!(one && other && one.section && other.section && one.section === other.section);
-}
-function paneOnto(run, shows, start, end, wide) {
-  var pane = document.createElement("span");
-  pane.style.left = start * 100 / wide + "%";
-  pane.style.width = (end - start) * 100 / wide + "%";
-  if (!shows) pane.className = "empty";
-  else if (shows === "off") pane.className = "off";
-  else {
-    var band = document.createElement("span");
-    band.style.width = widthOf(shows.section) * 100 / (end - start) + "%";
-    band.style.left = -shows.at * 100 / (end - start) + "%";
-    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
-    pane.appendChild(band);
-  }
-  return pane;
-}
-function beneath(under) {
-  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
-}
-function carded(run) {
-  return !run.strip;
-}
-function cutPoint(run, after, wide, from) {
-  var snip = document.createElement("i");
-  snip.className = "cut";
-  snip.style.left = (after - from + 1) / wide * 100 + "%";
-  snip.style.width = "min(11px, " + 55 / wide + "%)";
-  snip.dataset.says = shortName(run.lamps[after]) + " | " + shortName(run.lamps[after + 1]);
-  snip.title = "cut between " + snip.dataset.says.replace(" | ", " and ");
-  snip.onclick = function(event) {
-    event.stopPropagation();
-    cutAt(run, after);
-  };
-  return snip;
-}
-function zoomOf(run) {
-  return run.zoom || 1;
-}
-function splitSection(run, ways) {
-  var section = run.sections[run.picked];
-  if (!section || ways < 2 || widthOf(section) < ways) return;
-  remember(run);
-  var made = [];
-  var edges = [];
-  for (var i = 0; i <= ways; i++) {
-    edges.push(section.from + Math.round(widthOf(section) * i / ways));
-  }
-  for (var g = 0; g < ways; g++) {
-    made.push({
-      from: edges[g],
-      to: edges[g + 1] - 1,
-      look: section.look,
-      pace: section.pace,
-      mood: section.mood,
-      colour: section.colour
-    });
-  }
-  run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
-  draw();
-}
-function stripBeads(run, section, beads) {
-  var row = document.createElement("span");
-  row.className = "stripbeads" + (lookNamed(section.look) ? "" : " unset");
-  for (var n2 = section.from; n2 <= section.to; n2++) {
-    var room = document.createElement("i");
-    var bead = document.createElement("b");
-    room.appendChild(bead);
-    row.appendChild(room);
-    beads[n2] = bead;
-  }
-  return row;
-}
-function wireEnd(which) {
-  var end = document.createElement("span");
-  end.className = "wireend";
-  var mark = document.createElement("span");
-  mark.className = which;
-  end.appendChild(mark);
-  return end;
-}
-function fitBeads(bar, beads) {
-  if (!beads.length || !bar.offsetWidth) return;
-  var room = Infinity;
-  beads.forEach(function(bead) {
-    room = Math.min(room, bead.parentNode.getBoundingClientRect().width);
-  });
-  var apart = (room - BEADS_JOIN_AT) / (BEAD_MOST + GAP_MOST - BEADS_JOIN_AT);
-  apart = Math.max(0, Math.min(1, apart));
-  var size = Math.min(BEAD_MOST, room - GAP_MOST * apart);
-  var wire = BEAD_MOST * 0.16;
-  bar.style.setProperty("--apart", apart);
-  bar.style.setProperty("--gap", GAP_MOST * apart + "px");
-  bar.style.setProperty("--fill", 1 - Math.min(1, GAP_MOST * apart));
-  bar.style.setProperty("--gapdrawn", apart > 0 ? "max(var(--gap), 1px)" : "0px");
-  bar.style.setProperty("--bead", size + "px");
-  bar.style.setProperty("--beadtall", BEAD_MOST + "px");
-  bar.style.setProperty("--wire", wire + "px");
-  bar.style.setProperty("--end", BEAD_MOST + "px");
-  var middle = beads[0].getBoundingClientRect();
-  var from = bar.getBoundingClientRect();
-  var lead = bar.querySelector(".wireend .lead").getBoundingClientRect();
-  var tail = bar.querySelector(".wireend .tail").getBoundingClientRect();
-  var line = bar.querySelector(".stripwire");
-  line.style.top = middle.top + middle.height / 2 - from.top - wire / 2 + "px";
-  line.style.height = wire + "px";
-  line.style.left = lead.left + lead.width / 2 - from.left + "px";
-  line.style.right = from.right - tail.left - tail.width / 2 + "px";
-  bar.style.setProperty("--wiremiddle", middle.top + middle.height / 2 - from.top + "px");
-}
-function renderStripBar(where, run) {
-  var box = document.getElementById(where);
-  var was = box.querySelector(".scroller");
-  var kept = was ? was.scrollLeft : run.scrolled || 0;
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar carded stripcards";
-  bar.style.width = zoomOf(run) * 100 + "%";
-  var beads = [];
-  bar.appendChild(wireEnd("lead"));
-  run.sections.forEach(function(section, at) {
-    var wide = widthOf(section);
-    var cell = document.createElement("button");
-    cell.className = "sec" + (isPicked(run, at) ? " picked" : "") + (wide * 40 < run.count * 8 ? " narrow" : "");
-    cell.style.flex = wide + " 1 0";
-    cell.title = "lights " + (section.from + 1) + " to " + (section.to + 1);
-    cell.appendChild(stripBeads(run, section, beads));
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title += ". " + under.tip;
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>" + beneath(under);
-    cell.appendChild(says);
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var n2 = section.from; n2 < section.to; n2++) {
-      inside.appendChild(cutPoint(run, n2, wide, section.from));
-    }
-    cell.appendChild(inside);
-    cell.onclick = function() {
-      pick(run, at);
-      draw();
-    };
-    bar.appendChild(cell);
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click to remove it";
-      edge.onmousedown = function(e) {
-        e.preventDefault();
-        setHolding({ run, which: at, where, had: run.sections.length });
-        edge.classList.add("holding");
-      };
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\xD7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function(e) {
-        e.stopPropagation();
-      };
-      drop.onclick = function(e) {
-        e.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  bar.appendChild(wireEnd("tail"));
-  var line = document.createElement("span");
-  line.className = "stripwire";
-  bar.appendChild(line);
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  scroller.scrollLeft = kept;
-  scroller.onscroll = function() {
-    run.scrolled = scroller.scrollLeft;
-  };
-  fitBeads(bar, beads);
-  if (window.ResizeObserver) new ResizeObserver(function() {
-    fitBeads(bar, beads);
-  }).observe(bar);
-  painters.push({ run, paint: function(all) {
-    beads.forEach(function(bead, n2) {
-      var one = all[n2] || { level: 0, ink: "#e4e0d9" };
-      bead.style.background = bead.style.color = one.nothing ? "#2a2d30" : inkAt(one);
-    });
-  } });
-  scroller.onwheel = function(e) {
-    if (run.count <= ZOOMS_OVER) return;
-    e.preventDefault();
-    var box2 = scroller.getBoundingClientRect();
-    var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
-    zoomTo(run, zoomOf(run) * (e.deltaY < 0 ? 1.25 : 0.8), at, e.clientX - box2.left);
-  };
-}
-function middleOfView(run) {
-  var scroller = document.querySelector("#" + run.id + "Bar .scroller");
-  if (!scroller) return 0.5;
-  var bar = scroller.querySelector(".bar");
-  return (scroller.scrollLeft + scroller.clientWidth / 2) / bar.offsetWidth;
-}
-function zoomTo(run, want, at, from) {
-  want = Math.round(want * 1e3) / 1e3;
-  if (Math.abs(want - 1) < 0.01) want = 1;
-  run.zoom = Math.max(1, Math.min(24, want));
-  draw();
-  var scroller = document.querySelector("#" + run.id + "Bar .scroller");
-  if (!scroller) return;
-  var bar = scroller.querySelector(".bar");
-  var to = at * bar.offsetWidth - (from === void 0 ? scroller.clientWidth / 2 : from);
-  scroller.scrollLeft = Math.max(0, to);
-  run.scrolled = scroller.scrollLeft;
-}
-function divide(run, ways) {
-  var section = run.sections[run.picked];
-  if (!section) return;
-  var had2 = playsOf(section);
-  var at = run.picked, count = run.sections.length;
-  splitSection(run, ways);
-  for (var made = at; made < at + run.sections.length - count + 1; made++) {
-    Object.assign(run.sections[made], playsOf(had2));
-  }
-  draw();
-}
-function divideLengths(run, each) {
-  var section = run.sections[run.picked];
-  if (!section || each < 1 || each >= widthOf(section)) return;
-  remember(run);
-  var had2 = playsOf(section);
-  var made = [];
-  for (var from = section.from; from <= section.to; from += each) {
-    made.push(Object.assign(
-      { from, to: Math.min(section.to, from + each - 1) },
-      playsOf(had2)
-    ));
-  }
-  run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
-  settle();
-  draw();
-}
-function toolButton(icon, words, off, act, title) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle";
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.disabled = off;
-  button.title = title;
-  button.dataset.act = act;
-  return button;
-}
-function toolNumber(value, low, high, focus, change) {
-  var box = document.createElement("input");
-  box.type = "number";
-  box.min = low;
-  box.max = high;
-  box.value = value;
-  box.dataset.focus = focus;
-  box.onchange = function() {
-    change(Math.max(low, Math.min(high, Number(box.value) || low)));
-    draw();
-  };
-  return box;
-}
-function splitTools(where, run) {
-  var section = run.sections[run.picked];
-  var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("span");
-  row.className = "stretchtools";
-  var ways = run.ways || 3;
-  var split = toolGroup("&#9986;", "Split into");
-  split.appendChild(toolNumber(
-    ways,
-    1,
-    Math.max(2, wide),
-    where + "-ways",
-    function(value) {
-      run.ways = value;
-    }
-  ));
-  var parts = toolAct(
-    "stretches",
-    wide < 2 || ways < 2,
-    "split",
-    "split the selected stretch into " + ways + " equal parts"
-  );
-  parts.onclick = function() {
-    divide(run, Math.min(ways, wide));
-  };
-  split.appendChild(parts);
-  var lengths = toolAct(
-    "lights each",
-    ways >= wide,
-    "lengths",
-    "split the selected stretch every " + ways + (ways === 1 ? " light" : " lights") + ", with a shorter last stretch if it does not divide evenly"
-  );
-  lengths.onclick = function() {
-    divideLengths(run, ways);
-  };
-  split.appendChild(lengths);
-  row.appendChild(split);
-  return row;
-}
-function barCells(run) {
-  var bar = run.strip ? run.id + "Bar" : run === mono ? "monoBar" : "outBar";
-  return Array.prototype.slice.call(document.querySelectorAll("#" + bar + " .bar > .sec"));
-}
-function toolGroup(icon, words) {
-  var group = document.createElement("span");
-  group.className = "toolset";
-  var said = document.createElement("span");
-  said.className = "toolsays";
-  said.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  group.appendChild(said);
-  return group;
-}
-function toolAct(words, off, act, title) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "toolact";
-  button.textContent = words;
-  button.disabled = off;
-  button.title = title;
-  button.dataset.act = act;
-  return button;
-}
-function fitBars() {
-  document.querySelectorAll(".scroller").forEach(function(scroller) {
-    var bar = scroller.querySelector(".bar");
-    if (!bar) return;
-    var zoomed = bar.style.width && parseFloat(bar.style.width) > 100;
-    scroller.style.overflowX = zoomed ? "auto" : "hidden";
-    scroller.classList.toggle("zoomed", !!zoomed);
-    var edges = bar.getBoundingClientRect();
-    bar.querySelectorAll(".cut").forEach(function(cut) {
-      var at = cut.getBoundingClientRect();
-      var middle = (at.left + at.right) / 2;
-      cut.classList.toggle("nearstart", middle - edges.left < 40);
-      cut.classList.toggle("nearend", edges.right - middle < 40);
-    });
-  });
-}
-stripDrawing.bar = renderStripBar;
-stripDrawing.fit = fitBars;
-function stretchWash(look, section, run, mono2) {
-  if (mono2) return MONO_WASH;
-  var inks = run && section ? coloursWritten(look, section, run) : [];
-  if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
-  if (inks.length > 1) return "linear-gradient(90deg," + inks.join(",") + ")";
-  return inks[0] || "rgba(138,131,120,0.16)";
-}
-
-// boards/editor/picker/stretch_editor.js
-function renderColourPick(box, run) {
-  var section = run.sections[run.picked];
-  function live() {
-    return run.sections[run.picked];
-  }
-  var remembered = run.id + ":" + section.from;
-  var wrap = document.createElement("div");
-  wrap.className = "colourpick groundpick";
-  var swatches = document.createElement("div");
-  swatches.className = "sswatches";
-  var offered = swatchesFor(run, section);
-  var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
-  var chosenWord = offered.filter(function(name) {
-    return hexOf(WORDS[name]) === chosenHex;
-  })[0] || null;
-  offered.forEach(function(name) {
-    var swatch = document.createElement("button");
-    swatch.type = "button";
-    swatch.className = "swatch" + (chosenWord === name ? " on" : "");
-    swatch.style.background = rgbInk(WORDS[name]);
-    swatch.title = name;
-    var tag = document.createElement("b");
-    tag.textContent = name;
-    swatch.appendChild(tag);
-    swatch.onclick = function() {
-      live().colour = "#" + hexOf(WORDS[name]);
-      live().custom = false;
-      draw();
-    };
-    swatches.appendChild(swatch);
-  });
-  var custom = document.createElement("button");
-  custom.type = "button";
-  custom.className = "swatch custom" + (section.custom || !chosenWord ? " on" : "");
-  if (section.custom || !chosenWord) {
-    customColours[remembered] = {
-      colour: section.colour || "#ffffff",
-      level: section.level === void 0 ? 1 : section.level
-    };
-  }
-  var kept = customColours[remembered];
-  if (kept) custom.style.setProperty("--picked", atBrightness(kept.colour, kept.level));
-  custom.title = "any hue and saturation, with its own brightness";
-  var ctag = document.createElement("b");
-  ctag.textContent = "custom";
-  custom.appendChild(ctag);
-  custom.onclick = function() {
-    live().custom = true;
-    if (kept) {
-      live().colour = kept.colour;
-      live().level = kept.level;
-    }
-    draw();
-  };
-  swatches.appendChild(custom);
-  wrap.appendChild(swatches);
-  var holds = document.createElement("div");
-  var open = section.custom || !chosenWord;
-  holds.className = "customholds scustom";
-  holds.style.display = open ? "" : "none";
-  var parts = takeApart(hexRgb(section.colour || "#ffffff"));
-  var field = document.createElement("div");
-  field.className = "field";
-  var at = document.createElement("div");
-  at.className = "at";
-  at.style.left = parts.hue / 360 * 100 + "%";
-  at.style.top = (1 - parts.sat) * 100 + "%";
-  at.style.background = rgbInk(fieldColour(parts.hue, parts.sat));
-  field.appendChild(at);
-  function pointingAt(event) {
-    var box2 = field.getBoundingClientRect();
-    var across = Math.max(0, Math.min(1, (event.clientX - box2.left) / box2.width));
-    var down = Math.max(0, Math.min(1, (event.clientY - box2.top) / box2.height));
-    var rgb = fieldColour(across * 360, 1 - down);
-    live().colour = "#" + hexOf(rgb);
-    live().custom = true;
-    at.style.left = across * 100 + "%";
-    at.style.top = down * 100 + "%";
-    at.style.background = rgbInk(rgb);
-    hex.value = atBrightness(live().colour, live().level);
-    preview.style.background = hex.value;
-    renderPreview();
-  }
-  field.onpointerdown = function(event) {
-    field.setPointerCapture(event.pointerId);
-    pointingAt(event);
-  };
-  field.onpointermove = function(event) {
-    if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
-  };
-  field.onpointerup = function() {
-    draw();
-  };
-  holds.appendChild(field);
-  var typed = document.createElement("div");
-  typed.className = "hexline";
-  var label = document.createElement("label");
-  label.textContent = "Hex";
-  typed.appendChild(label);
-  var hex = document.createElement("input");
-  hex.type = "text";
-  hex.maxLength = 7;
-  hex.spellcheck = false;
-  hex.value = atBrightness(section.colour || "#ffffff", section.level);
-  hex.title = "the colour as written, at its brightness. Paste a colour in to set the hue, saturation and brightness below";
-  hex.oninput = function() {
-    var said = hex.value.replace("#", "").trim();
-    if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
-    var typedRgb = hexRgb("#" + said.toLowerCase());
-    var got = takeApart(typedRgb);
-    var rgb = fieldColour(got.hue, got.sat);
-    live().colour = "#" + hexOf(rgb);
-    live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
-    live().custom = true;
-    at.style.left = got.hue / 360 * 100 + "%";
-    at.style.top = (1 - got.sat) * 100 + "%";
-    at.style.background = rgbInk(rgb);
-    preview.style.background = "#" + said.toLowerCase();
-    renderPreview();
-  };
-  hex.onblur = function() {
-    draw();
-  };
-  typed.appendChild(hex);
-  var side = document.createElement("div");
-  side.className = "scustomside";
-  side.appendChild(typed);
-  var preview = document.createElement("div");
-  preview.className = "scustompreview";
-  preview.style.background = atBrightness(section.colour || "#ffffff", section.level);
-  preview.title = "The colour as written, at its brightness";
-  side.appendChild(preview);
-  holds.appendChild(side);
-  wrap.appendChild(holds);
-  box.appendChild(wrap);
-}
-function signalFace(name, key) {
-  var lit = SIGNAL_STATES[name][key];
-  function lamp(state2, ink) {
-    if (!state2) return SIGNAL_INK.dark;
-    return ink;
-  }
-  function flashing2(state2) {
-    return state2 === "f" ? " class='flashing'" : "";
-  }
-  var head = [SIGNAL_INK.red, SIGNAL_INK.amber, SIGNAL_INK.green].map(function(ink, at) {
-    return "<circle cx='6' cy='" + (4.5 + at * 6.5) + "' r='2.6' fill='" + lamp(lit[at], ink) + "'" + flashing2(lit[at]) + "/>";
-  }).join("");
-  var wide = 12;
-  var figures = "";
-  if (lit.length > 3) {
-    wide = 22;
-    var stand = lamp(lit[3], SIGNAL_INK.red), walk = lamp(lit[4], SIGNAL_INK.green);
-    figures = "<rect x='12.5' y='1' width='9' height='22' rx='2' fill='#1c1f22'/><g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + stand + "'" + flashing2(lit[3]) + "><circle cx='17' cy='3.6' r='1.1' fill='" + stand + "' stroke='none'/><path d='M17 5.2 V8.6 M15.6 6.4 H18.4 M16.3 8.6 V11 M17.7 8.6 V11'/></g><g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + walk + "'" + flashing2(lit[4]) + "><circle cx='17.4' cy='13.6' r='1.1' fill='" + walk + "' stroke='none'/><path d='M17.2 15.2 L16.8 18.3 M15.6 16.8 L18.6 16 M16.8 18.3 L15.4 21 M16.8 18.3 L18.6 20.8'/></g>";
-  }
-  return "<svg class='signalface' viewBox='0 0 " + wide + " 24' width='" + wide * 0.9 + "' height='21.6' aria-hidden='true'><rect x='1' y='0' width='10' height='24' rx='3' fill='#1c1f22'/>" + head + figures + "</svg>";
-}
-function paintPalette(swatches, lines) {
-  swatches.textContent = "";
-  (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function(said) {
-    var chip = document.createElement("span");
-    chip.className = "palettechip";
-    chip.style.background = inkOf(said.slice(7));
-    chip.title = said.slice(7);
-    swatches.appendChild(chip);
-  });
-}
-function figureCells(said, unit, title, take) {
-  var box = document.createElement("input");
-  box.type = "text";
-  box.inputMode = "decimal";
-  box.className = "figurebox";
-  box.value = said;
-  box.title = title;
-  box.onchange = function() {
-    var typed = parseFloat(box.value.replace(",", "."));
-    if (!(typed > 0)) {
-      box.value = said;
-      return;
-    }
-    take(typed);
-    draw();
-  };
-  var units = document.createElement("span");
-  units.className = "figureunit";
-  units.textContent = unit;
-  return [box, units];
-}
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var memo = box && section && standingIn(run, section);
-  if (memo) {
-    var note = document.createElement("div");
-    note.className = "standin";
-    note.textContent = look.name + ", replacing " + memo.look + ", which mono lights cannot play. Rejoin to restore " + memo.look + ".";
-    box.querySelector(".chosen").appendChild(note);
-  }
-  if (box && look && look.detents) {
-    detented(box, where, typeof look.detents === "function" ? look.detents(targetFor(run, section)) : look.detents);
-  }
-  var wrap = box && box.querySelector(".chosen");
-  if (!wrap || !look) return;
-  var tuning = wrap.querySelector(".tuning");
-  if (!tuning) {
-    tuning = document.createElement("div");
-    tuning.className = "tuning";
-    wrap.appendChild(tuning);
-  }
-  if (look.solid) tuning.textContent = "";
-  var first = run.lamps[section.from];
-  var coloured = takesColour(look) && !!first && first.colour;
-  var mono2 = !!first && !first.colour;
-  var toneless = look.mood === "Colour" || mono2 && look.mood === "Palette";
-  if ((coloured || mono2) && toneless && tuning.children.length >= 4) {
-    tuning.removeChild(tuning.children[3]);
-    tuning.removeChild(tuning.children[2]);
-  }
-  brightnessSlider(tuning, run, where);
-  if (coloured) {
-    renderColourPick(wrap, run);
-    wrap.appendChild(tuning);
-  }
-});
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
-  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
-  var after = speed ? speed.nextSibling : null;
-  if (speed) {
-    tuning.removeChild(speed.previousElementSibling);
-    tuning.removeChild(speed);
-  }
-  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
-  if (ease) {
-    var easeLabel = ease.previousElementSibling;
-    if (after === easeLabel) after = ease.nextSibling;
-    tuning.insertBefore(easeLabel, after);
-    tuning.insertBefore(ease, after);
-    after = ease.nextSibling;
-  }
-  SIGNAL_TIMINGS[look.name].forEach(function(part) {
-    var label = document.createElement("label");
-    label.className = "signalstate";
-    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
-    var range = document.createElement("input");
-    range.style.accentColor = SIGNAL_TINT[part[0]];
-    range.type = "range";
-    range.min = part[3];
-    range.max = part[4];
-    range.step = 0.5;
-    range.value = withSection(section, function() {
-      return timingOf(look.name, part[0]);
-    });
-    range.dataset.focus = where + "-timing-" + part[0];
-    range.dataset.timing = part[0];
-    range.title = "seconds, " + part[1].toLowerCase();
-    range.oninput = function() {
-      var mine = run.sections[run.picked];
-      mine.timings = Object.assign({}, mine.timings);
-      mine.timings[part[0]] = Number(range.value);
-      renderPreview();
-    };
-    tuning.insertBefore(label, after);
-    tuning.insertBefore(range, after);
-  });
-});
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning) return;
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function(range) {
-    var moved = range.oninput;
-    range.oninput = function() {
-      if (moved) moved.call(range);
-      var live = run.sections[run.picked];
-      var cell = barCells(run)[run.picked];
-      var wash = cell && cell.querySelector(".lit");
-      if (wash && look) wash.style.background = washFor(run, live, look);
-    };
-    if (!range.onchange) range.onchange = function() {
-      draw();
-    };
-  });
-  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function(label) {
-    var drawn = SETTING_ICONS[label.textContent];
-    if (!drawn || label.querySelector(".settingicon")) return;
-    if (label.textContent === "Fade") {
-      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
-    }
-    label.classList.add("withicon");
-    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' aria-hidden='true'>" + drawn + "</svg>");
-  });
-});
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var who = box && box.querySelector(".chosen .who");
-  var section = run && run.sections[run.picked];
-  if (!who || !section) return;
-  var look = lookNamed(section.look);
-  var under = look ? null : stretchUnder(run, section);
-  who.innerHTML = "";
-  var named = document.createElement("b");
-  named.textContent = look ? look.name : "Nothing";
-  who.appendChild(named);
-  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
-  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
-  who.title = targetFor(run, section).selector;
-  if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    who.parentNode.insertBefore(hint, who.nextSibling);
-  }
-});
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var who = box && box.querySelector(".chosen .who");
-  if (!section || !who) return;
-  var named = document.createElement("span");
-  while (who.firstChild) named.appendChild(who.firstChild);
-  who.appendChild(named);
-  who.classList.add("withway");
-  if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
-});
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var pick2 = box && box.querySelector(".chosen .colourpick");
-  var first = section && run.lamps[section.from];
-  if (!pick2 || section.look !== BLINK || !first || !first.colour) return;
-  function live() {
-    return run.sections[run.picked];
-  }
-  var blinks = section.blinks || { colours: [section.colour || "#ff0000"], at: 0 };
-  blinks.colours[blinks.at] = section.colour;
-  section.blinks = blinks;
-  function choose(at) {
-    var mine = live();
-    mine.blinks.at = at;
-    mine.colour = mine.blinks.colours[at];
-    mine.custom = !blinkNamed(mine.colour);
-    draw();
-  }
-  var row = document.createElement("div");
-  row.className = "blinklist";
-  var said = document.createElement("span");
-  said.className = "blinksay";
-  said.textContent = blinks.colours.length > 1 ? "Blinks through" : "Blinks in";
-  row.appendChild(said);
-  blinks.colours.forEach(function(hex, at) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
-    chip.style.setProperty("--chip", hex);
-    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") + (blinkNamed(hex) || hex);
-    chip.onclick = function() {
-      choose(at);
-    };
-    row.appendChild(chip);
-    if (blinks.colours.length > 1) {
-      var drop = document.createElement("button");
-      drop.type = "button";
-      drop.className = "blinkdrop";
-      drop.textContent = "\xD7";
-      drop.title = "stop blinking in " + (blinkNamed(hex) || hex);
-      drop.onclick = function() {
-        var mine = live();
-        mine.blinks.colours.splice(at, 1);
-        var left = mine.blinks.colours;
-        mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
-        mine.colour = left[mine.blinks.at];
-        mine.custom = !blinkNamed(mine.colour);
-        if (left.length === 1) mine.blinks = void 0;
-        draw();
-      };
-      row.appendChild(drop);
-    }
-  });
-  var more = document.createElement("button");
-  more.type = "button";
-  more.className = "blinkmore";
-  more.textContent = "+ another colour";
-  more.title = "blink through several colours, one per blink";
-  more.onclick = function() {
-    var mine = live();
-    if (!mine.blinks) mine.blinks = { colours: [mine.colour], at: 0 };
-    var colours = mine.blinks.colours;
-    colours.push(colours[colours.length - 1]);
-    choose(colours.length - 1);
-  };
-  row.appendChild(more);
-  pick2.insertBefore(row, pick2.firstChild);
-});
-chosenSteps.push(function(where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look) return;
-  function live() {
-    return run.sections[run.picked];
-  }
-  tuning.classList.toggle("figuresopen", figuresOpen);
-  var ranges = Array.prototype.slice.call(tuning.querySelectorAll("input[type=range]"));
-  var boxes = [];
-  ranges.forEach(function(range) {
-    var slider = (range.dataset.focus || "").split("-").pop();
-    var cells, way = null, key = null, widest = 3;
-    var timing = range.dataset.timing;
-    if (timing) {
-      widest = Math.max(String(range.min).length, String(range.max).length) + 2;
-      cells = figureCells(
-        figureSaid(Number(range.value)),
-        "s",
-        "seconds, typed exactly, beyond the slider's range if needed",
-        function(typed) {
-          var mine = live();
-          mine.timings = Object.assign({}, mine.timings);
-          mine.timings[timing] = Math.round(typed * 100) / 100;
-        }
-      );
-    } else if (slider === "mood" && look.mood === "Palette") {
-      var swatches = document.createElement("span");
-      swatches.className = "figurebox paletteswatches";
-      paintPalette(swatches, sectionLines(run, section, look));
-      swatches.style.gridColumn = "span 2";
-      cells = [swatches, null];
-    } else if (slider === "level") {
-      var bright = section.level === void 0 ? 1 : section.level;
-      cells = figureCells(
-        String(Math.round(bright * 100)),
-        "%",
-        "brightness, typed as a percentage",
-        function(typed) {
-          live().level = Math.max(0.01, Math.min(1, typed / 100));
-        }
-      );
-    } else if (slider === "pace" || slider === "mood") {
-      key = figureKey(run, section, look, slider);
-      if (key) {
-        way = figureWay(key, look);
-        [0, 0.5, 1].forEach(function(place) {
-          var reach = figureSaid(way.show(settingIn(
-            linesAt(run, section, look, slider, place),
-            key
-          )));
-          widest = Math.max(widest, reach.length);
-        });
-        var typedHere = section.exact && section.exact[slider];
-        var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
-        cells = figureCells(
-          figureSaid(way.show(value)),
-          way.unit,
-          "the file's " + key + ", typed exactly, beyond the slider's range if needed",
-          function(typed) {
-            var wanted = way.take(typed);
-            var mine = live();
-            var found = placeFor(run, mine, look, slider, key, wanted);
-            mine[slider] = found.place;
-            mine.exact = Object.assign({}, mine.exact);
-            if (found.off > 1e-6) {
-              mine.exact[slider] = { key, value: Math.round(wanted * 1e3) / 1e3 };
-            } else {
-              delete mine.exact[slider];
-            }
-          }
-        );
-      }
-    } else {
-      return;
-    }
-    if (!cells) {
-      cells = [document.createElement("span"), document.createElement("span")];
-      cells[0].className = "figurebox";
-      cells[1].className = "figureunit";
-    }
-    if (cells[0].tagName === "INPUT") {
-      boxes.push({ box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length) });
-    }
-    if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);
-    range.parentNode.insertBefore(cells[0], range.nextSibling);
-    var moved = range.oninput;
-    range.oninput = function() {
-      var mine = live();
-      if (mine.exact && mine.exact[slider]) {
-        mine.exact = Object.assign({}, mine.exact);
-        delete mine.exact[slider];
-      }
-      if (moved) moved.call(range);
-      if (cells[0].classList.contains("paletteswatches")) {
-        paintPalette(cells[0], sectionLines(run, mine, look));
-        return;
-      }
-      if (cells[0].tagName !== "INPUT") return;
-      if (timing) cells[0].value = figureSaid(Number(range.value));
-      else if (slider === "level") cells[0].value = String(Math.round(Number(range.value) * 100));
-      else cells[0].value = figureSaid(way.show(settingIn(sectionLines(run, mine, look), key)));
-    };
-  });
-  var chars = boxes.reduce(function(most, one) {
-    return Math.max(most, one.chars);
-  }, 3);
-  boxes.forEach(function(one) {
-    one.box.style.width = chars + 0.5 + "ch";
-  });
-  var handle = document.createElement("button");
-  handle.type = "button";
-  handle.className = "figurehandle";
-  handle.textContent = figuresOpen ? "\u203A" : "\u2039";
-  handle.title = figuresOpen ? "hide values" : "show values";
-  handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
-  handle.style.gridRow = "1 / span " + ranges.length;
-  handle.onclick = function() {
-    setFiguresOpen(!figuresOpen);
-    try {
-      window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
-    } catch (e) {
-    }
-    draw();
-  };
-  tuning.appendChild(handle);
-});
-
-// boards/editor/picker/wiring.js
-function showKin(out, on) {
-  (kinOf[out] || []).forEach(function(node) {
-    node.classList.toggle("kin", on);
-  });
-}
-function crossing(out, colour) {
-  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
-  var made = document.createElement("button");
-  made.className = "cross boardarrow";
-  var says = colour ? "split " + outputSaid(out) + " into three mono lights" : "rejoin " + outputSaid(out) + " as one colour light";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
-  made.onclick = function(event) {
-    event.stopPropagation();
-    if (colour) breakOut(out);
-    else rejoin(out);
-  };
-  return made;
-}
-function headSteps(row, run) {
-  var steps = document.createElement("span");
-  steps.className = "headsteps";
-  if (run.strip && run.count > ZOOMS_OVER) {
-    steps.appendChild(iconButton(
-      GLASS_OUT,
-      "Zoom out",
-      zoomOf(run) <= 1.001,
-      function() {
-        zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-      }
-    ));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    steps.appendChild(said);
-    steps.appendChild(iconButton(
-      GLASS_IN,
-      "Zoom in",
-      zoomOf(run) >= 23.9,
-      function() {
-        zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-      }
-    ));
-  }
-  steps.appendChild(iconButton(
-    BACK,
-    "Undo",
-    !(run.was && run.was.length),
-    function() {
-      stepBack(run);
-    }
-  ));
-  steps.appendChild(iconButton(
-    ON,
-    "Redo",
-    !(run.undone && run.undone.length),
-    function() {
-      stepOn(run);
-    }
-  ));
-  var join = toolButton(
-    "&#10231;",
-    "Join all",
-    run.sections.length < 2,
-    "join",
-    "merge into one stretch, keeping the selected stretch's look"
-  );
-  join.onclick = function() {
-    joinAll(run);
-  };
-  steps.appendChild(join);
-  row.appendChild(steps);
-}
-var SLIDE_MS = 420;
-(function() {
-  var row = document.createElement("div");
-  row.id = "wiringRow";
-  var sides = document.getElementById("sides");
-  sides.parentNode.insertBefore(row, sides.nextSibling);
-})();
-function wiredLamps() {
-  var lamps = [];
-  wiring.forEach(function(one, out) {
-    lamps = lamps.concat(placesOf(out));
-  });
-  lamps.forEach(function(lamp) {
-    lamp.key = lampKey(lamp);
-  });
-  return lamps;
-}
-function wiredSide() {
-  var wired = wiredLamps();
-  var byKey = {};
-  wired.forEach(function(lamp) {
-    byKey[lamp.key] = lamp;
-  });
-  return { wiring: wired, order: order.map(function(place) {
-    return byKey[lampKey(place)];
-  }) };
-}
-function lampsShown() {
-  return Array.prototype.slice.call(document.querySelectorAll(
-    "#outBar .cardlamp[data-key], #monoBar .cardlamp[data-key]"
-  ));
-}
-function lampNode(key) {
-  return lampsShown().filter(function(node) {
-    return node.dataset.key === key;
-  })[0] || null;
-}
-function bringForward(keys, on) {
-  keys.forEach(function(key) {
-    document.querySelectorAll("#outPanel [data-key='" + key + "']").forEach(function(node) {
-      node.classList.toggle("wirehot", on);
-    });
-  });
-}
-function overlapBelow(box) {
-  var settings = document.getElementById("outChosen").getBoundingClientRect().bottom - box.getBoundingClientRect().bottom;
-  if (settings <= 0) return;
-  box.style.minHeight = Math.max(box.getBoundingClientRect().height, settings) + "px";
-  box.style.marginBottom = -settings + "px";
-}
-function renderConnectors() {
-  var box = document.getElementById("wiringRow");
-  box.textContent = "";
-  box.style.marginBottom = "";
-  box.style.minHeight = "";
-  var old = document.getElementById("wiringLines");
-  if (old) old.parentNode.removeChild(old);
-  document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
-  if (!setupOn || !BOARD.wiring_order) return;
-  var row = document.createElement("div");
-  row.className = "wireconnectors";
-  wiring.forEach(function(one, out) {
-    var block = document.createElement("div");
-    block.className = "wireconnector";
-    var pins = document.createElement("div");
-    pins.className = "wirepins";
-    var keys = [];
-    var single = OUTPUTS[out].mono;
-    placesOf(out).forEach(function(place) {
-      var pin = document.createElement("span");
-      var key = lampKey(place);
-      pin.className = "wirepin" + (place.channel === null ? " whole" : single ? " single" : "");
-      pin.dataset.key = key;
-      if (place.channel !== null && !single) pin.style.background = CHANNEL_INKS[place.channel];
-      pins.appendChild(pin);
-      keys.push(key);
-    });
-    block.appendChild(pins);
-    var name = document.createElement("b");
-    name.textContent = shortName({ out, colour: true });
-    block.appendChild(name);
-    block.title = outputSaid(out) + (one.broken && !single ? ", broken out into three" : "");
-    block.addEventListener("mouseenter", function() {
-      bringForward(keys, true);
-    });
-    block.addEventListener("mouseleave", function() {
-      bringForward(keys, false);
-    });
-    row.appendChild(block);
-  });
-  var board = document.createElement("div");
-  board.className = "wireboard";
-  board.appendChild(row);
-  box.appendChild(board);
-  var side = wiredSide();
-  var astray = astrayOf(side);
-  astray.forEach(function(lamp) {
-    var node = lampNode(lamp.key);
-    if (node) node.classList.add("astray");
-  });
-  var foot = document.createElement("div");
-  foot.className = "wirefoot";
-  var said = document.createElement("span");
-  said.innerHTML = (astray.length ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring order, numbered in bold. " : "All lights are in wiring order. ") + brokenSentence() + "Hover over a light or connector to highlight its wire.";
-  foot.appendChild(said);
-  var reset = resetWiringButton();
-  reset.disabled = !wiringChanged(astray);
-  foot.appendChild(reset);
-  board.appendChild(foot);
-  overlapBelow(box);
-  drawLines();
-}
-function drawLines() {
-  var panel = document.getElementById("outPanel");
-  var from = panel.getBoundingClientRect();
-  var lines = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  lines.id = "wiringLines";
-  lines.setAttribute("class", "wirelines");
-  wiredLamps().forEach(function(lamp) {
-    var node = lampNode(lamp.key);
-    var pin = panel.querySelector(".wirepin[data-key='" + lamp.key + "']");
-    if (!node || !pin) return;
-    var top = node.getBoundingClientRect();
-    var bottom = pin.getBoundingClientRect();
-    var start = { x: bottom.left + bottom.width / 2 - from.left, y: bottom.top - from.top };
-    var end = { x: top.left + top.width / 2 - from.left, y: top.bottom - from.top };
-    var rise = (start.y - end.y) / 2;
-    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M" + start.x + " " + start.y + " C" + start.x + " " + (start.y - rise) + " " + end.x + " " + (end.y + rise) + " " + end.x + " " + end.y);
-    path.dataset.key = lamp.key;
-    path.style.stroke = lamp.channel === null || OUTPUTS[lamp.out].mono ? "var(--boardOuts)" : CHANNEL_INKS[lamp.channel];
-    lines.appendChild(path);
-  });
-  panel.appendChild(lines);
-}
-var sliding = null;
-function moveLamp(move) {
-  slideFrom(lampKey(move.from));
-  moveLampInScenes(move);
-}
-function brokenSentence() {
-  var broken = breakingOutputs().some(function(out) {
-    return wiring[out].broken;
-  });
-  if (!broken) return "";
-  var said = brokenSaid();
-  return said.charAt(0).toUpperCase() + said.slice(1) + ". ";
-}
-function resetWiringButton() {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "wirereset";
-  button.textContent = "Reset wiring";
-  button.title = "Rejoin every broken-out output and put every light back in wiring order";
-  button.onclick = function() {
-    slideFrom(null);
-    breakingOutputs().forEach(function(out) {
-      if (wiring[out].broken) gatherFromThree(out);
-    });
-    resetWiringInScenes();
-  };
-  return button;
-}
-function placeInPanel(node) {
-  var box = node.getBoundingClientRect();
-  var panel = document.getElementById("outPanel").getBoundingClientRect();
-  return { left: box.left - panel.left, top: box.top - panel.top };
-}
-function slideFrom(carried2) {
-  var was = {};
-  lampsShown().forEach(function(node) {
-    was[node.dataset.key] = placeInPanel(node);
-  });
-  sliding = { was, carried: carried2 };
-  window.setTimeout(function() {
-    sliding = null;
-  }, 0);
-}
-function playSlide() {
-  if (!sliding) return;
-  var was = sliding.was;
-  var carried2 = sliding.carried;
-  lampsShown().forEach(function(node) {
-    var from = was[node.dataset.key];
-    if (!from) return;
-    var to = placeInPanel(node);
-    var dx = from.left - to.left;
-    var dy = from.top - to.top;
-    if (!dx && !dy) return;
-    if (node.dataset.key === carried2) node.classList.add("moving");
-    node.style.transition = "none";
-    node.style.transform = "translate(" + dx + "px," + dy + "px)";
-    node.getBoundingClientRect();
-    node.style.transition = "transform " + SLIDE_MS + "ms cubic-bezier(.2,.7,.2,1)";
-    node.style.transform = "";
-    window.setTimeout(function() {
-      node.classList.remove("moving");
-      node.style.transition = "";
-    }, SLIDE_MS + 40);
-  });
-}
-function breakOut(out) {
-  slideFrom(null);
-  var whole = sliding.was[lampKey({ out, channel: null })];
-  if (whole) {
-    [0, 1, 2].forEach(function(channel) {
-      sliding.was[lampKey({ out, channel })] = whole;
-    });
-  }
-  breakOutInScenes(out);
-}
-function rejoin(out) {
-  slideFrom(null);
-  gatherFromThree(out);
-  rejoinInScenes(out);
-}
-function gatherFromThree(out) {
-  var three = [0, 1, 2].map(function(channel) {
-    return sliding.was[lampKey({ out, channel })];
-  }).filter(Boolean);
-  if (three.length) {
-    sliding.was[lampKey({ out, channel: null })] = {
-      left: three.reduce(function(sum, one) {
-        return sum + one.left;
-      }, 0) / three.length,
-      top: three.reduce(function(sum, one) {
-        return sum + one.top;
-      }, 0) / three.length
-    };
-  }
-}
-addStep(drawSteps.after, DRAW_AFTER, "wiring", function() {
-  renderConnectors();
-  playSlide();
-});
-window.addEventListener("resize", function() {
-  if (setupOn) draw();
-});
-function noArrow() {
-  var none = document.createElement("span");
-  none.style.position = "absolute";
-  return none;
-}
-
-// boards/editor/picker/setup.js
-function stripChipChoice(run) {
-  var choice;
-  if (run.made === null) {
-    choice = h("select", {
-      title: "The strip's colour order. Change it if red shows as another colour",
-      onchange: function() {
-        stripSet(run, { order: choice.value });
-        draw();
-      }
-    }, STRIP_ORDERS.map(function(pair) {
-      return h("option", { value: pair[0], selected: (run.order || "") === pair[0] }, pair[1]);
-    }));
-    return choice;
-  }
-  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ? STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function(a, b) {
-    return a - b;
-  }) : STRIP_BRIGHTNESSES;
-  choice = h("select", {
-    title: "Overall strip brightness, applied on top of each stretch's level",
-    onchange: function() {
-      stripSet(run, { brightness: Number(choice.value) });
-      draw();
-    }
-  }, offered.map(function(brightness) {
-    return h(
-      "option",
-      { value: brightness, selected: brightness === run.brightness },
-      stripPercent(brightness) + (brightness === run.made ? " (default)" : "")
-    );
-  }));
-  return choice;
-}
-STRIPS.forEach(function(strip) {
-  BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id;
-});
-function unmark() {
-  document.querySelectorAll(".sec.picked, .card.picked").forEach(function(one) {
-    one.classList.remove("picked");
-  });
-}
-function boardBox(panel, parts) {
-  return h("span", {
-    className: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
-    title: "Board setup, shared by every scene"
-  }, boardIcon(), parts);
-}
-function small(words) {
-  return h("small", {}, words);
-}
-function boardIcon() {
-  return h("svg:svg", {
-    viewBox: "0 0 14 14",
-    width: "13",
-    height: "13",
-    class: "boardicon",
-    "aria-hidden": "true",
-    html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"
-  });
-}
-function renderOutFacts() {
-  var box = document.getElementById("outFacts");
-  var hint = null;
-  if (canEdit("outPanel")) {
-    var breaking = breakingOutputs();
-    var said = "Drag lights to match your build." + (breaking.length > 1 ? " Arrows split or rejoin an output's three lights." : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it." : "");
-    hint = h("span", { className: "hint", title: said }, said);
-  }
-  replace(box, boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint);
-  headSteps(box, active.strip ? lastOutputRun : active);
-}
-function stripBuilt(run) {
-  return run.leds + " LEDs, " + stripChipShown(run);
-}
-function renderLeds(where, run) {
-  var box = document.getElementById(where);
-  var panel = run.id + "Panel";
-  document.getElementById(panel).classList.toggle("stripout", !run.there);
-  if (!run.there) {
-    renderStripOut(box, run, panel);
-    return;
-  }
-  if (canEdit(panel)) {
-    renderStripChip(where, run);
-    var says = box.querySelector(".says");
-    if (says) box.removeChild(says);
-    var chip = box.querySelector(".chip");
-    chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
-    chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
-  } else {
-    replace(box, boardBox(panel, ["Strip", small(stripBuilt(run))]));
-  }
-  box.appendChild(stretchCount(run));
-  headSteps(box, run);
-}
-stripDrawing.leds = renderLeds;
-addStep(drawSteps.after, DRAW_AFTER, "setup", function() {
-  renderOutFacts();
-  document.body.classList.toggle("setupall", setupOn);
-  if (setupOn) unmark();
-  paintAll();
-});
-function renderStripChip(where, run) {
-  var count = h("input", {
-    type: "number",
-    min: STRIP_FEWEST,
-    max: STRIP_MOST,
-    value: run.leds,
-    onchange: function() {
-      var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) || STRIP_FEWEST));
-      if (want === run.leds) return;
-      stripSet(run, { leds: want });
-      settle();
-      draw();
-    }
-  });
-  replace(
-    document.getElementById(where),
-    h("div", { className: "chip strip" }, "Strip", count, small("LEDs"), stripChipChoice(run)),
-    h("span", { className: "says" }, "shared by every scene")
-  );
-}
-function renderStripOut(box, run, panel) {
-  var blocked = stripBlockedBy(run);
-  replace(
-    box,
-    boardBox(panel, ["Strip", small("not fitted")]),
-    blocked ? h("span", { className: "stripblocked says" }, blocked) : h("button", {
-      type: "button",
-      className: "addstrip",
-      disabled: !canEdit(panel),
-      onclick: function() {
-        stripThere(run, true);
-        workOn(panel);
-        draw();
-      }
-    }, "add this strip")
-  );
-}
-var lastOutputRun = outs;
-function setLastOutputRun(run) {
-  lastOutputRun = run;
 }
 
 // boards/editor/picker/board_settings.js
@@ -8940,887 +8559,6 @@ addStep(connectSteps, CONNECT_ORDER, "driveFiles", async function() {
   });
 });
 setInterval(rescanMedia, 5e3);
-
-// boards/editor/picker/readback.js
-var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
-var boardComments = [];
-var notesNow = {};
-function readHeading(line) {
-  var inner = line.slice(1, -1);
-  var colon = inner.indexOf(":");
-  var name = (colon < 0 ? inner : inner.slice(0, colon)).trim();
-  var heading = {
-    name,
-    seconds: null,
-    restart: false,
-    after: null,
-    line,
-    written: line
-  };
-  var odd = false;
-  var settings = colon < 0 ? "" : inner.slice(colon + 1);
-  var then = settings.match(/(^|\s)then(\s+|$)/i);
-  if (then) {
-    heading.after = settings.slice(then.index + then[0].length).trim();
-    settings = settings.slice(0, then.index);
-    if (!heading.after) odd = true;
-  }
-  settings.split(/\s+/).forEach(function(word) {
-    if (!word) return;
-    var time = word.match(/^(\d+(?:\.\d+)?)([sm])$/i);
-    if (time) {
-      heading.seconds = Number(time[1]) * (time[2].toLowerCase() === "m" ? 60 : 1);
-      if (time[2].toLowerCase() === "m") odd = true;
-    } else if (word.toLowerCase() === "restart") heading.restart = true;
-    else odd = true;
-  });
-  if (!odd) heading.written = null;
-  return heading;
-}
-function readEffects(text) {
-  var parsed = { tokens: [], comments: [], slots: [{ heading: null, comments: [], kept: [] }] };
-  var comments = [];
-  var entry = null;
-  text.replace(/\r/g, "").split("\n").forEach(function(raw) {
-    var line = raw.trim();
-    var slot = parsed.slots[parsed.slots.length - 1];
-    if (!line) return;
-    if (line.charAt(0) === "#") {
-      if (line.indexOf(WIRED) === 0) parsed.wiring = line.slice(WIRED.length).trim();
-      else if (line.indexOf(NOT_FITTED) === 0) {
-        parsed.notFitted = line.slice(NOT_FITTED.length).split(",").map(function(name) {
-          return name.trim().toLowerCase();
-        }).filter(Boolean);
-      } else if (PAGE_LINES.indexOf(line) < 0) comments.push(raw.replace(/\s+$/, ""));
-      return;
-    }
-    if (line.charAt(0) === "[" && line.slice(-1) === "]") {
-      parsed.slots.push({ heading: readHeading(line), comments, kept: [] });
-      comments = [];
-      entry = null;
-      return;
-    }
-    if (/^board\s*:/i.test(line)) {
-      parsed.comments = parsed.comments.concat(comments);
-      comments = [];
-      parsed.tokens = parsed.tokens.concat(boardTokens(line.replace(/^board\s*:/i, "")));
-      entry = { board: true };
-      return;
-    }
-    if (entry && unquotedColon(line) < 0) {
-      if (entry.board) parsed.tokens = parsed.tokens.concat(boardTokens(line));
-      else entry.text += "\n" + raw.replace(/\s+$/, "");
-      return;
-    }
-    entry = { text: raw.replace(/\s+$/, ""), comments };
-    comments = [];
-    slot.kept.push(entry);
-  });
-  if (comments.length) {
-    parsed.slots[parsed.slots.length - 1].kept.push({ text: null, comments });
-  }
-  return parsed;
-}
-function readProgram(named, argued) {
-  boardSet.program = null;
-  if (!named) {
-    if (argued) boardResidue.push(argued);
-    return;
-  }
-  var path = named.slice("program=".length);
-  var given = argued ? argsRead(argued.slice("args=".length)) : [];
-  var kept = boardSet.args[path];
-  boardSet.args[path] = given;
-  if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
-    boardSet.program = path;
-    setProgramPage(true);
-    return;
-  }
-  setProgramPage(false);
-  boardSet.args[path] = kept;
-  boardResidue.push(named);
-  if (argued) boardResidue.push(argued);
-}
-var programWaiting = null;
-function readWaitingProgram() {
-  if (!programWaiting) return;
-  var named = programWaiting[0], argued = programWaiting[1];
-  programWaiting = null;
-  if (boardSet.program) return;
-  filterResidue(function(token) {
-    return token !== named && token !== argued;
-  });
-  var page = onProgramPage;
-  readProgram(named, argued);
-  if (!boardSet.program) setProgramPage(page);
-}
-programsReadSteps.push(readWaitingProgram);
-function absorbFile(text) {
-  var parsed = readEffects(text);
-  wiringRead = parsed.wiring || null;
-  setNotFittedRead(parsed.notFitted || null);
-  boardSet.reload = true;
-  boardSet.driveHidden = false;
-  clearResidue();
-  var named = null, argued = null;
-  parsed.tokens.forEach(function(token) {
-    var lowered = token.toLowerCase();
-    if (lowered === "reload=auto") boardSet.reload = true;
-    else if (lowered === "reload=manual") boardSet.reload = false;
-    else if (lowered === "drive=manual") boardSet.driveHidden = true;
-    else if (/^program=/i.test(token) && !named) named = token;
-    else if (/^args=/i.test(token) && !argued) argued = token;
-    else boardResidue.push(token);
-  });
-  readProgram(named, argued);
-  programWaiting = named && !boardSet.program && !programsKnown ? [named, argued] : null;
-  boardComments = parsed.comments;
-  function bodyKeeping(kept) {
-    var body = blankBody();
-    body.kept = copyKept(kept);
-    return body;
-  }
-  state.always.body = bodyKeeping(parsed.slots[0].kept);
-  state.scenes = parsed.slots.slice(1).map(function(slot) {
-    var heading = slot.heading;
-    return {
-      name: heading.name,
-      seconds: heading.seconds || 10,
-      waits: heading.seconds === null,
-      restart: heading.restart,
-      comments: slot.comments,
-      read: heading,
-      body: bodyKeeping(slot.kept)
-    };
-  });
-  state.scenes.forEach(function(scene) {
-    if (!scene.read.after) return;
-    var named2 = state.scenes.filter(function(other) {
-      return other.name === scene.read.after;
-    })[0];
-    if (named2) scene.then = sceneMark(named2);
-    else scene.read.written = scene.read.line;
-  });
-  settleLoneScene();
-  var bodies = [state.always.body].concat(state.scenes.map(function(scene) {
-    return scene.body;
-  }));
-  bodies.forEach(function(body) {
-    body.notes = body.notes || {};
-  });
-  bodyParts.forEach(function(part) {
-    if (part.readBoard) part.readBoard();
-  });
-  bodyParts.forEach(function(part) {
-    if (part.read) part.read(bodies);
-  });
-  readLights(bodies);
-  state.at = -1;
-  apply(state.always.body);
-  runs.filter(function(run) {
-    return run.strip && run.there && runs.some(function(other) {
-      return other.strip && other.there && run.takes.indexOf(other.name) >= 0;
-    });
-  }).forEach(dropStrip);
-  draw();
-}
-function outputsBrokenOut(bodies) {
-  var broken = {};
-  bodies.forEach(function(body) {
-    body.kept.forEach(function(one) {
-      var parts = entryParts(one.text);
-      if (!parts) return;
-      itemsNamed(parts.selector).forEach(function(places) {
-        (places || []).forEach(function(place) {
-          if (place.channel !== null && !OUTPUTS[place.out].mono) broken[place.out] = true;
-        });
-      });
-    });
-  });
-  return broken;
-}
-function wireAsRead(broken) {
-  setLayout(wiring.map(function(one, out) {
-    return { broken: OUTPUTS[out].mono || !!broken[out] };
-  }), order);
-  setLayout(wiring, plainOrder());
-}
-var WIRED = "# Wired in the order ";
-var wiringRead = null;
-function wiringLine() {
-  var plain = plainOrder();
-  var same = order.length === plain.length && order.every(function(place, at) {
-    return place.out === plain[at].out && place.channel === plain[at].channel;
-  });
-  if (same) return null;
-  return WIRED + joinedItems(order.map(function(place) {
-    var output = OUTPUTS[place.out];
-    var channel = place.channel === null || output.mono ? "" : "." + CHANNELS[place.channel];
-    return { out: place.out, rest: (output.number === null ? "" : String(output.number)) + channel };
-  }));
-}
-function orderSaid(said) {
-  var placed = placesNamed(/^\d/.test(said) ? OUTPUTS[0].prefix + said : said);
-  if (!placed) return null;
-  var seen = {};
-  for (var p = 0; p < placed.length; p++) {
-    var key = placed[p].out + "." + placed[p].channel;
-    if (seen[key]) return null;
-    seen[key] = true;
-  }
-  for (var o = 0; o < wiring.length; o++) {
-    if (OUTPUTS[o].mono) {
-      if (!seen[o + ".0"]) return null;
-      continue;
-    }
-    var whole = seen[o + ".null"];
-    var channels = [0, 1, 2].filter(function(c) {
-      return seen[o + "." + c];
-    }).length;
-    if (whole ? channels : channels !== 3) return null;
-  }
-  return placed;
-}
-function orderImplied(bodies) {
-  var named = [];
-  var needed = false;
-  bodies.forEach(function(body) {
-    body.kept.forEach(function(one) {
-      var parts = entryParts(one.text);
-      var places = parts && placesNamed(parts.selector);
-      if (!places || places.some(function(place) {
-        return place.channel !== null && !OUTPUTS[place.out].mono;
-      })) return;
-      var outputs = places.map(function(place) {
-        return place.out + 1;
-      });
-      var steps = outputs.slice(1).map(function(out2, at) {
-        return out2 - outputs[at];
-      });
-      if (steps.some(function(step2) {
-        return Math.abs(step2) !== 1;
-      }) && !(steps.some(function(step2) {
-        return step2 > 0;
-      }) && steps.some(function(step2) {
-        return step2 < 0;
-      }))) return;
-      if (steps.some(function(step2) {
-        return step2 > 0;
-      }) && steps.some(function(step2) {
-        return step2 < 0;
-      })) needed = true;
-      outputs.forEach(function(out2) {
-        if (named.indexOf(out2) < 0) named.push(out2);
-      });
-    });
-  });
-  if (!needed) return null;
-  for (var out = 1; out <= wiring.length; out++) if (named.indexOf(out) < 0) named.push(out);
-  return named.map(function(out2) {
-    return { out: out2 - 1, channel: OUTPUTS[out2 - 1].mono ? 0 : null };
-  });
-}
-function stretchWriting(run, texts, span2) {
-  var parts = entryParts(texts[0]);
-  var colour = null;
-  var custom = false;
-  var blinks = null;
-  function hexFor(word2) {
-    word2 = word2.toLowerCase();
-    return "#" + (word2 === "black" ? "000000" : WORDS[word2] ? hexOf(WORDS[word2]) : word2);
-  }
-  if (parts.left.colour) {
-    var word = parts.left.colour.toLowerCase();
-    colour = hexFor(word);
-    custom = !WORDS[word];
-  }
-  if (parts.right.colour && parts.right.colour.indexOf("|") >= 0) {
-    blinks = { colours: parts.right.colour.split("|").map(hexFor), at: 0 };
-    colour = blinks.colours[0];
-    custom = !wordFor(colour);
-  }
-  var level = parts.left.level ? parseFloat(parts.left.level) / 100 : 1;
-  var tries = [];
-  [{ colour, custom }, { colour: null, custom: false }].forEach(function(chosen) {
-    [false, true].forEach(function(back) {
-      LOOKS.forEach(function(look2) {
-        tries.push({ look: look2, chosen, back });
-      });
-    });
-  });
-  for (var t = 0; t < tries.length; t++) {
-    var look = tries[t].look;
-    var section = {
-      from: span2.from,
-      to: span2.to,
-      look: keyOf(look),
-      pace: 0.5,
-      mood: 0.5,
-      colour: tries[t].chosen.colour,
-      custom: tries[t].chosen.custom,
-      reversed: tries[t].back,
-      level,
-      blinks: blinks && look.name === BLINK ? JSON.parse(JSON.stringify(blinks)) : null,
-      exact: null,
-      timings: signalTimings(look, texts)
-    };
-    if (!canPlay(look, targetFor(run, section))) continue;
-    solveSliders(run, section, look, texts);
-    var written = sectionLines(run, section, look);
-    if (sameLines(written, texts)) return section;
-    if (sameShape(written, texts) && refineSliders(run, section, look, texts)) return section;
-  }
-  return null;
-}
-function signalTimings(look, texts) {
-  if (!SIGNAL_TIMINGS[look.name]) return null;
-  var timings = {};
-  SIGNAL_TIMINGS[look.name].forEach(function(part) {
-    var said = (texts.join(" ").match(new RegExp("(^|\\s)" + part[0] + "=([\\d.]+)")) || [])[2];
-    if (said !== void 0) timings[part[0]] = Number(said);
-  });
-  return timings;
-}
-function sameLines(written, texts) {
-  return written.length === texts.length && written.every(function(line, at) {
-    return line === texts[at];
-  });
-}
-function sameShape(written, texts) {
-  function shape(line) {
-    return line.replace(/=[^\s:]+/g, "=#");
-  }
-  return written.length === texts.length && written.every(function(line, at) {
-    return shape(line) === shape(texts[at]);
-  });
-}
-function refineSliders(run, section, look, texts) {
-  var sliders = ["pace", "mood"];
-  for (var pass = 0; pass < 2; pass++) {
-    for (var s = 0; s < sliders.length; s++) {
-      var slider = sliders[s];
-      if (section.exact && section.exact[slider]) continue;
-      for (var step2 = 0; step2 <= 200; step2++) {
-        var trial = Object.assign({}, section);
-        trial[slider] = step2 / 200;
-        if (sameLines(sectionLines(run, trial, look), texts)) {
-          section[slider] = trial[slider];
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-function solveSliders(run, section, look, texts) {
-  ["pace", "mood"].forEach(function(slider) {
-    var key = figureKey(run, section, look, slider);
-    if (!key) return;
-    var value = settingIn(texts, key);
-    if (value === null) return;
-    var found = placeFor(run, section, look, slider, key, value);
-    section[slider] = found.place;
-    if (found.off > 1e-6) {
-      section.exact = Object.assign({}, section.exact);
-      section.exact[slider] = { key, value };
-    }
-  });
-}
-function groupsFrom(at, read) {
-  var found = [];
-  runs.forEach(function(run) {
-    var lamps = [];
-    for (var k = 1; at + k <= keptNow.length; k++) {
-      var parts = entryParts(keptNow[at + k - 1].text);
-      var some = parts && lampsNamed(run, parts.selector);
-      if (!some) break;
-      lamps = lamps.concat(some);
-      var span2 = spanOf(lamps);
-      if (!span2 || span2.to - span2.from + 1 !== lamps.length) continue;
-      var clear = !read[run.name].some(function(one) {
-        return one.from <= span2.to && span2.from <= one.to;
-      });
-      if (clear) found.push({ run, k, span: span2 });
-    }
-  });
-  return found.sort(function(a, b) {
-    return b.k - a.k;
-  });
-}
-function readLights(bodies) {
-  var lengths = {};
-  boardResidue.forEach(function(token) {
-    var named = token.match(/^(\w+)=(\d+)(?:\|(\S+))?$/i);
-    var run = named && stripNamed(named[1]);
-    if (!run) return;
-    var values = readStripTail(run, named[3] || "");
-    if (!values) return;
-    values.leds = Number(named[2]);
-    values.there = true;
-    lengths[run.name] = { token, values };
-  });
-  runs.forEach(function(run) {
-    if (run.strip && lengths[run.name]) stripSet(run, lengths[run.name].values);
-  });
-  if (Object.keys(lengths).length) {
-    runs.forEach(function(run) {
-      if (run.strip && !lengths[run.name]) stripSet(run, { there: false });
-    });
-  }
-  if (notFittedRead) {
-    runs.forEach(function(run) {
-      if (!run.strip || lengths[run.name]) return;
-      var strip = stripDescribed(run);
-      stripSet(run, { there: strip.fitted && !saidNotFitted(strip.tab) });
-    });
-  }
-  var stripsRead = {};
-  var broken = outputsBrokenOut(bodies);
-  var said = wiringRead && orderSaid(wiringRead);
-  bodies.forEach(function(body) {
-    apply(body);
-    if (said) {
-      setLayout(wiring.map(function(one2, out) {
-        return { broken: said.some(function(place) {
-          return place.out === out && place.channel !== null;
-        }) };
-      }), said.map(function(place) {
-        return { out: place.out, channel: place.channel };
-      }));
-    } else {
-      wireAsRead(broken);
-      var implied = !Object.keys(broken).length && orderImplied(bodies);
-      if (implied) setLayout(wiring, implied);
-    }
-    runs.forEach(function(run) {
-      run.sections = [];
-    });
-    settle();
-    var read = {};
-    runs.forEach(function(run) {
-      read[run.name] = [];
-    });
-    var at = 0;
-    while (at < keptNow.length) {
-      var matched = false;
-      var candidates = groupsFrom(at, read);
-      for (var c = 0; c < candidates.length && !matched; c++) {
-        var one = candidates[c];
-        var group = keptNow.slice(at, at + one.k);
-        var texts = group.map(function(kept) {
-          return kept.text;
-        });
-        var section = stretchWriting(one.run, texts, one.span);
-        if (!section) continue;
-        read[one.run.name].push(section);
-        if (one.run.strip) stripsRead[one.run.name] = true;
-        group.forEach(function(kept) {
-          if (kept.comments.length) notesNow[kept.text] = kept.comments;
-        });
-        keptNow.splice(at, one.k);
-        matched = true;
-      }
-      if (!matched) at++;
-    }
-    runs.forEach(function(run) {
-      var sorted = read[run.name].sort(function(a, b) {
-        return a.from - b.from;
-      });
-      var filled = [];
-      var next = 0;
-      sorted.forEach(function(section2) {
-        if (section2.from > next) filled.push(blank(next, section2.from - 1, run));
-        filled.push(section2);
-        next = section2.to + 1;
-      });
-      if (next < run.lamps.length) filled.push(blank(next, run.lamps.length - 1, run));
-      run.sections = filled;
-    });
-    settle();
-    var captured = capture();
-    Object.keys(captured).forEach(function(key) {
-      body[key] = captured[key];
-    });
-  });
-  Object.keys(stripsRead).forEach(function(name) {
-    boardResidue.splice(boardResidue.indexOf(lengths[name].token), 1);
-  });
-}
-addStep(bodyParts, BODY_ORDER, "readback", {
-  capture: function(body) {
-    body.kept = copyKept(keptNow);
-    body.notes = JSON.parse(JSON.stringify(notesNow));
-  },
-  apply: function(body) {
-    setKept(copyKept(body.kept));
-    notesNow = JSON.parse(JSON.stringify(body.notes || {}));
-  },
-  // A body with nothing in it keeps nothing either, whatever the scene on show kept
-  blank: function(body) {
-    body.kept = [];
-    body.notes = {};
-  },
-  // Kept entries come last in their scene, each with its comments above it. A line read into
-  // the page has its comments above it again while it writes the same
-  entries: function(body, written) {
-    var notes = body.notes || {};
-    var lines = [];
-    written.forEach(function(line) {
-      lines = lines.concat(notes[line] || []);
-      lines.push(line);
-    });
-    (body.kept || []).forEach(function(one) {
-      lines = lines.concat(one.comments);
-      if (one.text !== null) lines.push(one.text);
-    });
-    return lines;
-  }
-});
-function heldOfToken(token) {
-  var named = token.match(/^(\w+)=/);
-  var name = named && named[1].toLowerCase();
-  var held = STRIPS.map(function(strip) {
-    return strip.name;
-  }).concat(SCREEN_PORTS.map(function(port) {
-    return port.id;
-  }));
-  return held.indexOf(name) >= 0 ? name : null;
-}
-addStep(boardLineSteps.after, BOARD_LINE_AFTER, "readback", function(line) {
-  var lower = (line || "").toLowerCase();
-  var kept = boardResidue.filter(function(token) {
-    var name = heldOfToken(token);
-    return !name || !new RegExp("\\b" + name + "=").test(lower);
-  });
-  if (kept.length) line = (line || "board:") + " " + kept.join(" ");
-  return line;
-});
-fileHead.under.push(function() {
-  var wired = wiringLine();
-  return wired ? [wired] : [];
-});
-fileHead.under.push(function() {
-  var off = notFittedLine();
-  return off ? [off] : [];
-});
-fileHead.above.push(function() {
-  return boardComments;
-});
-function renderKept() {
-  var box = document.getElementById("keptLines");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "keptLines";
-    box.className = "keptlines";
-    var preview = document.getElementById("preview");
-    var file = preview.closest("details") || preview;
-    file.parentNode.insertBefore(box, file);
-  }
-  var shown = keptNow.filter(function(one) {
-    return one.text !== null;
-  });
-  box.hidden = !shown.length;
-  box.textContent = "";
-  if (!shown.length) return;
-  var head = document.createElement("div");
-  head.className = "keptsay";
-  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") + " the picker cannot edit:";
-  box.appendChild(head);
-  keptNow.forEach(function(one, at) {
-    if (one.text === null) return;
-    var row = document.createElement("div");
-    row.className = "keptrow";
-    var code = document.createElement("code");
-    code.textContent = one.text;
-    row.appendChild(code);
-    var drop = document.createElement("button");
-    drop.className = "keptdrop";
-    drop.textContent = "\xD7";
-    drop.title = "Remove this line from the file";
-    drop.onclick = function() {
-      keptNow.splice(at, 1);
-      draw();
-    };
-    row.appendChild(drop);
-    box.appendChild(row);
-  });
-}
-function markKeptLights() {
-  runs.forEach(function(run) {
-    var named = keptLights(run);
-    if (run.strip) {
-      var bar = document.getElementById(run.id + "Bar");
-      if (!bar) return;
-      bar.querySelectorAll(".sec").forEach(function(cell, at) {
-        var section = run.sections[at];
-        if (!section) return;
-        for (var lamp = section.from; lamp <= section.to; lamp++) {
-          if (named[lamp]) {
-            cell.classList.add("keptlamp");
-            cell.title = "used by a line the picker cannot edit: " + named[lamp][0].text;
-            return;
-          }
-        }
-      });
-      return;
-    }
-    var box = document.getElementById(run === outs ? "outBar" : "monoBar");
-    if (!box) return;
-    box.querySelectorAll(".cardlamp").forEach(function(lamp, at) {
-      if (!named[at]) return;
-      lamp.classList.add("keptlamp");
-      lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
-    });
-  });
-}
-addStep(drawSteps.after, DRAW_AFTER, "readback", function() {
-  renderKept();
-  markKeptLights();
-});
-addStep(connectSteps, CONNECT_ORDER, "readback", async function() {
-  var text = await (await drive.fileHandle.getFile()).text();
-  if (!text.trim()) return;
-  var ours = text.indexOf(HEADER) === 0;
-  if (!ours) {
-    var kept = readEffects(text).slots.reduce(function(count, slot) {
-      return count + slot.kept.filter(function(one) {
-        return one.text !== null;
-      }).length;
-    }, 0);
-    var open = confirm("This file was not written by the picker. Open it anyway? " + (kept === 1 ? "One line" : kept + " lines") + " would be kept unchanged. Cancel to start fresh, replacing the file when you save.");
-    if (!open) {
-      rememberRead(text);
-      return;
-    }
-  }
-  absorbFile(text);
-  rememberRead(text);
-});
-function rememberRead(text) {
-  try {
-    localStorage.setItem(WROTE_KEY, text);
-  } catch (e) {
-  }
-}
-
-// boards/editor/picker/save_menu.js
-var saveMenu = document.getElementById("saveMenu");
-var saveArrow = document.getElementById("saveArrow");
-function saveChoice(words, hint, on, flip, refused) {
-  var box = h("input", {
-    type: "checkbox",
-    checked: on,
-    disabled: !!refused,
-    onchange: function() {
-      flip(box.checked);
-      draw();
-    }
-  });
-  return h(
-    "label",
-    { className: "savechoice" + (refused ? " refused" : "") },
-    box,
-    h("span", {}, words, h("small", {}, refused || hint))
-  );
-}
-function renderSaveMenu() {
-  replace(
-    saveMenu,
-    saveChoice(
-      "Play saves without an eject",
-      boardSet.program ? "saving restarts the board and runs the program" : "the first save after turning this on still needs an eject",
-      boardSet.reload,
-      function(on) {
-        boardSet.reload = on;
-      },
-      null
-    ),
-    saveChoice(
-      "Keep the drive hidden at start",
-      "double-press Boot to show it",
-      boardSet.driveHidden,
-      function(on) {
-        boardSet.driveHidden = on;
-      },
-      driveMeansSomething() ? null : "always shown while a program runs"
-    )
-  );
-}
-function showSaveMenu(shown) {
-  saveMenu.hidden = !shown;
-  saveArrow.setAttribute("aria-expanded", shown ? "true" : "false");
-}
-function closeSaveMenu() {
-  showSaveMenu(false);
-}
-saveArrow.onclick = function() {
-  showSaveMenu(saveMenu.hidden);
-  if (saveMenu.hidden) return;
-  var within = saveMenu.offsetParent.getBoundingClientRect();
-  var under = saveArrow.getBoundingClientRect();
-  saveMenu.style.left = "auto";
-  saveMenu.style.right = within.right - under.right + "px";
-  saveMenu.style.top = under.bottom - within.top + 6 + "px";
-};
-document.addEventListener("click", function(event) {
-  if (saveMenu.hidden || saveMenu.contains(event.target) || saveArrow.contains(event.target)) return;
-  closeSaveMenu();
-});
-document.addEventListener("keydown", function(event) {
-  if (event.key !== "Escape" || saveMenu.hidden) return;
-  closeSaveMenu();
-  saveArrow.focus();
-});
-addStep(drawSteps.after, DRAW_AFTER, "saveMenu", renderSaveMenu);
-
-// boards/editor/picker/tabs.js
-function setSetup(on) {
-  setSetupMode(on);
-  showChosen();
-}
-var TAB_NAMES = { outPanel: BOARD.output_words.tab };
-BOARD.strips.forEach(function(strip) {
-  TAB_NAMES[strip.name + "Panel"] = strip.tab;
-});
-var TAB_PANELS = LED_PANELS.slice();
-if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
-var FEATURE_TABS = ["screens", "sound", "sensor"];
-var chosenTab = "outPanel";
-if (BOARD.strips_first) {
-  firstFitted = STRIPS.filter(function(strip) {
-    return strip.there;
-  })[0];
-  if (firstFitted) chosenTab = firstFitted.id + "Panel";
-}
-function chosenTakesLooks() {
-  return LED_PANELS.indexOf(chosenTab) >= 0 && runsOfPanel(chosenTab).every(function(run) {
-    return run.there !== false;
-  });
-}
-addStep(drawSteps.before, DRAW_BEFORE, "tabs", function() {
-  if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
-});
-function showChosen() {
-  TAB_PANELS.forEach(function(panel) {
-    var node = document.getElementById(panel);
-    node.open = true;
-    node.hidden = false;
-    node.classList.toggle("tabhidden", panel !== chosenTab);
-    node.classList.add("tabbed");
-  });
-  document.body.classList.toggle("nolooks", !chosenTakesLooks());
-  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
-    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-  }
-}
-function holdTabsPlace() {
-  if (!document.body.classList.contains("looksbelow")) return;
-  var stack = document.getElementById("tabStack");
-  var looks = document.getElementById("looks");
-  var holder = looks.parentNode;
-  var withLooks = holder.getBoundingClientRect().height;
-  var after = looks.nextSibling;
-  holder.removeChild(looks);
-  var extra = withLooks - holder.getBoundingClientRect().height;
-  holder.insertBefore(looks, after);
-  stack.style.minHeight = "";
-  var tallest = 0;
-  TAB_PANELS.forEach(function(panel) {
-    var node = document.getElementById(panel);
-    var high = node.getBoundingClientRect().height;
-    if (LED_PANELS.indexOf(panel) >= 0 && !node.contains(looks)) high += extra;
-    tallest = Math.max(tallest, high);
-  });
-  stack.style.minHeight = tallest + "px";
-}
-var tabSwatches = {};
-function tabSwatch(swatch, panel) {
-  tabSwatches[panel](swatch, panel);
-}
-function tabBlocked(panel) {
-  var run = runsOfPanel(panel)[0];
-  return run && run.strip ? stripBlockedBy(run) : "";
-}
-function renderLedTabs() {
-  var bar = document.getElementById("ledTabs");
-  bar.textContent = "";
-  TAB_PANELS.forEach(function(panel) {
-    var tab = document.createElement("button");
-    tab.type = "button";
-    var blocked = tabBlocked(panel);
-    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
-    if (blocked) tab.title = blocked;
-    tab.dataset.panel = panel;
-    var name = document.createElement("b");
-    name.textContent = TAB_NAMES[panel];
-    tab.appendChild(name);
-    var swatch = document.createElement("span");
-    swatch.className = "accswatch";
-    tabSwatch(swatch, panel);
-    tab.appendChild(swatch);
-    tab.addEventListener("click", function() {
-      chosenTab = panel;
-      if (chosenTakesLooks()) workOn(panel);
-      showChosen();
-      draw();
-    });
-    bar.appendChild(tab);
-  });
-  var gap = document.createElement("span");
-  gap.className = "gap";
-  bar.appendChild(gap);
-  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function() {
-    var was = bar.getBoundingClientRect().top;
-    setSetup(!setupOn);
-    draw();
-    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
-  }));
-}
-function keptOpen(panel) {
-  var node = document.getElementById(panel);
-  node.addEventListener("toggle", function() {
-    if (!node.open) node.open = true;
-  });
-}
-LED_PANELS.forEach(keptOpen);
-addStep(drawSteps.after, DRAW_AFTER, "tabs", function() {
-  if (!active.strip) setLastOutputRun(active);
-  if (active.strip) renderChosen("outChosen", lastOutputRun);
-  runs.filter(function(run) {
-    return run.strip && run !== active;
-  }).forEach(function(run) {
-    renderChosen(run.id + "Chosen", run);
-  });
-  renderLedTabs();
-});
-(function() {
-  var bar = document.createElement("div");
-  bar.className = "ledtabs";
-  bar.id = "ledTabs";
-  var first = document.getElementById("outPanel");
-  first.parentNode.insertBefore(bar, first);
-  var stack = document.createElement("div");
-  stack.className = "tabstack";
-  stack.id = "tabStack";
-  first.parentNode.insertBefore(stack, first);
-  LED_PANELS.forEach(function(panel) {
-    stack.appendChild(document.getElementById(panel));
-  });
-  if (!/[?&]above\b/.test(location.search)) {
-    document.body.classList.add("looksbelow");
-    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-  }
-})();
-function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
-}
-var firstFitted;
 
 // boards/editor/picker/program.js
 var OWN_GROUP = "On the drive";
@@ -11885,94 +10623,11 @@ function discoverBinBeside(card, bin) {
   card.appendChild(bin);
 }
 
-// boards/editor/picker/float_bar.js
-var FLOAT_MOVED = ["open", "save", "saveArrow", "check", "saveMenu"];
-var floatShown = false;
-var floatSaidTimer = null;
-var FLOAT_SAID_MS = 8e3;
-var floatSaid = h("span", {
-  className: "floatsaid",
-  onclick: function() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-});
-var floatWhere = h("span", { className: "floatwhere" });
-var floatButtons = h("span", { className: "floatbuttons" });
-var floatBar = h(
-  "div",
-  { className: "floatbar", "aria-hidden": "true", inert: true },
-  h(
-    "span",
-    { className: "floatleft" },
-    h(
-      "span",
-      { className: "floatname" },
-      document.querySelector("header h1").firstChild.textContent.trim()
-    ),
-    floatSaid
-  ),
-  floatWhere,
-  floatButtons
-);
-document.body.appendChild(floatBar);
-new IntersectionObserver(function(seen) {
-  floatHeader(!seen[seen.length - 1].isIntersecting);
-}).observe(document.querySelector("header"));
-function floatHeader(away) {
-  if (away === floatShown) return;
-  floatShown = away;
-  closeSaveMenu();
-  FLOAT_MOVED.forEach(function(id) {
-    var one = document.getElementById(id);
-    if (away) {
-      var box = one.getBoundingClientRect();
-      one.replaceWith(h("span", {
-        className: "floatstand",
-        "data-stands-for": id,
-        style: { width: box.width + "px", height: box.height + "px" }
-      }));
-      floatButtons.appendChild(one);
-    } else {
-      document.querySelector("[data-stands-for='" + id + "']").replaceWith(one);
-    }
-  });
-  floatBar.classList.toggle("shown", away);
-  floatBar.setAttribute("aria-hidden", away ? "false" : "true");
-  floatBar.inert = !away;
-}
-addStep(drawSteps.after, DRAW_AFTER, "floatBar", function() {
-  var shown = onProgramPage ? boardSet.program ? programTitle(boardSet.program) : "" : !state.scenes.length ? "" : state.at < 0 ? "Always on" : state.scenes[state.at].name;
-  replace(
-    floatWhere,
-    h("b", {}, onProgramPage ? "Programs" : "Effects"),
-    shown ? h("small", {}, shown) : null
-  );
-});
-bannerSteps.push(function(text, warn) {
-  clearTimeout(floatSaidTimer);
-  floatSaid.textContent = text || "";
-  floatSaid.title = text ? "Show at the top of the page" : "";
-  floatSaid.className = "floatsaid" + (warn === "hold" ? " hold" : warn ? " warn" : "");
-  if (text && !warn) {
-    floatSaidTimer = setTimeout(function() {
-      floatSaid.textContent = "";
-    }, FLOAT_SAID_MS);
-  }
-});
-
 // boards/editor/picker/gallery.js
 function lookCard(isMono, look, on) {
-  var card = document.createElement("div");
-  card.className = "card" + (on ? " picked" : "") + (look.name ? "" : " nothing");
-  var face = document.createElement("div");
-  face.className = "face";
+  var cells = [];
   if (look.name) {
-    var cells = [];
-    for (var i = 0; i < CARD_LIGHTS; i++) {
-      var cell = document.createElement("span");
-      face.appendChild(cell);
-      cells.push(cell);
-    }
+    for (var i = 0; i < CARD_LIGHTS; i++) cells.push(h("span"));
     cardFaces.push({
       cells,
       look,
@@ -11980,21 +10635,21 @@ function lookCard(isMono, look, on) {
       key: (isMono ? "m" : "c") + "-" + look.name
     });
   }
-  card.appendChild(face);
-  var name = document.createElement("div");
-  name.className = "name";
-  name.textContent = look.name || "Nothing";
-  card.appendChild(name);
-  card.title = look.name ? look.name + ": apply it to the selected stretch" : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch" : "turn a stretch off";
-  card.onclick = function() {
-    var run = galleryRun(isMono);
-    landLook(run, stretchFor(run, isMono), look.name);
-  };
-  if (!isMono && takesColour(lookNamed(look.name))) {
-    card.appendChild(paletteMark());
-    card.title += ". You can choose its colour";
-  }
-  return card;
+  var coloured = !isMono && takesColour(lookNamed(look.name));
+  return h(
+    "div",
+    {
+      className: "card" + (on ? " picked" : "") + (look.name ? "" : " nothing"),
+      title: (look.name ? look.name + ": apply it to the selected stretch" : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch" : "turn a stretch off") + (coloured ? ". You can choose its colour" : ""),
+      onclick: function() {
+        var run = galleryRun(isMono);
+        landLook(run, stretchFor(run, isMono), look.name);
+      }
+    },
+    h("div", { className: "face" }, cells),
+    h("div", { className: "name" }, look.name || "Nothing"),
+    coloured ? paletteMark() : null
+  );
 }
 function spanning() {
   return LOOKS.filter(function(look) {
@@ -12014,32 +10669,29 @@ function paintCards() {
 addStep(paintSteps, PAINT_ORDER, "cards", paintCards);
 function renderGalleries() {
   if (!haveKind(showing) && haveKind(!showing)) setShowing(!showing);
-  var box = document.getElementById("looks");
-  box.textContent = "";
-  var tabs = document.createElement("div");
-  tabs.className = "tabs sides";
-  box.appendChild(tabs);
   var run = galleryRun(showing);
   var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
   var lamp = section && run.lamps[section.from];
   var target = section ? targetFor(run, section) : null;
-  var shelf = document.createElement("div");
-  shelf.className = "shelf bare";
-  box.appendChild(shelf);
-  var looks = document.createElement("div");
-  looks.className = "gallery";
-  spanning().concat([{ name: null }]).forEach(function(look) {
-    var can = !look.name || !target || canPlay(look, target);
-    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
-    var card = lookCard(showing, look, on);
-    if (!can) {
-      card.className += " cannot";
-      card.onclick = null;
-      card.title = whyNot(look, target);
-    }
-    looks.appendChild(card);
-  });
-  shelf.appendChild(looks);
+  replace(
+    document.getElementById("looks"),
+    h("div", { className: "tabs sides" }),
+    h(
+      "div",
+      { className: "shelf bare" },
+      h("div", { className: "gallery" }, spanning().concat([{ name: null }]).map(function(look) {
+        var can = !look.name || !target || canPlay(look, target);
+        var on = can && lamp && lamp.colour === !showing && section.look === look.name;
+        var card = lookCard(showing, look, on);
+        if (!can) {
+          card.className += " cannot";
+          card.onclick = null;
+          card.title = whyNot(look, target);
+        }
+        return card;
+      }))
+    )
+  );
   groupGallery();
 }
 drawParts.galleries = renderGalleries;
@@ -12129,33 +10781,25 @@ function groupGallery() {
   groups = groups.filter(function(group) {
     return group.looks.length;
   });
-  var holder = document.createElement("div");
-  holder.className = "groupedlooks";
-  groups.forEach(function(group, at) {
-    var head = document.createElement("div");
-    head.className = "gallery-head lookshead";
+  flat.replaceWith(h("div", { className: "groupedlooks" }, groups.map(function(group, at) {
     var key = "looks:" + group.name;
     var open = groupOpen([key, "", [], false]);
     var fold = foldHead(group.name, group.says, open, function() {
       groupsOpen[key] = !open;
     });
     fold.classList.remove("gallery-head");
-    head.appendChild(fold);
-    if (at === 0 && nothing) {
-      nothing.classList.add("small");
-      head.appendChild(nothing);
-    }
-    holder.appendChild(head);
-    if (!open) return;
-    var row = document.createElement("div");
-    row.className = "gallery";
-    row.dataset.group = group.name;
-    group.looks.forEach(function(name) {
-      row.appendChild(cards[name]);
-    });
-    holder.appendChild(row);
-  });
-  flat.parentNode.replaceChild(holder, flat);
+    if (at === 0 && nothing) nothing.classList.add("small");
+    return [
+      h("div", { className: "gallery-head lookshead" }, fold, at === 0 ? nothing : null),
+      open ? h(
+        "div",
+        { className: "gallery", "data-group": group.name },
+        group.looks.map(function(name) {
+          return cards[name];
+        })
+      ) : null
+    ];
+  })));
 }
 function setUpLamp(one, lamp, channel) {
   takesPlace(one, lamp);
@@ -12170,99 +10814,913 @@ function setUpLamp(one, lamp, channel) {
   });
 }
 function renderBar(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar" + (carded(run) ? " carded" : "");
   var faces = [];
-  run.sections.forEach(function(section, at) {
-    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
-    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
-    cell.style.flex = widthOf(section) + " 1 0";
-    var first = run.lamps[section.from];
-    cell.title = (first && first.colour ? "colour" : "mono") + ", " + targetFor(run, section).selector;
-    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title = under.tip;
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" + beneath(under);
-    cell.appendChild(says);
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var i = section.from; i < section.to; i++) {
-      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
-    }
-    cell.appendChild(inside);
-    cell.onclick = function() {
-      if (dragged) return;
-      pick(run, at);
-      draw();
-    };
-    bar.appendChild(cell);
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click \xD7 to remove it";
-      edge.onmousedown = function(event) {
+  replace(
+    document.getElementById(where),
+    h(
+      "div",
+      { className: "scroller" },
+      h(
+        "div",
+        { className: "bar" + (carded(run) ? " carded" : "") },
+        run.sections.map(function(section, at) {
+          return [
+            barCell(run, section, at, faces),
+            at < run.sections.length - 1 ? barEdge(run, at, where) : null
+          ];
+        })
+      )
+    )
+  );
+  if (carded(run)) painters.push({ run, paint: function(all) {
+    paintFaces(faces, all);
+  } });
+}
+function barCell(run, section, at, faces) {
+  var first = run.lamps[section.from];
+  var lamps = carded(run) ? cardLamps(run, section, faces) : null;
+  var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
+  var cuts = [];
+  for (var i = section.from; i < section.to; i++) {
+    cuts.push(cutPoint(run, i, widthOf(section), section.from));
+  }
+  return h(
+    carded(run) && canEdit("outPanel") ? "div" : "button",
+    {
+      className: "sec" + (run === active && run.picked === at ? " picked" : ""),
+      style: { flex: widthOf(section) + " 1 0" },
+      title: under ? under.tip : (first && first.colour ? "colour" : "mono") + ", " + targetFor(run, section).selector,
+      onclick: function() {
+        if (dragged) return;
+        pick(run, at);
+        draw();
+      }
+    },
+    lamps,
+    washOf(run, section, look, under),
+    cellSays(look, widthOf(section), under),
+    h("span", { className: "cuts" }, cuts)
+  );
+}
+function barEdge(run, at, where) {
+  var edge = h(
+    "div",
+    {
+      className: "edge",
+      title: "drag to move this cut, or click \xD7 to remove it",
+      onmousedown: function(event) {
         event.preventDefault();
         remember(run);
         pick(run, at);
         setHolding({ run, which: at, where, had: run.sections.length });
         edge.classList.add("holding");
-      };
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\xD7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function(event) {
+      }
+    },
+    // Taking the cut out is its own target, so it is never confused with moving it
+    h("button", {
+      className: "drop",
+      title: "remove this cut and join the two stretches",
+      onmousedown: function(event) {
         event.stopPropagation();
-      };
-      drop.onclick = function(event) {
+      },
+      onclick: function(event) {
         event.stopPropagation();
         uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  if (carded(run)) painters.push({ run, paint: function(all) {
-    paintFaces(faces, all);
-  } });
+      }
+    }, "\xD7")
+  );
+  return edge;
 }
 drawParts.bars = function() {
   renderBar("outBar", outs);
   renderBar("monoBar", mono);
 };
 function cardLamps(run, section, faces) {
-  var row = document.createElement("span");
-  row.className = "cardlamps";
   var wiring2 = canEdit("outPanel");
+  var playing = lookNamed(section.look);
+  var lamps = [];
   for (var at = section.from; at <= section.to; at++) {
     var lamp = run.lamps[at];
-    var one = document.createElement("span");
     var channel = !lamp.colour && isChannel(lamp);
-    one.className = "cardlamp" + (channel ? " chan" : "");
-    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-    var playing = lookNamed(section.look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces[at] = face;
+    faces[at] = h("i");
+    var one = h("span", {
+      className: "cardlamp" + (channel ? " chan" : ""),
+      style: { "--chan": channel ? CHANNEL_INKS[lamp.channel] : null },
+      title: selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at))
+    }, faces[at], h("b", {}, shortName(lamp)));
     if (wiring2) setUpLamp(one, lamp, channel);
-    row.appendChild(one);
+    lamps.push(one);
   }
-  return row;
+  return h("span", { className: "cardlamps" }, lamps);
 }
+
+// boards/editor/picker/readback.js
+var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
+var boardComments = [];
+var notesNow = {};
+function readHeading(line) {
+  var inner = line.slice(1, -1);
+  var colon = inner.indexOf(":");
+  var name = (colon < 0 ? inner : inner.slice(0, colon)).trim();
+  var heading = {
+    name,
+    seconds: null,
+    restart: false,
+    after: null,
+    line,
+    written: line
+  };
+  var odd = false;
+  var settings = colon < 0 ? "" : inner.slice(colon + 1);
+  var then = settings.match(/(^|\s)then(\s+|$)/i);
+  if (then) {
+    heading.after = settings.slice(then.index + then[0].length).trim();
+    settings = settings.slice(0, then.index);
+    if (!heading.after) odd = true;
+  }
+  settings.split(/\s+/).forEach(function(word) {
+    if (!word) return;
+    var time = word.match(/^(\d+(?:\.\d+)?)([sm])$/i);
+    if (time) {
+      heading.seconds = Number(time[1]) * (time[2].toLowerCase() === "m" ? 60 : 1);
+      if (time[2].toLowerCase() === "m") odd = true;
+    } else if (word.toLowerCase() === "restart") heading.restart = true;
+    else odd = true;
+  });
+  if (!odd) heading.written = null;
+  return heading;
+}
+function readEffects(text) {
+  var parsed = { tokens: [], comments: [], slots: [{ heading: null, comments: [], kept: [] }] };
+  var comments = [];
+  var entry = null;
+  text.replace(/\r/g, "").split("\n").forEach(function(raw) {
+    var line = raw.trim();
+    var slot = parsed.slots[parsed.slots.length - 1];
+    if (!line) return;
+    if (line.charAt(0) === "#") {
+      if (line.indexOf(WIRED) === 0) parsed.wiring = line.slice(WIRED.length).trim();
+      else if (line.indexOf(NOT_FITTED) === 0) {
+        parsed.notFitted = line.slice(NOT_FITTED.length).split(",").map(function(name) {
+          return name.trim().toLowerCase();
+        }).filter(Boolean);
+      } else if (PAGE_LINES.indexOf(line) < 0) comments.push(raw.replace(/\s+$/, ""));
+      return;
+    }
+    if (line.charAt(0) === "[" && line.slice(-1) === "]") {
+      parsed.slots.push({ heading: readHeading(line), comments, kept: [] });
+      comments = [];
+      entry = null;
+      return;
+    }
+    if (/^board\s*:/i.test(line)) {
+      parsed.comments = parsed.comments.concat(comments);
+      comments = [];
+      parsed.tokens = parsed.tokens.concat(boardTokens(line.replace(/^board\s*:/i, "")));
+      entry = { board: true };
+      return;
+    }
+    if (entry && unquotedColon(line) < 0) {
+      if (entry.board) parsed.tokens = parsed.tokens.concat(boardTokens(line));
+      else entry.text += "\n" + raw.replace(/\s+$/, "");
+      return;
+    }
+    entry = { text: raw.replace(/\s+$/, ""), comments };
+    comments = [];
+    slot.kept.push(entry);
+  });
+  if (comments.length) {
+    parsed.slots[parsed.slots.length - 1].kept.push({ text: null, comments });
+  }
+  return parsed;
+}
+function readProgram(named, argued) {
+  boardSet.program = null;
+  if (!named) {
+    if (argued) boardResidue.push(argued);
+    return;
+  }
+  var path = named.slice("program=".length);
+  var given = argued ? argsRead(argued.slice("args=".length)) : [];
+  var kept = boardSet.args[path];
+  boardSet.args[path] = given;
+  if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
+    boardSet.program = path;
+    setProgramPage(true);
+    return;
+  }
+  setProgramPage(false);
+  boardSet.args[path] = kept;
+  boardResidue.push(named);
+  if (argued) boardResidue.push(argued);
+}
+var programWaiting = null;
+function readWaitingProgram() {
+  if (!programWaiting) return;
+  var named = programWaiting[0], argued = programWaiting[1];
+  programWaiting = null;
+  if (boardSet.program) return;
+  filterResidue(function(token) {
+    return token !== named && token !== argued;
+  });
+  var page = onProgramPage;
+  readProgram(named, argued);
+  if (!boardSet.program) setProgramPage(page);
+}
+programsReadSteps.push(readWaitingProgram);
+function absorbFile(text) {
+  var parsed = readEffects(text);
+  wiringRead = parsed.wiring || null;
+  setNotFittedRead(parsed.notFitted || null);
+  boardSet.reload = true;
+  boardSet.driveHidden = false;
+  clearResidue();
+  var named = null, argued = null;
+  parsed.tokens.forEach(function(token) {
+    var lowered = token.toLowerCase();
+    if (lowered === "reload=auto") boardSet.reload = true;
+    else if (lowered === "reload=manual") boardSet.reload = false;
+    else if (lowered === "drive=manual") boardSet.driveHidden = true;
+    else if (/^program=/i.test(token) && !named) named = token;
+    else if (/^args=/i.test(token) && !argued) argued = token;
+    else boardResidue.push(token);
+  });
+  readProgram(named, argued);
+  programWaiting = named && !boardSet.program && !programsKnown ? [named, argued] : null;
+  boardComments = parsed.comments;
+  function bodyKeeping(kept) {
+    var body = blankBody();
+    body.kept = copyKept(kept);
+    return body;
+  }
+  state.always.body = bodyKeeping(parsed.slots[0].kept);
+  state.scenes = parsed.slots.slice(1).map(function(slot) {
+    var heading = slot.heading;
+    return {
+      name: heading.name,
+      seconds: heading.seconds || 10,
+      waits: heading.seconds === null,
+      restart: heading.restart,
+      comments: slot.comments,
+      read: heading,
+      body: bodyKeeping(slot.kept)
+    };
+  });
+  state.scenes.forEach(function(scene) {
+    if (!scene.read.after) return;
+    var named2 = state.scenes.filter(function(other) {
+      return other.name === scene.read.after;
+    })[0];
+    if (named2) scene.then = sceneMark(named2);
+    else scene.read.written = scene.read.line;
+  });
+  settleLoneScene();
+  var bodies = [state.always.body].concat(state.scenes.map(function(scene) {
+    return scene.body;
+  }));
+  bodies.forEach(function(body) {
+    body.notes = body.notes || {};
+  });
+  bodyParts.forEach(function(part) {
+    if (part.readBoard) part.readBoard();
+  });
+  bodyParts.forEach(function(part) {
+    if (part.read) part.read(bodies);
+  });
+  readLights(bodies);
+  state.at = -1;
+  apply(state.always.body);
+  runs.filter(function(run) {
+    return run.strip && run.there && runs.some(function(other) {
+      return other.strip && other.there && run.takes.indexOf(other.name) >= 0;
+    });
+  }).forEach(dropStrip);
+  draw();
+}
+function outputsBrokenOut(bodies) {
+  var broken = {};
+  bodies.forEach(function(body) {
+    body.kept.forEach(function(one) {
+      var parts = entryParts(one.text);
+      if (!parts) return;
+      itemsNamed(parts.selector).forEach(function(places) {
+        (places || []).forEach(function(place) {
+          if (place.channel !== null && !OUTPUTS[place.out].mono) broken[place.out] = true;
+        });
+      });
+    });
+  });
+  return broken;
+}
+function wireAsRead(broken) {
+  setLayout(wiring.map(function(one, out) {
+    return { broken: OUTPUTS[out].mono || !!broken[out] };
+  }), order);
+  setLayout(wiring, plainOrder());
+}
+var WIRED = "# Wired in the order ";
+var wiringRead = null;
+function wiringLine() {
+  var plain = plainOrder();
+  var same = order.length === plain.length && order.every(function(place, at) {
+    return place.out === plain[at].out && place.channel === plain[at].channel;
+  });
+  if (same) return null;
+  return WIRED + joinedItems(order.map(function(place) {
+    var output = OUTPUTS[place.out];
+    var channel = place.channel === null || output.mono ? "" : "." + CHANNELS[place.channel];
+    return { out: place.out, rest: (output.number === null ? "" : String(output.number)) + channel };
+  }));
+}
+function orderSaid(said) {
+  var placed = placesNamed(/^\d/.test(said) ? OUTPUTS[0].prefix + said : said);
+  if (!placed) return null;
+  var seen = {};
+  for (var p = 0; p < placed.length; p++) {
+    var key = placed[p].out + "." + placed[p].channel;
+    if (seen[key]) return null;
+    seen[key] = true;
+  }
+  for (var o = 0; o < wiring.length; o++) {
+    if (OUTPUTS[o].mono) {
+      if (!seen[o + ".0"]) return null;
+      continue;
+    }
+    var whole = seen[o + ".null"];
+    var channels = [0, 1, 2].filter(function(c) {
+      return seen[o + "." + c];
+    }).length;
+    if (whole ? channels : channels !== 3) return null;
+  }
+  return placed;
+}
+function orderImplied(bodies) {
+  var named = [];
+  var needed = false;
+  bodies.forEach(function(body) {
+    body.kept.forEach(function(one) {
+      var parts = entryParts(one.text);
+      var places = parts && placesNamed(parts.selector);
+      if (!places || places.some(function(place) {
+        return place.channel !== null && !OUTPUTS[place.out].mono;
+      })) return;
+      var outputs = places.map(function(place) {
+        return place.out + 1;
+      });
+      var steps = outputs.slice(1).map(function(out2, at) {
+        return out2 - outputs[at];
+      });
+      if (steps.some(function(step2) {
+        return Math.abs(step2) !== 1;
+      }) && !(steps.some(function(step2) {
+        return step2 > 0;
+      }) && steps.some(function(step2) {
+        return step2 < 0;
+      }))) return;
+      if (steps.some(function(step2) {
+        return step2 > 0;
+      }) && steps.some(function(step2) {
+        return step2 < 0;
+      })) needed = true;
+      outputs.forEach(function(out2) {
+        if (named.indexOf(out2) < 0) named.push(out2);
+      });
+    });
+  });
+  if (!needed) return null;
+  for (var out = 1; out <= wiring.length; out++) if (named.indexOf(out) < 0) named.push(out);
+  return named.map(function(out2) {
+    return { out: out2 - 1, channel: OUTPUTS[out2 - 1].mono ? 0 : null };
+  });
+}
+function stretchWriting(run, texts, span2) {
+  var parts = entryParts(texts[0]);
+  var colour = null;
+  var custom = false;
+  var blinks = null;
+  function hexFor(word2) {
+    word2 = word2.toLowerCase();
+    return "#" + (word2 === "black" ? "000000" : WORDS[word2] ? hexOf(WORDS[word2]) : word2);
+  }
+  if (parts.left.colour) {
+    var word = parts.left.colour.toLowerCase();
+    colour = hexFor(word);
+    custom = !WORDS[word];
+  }
+  if (parts.right.colour && parts.right.colour.indexOf("|") >= 0) {
+    blinks = { colours: parts.right.colour.split("|").map(hexFor), at: 0 };
+    colour = blinks.colours[0];
+    custom = !wordFor(colour);
+  }
+  var level = parts.left.level ? parseFloat(parts.left.level) / 100 : 1;
+  var tries = [];
+  [{ colour, custom }, { colour: null, custom: false }].forEach(function(chosen) {
+    [false, true].forEach(function(back) {
+      LOOKS.forEach(function(look2) {
+        tries.push({ look: look2, chosen, back });
+      });
+    });
+  });
+  for (var t = 0; t < tries.length; t++) {
+    var look = tries[t].look;
+    var section = {
+      from: span2.from,
+      to: span2.to,
+      look: keyOf(look),
+      pace: 0.5,
+      mood: 0.5,
+      colour: tries[t].chosen.colour,
+      custom: tries[t].chosen.custom,
+      reversed: tries[t].back,
+      level,
+      blinks: blinks && look.name === BLINK ? JSON.parse(JSON.stringify(blinks)) : null,
+      exact: null,
+      timings: signalTimings(look, texts)
+    };
+    if (!canPlay(look, targetFor(run, section))) continue;
+    solveSliders(run, section, look, texts);
+    var written = sectionLines(run, section, look);
+    if (sameLines(written, texts)) return section;
+    if (sameShape(written, texts) && refineSliders(run, section, look, texts)) return section;
+  }
+  return null;
+}
+function signalTimings(look, texts) {
+  if (!SIGNAL_TIMINGS[look.name]) return null;
+  var timings = {};
+  SIGNAL_TIMINGS[look.name].forEach(function(part) {
+    var said = (texts.join(" ").match(new RegExp("(^|\\s)" + part[0] + "=([\\d.]+)")) || [])[2];
+    if (said !== void 0) timings[part[0]] = Number(said);
+  });
+  return timings;
+}
+function sameLines(written, texts) {
+  return written.length === texts.length && written.every(function(line, at) {
+    return line === texts[at];
+  });
+}
+function sameShape(written, texts) {
+  function shape(line) {
+    return line.replace(/=[^\s:]+/g, "=#");
+  }
+  return written.length === texts.length && written.every(function(line, at) {
+    return shape(line) === shape(texts[at]);
+  });
+}
+function refineSliders(run, section, look, texts) {
+  var sliders = ["pace", "mood"];
+  for (var pass = 0; pass < 2; pass++) {
+    for (var s = 0; s < sliders.length; s++) {
+      var slider = sliders[s];
+      if (section.exact && section.exact[slider]) continue;
+      for (var step2 = 0; step2 <= 200; step2++) {
+        var trial = Object.assign({}, section);
+        trial[slider] = step2 / 200;
+        if (sameLines(sectionLines(run, trial, look), texts)) {
+          section[slider] = trial[slider];
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+function solveSliders(run, section, look, texts) {
+  ["pace", "mood"].forEach(function(slider) {
+    var key = figureKey(run, section, look, slider);
+    if (!key) return;
+    var value = settingIn(texts, key);
+    if (value === null) return;
+    var found = placeFor(run, section, look, slider, key, value);
+    section[slider] = found.place;
+    if (found.off > 1e-6) {
+      section.exact = Object.assign({}, section.exact);
+      section.exact[slider] = { key, value };
+    }
+  });
+}
+function groupsFrom(at, read) {
+  var found = [];
+  runs.forEach(function(run) {
+    var lamps = [];
+    for (var k = 1; at + k <= keptNow.length; k++) {
+      var parts = entryParts(keptNow[at + k - 1].text);
+      var some = parts && lampsNamed(run, parts.selector);
+      if (!some) break;
+      lamps = lamps.concat(some);
+      var span2 = spanOf(lamps);
+      if (!span2 || span2.to - span2.from + 1 !== lamps.length) continue;
+      var clear = !read[run.name].some(function(one) {
+        return one.from <= span2.to && span2.from <= one.to;
+      });
+      if (clear) found.push({ run, k, span: span2 });
+    }
+  });
+  return found.sort(function(a, b) {
+    return b.k - a.k;
+  });
+}
+function readLights(bodies) {
+  var lengths = {};
+  boardResidue.forEach(function(token) {
+    var named = token.match(/^(\w+)=(\d+)(?:\|(\S+))?$/i);
+    var run = named && stripNamed(named[1]);
+    if (!run) return;
+    var values = readStripTail(run, named[3] || "");
+    if (!values) return;
+    values.leds = Number(named[2]);
+    values.there = true;
+    lengths[run.name] = { token, values };
+  });
+  runs.forEach(function(run) {
+    if (run.strip && lengths[run.name]) stripSet(run, lengths[run.name].values);
+  });
+  if (Object.keys(lengths).length) {
+    runs.forEach(function(run) {
+      if (run.strip && !lengths[run.name]) stripSet(run, { there: false });
+    });
+  }
+  if (notFittedRead) {
+    runs.forEach(function(run) {
+      if (!run.strip || lengths[run.name]) return;
+      var strip = stripDescribed(run);
+      stripSet(run, { there: strip.fitted && !saidNotFitted(strip.tab) });
+    });
+  }
+  var stripsRead = {};
+  var broken = outputsBrokenOut(bodies);
+  var said = wiringRead && orderSaid(wiringRead);
+  bodies.forEach(function(body) {
+    apply(body);
+    if (said) {
+      setLayout(wiring.map(function(one2, out) {
+        return { broken: said.some(function(place) {
+          return place.out === out && place.channel !== null;
+        }) };
+      }), said.map(function(place) {
+        return { out: place.out, channel: place.channel };
+      }));
+    } else {
+      wireAsRead(broken);
+      var implied = !Object.keys(broken).length && orderImplied(bodies);
+      if (implied) setLayout(wiring, implied);
+    }
+    runs.forEach(function(run) {
+      run.sections = [];
+    });
+    settle();
+    var read = {};
+    runs.forEach(function(run) {
+      read[run.name] = [];
+    });
+    var at = 0;
+    while (at < keptNow.length) {
+      var matched = false;
+      var candidates = groupsFrom(at, read);
+      for (var c = 0; c < candidates.length && !matched; c++) {
+        var one = candidates[c];
+        var group = keptNow.slice(at, at + one.k);
+        var texts = group.map(function(kept) {
+          return kept.text;
+        });
+        var section = stretchWriting(one.run, texts, one.span);
+        if (!section) continue;
+        read[one.run.name].push(section);
+        if (one.run.strip) stripsRead[one.run.name] = true;
+        group.forEach(function(kept) {
+          if (kept.comments.length) notesNow[kept.text] = kept.comments;
+        });
+        keptNow.splice(at, one.k);
+        matched = true;
+      }
+      if (!matched) at++;
+    }
+    runs.forEach(function(run) {
+      var sorted = read[run.name].sort(function(a, b) {
+        return a.from - b.from;
+      });
+      var filled = [];
+      var next = 0;
+      sorted.forEach(function(section2) {
+        if (section2.from > next) filled.push(blank(next, section2.from - 1, run));
+        filled.push(section2);
+        next = section2.to + 1;
+      });
+      if (next < run.lamps.length) filled.push(blank(next, run.lamps.length - 1, run));
+      run.sections = filled;
+    });
+    settle();
+    var captured = capture();
+    Object.keys(captured).forEach(function(key) {
+      body[key] = captured[key];
+    });
+  });
+  Object.keys(stripsRead).forEach(function(name) {
+    boardResidue.splice(boardResidue.indexOf(lengths[name].token), 1);
+  });
+}
+addStep(bodyParts, BODY_ORDER, "readback", {
+  capture: function(body) {
+    body.kept = copyKept(keptNow);
+    body.notes = JSON.parse(JSON.stringify(notesNow));
+  },
+  apply: function(body) {
+    setKept(copyKept(body.kept));
+    notesNow = JSON.parse(JSON.stringify(body.notes || {}));
+  },
+  // A body with nothing in it keeps nothing either, whatever the scene on show kept
+  blank: function(body) {
+    body.kept = [];
+    body.notes = {};
+  },
+  // Kept entries come last in their scene, each with its comments above it. A line read into
+  // the page has its comments above it again while it writes the same
+  entries: function(body, written) {
+    var notes = body.notes || {};
+    var lines = [];
+    written.forEach(function(line) {
+      lines = lines.concat(notes[line] || []);
+      lines.push(line);
+    });
+    (body.kept || []).forEach(function(one) {
+      lines = lines.concat(one.comments);
+      if (one.text !== null) lines.push(one.text);
+    });
+    return lines;
+  }
+});
+function heldOfToken(token) {
+  var named = token.match(/^(\w+)=/);
+  var name = named && named[1].toLowerCase();
+  var held = STRIPS.map(function(strip) {
+    return strip.name;
+  }).concat(SCREEN_PORTS.map(function(port) {
+    return port.id;
+  }));
+  return held.indexOf(name) >= 0 ? name : null;
+}
+addStep(boardLineSteps.after, BOARD_LINE_AFTER, "readback", function(line) {
+  var lower = (line || "").toLowerCase();
+  var kept = boardResidue.filter(function(token) {
+    var name = heldOfToken(token);
+    return !name || !new RegExp("\\b" + name + "=").test(lower);
+  });
+  if (kept.length) line = (line || "board:") + " " + kept.join(" ");
+  return line;
+});
+fileHead.under.push(function() {
+  var wired = wiringLine();
+  return wired ? [wired] : [];
+});
+fileHead.under.push(function() {
+  var off = notFittedLine();
+  return off ? [off] : [];
+});
+fileHead.above.push(function() {
+  return boardComments;
+});
+function renderKept() {
+  var box = document.getElementById("keptLines");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "keptLines";
+    box.className = "keptlines";
+    var preview = document.getElementById("preview");
+    var file = preview.closest("details") || preview;
+    file.parentNode.insertBefore(box, file);
+  }
+  var shown = keptNow.filter(function(one) {
+    return one.text !== null;
+  });
+  box.hidden = !shown.length;
+  box.textContent = "";
+  if (!shown.length) return;
+  var head = document.createElement("div");
+  head.className = "keptsay";
+  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") + " the picker cannot edit:";
+  box.appendChild(head);
+  keptNow.forEach(function(one, at) {
+    if (one.text === null) return;
+    var row = document.createElement("div");
+    row.className = "keptrow";
+    var code = document.createElement("code");
+    code.textContent = one.text;
+    row.appendChild(code);
+    var drop = document.createElement("button");
+    drop.className = "keptdrop";
+    drop.textContent = "\xD7";
+    drop.title = "Remove this line from the file";
+    drop.onclick = function() {
+      keptNow.splice(at, 1);
+      draw();
+    };
+    row.appendChild(drop);
+    box.appendChild(row);
+  });
+}
+function markKeptLights() {
+  runs.forEach(function(run) {
+    var named = keptLights(run);
+    if (run.strip) {
+      var bar = document.getElementById(run.id + "Bar");
+      if (!bar) return;
+      bar.querySelectorAll(".sec").forEach(function(cell, at) {
+        var section = run.sections[at];
+        if (!section) return;
+        for (var lamp = section.from; lamp <= section.to; lamp++) {
+          if (named[lamp]) {
+            cell.classList.add("keptlamp");
+            cell.title = "used by a line the picker cannot edit: " + named[lamp][0].text;
+            return;
+          }
+        }
+      });
+      return;
+    }
+    var box = document.getElementById(run === outs ? "outBar" : "monoBar");
+    if (!box) return;
+    box.querySelectorAll(".cardlamp").forEach(function(lamp, at) {
+      if (!named[at]) return;
+      lamp.classList.add("keptlamp");
+      lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
+    });
+  });
+}
+addStep(drawSteps.after, DRAW_AFTER, "readback", function() {
+  renderKept();
+  markKeptLights();
+});
+addStep(connectSteps, CONNECT_ORDER, "readback", async function() {
+  var text = await (await drive.fileHandle.getFile()).text();
+  if (!text.trim()) return;
+  var ours = text.indexOf(HEADER) === 0;
+  if (!ours) {
+    var kept = readEffects(text).slots.reduce(function(count, slot) {
+      return count + slot.kept.filter(function(one) {
+        return one.text !== null;
+      }).length;
+    }, 0);
+    var open = confirm("This file was not written by the picker. Open it anyway? " + (kept === 1 ? "One line" : kept + " lines") + " would be kept unchanged. Cancel to start fresh, replacing the file when you save.");
+    if (!open) {
+      rememberRead(text);
+      return;
+    }
+  }
+  absorbFile(text);
+  rememberRead(text);
+});
+function rememberRead(text) {
+  try {
+    localStorage.setItem(WROTE_KEY, text);
+  } catch (e) {
+  }
+}
+
+// boards/editor/picker/save_menu.js
+var saveMenu = document.getElementById("saveMenu");
+var saveArrow = document.getElementById("saveArrow");
+function saveChoice(words, hint, on, flip, refused) {
+  var box = h("input", {
+    type: "checkbox",
+    checked: on,
+    disabled: !!refused,
+    onchange: function() {
+      flip(box.checked);
+      draw();
+    }
+  });
+  return h(
+    "label",
+    { className: "savechoice" + (refused ? " refused" : "") },
+    box,
+    h("span", {}, words, h("small", {}, refused || hint))
+  );
+}
+function renderSaveMenu() {
+  replace(
+    saveMenu,
+    saveChoice(
+      "Play saves without an eject",
+      boardSet.program ? "saving restarts the board and runs the program" : "the first save after turning this on still needs an eject",
+      boardSet.reload,
+      function(on) {
+        boardSet.reload = on;
+      },
+      null
+    ),
+    saveChoice(
+      "Keep the drive hidden at start",
+      "double-press Boot to show it",
+      boardSet.driveHidden,
+      function(on) {
+        boardSet.driveHidden = on;
+      },
+      driveMeansSomething() ? null : "always shown while a program runs"
+    )
+  );
+}
+function showSaveMenu(shown) {
+  saveMenu.hidden = !shown;
+  saveArrow.setAttribute("aria-expanded", shown ? "true" : "false");
+}
+function closeSaveMenu() {
+  showSaveMenu(false);
+}
+saveArrow.onclick = function() {
+  showSaveMenu(saveMenu.hidden);
+  if (saveMenu.hidden) return;
+  var within = saveMenu.offsetParent.getBoundingClientRect();
+  var under = saveArrow.getBoundingClientRect();
+  saveMenu.style.left = "auto";
+  saveMenu.style.right = within.right - under.right + "px";
+  saveMenu.style.top = under.bottom - within.top + 6 + "px";
+};
+document.addEventListener("click", function(event) {
+  if (saveMenu.hidden || saveMenu.contains(event.target) || saveArrow.contains(event.target)) return;
+  closeSaveMenu();
+});
+document.addEventListener("keydown", function(event) {
+  if (event.key !== "Escape" || saveMenu.hidden) return;
+  closeSaveMenu();
+  saveArrow.focus();
+});
+addStep(drawSteps.after, DRAW_AFTER, "saveMenu", renderSaveMenu);
+
+// boards/editor/picker/float_bar.js
+var FLOAT_MOVED = ["open", "save", "saveArrow", "check", "saveMenu"];
+var floatShown = false;
+var floatSaidTimer = null;
+var FLOAT_SAID_MS = 8e3;
+var floatSaid = h("span", {
+  className: "floatsaid",
+  onclick: function() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
+var floatWhere = h("span", { className: "floatwhere" });
+var floatButtons = h("span", { className: "floatbuttons" });
+var floatBar = h(
+  "div",
+  { className: "floatbar", "aria-hidden": "true", inert: true },
+  h(
+    "span",
+    { className: "floatleft" },
+    h(
+      "span",
+      { className: "floatname" },
+      document.querySelector("header h1").firstChild.textContent.trim()
+    ),
+    floatSaid
+  ),
+  floatWhere,
+  floatButtons
+);
+document.body.appendChild(floatBar);
+new IntersectionObserver(function(seen) {
+  floatHeader(!seen[seen.length - 1].isIntersecting);
+}).observe(document.querySelector("header"));
+function floatHeader(away) {
+  if (away === floatShown) return;
+  floatShown = away;
+  closeSaveMenu();
+  FLOAT_MOVED.forEach(function(id) {
+    var one = document.getElementById(id);
+    if (away) {
+      var box = one.getBoundingClientRect();
+      one.replaceWith(h("span", {
+        className: "floatstand",
+        "data-stands-for": id,
+        style: { width: box.width + "px", height: box.height + "px" }
+      }));
+      floatButtons.appendChild(one);
+    } else {
+      document.querySelector("[data-stands-for='" + id + "']").replaceWith(one);
+    }
+  });
+  floatBar.classList.toggle("shown", away);
+  floatBar.setAttribute("aria-hidden", away ? "false" : "true");
+  floatBar.inert = !away;
+}
+addStep(drawSteps.after, DRAW_AFTER, "floatBar", function() {
+  var shown = onProgramPage ? boardSet.program ? programTitle(boardSet.program) : "" : !state.scenes.length ? "" : state.at < 0 ? "Always on" : state.scenes[state.at].name;
+  replace(
+    floatWhere,
+    h("b", {}, onProgramPage ? "Programs" : "Effects"),
+    shown ? h("small", {}, shown) : null
+  );
+});
+bannerSteps.push(function(text, warn) {
+  clearTimeout(floatSaidTimer);
+  floatSaid.textContent = text || "";
+  floatSaid.title = text ? "Show at the top of the page" : "";
+  floatSaid.className = "floatsaid" + (warn === "hold" ? " hold" : warn ? " warn" : "");
+  if (text && !warn) {
+    floatSaidTimer = setTimeout(function() {
+      floatSaid.textContent = "";
+    }, FLOAT_SAID_MS);
+  }
+});
 
 // boards/editor/picker/scene_tray.js
 function sceneTurn(scene) {
@@ -14313,33 +13771,528 @@ discoverKinds.sound = {
   face: discoverSoundFace
 };
 
-// boards/editor/picker/tab_swatches.js
-function liveSwatch(swatch, panel) {
-  swatch.textContent = "";
-  swatch.className = "accswatch liveswatch";
-  var absent = runsOfPanel(panel).every(function(run) {
-    return run.strip && run.there === false;
+// boards/editor/picker/stretch_editor.js
+function renderColourPick(box, run) {
+  var section = run.sections[run.picked];
+  function live() {
+    return run.sections[run.picked];
+  }
+  var remembered = run.id + ":" + section.from;
+  var offered = swatchesFor(run, section);
+  var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
+  var chosenWord = offered.filter(function(name) {
+    return hexOf(WORDS[name]) === chosenHex;
+  })[0] || null;
+  var open = section.custom || !chosenWord;
+  if (open) {
+    customColours[remembered] = {
+      colour: section.colour || "#ffffff",
+      level: section.level === void 0 ? 1 : section.level
+    };
+  }
+  var kept = customColours[remembered];
+  var swatches = h(
+    "div",
+    { className: "sswatches" },
+    offered.map(function(name) {
+      return h("button", {
+        type: "button",
+        className: "swatch" + (chosenWord === name ? " on" : ""),
+        style: { background: rgbInk(WORDS[name]) },
+        title: name,
+        onclick: function() {
+          live().colour = "#" + hexOf(WORDS[name]);
+          live().custom = false;
+          draw();
+        }
+      }, h("b", {}, name));
+    }),
+    // The last one is not a colour but the way to every other one. A swatch keeps the
+    // brightness already set, and custom comes back at its own
+    h("button", {
+      type: "button",
+      className: "swatch custom" + (open ? " on" : ""),
+      style: { "--picked": kept ? atBrightness(kept.colour, kept.level) : null },
+      title: "any hue and saturation, with its own brightness",
+      onclick: function() {
+        live().custom = true;
+        if (kept) {
+          live().colour = kept.colour;
+          live().level = kept.level;
+        }
+        draw();
+      }
+    }, h("b", {}, "custom"))
+  );
+  var parts = takeApart(hexRgb(section.colour || "#ffffff"));
+  var at = h("div", { className: "at", style: {
+    left: parts.hue / 360 * 100 + "%",
+    top: (1 - parts.sat) * 100 + "%",
+    background: rgbInk(fieldColour(parts.hue, parts.sat))
+  } });
+  var field = h("div", { className: "field" }, at);
+  function pointingAt(event) {
+    var box2 = field.getBoundingClientRect();
+    var across = Math.max(0, Math.min(1, (event.clientX - box2.left) / box2.width));
+    var down = Math.max(0, Math.min(1, (event.clientY - box2.top) / box2.height));
+    var rgb = fieldColour(across * 360, 1 - down);
+    live().colour = "#" + hexOf(rgb);
+    live().custom = true;
+    at.style.left = across * 100 + "%";
+    at.style.top = down * 100 + "%";
+    at.style.background = rgbInk(rgb);
+    hex.value = atBrightness(live().colour, live().level);
+    preview.style.background = hex.value;
+    renderPreview();
+  }
+  field.onpointerdown = function(event) {
+    field.setPointerCapture(event.pointerId);
+    pointingAt(event);
+  };
+  field.onpointermove = function(event) {
+    if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
+  };
+  field.onpointerup = function() {
+    draw();
+  };
+  var hex = h("input", {
+    type: "text",
+    maxLength: 7,
+    value: atBrightness(section.colour || "#ffffff", section.level),
+    title: "the colour as written, at its brightness. Paste a colour in to set the hue, saturation and brightness below",
+    oninput: function() {
+      var said = hex.value.replace("#", "").trim();
+      if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
+      var typedRgb = hexRgb("#" + said.toLowerCase());
+      var got = takeApart(typedRgb);
+      var rgb = fieldColour(got.hue, got.sat);
+      live().colour = "#" + hexOf(rgb);
+      live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
+      live().custom = true;
+      at.style.left = got.hue / 360 * 100 + "%";
+      at.style.top = (1 - got.sat) * 100 + "%";
+      at.style.background = rgbInk(rgb);
+      preview.style.background = "#" + said.toLowerCase();
+      renderPreview();
+    },
+    onblur: function() {
+      draw();
+    }
   });
-  if (absent) swatch.classList.add("absent");
-  runsOfPanel(panel).forEach(function(run) {
-    var cells = run.lamps.map(function() {
-      var cell = document.createElement("span");
-      swatch.appendChild(cell);
-      return cell;
-    });
-    painters.push({ run, paint: function(all) {
-      cells.forEach(function(cell, at) {
-        var one = all[at];
-        cell.style.background = one && one.off ? "#2a2d30" : !one || one.nothing ? "transparent" : inkAt(one);
-      });
-    } });
+  hex.spellcheck = false;
+  var preview = h("div", {
+    className: "scustompreview",
+    title: "The colour as written, at its brightness",
+    style: { background: atBrightness(section.colour || "#ffffff", section.level) }
   });
-  swatch.title = "what the lights are showing";
+  var holds = h(
+    "div",
+    { className: "customholds scustom" },
+    field,
+    h(
+      "div",
+      { className: "scustomside" },
+      h("div", { className: "hexline" }, h("label", {}, "Hex"), hex),
+      preview
+    )
+  );
+  holds.style.display = open ? "" : "none";
+  box.appendChild(h("div", { className: "colourpick groundpick" }, swatches, holds));
 }
-LED_PANELS.forEach(function(panel) {
-  tabSwatches[panel] = liveSwatch;
+function signalFace(name, key) {
+  var lit = SIGNAL_STATES[name][key];
+  function lamp(state2, ink) {
+    if (!state2) return SIGNAL_INK.dark;
+    return ink;
+  }
+  function flashing2(state2) {
+    return state2 === "f" ? " class='flashing'" : "";
+  }
+  var head = [SIGNAL_INK.red, SIGNAL_INK.amber, SIGNAL_INK.green].map(function(ink, at) {
+    return "<circle cx='6' cy='" + (4.5 + at * 6.5) + "' r='2.6' fill='" + lamp(lit[at], ink) + "'" + flashing2(lit[at]) + "/>";
+  }).join("");
+  var wide = 12;
+  var figures = "";
+  if (lit.length > 3) {
+    wide = 22;
+    var stand = lamp(lit[3], SIGNAL_INK.red), walk = lamp(lit[4], SIGNAL_INK.green);
+    figures = "<rect x='12.5' y='1' width='9' height='22' rx='2' fill='#1c1f22'/><g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + stand + "'" + flashing2(lit[3]) + "><circle cx='17' cy='3.6' r='1.1' fill='" + stand + "' stroke='none'/><path d='M17 5.2 V8.6 M15.6 6.4 H18.4 M16.3 8.6 V11 M17.7 8.6 V11'/></g><g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + walk + "'" + flashing2(lit[4]) + "><circle cx='17.4' cy='13.6' r='1.1' fill='" + walk + "' stroke='none'/><path d='M17.2 15.2 L16.8 18.3 M15.6 16.8 L18.6 16 M16.8 18.3 L15.4 21 M16.8 18.3 L18.6 20.8'/></g>";
+  }
+  return "<svg class='signalface' viewBox='0 0 " + wide + " 24' width='" + wide * 0.9 + "' height='21.6' aria-hidden='true'><rect x='1' y='0' width='10' height='24' rx='3' fill='#1c1f22'/>" + head + figures + "</svg>";
+}
+function paintPalette(swatches, lines) {
+  replace(swatches, (lines.join(" ").match(/colour=[^\s:]+/g) || []).map(function(said) {
+    return h("span", {
+      className: "palettechip",
+      style: { background: inkOf(said.slice(7)) },
+      title: said.slice(7)
+    });
+  }));
+}
+function figureCells(said, unit, title, take) {
+  var box = h("input", {
+    type: "text",
+    inputMode: "decimal",
+    className: "figurebox",
+    value: said,
+    title,
+    onchange: function() {
+      var typed = parseFloat(box.value.replace(",", "."));
+      if (!(typed > 0)) {
+        box.value = said;
+        return;
+      }
+      take(typed);
+      draw();
+    }
+  });
+  return [box, h("span", { className: "figureunit" }, unit)];
+}
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  var memo = box && section && standingIn(run, section);
+  if (memo) {
+    box.querySelector(".chosen").appendChild(h(
+      "div",
+      { className: "standin" },
+      look.name + ", replacing " + memo.look + ", which mono lights cannot play. Rejoin to restore " + memo.look + "."
+    ));
+  }
+  if (box && look && look.detents) {
+    detented(box, where, typeof look.detents === "function" ? look.detents(targetFor(run, section)) : look.detents);
+  }
+  var wrap = box && box.querySelector(".chosen");
+  if (!wrap || !look) return;
+  var tuning = wrap.querySelector(".tuning");
+  if (!tuning) tuning = wrap.appendChild(h("div", { className: "tuning" }));
+  if (look.solid) tuning.textContent = "";
+  var first = run.lamps[section.from];
+  var coloured = takesColour(look) && !!first && first.colour;
+  var mono2 = !!first && !first.colour;
+  var toneless = look.mood === "Colour" || mono2 && look.mood === "Palette";
+  if ((coloured || mono2) && toneless && tuning.children.length >= 4) {
+    tuning.removeChild(tuning.children[3]);
+    tuning.removeChild(tuning.children[2]);
+  }
+  brightnessSlider(tuning, run, where);
+  if (coloured) {
+    renderColourPick(wrap, run);
+    wrap.appendChild(tuning);
+  }
 });
-addStep(drawSteps.after, DRAW_AFTER, "tabSwatches", paintAll);
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  var tuning = box && box.querySelector(".chosen .tuning");
+  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
+  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
+  var after = speed ? speed.nextSibling : null;
+  if (speed) {
+    tuning.removeChild(speed.previousElementSibling);
+    tuning.removeChild(speed);
+  }
+  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
+  if (ease) {
+    var easeLabel = ease.previousElementSibling;
+    if (after === easeLabel) after = ease.nextSibling;
+    tuning.insertBefore(easeLabel, after);
+    tuning.insertBefore(ease, after);
+    after = ease.nextSibling;
+  }
+  SIGNAL_TIMINGS[look.name].forEach(function(part) {
+    var range = h("input", {
+      style: { "accent-color": SIGNAL_TINT[part[0]] },
+      type: "range",
+      min: part[3],
+      max: part[4],
+      step: 0.5,
+      value: withSection(section, function() {
+        return timingOf(look.name, part[0]);
+      }),
+      "data-focus": where + "-timing-" + part[0],
+      "data-timing": part[0],
+      title: "seconds, " + part[1].toLowerCase(),
+      oninput: function() {
+        var mine = run.sections[run.picked];
+        mine.timings = Object.assign({}, mine.timings);
+        mine.timings[part[0]] = Number(range.value);
+        renderPreview();
+      }
+    });
+    tuning.insertBefore(h(
+      "label",
+      {
+        className: "signalstate",
+        html: signalFace(look.name, part[0])
+      },
+      h("span", {}, part[1])
+    ), after);
+    tuning.insertBefore(range, after);
+  });
+});
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var tuning = box && box.querySelector(".chosen .tuning");
+  if (!tuning) return;
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function(range) {
+    var moved = range.oninput;
+    range.oninput = function() {
+      if (moved) moved.call(range);
+      var live = run.sections[run.picked];
+      var cell = barCells(run)[run.picked];
+      var wash = cell && cell.querySelector(".lit");
+      if (wash && look) wash.style.background = washFor(run, live, look);
+    };
+    if (!range.onchange) range.onchange = function() {
+      draw();
+    };
+  });
+  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function(label) {
+    var drawn = SETTING_ICONS[label.textContent];
+    if (!drawn || label.querySelector(".settingicon")) return;
+    if (label.textContent === "Fade") {
+      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
+    }
+    label.classList.add("withicon");
+    label.prepend(h("svg:svg", {
+      class: "settingicon",
+      viewBox: "0 0 16 16",
+      "aria-hidden": "true",
+      html: drawn
+    }));
+  });
+});
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var who = box && box.querySelector(".chosen .who");
+  var section = run && run.sections[run.picked];
+  if (!who || !section) return;
+  var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
+  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
+  replace(
+    who,
+    h("b", {}, look ? look.name : "Nothing"),
+    " on " + wherePlays(run, section, reversed)
+  );
+  who.title = targetFor(run, section).selector;
+  if (under) {
+    who.after(h(
+      "div",
+      { className: "underhint" },
+      under.tip + " Choose a look to give this scene its own."
+    ));
+  }
+});
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var who = box && box.querySelector(".chosen .who");
+  if (!section || !who) return;
+  who.appendChild(h("span", {}, Array.from(who.childNodes)));
+  who.classList.add("withway");
+  if (run.strip) who.appendChild(splitTools(where, run));
+  who.appendChild(directionToggle(run, section));
+});
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var pick2 = box && box.querySelector(".chosen .colourpick");
+  var first = section && run.lamps[section.from];
+  if (!pick2 || section.look !== BLINK || !first || !first.colour) return;
+  function live() {
+    return run.sections[run.picked];
+  }
+  var blinks = section.blinks || { colours: [section.colour || "#ff0000"], at: 0 };
+  blinks.colours[blinks.at] = section.colour;
+  section.blinks = blinks;
+  function choose(at) {
+    var mine = live();
+    mine.blinks.at = at;
+    mine.colour = mine.blinks.colours[at];
+    mine.custom = !blinkNamed(mine.colour);
+    draw();
+  }
+  var several = blinks.colours.length > 1;
+  pick2.prepend(h(
+    "div",
+    { className: "blinklist" },
+    h("span", { className: "blinksay" }, several ? "Blinks through" : "Blinks in"),
+    blinks.colours.map(function(hex, at) {
+      return [
+        h("button", {
+          type: "button",
+          className: "blinkchip" + (at === blinks.at ? " on" : ""),
+          style: { "--chip": hex },
+          title: (at === blinks.at ? "the colour being edited below, " : "change ") + (blinkNamed(hex) || hex),
+          onclick: function() {
+            choose(at);
+          }
+        }),
+        several ? h("button", {
+          type: "button",
+          className: "blinkdrop",
+          title: "stop blinking in " + (blinkNamed(hex) || hex),
+          onclick: function() {
+            var mine = live();
+            mine.blinks.colours.splice(at, 1);
+            var left = mine.blinks.colours;
+            mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
+            mine.colour = left[mine.blinks.at];
+            mine.custom = !blinkNamed(mine.colour);
+            if (left.length === 1) mine.blinks = void 0;
+            draw();
+          }
+        }, "\xD7") : null
+      ];
+    }),
+    // The colour added is a copy of the last, a custom one included, to be changed from there
+    h("button", {
+      type: "button",
+      className: "blinkmore",
+      title: "blink through several colours, one per blink",
+      onclick: function() {
+        var mine = live();
+        if (!mine.blinks) mine.blinks = { colours: [mine.colour], at: 0 };
+        var colours = mine.blinks.colours;
+        colours.push(colours[colours.length - 1]);
+        choose(colours.length - 1);
+      }
+    }, "+ another colour")
+  ));
+});
+chosenSteps.push(function(where, run) {
+  var box = document.getElementById(where);
+  var section = run && run.sections[run.picked];
+  var look = section && lookNamed(section.look);
+  var tuning = box && box.querySelector(".chosen .tuning");
+  if (!tuning || !look) return;
+  function live() {
+    return run.sections[run.picked];
+  }
+  tuning.classList.toggle("figuresopen", figuresOpen);
+  var ranges = Array.prototype.slice.call(tuning.querySelectorAll("input[type=range]"));
+  var boxes = [];
+  ranges.forEach(function(range) {
+    var slider = (range.dataset.focus || "").split("-").pop();
+    var cells, way = null, key = null, widest = 3;
+    var timing = range.dataset.timing;
+    if (timing) {
+      widest = Math.max(String(range.min).length, String(range.max).length) + 2;
+      cells = figureCells(
+        figureSaid(Number(range.value)),
+        "s",
+        "seconds, typed exactly, beyond the slider's range if needed",
+        function(typed) {
+          var mine = live();
+          mine.timings = Object.assign({}, mine.timings);
+          mine.timings[timing] = Math.round(typed * 100) / 100;
+        }
+      );
+    } else if (slider === "mood" && look.mood === "Palette") {
+      var swatches = h("span", {
+        className: "figurebox paletteswatches",
+        style: { "grid-column": "span 2" }
+      });
+      paintPalette(swatches, sectionLines(run, section, look));
+      cells = [swatches, null];
+    } else if (slider === "level") {
+      var bright = section.level === void 0 ? 1 : section.level;
+      cells = figureCells(
+        String(Math.round(bright * 100)),
+        "%",
+        "brightness, typed as a percentage",
+        function(typed) {
+          live().level = Math.max(0.01, Math.min(1, typed / 100));
+        }
+      );
+    } else if (slider === "pace" || slider === "mood") {
+      key = figureKey(run, section, look, slider);
+      if (key) {
+        way = figureWay(key, look);
+        [0, 0.5, 1].forEach(function(place) {
+          var reach = figureSaid(way.show(settingIn(
+            linesAt(run, section, look, slider, place),
+            key
+          )));
+          widest = Math.max(widest, reach.length);
+        });
+        var typedHere = section.exact && section.exact[slider];
+        var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
+        cells = figureCells(
+          figureSaid(way.show(value)),
+          way.unit,
+          "the file's " + key + ", typed exactly, beyond the slider's range if needed",
+          function(typed) {
+            var wanted = way.take(typed);
+            var mine = live();
+            var found = placeFor(run, mine, look, slider, key, wanted);
+            mine[slider] = found.place;
+            mine.exact = Object.assign({}, mine.exact);
+            if (found.off > 1e-6) {
+              mine.exact[slider] = { key, value: Math.round(wanted * 1e3) / 1e3 };
+            } else {
+              delete mine.exact[slider];
+            }
+          }
+        );
+      }
+    } else {
+      return;
+    }
+    if (!cells) {
+      cells = [h("span", { className: "figurebox" }), h("span", { className: "figureunit" })];
+    }
+    if (cells[0].tagName === "INPUT") {
+      boxes.push({ box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length) });
+    }
+    if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);
+    range.parentNode.insertBefore(cells[0], range.nextSibling);
+    var moved = range.oninput;
+    range.oninput = function() {
+      var mine = live();
+      if (mine.exact && mine.exact[slider]) {
+        mine.exact = Object.assign({}, mine.exact);
+        delete mine.exact[slider];
+      }
+      if (moved) moved.call(range);
+      if (cells[0].classList.contains("paletteswatches")) {
+        paintPalette(cells[0], sectionLines(run, mine, look));
+        return;
+      }
+      if (cells[0].tagName !== "INPUT") return;
+      if (timing) cells[0].value = figureSaid(Number(range.value));
+      else if (slider === "level") cells[0].value = String(Math.round(Number(range.value) * 100));
+      else cells[0].value = figureSaid(way.show(settingIn(sectionLines(run, mine, look), key)));
+    };
+  });
+  var chars = boxes.reduce(function(most, one) {
+    return Math.max(most, one.chars);
+  }, 3);
+  boxes.forEach(function(one) {
+    one.box.style.width = chars + 0.5 + "ch";
+  });
+  tuning.appendChild(h("button", {
+    type: "button",
+    className: "figurehandle",
+    title: figuresOpen ? "hide values" : "show values",
+    "aria-expanded": figuresOpen ? "true" : "false",
+    style: { "grid-row": "1 / span " + ranges.length },
+    onclick: function() {
+      setFiguresOpen(!figuresOpen);
+      try {
+        window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
+      } catch (e) {
+      }
+      draw();
+    }
+  }, figuresOpen ? "\u203A" : "\u2039"));
+});
 
 // boards/editor/picker/start.js
 addStep(drawSteps.after, DRAW_AFTER, "start", holdTabsPlace);
