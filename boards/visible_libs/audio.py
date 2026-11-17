@@ -31,6 +31,9 @@ def __ramp(samples: ptr16, count: int, gain: int, step: int):
 class WavReader:
     """A WAV file's header parsed and its sample data read, from a path or an already-open file."""
 
+    # The longest format chunk, which WAVE_FORMAT_EXTENSIBLE writes
+    FORMAT_LENGTH = 40
+
     def __init__(self, file):
         # A path is opened here and closed by close(). An already-open file is
         # the caller's to close, so one handle can be played many times
@@ -43,48 +46,58 @@ class WavReader:
         self._parse(self.wav_file)
 
     def _parse(self, wav_file):
-        chunk_ID = wav_file.read(4)
-        if chunk_ID != b"RIFF":
-            raise ValueError("WAV chunk ID invalid")
-        _ = wav_file.read(4)                            # chunk_size
+        if wav_file.read(4) != b"RIFF":
+            raise ValueError("not a WAV file")
+        _ = wav_file.read(4)                            # riff_size
         if wav_file.read(4) != b"WAVE":
-            raise ValueError("WAV format invalid")
-        sub_chunk1_ID = wav_file.read(4)
-        if sub_chunk1_ID != b"fmt ":
-            raise ValueError("WAV sub chunk 1 ID invalid")
-        _ = wav_file.read(4)                            # sub_chunk1_size
-        _ = struct.unpack("<H", wav_file.read(2))[0]    # audio_format
-        num_channels = struct.unpack("<H", wav_file.read(2))[0]
+            raise ValueError("not a WAV file")
 
-        if num_channels == 1:
-            self.format = I2S.MONO
-        else:
-            self.format = I2S.STEREO
+        # Each chunk starts with an ID and a size, and its body is padded to an even length.
+        # Only the format and the samples are read. Anything else is stepped over, such as
+        # the LIST chunk an audio editor keeps its tags in
+        has_format = False
+        while True:
+            header = wav_file.read(8)
+            if len(header) < 8:
+                raise ValueError("no audio data found" if has_format else "not a WAV file")
+            chunk_id = header[:4]
+            chunk_size = struct.unpack("<I", header[4:])[0]
+            chunk_start = wav_file.tell()
 
-        self.sample_rate = struct.unpack("<I", wav_file.read(4))[0]
-        # if sample_rate != 44_100 and sample_rate != 48_000:
-        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
+            if chunk_id == b"fmt ":
+                self.__read_format(wav_file.read(min(chunk_size, self.FORMAT_LENGTH)))
+                has_format = True
+            elif chunk_id == b"data":
+                if not has_format:
+                    raise ValueError("not a WAV file")
+                self.offset = chunk_start
+                self.size = chunk_size
+                break
 
-        _ = struct.unpack("<I", wav_file.read(4))[0]    # byte_rate
-        _ = struct.unpack("<H", wav_file.read(2))[0]    # block_align
-        self.bits_per_sample = struct.unpack("<H", wav_file.read(2))[0]
-
-        # usually the sub chunk2 ID ("data") comes next, but
-        # some online MP3->WAV converters add
-        # binary data before "data".  So, read a fairly large
-        # block of bytes and search for "data".
-
-        binary_block = wav_file.read(200)
-        offset = binary_block.find(b"data")
-        if offset == -1:
-            raise ValueError("WAV sub chunk 2 ID not found")
-
-        self.offset = offset + 44
-
-        wav_file.seek(offset + 40)
-        self.size = struct.unpack("<I", wav_file.read(4))[0]
+            wav_file.seek(chunk_start + chunk_size + (chunk_size & 1))
 
         wav_file.seek(self.offset)
+
+    def __read_format(self, fields):
+        if len(fields) < 16:
+            raise ValueError("not a WAV file")
+        audio_format, num_channels, self.sample_rate, _, _, self.bits_per_sample = \
+            struct.unpack_from("<HHIIHH", fields)     # byte_rate and block_align unused
+
+        # WAVE_FORMAT_EXTENSIBLE carries the real format code at the start of its sub-format
+        if audio_format == 0xFFFE and len(fields) >= 26:
+            audio_format = struct.unpack_from("<H", fields, 24)[0]
+
+        # Check if the audio is PCM at a sample size machine.I2S takes, 16 or 32 bits
+        if audio_format != 1 or self.bits_per_sample not in (16, 32):
+            raise ValueError("only 16-bit or 32-bit PCM audio is supported")
+        if num_channels not in (1, 2):
+            raise ValueError("only mono or stereo audio is supported")
+
+        self.format = I2S.MONO if num_channels == 1 else I2S.STEREO
+
+        # if self.sample_rate != 44_100 and self.sample_rate != 48_000:
+        #    raise ValueError(f"WAV sample rate of {self.sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
 
     def seek(self, pos):
         return self.wav_file.seek(pos + self.offset)
@@ -132,6 +145,9 @@ class WavPlayer:
     # or stopping mid-waveform would click
     FADE_MS = 40
 
+    # The gain that leaves samples as they are, which the volume scaling skips
+    FULL_GAIN = 32768
+
     # ibuf_ms grows the I2S ring to hold at least that many milliseconds of whatever plays, for a
     # board whose refills can be held up. The ring is sized from the sound's byte rate as it starts
     def __init__(self, id, sck_pin, ws_pin, sd_pin, amp_enable=None, ibuf_len=INTERNAL_BUFFER_LENGTH, root="/", ibuf_ms=None):
@@ -159,6 +175,7 @@ class WavPlayer:
         self.__mode = WavPlayer.MODE_WAV
         self.__wav_file = None
         self.__loop_wav = False
+        self.__gain = self.FULL_GAIN    # The volume as a gain in 32768ths
         self.__fade_length = 0          # The samples a fade takes at the current sound's rate
         self.__fade = 0                 # Samples still to rise from silence
         self.__fading_out = 0           # Samples still to fall to silence, the player pausing after
@@ -181,6 +198,20 @@ class WavPlayer:
 
     def set_root(self, root):
         self.__root = root.rstrip("/") + "/"
+
+    @property
+    def volume(self):
+        """
+        The volume of tones and 16-bit WAVs, from 0.0 for silence to 1.0 for the sound as
+        recorded. A change reaches a playing sound at its next refill. A 32-bit WAV ignores it.
+        """
+        return self.__gain / self.FULL_GAIN
+
+    @volume.setter
+    def volume(self, volume):
+        if volume < 0.0 or volume > 1.0:
+            raise ValueError("volume out of range. Expected 0.0 to 1.0")
+        self.__gain = int(volume * self.FULL_GAIN + 0.5)
 
     def play_wav(self, wav_file, loop=False, position=0):
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
@@ -391,6 +422,10 @@ class WavPlayer:
 
         self.__state = WavPlayer.NONE   # Return to the none state
 
+    def __quieten(self, samples, length):
+        # Scale 16-bit samples to the volume. Callers skip this at full volume
+        __ramp(samples, length // 2, self.__gain, 0)
+
     def __fade_in(self, samples, length):
         # Each sample still to rise is scaled by how far into the fade it falls
         step = 32768 // self.__fade_length
@@ -468,6 +503,8 @@ class WavPlayer:
                             if num_read == 0:
                                 _ = self.__wav_file.seek(0)    # Play again, so advance to first byte of sample data
                                 self._loop_count += 1
+                        if self.__gain != self.FULL_GAIN and self.__wav_file.bits_per_sample == 16:
+                            self.__quieten(self.__wav_samples_mv, loop_read)
                         if self.__fade:
                             self.__fade_in(self.__wav_samples_mv, loop_read)
                         if self.__fading_out:
@@ -483,6 +520,8 @@ class WavPlayer:
                     return
 
                 if num_read:
+                    if self.__gain != self.FULL_GAIN and self.__wav_file.bits_per_sample == 16:
+                        self.__quieten(self.__wav_samples_mv, num_read)
                     if self.__fade:
                         self.__fade_in(self.__wav_samples_mv, num_read)
                     if self.__fading_out:
@@ -501,10 +540,12 @@ class WavPlayer:
                     self.__tone_samples = self.__queued_samples
                     self.__tone_scaled = self.__queued_scaled
                     self.__queued_samples = None
-                if self.__fade or self.__fading_out:
-                    # The tone's buffer repeats, so a fade scales a copy of it
+                if self.__fade or self.__fading_out or self.__gain != self.FULL_GAIN:
+                    # The tone's buffer repeats, so the volume and a fade scale a copy of it
                     scaled = self.__tone_scaled
                     scaled[:] = self.__tone_samples
+                    if self.__gain != self.FULL_GAIN:
+                        self.__quieten(scaled, len(scaled))
                     if self.__fade:
                         self.__fade_in(scaled, len(scaled))
                     if self.__fading_out:
