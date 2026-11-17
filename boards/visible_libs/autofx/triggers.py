@@ -38,6 +38,9 @@ class Triggers:
         self.__pin = None
         self.__pressed = []         # Buttons pressed since the last pass, oldest first
         sensor = settings.get("sensor")
+        # Check if the board has no sensor connector, which setting the board up has reported
+        if getattr(fx, "SENSOR_PIN", None) is None:
+            sensor = None
         # A board that could not take the sensor has none to hand back
         try:
             if sensor == "ir":
