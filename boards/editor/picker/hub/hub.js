@@ -1,4 +1,5 @@
 import {BOARD_LINE_AFTER, SCREEN_SIZES, boardLineSteps} from "../board.js";
+import {h, replace} from "../dom.js";
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
 import {
   BODY_ORDER, DRIVE_ORDER, allBodies, apply, bodyParts, driveParts, otherScenes, slotAt, state,
@@ -190,9 +191,7 @@ screensHeadSteps.instead.push(function () {
 });
 
 addStep(screensHeadSteps.after, HEAD_AFTER, "hub", function () {
-  var facts = document.getElementById("hubFacts");
-  facts.textContent = "";
-  facts.appendChild(hubParts.hubSwitch());
+  replace(document.getElementById("hubFacts"), hubParts.hubSwitch());
 });
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
@@ -207,34 +206,29 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
     });
     cell.className = "asset" + (on.length ? " on" + state.hub.port : "");
     cell.classList.toggle("hubb", state.hub.port === "B");
-    var pick = cell.querySelector(".pick");
-    pick.textContent = "";
-    HUB_PLACES.forEach(function (place) {
-      var button = document.createElement("button");
-      button.textContent = place;
-      button.className = on.indexOf(place) >= 0 ? "lit" : "";
-      button.disabled = !placeThere(place);
-      button.onclick = function () {
-        var held = state.places[place];
-        held.shows = held.shows !== name ? name : null;
-        placePicked = place;
-        draw();
-      };
-      pick.appendChild(button);
-    });
+    replace(cell.querySelector(".pick"), HUB_PLACES.map(function (place) {
+      return h("button", {
+        className: on.indexOf(place) >= 0 ? "lit" : "", disabled: !placeThere(place),
+        onclick: function () {
+          var held = state.places[place];
+          held.shows = held.shows !== name ? name : null;
+          placePicked = place;
+          draw();
+        }
+      }, place);
+    }),
     // Every position at once, or off every one where it shows on all
-    var all = document.createElement("button");
-    all.className = "all" + (on.length && on.length === placesThere().length ? " lit" : "");
-    all.textContent = "all";
-    all.disabled = !placesThere().length;
-    all.onclick = function () {
-      var everywhere = on.length === placesThere().length;
-      placesThere().forEach(function (place) {
-        state.places[place].shows = everywhere ? null : name;
-      });
-      draw();
-    };
-    pick.appendChild(all);
+    h("button", {
+      className: "all" + (on.length && on.length === placesThere().length ? " lit" : ""),
+      disabled: !placesThere().length,
+      onclick: function () {
+        var everywhere = on.length === placesThere().length;
+        placesThere().forEach(function (place) {
+          state.places[place].shows = everywhere ? null : name;
+        });
+        draw();
+      }
+    }, "all"));
   });
 });
 
@@ -247,8 +241,6 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
   var cell = document.querySelector("#assets .offasset");
   if (!cell || !state.hub.on) return;
   cell.title = "Turn a hub position or group off in this scene";
-  var pick = cell.querySelector(".pick");
-  pick.textContent = "";
 
   function turn(places, off) {
     var breaking = off ? [] : hubParts.breakingUp(places);
@@ -260,39 +252,33 @@ addStep(assetSteps, ASSET_ORDER, "hub", function () {
     breaking.forEach(function (place) { state.places[place].group = place; });
   }
 
-  hubParts.sendTargets().forEach(function (target) {
-    var off = target.places.every(function (place) { return state.places[place].off; });
-    var button = document.createElement("button");
-    button.type = "button";
-    button.textContent = target.name;
-    button.className = off ? "lit" : "";
-    if (off && target.ink) button.style.background = target.ink;
-    button.title = target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
-                              : target.name + ", on its own";
-    button.onclick = function () {
-      placePicked = target.places[0];
-      turn(target.places, !off);
-      draw();
-    };
-    pick.appendChild(button);
-  });
-
   // Every position at once, keeping the groups, or back on everywhere where all are off
   var everywhere = placesThere().length && placesThere().every(function (place) {
     return state.places[place].off;
   });
-  var all = document.createElement("button");
-  all.type = "button";
-  all.textContent = "all";
-  all.className = everywhere ? "lit" : "";
-  all.title = everywhere ? "Back on at every position"
-                         : "Off at every group and every position on its own, keeping the groups";
-  all.disabled = !placesThere().length;
-  all.onclick = function () {
-    turn(placesThere(), !everywhere);
-    draw();
-  };
-  pick.appendChild(all);
+  replace(cell.querySelector(".pick"), hubParts.sendTargets().map(function (target) {
+    var off = target.places.every(function (place) { return state.places[place].off; });
+    return h("button", {
+      type: "button", className: off ? "lit" : "",
+      style: {background: off && target.ink ? target.ink : null},
+      title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
+                        : target.name + ", on its own",
+      onclick: function () {
+        placePicked = target.places[0];
+        turn(target.places, !off);
+        draw();
+      }
+    }, target.name);
+  }), h("button", {
+    type: "button", className: everywhere ? "lit" : "",
+    title: everywhere ? "Back on at every position"
+                      : "Off at every group and every position on its own, keeping the groups",
+    disabled: !placesThere().length,
+    onclick: function () {
+      turn(placesThere(), !everywhere);
+      draw();
+    }
+  }, "all"));
 });
 
 var screensSwatch = tabSwatches.screensPanel;
@@ -300,25 +286,22 @@ var screensSwatch = tabSwatches.screensPanel;
 // The tab's swatch is the hub's six positions, each showing what it shows, where a hub is on
 tabSwatches.screensPanel = function (swatch) {
   if (!state.hub.on) return screensSwatch(swatch);
-  swatch.textContent = "";
   swatch.className = "accswatch screenswatch hubswatch";
-  HUB_PLACES.forEach(function (place) {
+  replace(swatch, HUB_PLACES.map(function (place) {
     var held = state.places[place];
-    var cell = document.createElement("span");
-    cell.className = "screencell " + hubInk();
     // Off is black, and Always on's picture wears the stripes of nothing, as on two screens
     var under = placeThere(place) ? placeUnder(place) : null;
     var shown = held.shows || (under && under.always ? under.always.shows : null);
     var art = placeThere(place) && shown ? mediaArt(shown) : null;
-    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") +
-                                          "url(" + art.url + ")";
-    if (!placeThere(place)) cell.classList.add("absent");
-    else if (held.off) cell.classList.add("off");
     // A picture with no thumbnail yet is a white tile, its position showing something
-    else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && under.off ? "dark" : "nothing");
-    swatch.appendChild(cell);
-  });
+    var marked = !placeThere(place) ? "absent" : held.off ? "off" : art ? ""
+               : shown ? "blank" : under && under.off ? "dark" : "nothing";
+    return h("span", {
+      className: "screencell " + hubInk() + (marked ? " " + marked : ""),
+      style: {"background-image": art ? (under && under.always ? "var(--through), " : "") +
+                                        "url(" + art.url + ")" : null}
+    });
+  }));
   swatch.title = HUB_PLACES.map(function (place) {
     var held = state.places[place];
     var under = placeThere(place) ? placeUnder(place) : null;
@@ -345,14 +328,8 @@ addStep(drawSteps.after, DRAW_AFTER, "hub", function () {
 
 // The switch takes the place of the line the tab opened with, at the top where the other
 // tabs have their board box
-(function () {
-  var says = document.getElementById("screensSays");
-  var facts = document.createElement("div");
-  facts.className = "facts";
-  facts.id = "hubFacts";
-  says.parentNode.insertBefore(facts, says);
-  says.hidden = true;
-}());
+document.getElementById("screensSays").before(h("div", {className: "facts", id: "hubFacts"}));
+document.getElementById("screensSays").hidden = true;
 
 // ---- what the file says ----------------------------------------------------------------------
 

@@ -1,3 +1,4 @@
+import {h, replace} from "../dom.js";
 import {DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
 import {
   HUB_PLACES, hubHeadSteps, hubParts, pickPlace, placePicked, placeThere, placeTurnForChosen,
@@ -173,55 +174,47 @@ addStep(assetSteps, ASSET_ORDER, "hubGroups", function () {
   var targets = sendTargets();
   document.querySelectorAll("#assets .asset:not(.offasset)").forEach(function (cell) {
     var name = cell.dataset.name;
-    var pick = cell.querySelector(".pick");
-    pick.textContent = "";
-    targets.forEach(function (target) {
-      var shown = target.places.every(function (place) {
-        return state.places[place].shows === name;
-      });
-      var button = document.createElement("button");
-      button.type = "button";
-      button.textContent = target.name;
-      button.dataset.target = target.name;
-      button.className = shown ? "lit" : "";
-      if (shown && target.ink) button.style.background = target.ink;
-      button.title = target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
-                                : target.name + ", on its own";
-      button.onclick = function () {
-        pickPlace(target.places[0]);
-        var breaking = shown ? breakingUp(target.places) : [];
-        state.places[placePicked].shows = shown ? null : name;
-        state.places[placePicked].off = false;
-        breaking.forEach(function (place) {
-          state.places[place].shows = null;
-          state.places[place].group = place;
-        });
-        draw();
-      };
-      pick.appendChild(button);
-    });
     // Every group and every position on its own at once, keeping the groups, or off every one
     // where it shows on all
     var everywhere = placesThere().length && placesThere().every(function (place) {
       return state.places[place].shows === name;
     });
-    var all = document.createElement("button");
-    all.type = "button";
-    all.className = "all" + (everywhere ? " lit" : "");
-    all.textContent = "all";
-    all.title = everywhere ? "Off every position"
-                           : "On every group and every position on its own, keeping the groups";
-    all.disabled = !placesThere().length;
-    all.onclick = function () {
-      var breaking = everywhere ? breakingUp(placesThere()) : [];
-      placesThere().forEach(function (place) {
-        state.places[place].shows = everywhere ? null : name;
-        state.places[place].off = false;
+    replace(cell.querySelector(".pick"), targets.map(function (target) {
+      var shown = target.places.every(function (place) {
+        return state.places[place].shows === name;
       });
-      breaking.forEach(function (place) { state.places[place].group = place; });
-      draw();
-    };
-    pick.appendChild(all);
+      return h("button", {
+        type: "button", "data-target": target.name, className: shown ? "lit" : "",
+        style: {background: shown && target.ink ? target.ink : null},
+        title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
+                          : target.name + ", on its own",
+        onclick: function () {
+          pickPlace(target.places[0]);
+          var breaking = shown ? breakingUp(target.places) : [];
+          state.places[placePicked].shows = shown ? null : name;
+          state.places[placePicked].off = false;
+          breaking.forEach(function (place) {
+            state.places[place].shows = null;
+            state.places[place].group = place;
+          });
+          draw();
+        }
+      }, target.name);
+    }), h("button", {
+      type: "button", className: "all" + (everywhere ? " lit" : ""),
+      title: everywhere ? "Off every position"
+                        : "On every group and every position on its own, keeping the groups",
+      disabled: !placesThere().length,
+      onclick: function () {
+        var breaking = everywhere ? breakingUp(placesThere()) : [];
+        placesThere().forEach(function (place) {
+          state.places[place].shows = everywhere ? null : name;
+          state.places[place].off = false;
+        });
+        breaking.forEach(function (place) { state.places[place].group = place; });
+        draw();
+      }
+    }, "all"));
   });
 });
 
@@ -289,33 +282,29 @@ hubHeadSteps.push(function () {
     }
     tile.classList.toggle("picked", picked.indexOf(place) >= 0);
 
-    var numbers = document.createElement("span");
-    numbers.className = "groupseg";
-    GROUP_NUMBERS.forEach(function (number) {
-      var button = document.createElement("button");
-      button.type = "button";
-      button.textContent = number;
+    var numbers = h("span", {className: "groupseg"}, GROUP_NUMBERS.map(function (number) {
       var inIt = groupOf(place) === number;
-      button.className = inIt ? "on" : "";
-      if (inIt) button.style.background = GROUP_INKS[number];
       var fits = sizeFits(place, number);
-      button.disabled = !fits;
-      button.title = !fits ? "Group " + number + " holds " +
-                             state.hub.sizes[membersOfGroup(number)[0]] + "\" panels, and " +
-                             place + " is " + state.hub.sizes[place] + "\""
-                   : inIt ? "Remove " + place + " from group " + number + ", keeping what it shows"
-                          : "Put " + place + " in group " + number +
-                            (!membersOfGroup(number).length ? ""
-                             : state.places[membersOfGroup(number)[0]].shows
-                               ? ", to show what the group shows"
-                               : state.places[place].shows ? ", taking what " + place + " shows" : "");
-      button.onclick = function (event) {
-        event.stopPropagation();
-        joinOrLeave(place, number);
-        draw();
-      };
-      numbers.appendChild(button);
-    });
+      return h("button", {
+        type: "button", className: inIt ? "on" : "",
+        style: {background: inIt ? GROUP_INKS[number] : null},
+        disabled: !fits,
+        title: !fits ? "Group " + number + " holds " +
+                       state.hub.sizes[membersOfGroup(number)[0]] + "\" panels, and " +
+                       place + " is " + state.hub.sizes[place] + "\""
+             : inIt ? "Remove " + place + " from group " + number + ", keeping what it shows"
+                    : "Put " + place + " in group " + number +
+                      (!membersOfGroup(number).length ? ""
+                       : state.places[membersOfGroup(number)[0]].shows
+                         ? ", to show what the group shows"
+                         : state.places[place].shows ? ", taking what " + place + " shows" : ""),
+        onclick: function (event) {
+          event.stopPropagation();
+          joinOrLeave(place, number);
+          draw();
+        }
+      }, number);
+    }));
     tile.appendChild(numbers);
     // A position showing Always on's picture is grouped as Always on groups it, so its numbers are
     // greyed, unless it is in a group of the scene's own, which it can still leave here. One the
@@ -328,16 +317,12 @@ hubHeadSteps.push(function () {
     // A position on its own names those it matches, which go out with it until a setting differs
     var others = membersOf(place).filter(function (other) { return other !== place; });
     var matching = (sentWith[place] || []).filter(function (other) { return other !== place; });
-    var said = document.createElement("small");
-    said.className = "groupsaid";
-    said.textContent = inherited && !ink ? "from Always on"
-                     : under && under.off ? "lit only in " + spoken(namesOf(under.off))
-                     : ink ? (others.length ? "grouped with " + placesSaid(others)
-                                            : "alone in group " + groupOf(place))
-                     : matching.length ? "matches " + placesSaid(matching) : "on its own";
-    if (ink) said.style.color = ink;
-    said.title = said.textContent;
-    tile.appendChild(said);
+    var said = inherited && !ink ? "from Always on"
+             : under && under.off ? "lit only in " + spoken(namesOf(under.off))
+             : ink ? (others.length ? "grouped with " + placesSaid(others)
+                                    : "alone in group " + groupOf(place))
+             : matching.length ? "matches " + placesSaid(matching) : "on its own";
+    tile.appendChild(h("small", {className: "groupsaid", style: {color: ink}, title: said}, said));
   });
 });
 

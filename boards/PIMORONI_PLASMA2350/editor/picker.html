@@ -9705,6 +9705,15 @@ function screenLetter(name) {
 function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
 }
+function bandFact(control) {
+  control.disabled = control.disabled || !setupOn;
+  return h(
+    "span",
+    { className: "bandfact", title: "Board setup, shared by every scene" },
+    boardIcon(),
+    control
+  );
+}
 function screenButton(letter) {
   return SCREENS.length > 1 ? letter : "Show";
 }
@@ -13789,23 +13798,8 @@ function renderAssets() {
   });
 }
 function renderScreensTab() {
-  renderScreensParts();
-  if (state.hub.on) {
-    document.querySelectorAll("#screensHead .hubbox .place .placesize").forEach(function(size) {
-      var chip = boardIcon();
-      chip.classList.add("placechip");
-      size.parentNode.insertBefore(chip, size);
-    });
-  }
-  document.querySelectorAll("#screensHead .screen-box h3").forEach(function(band) {
-    var chip = band.querySelector(".boardicon");
-    var size = band.querySelector("select.inband");
-    if (!chip || !size) return;
-    var fact = h("span", { className: "bandfact", title: "Board setup, shared by every scene" }, chip);
-    band.insertBefore(fact, size);
-    fact.append(size);
-    band.title = "";
-  });
+  renderScreensHead();
+  renderAssets();
 }
 screenParts.renderTab = renderScreensTab;
 function renderScreenBoxes() {
@@ -13817,8 +13811,9 @@ function screenBox(letter) {
     return h(
       "div",
       { className: "screen-box " + letter.toLowerCase() },
-      h("h3", {}, screenShown(letter)),
+      h("h3", { title: "Board setup, shared by every scene" }, boardIcon(), screenShown(letter)),
       h("div", { className: "body adding" }, h("button", {
+        disabled: !setupOn,
         onclick: function() {
           screen.there = true;
           screen.shows = null;
@@ -13872,14 +13867,15 @@ function screenBox(letter) {
     { className: "screen-box " + letter.toLowerCase() },
     h(
       "h3",
-      {},
+      { title: "" },
       screenShown(letter),
-      size,
+      bandFact(size),
       // Taking the screen out is the only way to have none, as a screen showing nothing
       // would say the same thing twice
       h("button", {
         className: "drop",
         title: "Remove this screen from every scene",
+        disabled: !setupOn,
         onclick: function() {
           screen.there = false;
           store();
@@ -13904,20 +13900,6 @@ function screenBox(letter) {
       }
     }, h("b", {}, "Keep as is"), h("code", {}, screen.kept)) : null
   );
-}
-function renderScreensParts() {
-  renderScreensHead();
-  renderAssets();
-  var head = document.getElementById("screensHead");
-  head.querySelectorAll(".screen-box h3").forEach(function(band) {
-    band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
-  });
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button").forEach(function(control) {
-      control.disabled = true;
-    });
-  }
 }
 function renderScreensHead() {
   if (!screensHeadSteps.instead.some(function(step2) {

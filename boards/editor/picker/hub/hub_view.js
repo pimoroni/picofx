@@ -1,4 +1,5 @@
 import {SCREEN_SIZES} from "../board.js";
+import {h, replace} from "../dom.js";
 import {draw} from "../draw.js";
 import {
   HUB_PLACES, asAlwaysScreen, asScreen, hubHeadSteps, hubInk, hubParts, pickPlace, placePicked,
@@ -10,7 +11,7 @@ import {setupOn} from "../runs.js";
 import {allBodies, apply, capture, frozen, slotAt, state, store} from "../scenes.js";
 import {panelPreview} from "../screens/screen_art.js";
 import {lookSections} from "../screens/screen_settings.js";
-import {kindOf, pictureSaid} from "../screens/screens.js";
+import {bandFact, kindOf, pictureSaid} from "../screens/screens.js";
 import {boardIcon} from "../setup.js";
 
 // ---- drawing the hub -------------------------------------------------------------------------
@@ -19,127 +20,91 @@ import {boardIcon} from "../setup.js";
 // be seen to be a choice, and only changed while editing the board. It sits at the top of the
 // tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
-  var row = document.createElement("div");
-  row.className = "hubswitch" + (setupOn ? "" : " locked");
-  row.title = setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it";
-  var lead = document.createElement("span");
-  lead.className = "hublead" + (state.hub.on ? "" : " on");
-  lead.appendChild(boardIcon());
-  row.appendChild(lead);
-  [[false, "A screen on each connector"], [true, "A Screen Hub across both"]]
-    .forEach(function (pair) {
-      var choice = document.createElement("button");
-      choice.type = "button";
-      choice.className = state.hub.on === pair[0] ? "on" : "";
-      choice.disabled = !setupOn;
-      choice.textContent = pair[1];
-      choice.onclick = function () {
-        state.hub.on = pair[0];
-        draw();
-      };
-      row.appendChild(choice);
-    });
-  return row;
+  return h("div", {
+    className: "hubswitch" + (setupOn ? "" : " locked"),
+    title: setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it"
+  }, h("span", {className: "hublead" + (state.hub.on ? "" : " on")}, boardIcon()),
+     [[false, "A screen on each connector"], [true, "A Screen Hub across both"]].map(function (pair) {
+       return h("button", {
+         type: "button", className: state.hub.on === pair[0] ? "on" : "", disabled: !setupOn,
+         onclick: function () {
+           state.hub.on = pair[0];
+           draw();
+         }
+       }, pair[1]);
+     }));
 }
 
 function placeTile(place) {
-  var held = state.places[place];
-  var tile = document.createElement("div");
-  tile.className = "place" + (place === placePicked && placeThere(place) ? " picked" : "");
-  tile.dataset.place = place;
-  var top = document.createElement("div");
-  top.className = "placetop";
-  var letter = document.createElement("b");
-  letter.className = "placename";
-  letter.textContent = place;
-  top.appendChild(letter);
-  tile.appendChild(top);
-
+  var picked = place === placePicked && placeThere(place);
+  var name = h("b", {className: "placename"}, place);
   if (!state.hub.sizes[place]) {
-    tile.classList.add("empty");
-    var none = document.createElement("span");
-    none.className = "placenone";
-    none.textContent = "no panel";
-    tile.appendChild(none);
-    if (setupOn) {
-      var fit = document.createElement("button");
-      fit.type = "button";
-      fit.className = "placefit";
-      fit.textContent = "add";
-      fit.title = "A panel is fitted at " + place;
-      fit.onclick = function (event) {
-        event.stopPropagation();
-        state.hub.sizes[place] = state.hub.was[place] || "2.8";
-        draw();
-      };
-      tile.appendChild(fit);
-    }
-    return tile;
+    return h("div", {className: "place" + (picked ? " picked" : "") + " empty", "data-place": place},
+             h("div", {className: "placetop"}, name),
+             h("span", {className: "placenone"}, "no panel"),
+             setupOn ? h("button", {
+               type: "button", className: "placefit", title: "A panel is fitted at " + place,
+               onclick: function (event) {
+                 event.stopPropagation();
+                 state.hub.sizes[place] = state.hub.was[place] || "2.8";
+                 draw();
+               }
+             }, "add") : null);
   }
 
-  // Which panel is here, shown in every mode and changed only while editing the board
-  var size = document.createElement("select");
-  size.className = "placesize";
-  SCREEN_SIZES.forEach(function (inches) {
-    var option = document.createElement("option");
-    option.value = inches;
-    option.textContent = inches + "\"";
-    if (state.hub.sizes[place] === inches) option.selected = true;
-    size.appendChild(option);
-  });
-  size.disabled = !setupOn;
-  size.title = "Panel at " + place + ", shared by every scene";
-  size.onclick = function (event) { event.stopPropagation(); };
-  size.onchange = function () {
-    state.hub.sizes[place] = size.value;
-    draw();
-  };
-  top.appendChild(size);
+  // Which panel is here, shown in every mode and changed only while editing the board, beside the
+  // board's chip
+  var size = h("select", {
+    className: "placesize", disabled: !setupOn, title: "Panel at " + place + ", shared by every scene",
+    onclick: function (event) { event.stopPropagation(); },
+    onchange: function () {
+      state.hub.sizes[place] = size.value;
+      draw();
+    }
+  }, SCREEN_SIZES.map(function (inches) {
+    return h("option", {value: inches, selected: state.hub.sizes[place] === inches}, inches + "\"");
+  }));
+  var chip = boardIcon();
+  chip.classList.add("placechip");
 
   // A position the scene leaves to Always on shows Always on's picture in the striped frame
+  var held = state.places[place];
   var under = placeUnder(place);
   var drawing = panelPreview(under && under.always ? asAlwaysScreen(place, under.always)
                                                    : asScreen(place));
   if (under && under.always) drawing.classList.add("under");
-  tile.appendChild(drawing);
-  var says = document.createElement("small");
-  says.className = "placesays";
-  // A position in a scene's own group says Always on's, as the line under it names the group
-  says.textContent = held.off ? "off"
-                   : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") +
-                                             pictureSaid(under.always.shows)
-                   : under ? "off in this scene" : held.shows || "nothing";
-  tile.appendChild(says);
-  if (setupOn) {
-    var drop = document.createElement("button");
-    drop.type = "button";
-    drop.className = "placedrop";
-    drop.textContent = "\u00d7";
-    drop.title = "No panel at " + place + ", in every scene";
-    drop.onclick = function (event) {
-      event.stopPropagation();
-      state.hub.was[place] = state.hub.sizes[place];
-      state.hub.sizes[place] = "";
-      store();
-      allBodies().forEach(function (body) { body.places[place].shows = null; });
-      apply(slotAt(state.at).body);
+  return h("div", {
+    className: "place" + (picked ? " picked" : ""), "data-place": place,
+    onclick: function () {
+      pickPlace(place);
       draw();
-    };
-    tile.appendChild(drop);
-  }
-  tile.onclick = function () {
-    pickPlace(place);
-    draw();
-  };
-  return tile;
+    }
+  }, h("div", {className: "placetop"}, name, chip, size),
+     drawing,
+     // A position in a scene's own group says Always on's, as the line under it names the group
+     h("small", {className: "placesays"},
+       held.off ? "off"
+       : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") +
+                                 pictureSaid(under.always.shows)
+       : under ? "off in this scene" : held.shows || "nothing"),
+     setupOn ? h("button", {
+       type: "button", className: "placedrop", title: "No panel at " + place + ", in every scene",
+       onclick: function (event) {
+         event.stopPropagation();
+         state.hub.was[place] = state.hub.sizes[place];
+         state.hub.sizes[place] = "";
+         store();
+         allBodies().forEach(function (body) { body.places[place].shows = null; });
+         apply(slotAt(state.at).body);
+         draw();
+       }
+     }, "\u00d7") : null);
 }
 
 // The picked position's settings, the same sections a screen has. What each position shows is
 // said under its module, and the position being set is the one filled, so the strip says neither
 function placeSettings() {
-  var settings = document.createElement("div");
-  settings.className = "hubsettings";
-  if (!placeThere(placePicked)) return settings;
+  if (!placeThere(placePicked)) return h("div", {className: "hubsettings"});
   var held = state.places[placePicked];
   // A position showing Always on's picture shows Always on's settings, greyed
   var under = placeUnder(placePicked);
@@ -148,8 +113,7 @@ function placeSettings() {
                                     : held;
   var sections = lookSections("place" + placePicked, shown, state.hub.sizes[placePicked]);
   if (shown !== held) frozen(sections);
-  settings.appendChild(sections);
-  return settings;
+  return h("div", {className: "hubsettings"}, sections);
 }
 
 // The note on how fast the hub plays what it shows. A still picture is sent once and costs nothing
@@ -176,53 +140,31 @@ function hubPace() {
                                                              : ", so nothing slows down."));
   var apart = apartSaid(sends);
   if (apart) said.push(apart);
-  var pace = document.createElement("p");
-  pace.className = "hubpace" + (said.length ? "" : " quiet");
-  pace.innerHTML = said.join(" ");
-  return pace;
+  // The sentences name the screens in bold
+  return h("p", {className: "hubpace" + (said.length ? "" : " quiet"), html: said.join(" ")});
 }
 
-// Draw the hub's box in place of the screens'
+// Draw the hub's box in place of the screens'. How the hub is wired is the board's, so its band
+// wears the board's chip beside it
 function renderHubHead() {
   var box = document.getElementById("screensHead");
-  box.textContent = "";
   box.classList.add("hubbed");
-
-  var side = document.createElement("div");
-  side.className = "screen-box " + hubInk() + " hubbox";
-  var head = document.createElement("h3");
-  head.appendChild(document.createTextNode("Screen Hub"));
   // The hub is drawn for its screens through A, but may be wired the other way round
-  var port = document.createElement("select");
-  [["A", "SPI on A, Selects on B"], ["B", "SPI on B, Selects on A"]]
-    .forEach(function (pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if (state.hub.port === pair[0]) option.selected = true;
-      port.appendChild(option);
-    });
-  port.className = "inband";
-  port.title = "Which connectors the hub's SPI and Selects " +
-               "are plugged into, as labelled on the hub";
-  port.onchange = function () { state.hub.port = port.value; draw(); };
-  head.appendChild(port);
-  var fitted = document.createElement("small");
-  fitted.className = "hubcount";
-  fitted.textContent = placesThere().length + " of " + HUB_PLACES.length + " fitted";
-  head.appendChild(fitted);
-  side.appendChild(head);
-
-  var body = document.createElement("div");
-  body.className = "body";
-  var row = document.createElement("div");
-  row.className = "places";
-  HUB_PLACES.forEach(function (place) { row.appendChild(placeTile(place)); });
-  body.appendChild(row);
-  body.appendChild(placeSettings());
-  body.appendChild(hubPace());
-  side.appendChild(body);
-  box.appendChild(side);
+  var port = h("select", {
+    className: "inband",
+    title: "Which connectors the hub's SPI and Selects are plugged into, as labelled on the hub",
+    onchange: function () { state.hub.port = port.value; draw(); }
+  }, [["A", "SPI on A, Selects on B"], ["B", "SPI on B, Selects on A"]].map(function (pair) {
+    return h("option", {value: pair[0], selected: state.hub.port === pair[0]}, pair[1]);
+  }));
+  replace(box, h("div", {className: "screen-box " + hubInk() + " hubbox"},
+                 h("h3", {title: ""}, "Screen Hub", bandFact(port),
+                   h("small", {className: "hubcount"},
+                     placesThere().length + " of " + HUB_PLACES.length + " fitted")),
+                 h("div", {className: "body"},
+                   h("div", {className: "places"}, HUB_PLACES.map(placeTile)),
+                   placeSettings(),
+                   hubPace())));
   hubHeadSteps.forEach(function (step) { step(); });
 }
 hubParts.renderHead = renderHubHead;

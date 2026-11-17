@@ -10,7 +10,7 @@ import {allBodies, apply, frozen, slotAt, state, store} from "../scenes.js";
 import {mediaArt, panelPreview} from "./screen_art.js";
 import {drawingCopyTile, lightRow, lookSections, showingLine} from "./screen_settings.js";
 import {
-  SCREENS, SCREEN_NAMES, assetSteps, screenButton, screenParts, screenShown, screenUnder,
+  SCREENS, SCREEN_NAMES, assetSteps, bandFact, screenButton, screenParts, screenShown, screenUnder,
   screensHeadSteps, screensPaired
 } from "./screens.js";
 import {boardIcon} from "../setup.js";
@@ -147,26 +147,10 @@ function renderAssets() {
   assetSteps.forEach(function (step) { step(); });
 }
 
-// Put the board's chip beside what is the board's, not before a box's name. That is a screen's
-// panel size in its band, the way the hub is wired in its band, and each position's panel size
+// The tab's head and its pictures
 function renderScreensTab() {
-  renderScreensParts();
-  if (state.hub.on) {
-    document.querySelectorAll("#screensHead .hubbox .place .placesize").forEach(function (size) {
-      var chip = boardIcon();
-      chip.classList.add("placechip");
-      size.parentNode.insertBefore(chip, size);
-    });
-  }
-  document.querySelectorAll("#screensHead .screen-box h3").forEach(function (band) {
-    var chip = band.querySelector(".boardicon");
-    var size = band.querySelector("select.inband");
-    if (!chip || !size) return;
-    var fact = h("span", {className: "bandfact", title: "Board setup, shared by every scene"}, chip);
-    band.insertBefore(fact, size);
-    fact.append(size);
-    band.title = "";
-  });
+  renderScreensHead();
+  renderAssets();
 }
 screenParts.renderTab = renderScreensTab;
 
@@ -176,13 +160,16 @@ function renderScreenBoxes() {
   replace(document.getElementById("screensHead"), SCREENS.map(screenBox));
 }
 
-// A screen's box, its band naming it over its body, or the way to add it where it is not fitted
+// A screen's box, its band naming it over its body, or the way to add it where it is not fitted.
+// Whether a screen is fitted and its size are the board's, so the band wears the board's chip,
+// beside the size where there is one
 function screenBox(letter) {
   var screen = state.screens[letter];
   if (!screen.there) {
     return h("div", {className: "screen-box " + letter.toLowerCase()},
-             h("h3", {}, screenShown(letter)),
+             h("h3", {title: "Board setup, shared by every scene"}, boardIcon(), screenShown(letter)),
              h("div", {className: "body adding"}, h("button", {
+               disabled: !setupOn,
                onclick: function () {
                  screen.there = true;
                  screen.shows = null;
@@ -228,11 +215,11 @@ function screenBox(letter) {
   body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
 
   return h("div", {className: "screen-box " + letter.toLowerCase()},
-           h("h3", {}, screenShown(letter), size,
+           h("h3", {title: ""}, screenShown(letter), bandFact(size),
              // Taking the screen out is the only way to have none, as a screen showing nothing
              // would say the same thing twice
              h("button", {
-               className: "drop", title: "Remove this screen from every scene",
+               className: "drop", title: "Remove this screen from every scene", disabled: !setupOn,
                onclick: function () {
                  screen.there = false;
                  // Every scene's choice for it goes too, since nothing is left to show them
@@ -255,24 +242,6 @@ function screenBox(letter) {
 }
 
 // ---- drawing the tab -------------------------------------------------------------------------
-
-// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
-// board's
-function renderScreensParts() {
-  renderScreensHead();
-  renderAssets();
-  var head = document.getElementById("screensHead");
-  // The band is the screen's coloured box, so it wears the board's chip like the others
-  head.querySelectorAll(".screen-box h3").forEach(function (band) {
-    band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
-  });
-  // Whether a screen is fitted and its size are the board's
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
-      .forEach(function (control) { control.disabled = true; });
-  }
-}
 
 function renderScreensHead() {
   if (!screensHeadSteps.instead.some(function (step) { return step(); })) {

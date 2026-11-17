@@ -1,13 +1,16 @@
 import {
   NOT_FITTED_ORDER, boardLineSteps, notFittedSteps, screenHooks, screensFitted
 } from "../board.js";
+import {h} from "../dom.js";
 import {addStep} from "../draw.js";
 import {isHiddenName, nameShown} from "../drive.js";
 import {isExampleMedia, mediaHome} from "../drive_files.js";
 import {argumentFrom, openingString} from "../drive_programs.js";
+import {setupOn} from "../runs.js";
 import {
   BODY_ORDER, DRIVE_ORDER, allBodies, bodyParts, driveParts, otherScenes, state
 } from "../scenes.js";
+import {boardIcon} from "../setup.js";
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -45,6 +48,14 @@ export function screenLetter(name) {
 // A screen as the page shows it, by its letter where there are two and plainly where there is one
 export function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
+}
+
+// A board setting in a box's coloured band, the board's chip beside its control, which only
+// editing the board can change
+export function bandFact(control) {
+  control.disabled = control.disabled || !setupOn;
+  return h("span", {className: "bandfact", title: "Board setup, shared by every scene"},
+           boardIcon(), control);
 }
 
 // The words on the button under a picture that puts it on a screen, the screen's letter where
