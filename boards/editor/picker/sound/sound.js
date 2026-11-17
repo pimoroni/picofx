@@ -86,9 +86,11 @@ function soundHead() {
              }
            }, h("span", {"aria-hidden": "true"}, "↻"), " Loop"),
            volumeSlider(),
-           h("div", {
+           h("button", {
+             type: "button",
              className: "card nothing small" +
                         (!state.sound && !state.soundKept && !state.soundOff ? " picked" : ""),
+             "aria-pressed": String(!state.sound && !state.soundKept && !state.soundOff),
              title: canSilence() ? "Play nothing of this scene's own" : "Play no sound",
              onclick: function () {
                state.sound = null;
@@ -97,6 +99,7 @@ function soundHead() {
                state.soundVolume = 100;
                state.soundKept = null;
                draw();
+               refocusCard("#sound .soundhead .card");
              }
            }, h("div", {className: "face"}), h("div", {className: "name"}, "Nothing")));
 }
@@ -144,7 +147,8 @@ function soundRow() {
 // to silence it keeps its place unseen, so the tab does not move between scenes. Its face is a
 // sound with nothing in it, drawn as a tile draws a near-silent file
 function soundSilenceCard() {
-  return h("div", {
+  return h("button", {
+    type: "button", "aria-pressed": String(!!state.soundOff),
     className: "card nothing small" + (state.soundOff ? " picked" : ""),
     style: {visibility: canSilence() ? null : "hidden"},
     title: "Play no sound in this scene",
@@ -155,9 +159,16 @@ function soundSilenceCard() {
       state.soundVolume = 100;
       state.soundOff = true;
       draw();
+      refocusCard("#sound .offhead .card");
     }
   }, h("div", {className: "face silenceface"}, soundOutline(silentBars())),
      h("div", {className: "name"}, "Silence"));
+}
+
+// Keep the keyboard on a card the draw has made afresh, found by selector=
+function refocusCard(selector) {
+  var again = document.querySelector(selector);
+  if (again) again.focus({preventScroll: true});
 }
 
 // The volume the board plays the sound at, a percentage in steps of five

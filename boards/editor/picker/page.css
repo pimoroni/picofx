@@ -616,6 +616,19 @@ body.setupall .chosen.pointing {
   margin: 0 0 var(--space-3);
 }
 
+/* A card that is a button lays out as one that is not, with none of a button's own font, colour,
+   padding or centring */
+button.card {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  appearance: none;
+  unicode-bidi: isolate;
+}
+
 .card {
   border: 2px solid var(--line);
   border-radius: var(--radius-l);

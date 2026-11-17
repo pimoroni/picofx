@@ -32,7 +32,8 @@ function lookCard(isMono, look, on) {
   var coloured = !isMono && takesColour(lookNamed(look.name));
   // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
   // so Nothing there is not the same as off
-  return h("div", {
+  return h("button", {
+    type: "button", "aria-pressed": String(!!on), "data-look": look.name || "",
     className: "card" + (on ? " picked" : "") + (look.name ? "" : " nothing"),
     title: (look.name ? look.name + ": apply it to the selected stretch"
             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
@@ -40,6 +41,9 @@ function lookCard(isMono, look, on) {
     onclick: function () {
       var run = galleryRun(isMono);
       landLook(run, stretchFor(run, isMono), look.name);
+      // The draw has made the cards afresh, so the keyboard stays on this look's new card
+      var again = document.querySelector("#looks .card[data-look='" + (look.name || "") + "']");
+      if (again) again.focus({preventScroll: true});
     }
   }, h("div", {className: "face"}, cells),
      h("div", {className: "name"}, look.name || "Nothing"),
@@ -91,6 +95,8 @@ function renderGalleries() {
               if (!can) {
                 card.className += " cannot";
                 card.onclick = null;
+                // Still reachable, so its tooltip can say why it cannot be chosen
+                card.setAttribute("aria-disabled", "true");
                 card.title = whyNot(look, target);
               }
               return card;

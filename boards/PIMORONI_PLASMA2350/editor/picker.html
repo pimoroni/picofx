@@ -704,6 +704,19 @@ body.setupall .chosen.pointing {
   margin: 0 0 var(--space-3);
 }
 
+/* A card that is a button lays out as one that is not, with none of a button's own font, colour,
+   padding or centring */
+button.card {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  appearance: none;
+  unicode-bidi: isolate;
+}
+
 .card {
   border: 2px solid var(--line);
   border-radius: var(--radius-l);
@@ -13013,13 +13026,18 @@ function lookCard(isMono, look, on) {
   }
   var coloured = !isMono && takesColour(lookNamed(look.name));
   return h(
-    "div",
+    "button",
     {
+      type: "button",
+      "aria-pressed": String(!!on),
+      "data-look": look.name || "",
       className: "card" + (on ? " picked" : "") + (look.name ? "" : " nothing"),
       title: (look.name ? look.name + ": apply it to the selected stretch" : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch" : "turn a stretch off") + (coloured ? ". You can choose its colour" : ""),
       onclick: function() {
         var run = galleryRun(isMono);
         landLook(run, stretchFor(run, isMono), look.name);
+        var again = document.querySelector("#looks .card[data-look='" + (look.name || "") + "']");
+        if (again) again.focus({ preventScroll: true });
       }
     },
     h("div", { className: "face" }, cells),
@@ -13062,6 +13080,7 @@ function renderGalleries() {
         if (!can) {
           card.className += " cannot";
           card.onclick = null;
+          card.setAttribute("aria-disabled", "true");
           card.title = whyNot(look, target);
         }
         return card;
