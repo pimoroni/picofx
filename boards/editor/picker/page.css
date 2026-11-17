@@ -856,6 +856,9 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .screen-box h3{font-size:var(--text-m);margin:0;padding:var(--space-3) var(--space-6);color:#fff;
  background:var(--dim);
  display:flex;align-items:center;gap:var(--space-3)}
+/* As tall as while the screen is fitted, when it holds the panel's size, so the band keeps its
+   height as the screen is added and removed */
+.screen-box h3{box-sizing:border-box;min-height:37px}
 /* The panel's size is a fact about the board, not about a scene, so it rides in
    the coloured band with the port's name instead of among the settings */
 .screen-box h3 select.inband{margin-left:var(--space-3);border:1px solid rgba(255,255,255,.55);
