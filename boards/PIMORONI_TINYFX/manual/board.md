@@ -7,8 +7,8 @@ tabs: *Outputs=mono Wave, Sound, Sensor
 ```
 
 Under **Effects** you'll find **Outputs** for the lights, **Sound** for the
-speaker and **Sensor** for the sensor connector. Each tab shows a small preview of what it's playing, and [[Edit board]]
-sits at the end of the row.
+speaker and **Sensor** for the sensor connector. Each tab shows a small preview
+of what it's playing.
 
 <!-- block picker_first_look -->
 
@@ -41,16 +41,17 @@ cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
 <!-- block picker_board -->
 
 ```picker
-tabs editing: *Outputs=mono Wave, Sound, Sensor
+tabs: *Outputs=mono Wave, Sound, Sensor
 badge: Wiring, the RGB output is one colour light | Drag lights to match your build. The arrow on the RGB output splits or rejoins it.
 wiring mono Wave: 1, 2, 3, 4, 5, 6 | RGB
 ```
 
-Drag each light to match where it sits in your build, so a look that travels
-moves the right way. The arrow on the RGB output moves it across to the mono side
-as three mono lights, or brings them back as one colour light. [[Reset wiring]],
-under the connectors, puts every light back in wiring order and rejoins the RGB
-output.
+Press the **Wiring** chip on **Outputs**, then drag each light to match where it
+sits in your build, so a look that travels moves the right way. The arrow on the
+RGB output moves it across to the mono side as three mono lights, or brings them
+back as one colour light. [[Reset wiring]], under the connectors, puts every light
+back in wiring order and rejoins the RGB output. Press the chip again when you're
+done.
 
 <!-- block picker_programs_picture -->
 

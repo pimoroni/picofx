@@ -56,8 +56,7 @@ tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sens
 
 Under **Effects** you'll find a tab for each part of the board. **Outputs**,
 **Left strip** and **Right strip** are for the lights, followed by **Screens**,
-**Sound** and **Sensor**. Each tab shows a small preview of what it's playing, and [[Edit board]]
-sits at the end of the row.
+**Sound** and **Sensor**. Each tab shows a small preview of what it's playing.
 
 ### Lights: Choosing a look
 
@@ -119,30 +118,33 @@ strip.
 
 ### Board: Setting up your hardware
 
-Press [[Edit board]] to tell the picker about your hardware. Everything else
-fades while you're there, and [[Done]] takes you back.
+Each tab holds the settings for its own hardware, such as the order your lights
+are wired in. Look out for the chip icon, which the picker puts on every board
+setting. These settings describe your hardware, so they're shared by every
+scene.
 
-Look out for the chip icon on [[Edit board]]. The picker marks every board
-setting with it, such as the order your lights are wired in. These settings
-describe your hardware, so they're shared by every scene.
+A part that isn't fitted has a button with the chip to add it, and a fitted part
+has [[remove]] to take it off again. Once you have scenes, the picker asks before
+removing anything, as every scene loses what it played there.
 
 ```picker
-tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 badge: Wiring, every output is one colour light | Drag lights to match your build. Arrows split or rejoin an output's three lights.
 wiring Rainbow: 1, 2, 3, 4, 5, 6, 7
 ```
 
-On **Outputs**, drag each light to match where it sits in your build, so a look
-that travels moves the right way. The arrows split an output into three mono
-lights, or join them back into one colour light. [[Reset wiring]], under the
-connectors, puts every light back in wiring order and rejoins every output.
+On **Outputs**, press the **Wiring** chip, then drag each light to match where it
+sits in your build, so a look that travels moves the right way. The arrows split
+an output into three mono lights, or join them back into one colour light.
+[[Reset wiring]], under the connectors, puts every light back in wiring order and
+rejoins every output. Press the chip again when you're done.
 
 On **Left strip** and **Right strip**, set how many LEDs each strip has and its
-colour order, which needs changing if red shows as another colour. The cross
-removes a strip you haven't fitted.
+colour order, which needs changing if red shows as another colour. [[remove]]
+takes off a strip you haven't fitted, and [[add this strip]] puts it back.
 
 ```picker
-tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+tabs: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 stripsetup: 30
 ```
 
@@ -177,12 +179,12 @@ Press [[Paired]] again to set them apart. Each scene can pair the screens or not
 ### Screens: Using a Screen Hub
 
 A Screen Hub plugs into both screen connectors and drives up to six screens, at
-the positions A to F printed on the hub. To set one up, press [[Edit board]], open
-**Screens** and choose **A Screen Hub across both**. Then pick which connector
-carries the hub's SPI and which its Selects, as labelled on the hub, and set the
-size of the screen at each position.
+the positions A to F printed on the hub. To set one up, open **Screens** and
+choose **A Screen Hub across both**. Then pick which connector carries the hub's
+SPI and which its Selects, as labelled on the hub, and set the size of the screen
+at each position. [[add a panel]] fills a position left empty.
 
-Back on **Screens**, the positions sit side by side under one shared backlight.
+The positions sit side by side under one shared backlight.
 Each picture has a button for every position, or for every group once you've
 made some, and [[all]] shows it everywhere.
 
@@ -272,9 +274,9 @@ the "On the drive" heading quietens it while the scene shows.
 
 ### Sensor: Changing scenes with a remote or motion
 
-Press [[Edit board]] and choose what's on the sensor connector, an Aye Arr
-Remote through an IR Receiver Stick, or a PIR Stick. That's the only board
-setting for it. The **Sensor** tab then shows the remote with a row for each
+On **Sensor**, press [[add a sensor]] and choose what's on the sensor connector,
+an Aye Arr Remote through an IR Receiver Stick, or a PIR Stick. That's the only
+board setting for it. The **Sensor** tab then shows the remote with a row for each
 button, or the Stick with a row for when motion starts and one for when it
 stops.
 

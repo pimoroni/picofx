@@ -8,8 +8,7 @@ tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
 
 Under **Effects** you'll find **DAT strip**, **CLK strip** and **APA102 strip**
 for the strips, **LED** for the board's own light, and **Screens**. Each tab
-shows a small preview of what it's playing, and [[Edit board]] sits at the end
-of the row.
+shows a small preview of what it's playing.
 
 <!-- block picker_first_look -->
 
@@ -40,13 +39,14 @@ cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
 <!-- block picker_board -->
 
 ```picker
-tabs editing: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
+tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
 stripsetup: 66
 ```
 
-Choose which strips are fitted, then set how many LEDs each has and its colour
-order, which needs changing if red shows as another colour. An APA102 strip uses
-both terminals, so it replaces the other two. On **Screens**, set the size of
+On each strip's tab, set how many LEDs it has and its colour order, which needs
+changing if red shows as another colour. [[remove]] takes off a strip you haven't
+fitted, and [[add this strip]] puts it back. An APA102 strip uses both terminals,
+so it replaces the other two. On **Screens**, set the size of
 the screen.
 
 <!-- block picker_screens_picture -->

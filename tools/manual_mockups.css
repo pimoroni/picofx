@@ -32,7 +32,6 @@
 .mockup .button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .mockup .button.off { opacity: 0.45; }
 .mockup .button.arrow { padding: 0.08rem 0.4rem; font-size: 0.7rem; }
-.mockup .button.done { background: var(--board); border-color: var(--board); color: #fff; }
 .mockup .button.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .mockup .button.small { font-size: 0.72rem; padding: 0 0.45rem; }
 
@@ -155,7 +154,7 @@
 /* A lights tab's picture, a cell for each light in what it plays. The pictures narrow to keep the
    row on one line, never past the names above them */
 .mockup .tab:not(.boxed) { flex: 0 1 6.5rem; }
-.mockup .tab.boxed, .mockup .tabrow .button { flex: none; }
+.mockup .tab.boxed { flex: none; }
 .mockup .tabswatch { display: flex; width: 100%; height: 0.55rem; border-radius: 3px; overflow: hidden; }
 .mockup .tabswatch i { flex: 1; }
 .mockup .tabsays { font-size: 0.66rem; line-height: 0.55rem; color: var(--dim); white-space: nowrap; }
@@ -166,7 +165,6 @@
 .mockup .tabscreens { display: flex; gap: 0.3rem; }
 .mockup .tabscreens i { width: 1.8rem; height: 1.8rem; border-radius: 3px; background: #fff; border: 1px solid var(--line); box-sizing: border-box; }
 .mockup .tabsound { display: block; width: 3.4rem; height: 1.8rem; border-radius: 3px; }
-.mockup .tabrow .button { margin: 0 0 0.5rem auto; align-self: center; }
 
 /* The scenes: a grey tray that is Always on, its own card the first column and each scene a card
    in its colour, then the folder tab holding the selected scene's settings */
@@ -269,6 +267,11 @@
 .mockup .badge b { font-size: 0.82rem; }
 .mockup .badge.strip { background: #c2570f; }
 .mockup .badge .field { border-color: rgba(255, 255, 255, 0.5); background: transparent; color: #fff; }
+/* A fitted part's remove button, in its coloured chip or band, or plain under a hub position */
+.mockup .remove { padding: 0 0.35rem; border: 1px solid var(--line); border-radius: 6px; font-size: 0.68rem; }
+.mockup .badge .remove, .mockup .screenhead .remove { border-color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.15); }
+.mockup .screenhead .remove { margin-left: auto; }
+.mockup .place .remove { align-self: center; background: #fff; }
 .mockup .badgerow .badge { flex: none; white-space: nowrap; }
 .mockup .badgerow .hint { min-width: 0; font-size: 0.75rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mockup .badgerow .hint.back { opacity: 0.35; }
