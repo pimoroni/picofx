@@ -14,7 +14,8 @@ committed and the module is generated, so run this after editing a part, a page,
 description or anything the catalogue reads.
 
 The parts are modules, bundled by the esbuild pinned in tools/picker, which
-npm ci --prefix tools/picker installs. editor/picker.html holds them as one readable script, so it
+npm ci --prefix tools/picker installs. The page's stylesheet is page.css, followed by any part's
+own of the same name, in the order the parts run. editor/picker.html holds them as one readable script, so it
 opens from disk as it is. The drive's copies of the picker and the text editor have their style and
 script minified. --dev also writes editor/picker.dev.html, which loads the parts as modules.
 
@@ -183,11 +184,12 @@ def check_release_branch(page):
                      found.group(1), RELEASE_BRANCH))
 
 
-def board_parts(picker_folders, board):
+def board_parts(picker_folders, board, kind=".js"):
     """
     The board's parts in name order, from the shared parts and any of its own, a feature
     folder's only where it has it. A feature folder inside another, as discover/screens/,
     is taken only where the board has both. A part of the board's own adds to the shared ones.
+    kind is the files' extension, ".js" for the parts and ".css" for their stylesheets.
     """
     folders = []
 
@@ -204,7 +206,7 @@ def board_parts(picker_folders, board):
 
     for folder in picker_folders:
         take(folder)
-    parts = [part for where in folders for part in glob.glob(os.path.join(where, "*.js"))]
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "*" + kind))]
     names = [os.path.basename(part) for part in parts]
     twice = sorted({name for name in names if names.count(name) > 1})
     if twice:
@@ -219,6 +221,9 @@ DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |c
 
 # The part that draws the page once every other part is in place, which runs last
 START_PART = "start.js"
+
+# The page's own stylesheet, which comes before any part's
+PAGE_STYLES = "page.css"
 
 # The page --dev writes beside picker.html, loading the parts as modules so a change to one shows
 # on reload. Modules load only from a server, as python3 -m http.server at the repository's root
@@ -309,6 +314,7 @@ def picker(board_dir, repo_dir, version):
     check_board(board_dir, board)
     shared = os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
+    folders = [shared] + ([own] if os.path.isdir(own) else [])
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
         page = f.read()
     page = page.replace("__BOARD_NAME__", board["name"])
@@ -316,10 +322,12 @@ def picker(board_dir, repo_dir, version):
     # Written into a script block, so "</" is escaped where a string would end the block
     build = json.dumps({"board": board, "version": version}, indent=1).replace("</", "<\\/")
     page = page.replace("__BUILD__", build)
-    left = sorted(set(re.findall(r"__[A-Z_]+__", page)))
+    order = ordered_parts(board_parts(folders, board))
+    # The stylesheets go in after the check, as a rule may hold anything
+    left = sorted(set(re.findall(r"__[A-Z_]+__", page)) - {"__STYLES__"})
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))
-    order = ordered_parts(board_parts([shared] + ([own] if os.path.isdir(own) else []), board))
+    page = page.replace("__STYLES__\n", styles(board_parts(folders, board, ".css"), order))
     # Every part is kept in the readable page, as a part may be used only from the console
     kept = page + PICKER_START + bundled(repo_dir, order, "--format=esm", "--tree-shaking=false")
     drive = page + PICKER_START + bundled(repo_dir, order, "--format=iife")
@@ -328,6 +336,30 @@ def picker(board_dir, repo_dir, version):
                     for part in order)
     modules = page + '<script type="module">\n' + loads + PICKER_END
     return kept + PICKER_END, drive + PICKER_END, modules
+
+
+def styles(sheets, order):
+    """
+    The page's stylesheet, page.css and then each part's stylesheet in the order the parts run,
+    so a part's rules follow those of the parts it builds on. A part's stylesheet shares its name
+    and folder, as sound/sound.css beside sound/sound.js, and one with no part beside it is
+    refused, as it would have no place in that order.
+    """
+    named = {os.path.splitext(os.path.normpath(part))[0]: part for part in order}
+    placed = []
+    for sheet in sheets:
+        if os.path.basename(sheet) == PAGE_STYLES:
+            continue
+        part = named.get(os.path.splitext(os.path.normpath(sheet))[0])
+        if not part:
+            sys.exit("{} has no part of its name beside it".format(sheet))
+        placed.append((order.index(part), sheet))
+    first = [sheet for sheet in sheets if os.path.basename(sheet) == PAGE_STYLES]
+    text = ""
+    for sheet in first + [sheet for at, sheet in sorted(placed)]:
+        with open(sheet, encoding="utf-8") as f:
+            text += f.read()
+    return text
 
 
 def bundled(repo_dir, order, *options):

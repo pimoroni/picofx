@@ -9,7 +9,7 @@ esbuild bundles into:
 - The page the FX drive carries, packed into the board's `fx_libs/fx_editor.py`. It is the same
   page with its style and script minified.
 
-Rebuild after changing a part, `page.html`, the board's `editor/fx_board.json` or anything the
+Rebuild after changing a part, `page.html`, a stylesheet, the board's `editor/fx_board.json` or anything the
 catalogue reads:
 
 ```sh
@@ -34,9 +34,10 @@ committed.
 
 ## Layout
 
-- `page.html` is the page's head, stylesheet and markup. The build fills in `__BOARD_NAME__`,
+- `page.html` is the page's head and markup. The build fills in `__BOARD_NAME__`,
   `__VERSION__` and `__BUILD__`, the board's description and the version, which `looks.js`
-  reads.
+  reads, and `__STYLES__`, the stylesheets.
+- `page.css` is the page's stylesheet, before any part's own.
 - Every other file is a part: a module, which runs after the parts it imports, as `strips.js`
   after `scenes.js`.
 - A folder named after a feature (`screens`, `hub`, `sound`, `sensor`, `discover`, `firmware`) is
@@ -99,8 +100,13 @@ its function to it:
 
 ## Styles
 
-The stylesheet is in `page.html`. Use its tokens, declared on `:root`, rather than literal
-values:
+The page's stylesheet is `page.css`, which the build puts in `page.html` at `__STYLES__`. A part
+can have a stylesheet of its own beside it, of the same name, as `sound/sound.css` beside
+`sound/sound.js`. Each follows `page.css` in the order the parts run, so a part's rules come
+after those of the parts it imports, and is taken only where the board takes its part. The build
+refuses a stylesheet with no part beside it.
+
+Use the tokens declared on `:root` in `page.css` rather than literal values:
 
 - `--space-1` to `--space-7` for gaps, margins and padding, .125rem to 1.5rem.
 - `--radius-xs` to `--radius-xl` and `--radius-round` for corners, 4px to 16px.
