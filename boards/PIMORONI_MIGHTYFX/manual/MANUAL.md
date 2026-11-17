@@ -322,6 +322,31 @@ with: screen, 2 screens, hub, remote, servos
 programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
 ```
 
+### Examples: Downloading more
+
+The board's examples are also kept online. You can download any example the
+drive doesn't have, and update the ones it does have. The computer needs to be
+online for this.
+
+Each tab that lists examples has a Discover button under its **Examples**
+heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+shows the examples this drive doesn't have. Click a card to choose it, or tick
+the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
+**Programs**, the **With** buttons in the gallery hide examples that need
+hardware you don't have.
+
+Under the Discover button, [[Check for updates]] looks for newer versions of the
+examples on the drive. [[Update all]] downloads every one it finds. To update a
+single example, press **Update** in the corner of its card. A card marked
+**Needs** and a version number needs newer firmware than the board has. Press
+[[Update available]] beside the version at the top of the page to get it.
+
+Examples on the drive have a delete button just like your own files. You can
+download a deleted example again later.
+
+If you've changed an example program or drawing, the picker keeps your version
+as a copy of your own before it updates. A changed picture or sound is replaced.
+
 ### Saving: Sending to the board
 
 [[Save to board]] writes your changes, and the board loads them a few seconds

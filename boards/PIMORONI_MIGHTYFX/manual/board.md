@@ -80,6 +80,11 @@ with: screen, 2 screens, hub, remote, servos
 programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
 ```
 
+<!-- block discover_kept -->
+
+If you've changed an example program or drawing, the picker keeps your version
+as a copy of your own before it updates. A changed picture or sound is replaced.
+
 <!-- block entry_examples -->
 
 ```entry

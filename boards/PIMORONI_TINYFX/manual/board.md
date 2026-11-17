@@ -61,6 +61,11 @@ with: remote, Qw/ST, speaker
 programs Model lighting | thrusters, beacons and lit postcards: Rescue vehicle, *Ship thrusters, Space tales
 ```
 
+<!-- block discover_kept -->
+
+If you've changed an example program, the picker keeps your version as a copy of
+your own before it updates. A changed sound is replaced.
+
 <!-- block entry_examples -->
 
 ```entry
