@@ -1,11 +1,11 @@
 import {banner} from "../banner.js";
 import {screenHooks} from "../board.js";
 import {SWATCHES, WORDS, fieldColour, hexOf, rgbInk, takeApart} from "../colours.js";
+import {h, replace} from "../dom.js";
 import {addStep, draw} from "../draw.js";
 import {driveTrouble, nameShown} from "../drive.js";
 import {isExampleMedia, mediaHome, scanMedia} from "../drive_files.js";
 import {copyToOwn, folderAt} from "../drive_programs.js";
-import {escapeHtml} from "../file_preview.js";
 import {spoken} from "../lines.js";
 import {toggle} from "../looks.js";
 import {copyTile} from "../program.js";
@@ -69,91 +69,54 @@ var FOLDS_START_OPEN = {Orientation: true, Placement: false, Background: false, 
 
 function foldSection(key, name, says, body) {
   var id = key + "|" + name;
-  var fold = document.createElement("details");
-  fold.className = "sfold";
-  fold.dataset.section = name;
-  fold.open = foldOpen[id] !== undefined ? foldOpen[id] : FOLDS_START_OPEN[name];
-  fold.ontoggle = function () { foldOpen[id] = fold.open; };
-  var head = document.createElement("summary");
-  head.appendChild(document.createTextNode(name));
-  var said = document.createElement("small");
-  said.className = "closedonly";
-  said.textContent = says;
-  head.appendChild(said);
-  fold.appendChild(head);
-  fold.appendChild(body);
+  var fold = h("details", {
+    className: "sfold", "data-section": name,
+    open: foldOpen[id] !== undefined ? foldOpen[id] : FOLDS_START_OPEN[name],
+    ontoggle: function () { foldOpen[id] = fold.open; }
+  }, h("summary", {}, name, h("small", {className: "closedonly"}, says || null)), body);
   return fold;
 }
 
 function sline() {
-  var row = document.createElement("div");
-  row.className = "sline";
-  for (var at = 0; at < arguments.length; at++) if (arguments[at]) row.appendChild(arguments[at]);
-  return row;
+  return h("div", {className: "sline"}, Array.from(arguments));
 }
 
 function named(words) {
-  var label = document.createElement("span");
-  label.className = "snamed";
-  label.textContent = words;
-  return label;
+  return h("span", {className: "snamed"}, words);
 }
 
 // One choice of several, as a row of buttons. options are [value, label html, refused]
 function segment(options, chosen, choose, title) {
-  var seg = document.createElement("span");
-  seg.className = "sseg";
-  if (title) seg.title = title;
-  options.forEach(function (option) {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.dataset.value = option[0];
-    button.innerHTML = option[1];
-    button.className = option[0] === chosen ? "on" : "";
-    button.disabled = !!option[2];
-    button.onclick = function () { choose(option[0]); draw(); };
-    seg.appendChild(button);
-  });
-  return seg;
+  return h("span", {className: "sseg", title: title || null}, options.map(function (option) {
+    return h("button", {
+      type: "button", "data-value": option[0], html: option[1],
+      className: option[0] === chosen ? "on" : "", disabled: !!option[2],
+      onclick: function () { choose(option[0]); draw(); }
+    });
+  }));
 }
 
 function numberBox(value, placeholder, change, step) {
-  var box = document.createElement("input");
-  box.type = "number";
-  box.step = step || 1;
-  box.value = value;
-  box.placeholder = placeholder;
-  box.onchange = function () { change(box.value); draw(); };
+  var box = h("input", {
+    type: "number", step: step || 1, value: value, placeholder: placeholder,
+    onchange: function () { change(box.value); draw(); }
+  });
   return box;
 }
 
 function unit(words) {
-  var said = document.createElement("span");
-  said.className = "sunit";
-  said.textContent = words;
-  return said;
+  return h("span", {className: "sunit"}, words);
 }
 
-// How brightly a screen is lit, as a slider with its figure
-function lightSlider(value, change, title) {
-  var slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  slider.value = Math.round(value * 100);
-  var figure = document.createElement("span");
-  figure.className = "lightfigure";
-  figure.textContent = slider.value + "%";
-  slider.oninput = function () { figure.textContent = slider.value + "%"; };
-  slider.onchange = function () { change(Number(slider.value) / 100); draw(); };
-  var label = document.createElement("label");
-  label.className = "opt lightopt";
-  label.appendChild(document.createTextNode("backlight"));
-  label.appendChild(slider);
-  label.appendChild(figure);
-  label.title = title;
-  return label;
+// How brightly a screen is lit, as a slider with its figure, named words=
+function lightSlider(value, change, title, words) {
+  var figure = h("span", {className: "lightfigure"}, Math.round(value * 100) + "%");
+  var slider = h("input", {
+    type: "range", min: 0, max: 100, step: 5, value: Math.round(value * 100),
+    oninput: function () { figure.textContent = slider.value + "%"; },
+    onchange: function () { change(Number(slider.value) / 100); draw(); }
+  });
+  return h("label", {className: "opt lightopt", title: title}, words, slider, figure);
 }
 
 // ---- orientation ----
@@ -198,22 +161,19 @@ var DOUBLE_GLYPH = "<svg width='12' height='12' viewBox='0 0 12 12' aria-hidden=
 function placementFold(key, held, size) {
   var look = held.look;
   var where = pictureOffset(look, held.shows, size, held.turn);
-  var anchor = document.createElement("span");
-  anchor.className = "sanchor";
-  anchor.title = "Picture position, calculated from its size and the panel's";
-  ANCHOR_NAMES.forEach(function (name, at) {
-    var point = document.createElement("button");
-    point.type = "button";
-    point.className = look.anchor === at ? "on" : "";
-    point.title = name;
-    point.onclick = function () {
-      look.anchor = at;
-      look.x = "";
-      look.y = "";
-      draw();
-    };
-    anchor.appendChild(point);
-  });
+  var anchor = h("span", {
+    className: "sanchor", title: "Picture position, calculated from its size and the panel's"
+  }, ANCHOR_NAMES.map(function (name, at) {
+    return h("button", {
+      type: "button", className: look.anchor === at ? "on" : "", title: name,
+      onclick: function () {
+        look.anchor = at;
+        look.x = "";
+        look.y = "";
+        draw();
+      }
+    });
+  }));
   // Typing a figure places the picture by hand, the other side kept where it was
   function typed(axis) {
     return function (value) {
@@ -244,14 +204,11 @@ function placementFold(key, held, size) {
                       function (on) { look.double = on; },
                       "Draw each pixel at double size");
   // Where it sits, then how it fills, in a line each or two halves where the section is wide
-  var body = document.createElement("div");
-  body.className = "ssplit";
-  body.appendChild(sline(anchor, named("x"), x, named("y"), y, double));
-  var across = named("\u2194");
-  across.title = "Across";
-  var down = named("\u2195");
-  down.title = "Down";
-  body.appendChild(sline(named("Tiling"), across, tiling(false), down, tiling(true)));
+  var body = h("div", {className: "ssplit"},
+               sline(anchor, named("x"), x, named("y"), y, double),
+               sline(named("Tiling"), h("span", {className: "snamed", title: "Across"}, "\u2194"),
+                     tiling(false), h("span", {className: "snamed", title: "Down"}, "\u2195"),
+                     tiling(true)));
   return foldSection(key, "Placement", placementSaid(look, where), body);
 }
 
@@ -266,138 +223,105 @@ var groundCustom = {};
 // is taken as written, and its brightness is read from it
 function backgroundFold(key, held) {
   var look = held.look;
-  var body = document.createElement("div");
-  body.className = "groundpick";
   var names = ["black"].concat(SWATCHES);
   var parts = groundParts(look.bg);
   var chosen = names.filter(function (name) {
     return hexOf(WORDS[name]) === hexOf(parts.full);
   })[0];
   var open = groundCustom[key] || !chosen;
-  var row = document.createElement("div");
-  row.className = "sswatches";
-  names.forEach(function (name) {
-    var swatch = document.createElement("button");
-    swatch.type = "button";
-    swatch.className = !open && chosen === name ? "on" : "";
-    swatch.style.background = rgbInk(WORDS[name]);
-    swatch.title = name;
-    // Named under the swatch where the section is wide enough, as the looks' picker names them
-    var tag = document.createElement("b");
-    tag.textContent = name;
-    swatch.appendChild(tag);
-    // A colour keeps the brightness already set
-    swatch.onclick = function () {
-      look.bg = groundHex(WORDS[name], parts.value);
-      groundCustom[key] = false;
-      draw();
-    };
-    row.appendChild(swatch);
-  });
-  var custom = document.createElement("button");
-  custom.type = "button";
-  custom.className = "custom" + (open ? " on" : "");
   // A colour that is no swatch's is the custom one, and the ring keeps showing it while a
   // swatch is chosen, so custom comes back to it
   if (open) look.customBg = look.bg;
-  if (look.customBg) custom.style.setProperty("--picked", look.customBg);
-  custom.title = "custom: pick a colour or type a hex code";
-  var customTag = document.createElement("b");
-  customTag.textContent = "custom";
-  custom.appendChild(customTag);
-  custom.onclick = function () {
-    groundCustom[key] = true;
-    if (look.customBg) look.bg = look.customBg;
-    draw();
-  };
-  row.appendChild(custom);
-  body.appendChild(row);
+  var row = h("div", {className: "sswatches"},
+    names.map(function (name) {
+      // Named under the swatch where the section is wide enough, as the looks' picker names
+      // them. A colour keeps the brightness already set
+      return h("button", {
+        type: "button", className: !open && chosen === name ? "on" : "",
+        style: {background: rgbInk(WORDS[name])}, title: name,
+        onclick: function () {
+          look.bg = groundHex(WORDS[name], parts.value);
+          groundCustom[key] = false;
+          draw();
+        }
+      }, h("b", {}, name));
+    }),
+    h("button", {
+      type: "button", className: "custom" + (open ? " on" : ""),
+      style: {"--picked": look.customBg || null},
+      title: "custom: pick a colour or type a hex code",
+      onclick: function () {
+        groundCustom[key] = true;
+        if (look.customBg) look.bg = look.customBg;
+        draw();
+      }
+    }, h("b", {}, "custom")));
 
-  if (open) {
-    var holds = document.createElement("div");
-    holds.className = "scustom";
-    var place = takeApart(parts.full);
-    var field = document.createElement("div");
-    field.className = "field";
-    var at = document.createElement("div");
-    at.className = "at";
-    at.style.left = (place.hue / 360 * 100) + "%";
-    at.style.top = ((1 - place.sat) * 100) + "%";
-    at.style.background = rgbInk(parts.full);
-    field.appendChild(at);
-    var hex = document.createElement("input");
-    function pointingAt(event) {
-      var bounds = field.getBoundingClientRect();
-      var across = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
-      var down = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
-      look.bg = groundHex(fieldColour(across * 360, 1 - down), parts.value);
-      at.style.left = (across * 100) + "%";
-      at.style.top = (down * 100) + "%";
-      at.style.background = look.bg;
-      hex.value = look.bg;
-      preview.style.background = look.bg;
+  // How bright the background is, black having none to set
+  var figure = h("span", {className: "lightfigure"}, Math.round(parts.value * 100) + "%");
+  var slider = h("input", {
+    type: "range", min: 0, max: 100, step: 5, value: Math.round(parts.value * 100),
+    disabled: chosen === "black",
+    oninput: function () { figure.textContent = slider.value + "%"; },
+    onchange: function () {
+      look.bg = groundHex(parts.full, Number(slider.value) / 100);
+      draw();
     }
-    field.onpointerdown = function (event) {
-      field.setPointerCapture(event.pointerId);
-      pointingAt(event);
-    };
-    field.onpointermove = function (event) {
-      if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
-    };
-    field.onpointerup = function () { draw(); };
-    holds.appendChild(field);
-    var typed = document.createElement("label");
-    typed.className = "hexline";
-    typed.appendChild(document.createTextNode("Hex"));
-    hex.type = "text";
-    hex.maxLength = 7;
-    hex.spellcheck = false;
-    hex.value = look.bg;
-    hex.title = "Use the background colour exactly as typed, including dark colours";
-    hex.onchange = function () {
+  });
+  var bright = h("label", {
+    className: "opt groundbright",
+    title: chosen === "black" ? "Brightness does not apply to black"
+                              : "Background brightness, separate from the backlight"
+  }, "brightness", slider, figure);
+  return foldSection(key, "Background", groundSaid(look.bg),
+                     h("div", {className: "groundpick"}, row,
+                       open ? customGround(look, parts) : null, bright));
+}
+
+// The custom colour's field to pick a hue and saturation from, with its hex to type beside the
+// colour itself at its brightness, as large as the room beside the field
+function customGround(look, parts) {
+  var place = takeApart(parts.full);
+  var at = h("div", {className: "at", style: {left: place.hue / 360 * 100 + "%",
+                                              top: (1 - place.sat) * 100 + "%",
+                                              background: rgbInk(parts.full)}});
+  var hex = h("input", {
+    type: "text", maxLength: 7, value: look.bg,
+    title: "Use the background colour exactly as typed, including dark colours",
+    onchange: function () {
       var said = hex.value.replace("#", "").trim().toLowerCase();
       if (/^[0-9a-f]{6}$/.test(said)) look.bg = "#" + said;
       draw();
-    };
-    typed.appendChild(hex);
-    // The hex over the colour itself at its brightness, as large as the room beside the field
-    var side = document.createElement("div");
-    side.className = "scustomside";
-    side.appendChild(typed);
-    var preview = document.createElement("div");
-    preview.className = "scustompreview";
+    }
+  });
+  hex.spellcheck = false;
+  var preview = h("div", {className: "scustompreview", style: {background: look.bg},
+                          title: "How the background will look"});
+  var field = h("div", {
+    className: "field",
+    onpointerdown: function (event) {
+      field.setPointerCapture(event.pointerId);
+      pointingAt(event);
+    },
+    onpointermove: function (event) {
+      if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
+    },
+    onpointerup: function () { draw(); }
+  }, at);
+  function pointingAt(event) {
+    var bounds = field.getBoundingClientRect();
+    var across = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+    var down = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+    look.bg = groundHex(fieldColour(across * 360, 1 - down), parts.value);
+    at.style.left = (across * 100) + "%";
+    at.style.top = (down * 100) + "%";
+    at.style.background = look.bg;
+    hex.value = look.bg;
     preview.style.background = look.bg;
-    preview.title = "How the background will look";
-    side.appendChild(preview);
-    holds.appendChild(side);
-    body.appendChild(holds);
   }
-
-  // How bright the background is, black having none to set
-  var slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  slider.value = Math.round(parts.value * 100);
-  slider.disabled = chosen === "black";
-  var figure = document.createElement("span");
-  figure.className = "lightfigure";
-  figure.textContent = slider.value + "%";
-  slider.oninput = function () { figure.textContent = slider.value + "%"; };
-  slider.onchange = function () {
-    look.bg = groundHex(parts.full, Number(slider.value) / 100);
-    draw();
-  };
-  var bright = document.createElement("label");
-  bright.className = "opt groundbright";
-  bright.appendChild(document.createTextNode("brightness"));
-  bright.appendChild(slider);
-  bright.appendChild(figure);
-  bright.title = chosen === "black" ? "Brightness does not apply to black"
-                                    : "Background brightness, separate from the backlight";
-  body.appendChild(bright);
-  return foldSection(key, "Background", groundSaid(look.bg), body);
+  return h("div", {className: "scustom"}, field,
+           h("div", {className: "scustomside"}, h("label", {className: "hexline"}, "Hex", hex),
+             preview));
 }
 
 // A drawing's own section, in playback's place. It sets how often the drawing draws and its
@@ -425,31 +349,19 @@ function drawingFold(key, held) {
     "of the memory. With Pixel double it fills the screen";
   canvas.querySelector("[data-value=set]").title = "A custom size in pixels, positioned like a small picture";
   // The speed, then the canvas, stacked or in two halves where the section is wide
-  var body = document.createElement("div");
-  body.className = "ssplit";
-  body.appendChild(speedLine(speed, every, look));
-  var sized = document.createElement("div");
-  body.appendChild(sized);
-  sized.appendChild(sline(named("Canvas"), canvas));
-  if (look.canvas === "set") {
-    var wide = numberBox(look.canvasW, "", function (value) {
-      if (Number(value) > 0) look.canvasW = Math.round(Number(value));
-    });
-    var high = numberBox(look.canvasH, "", function (value) {
-      if (Number(value) > 0) look.canvasH = Math.round(Number(value));
-    });
-    sized.appendChild(sline(named("Width"), wide, unit("pixels"), named("Height"), high,
-                           unit("pixels")));
-  }
+  var body = h("div", {className: "ssplit"}, speedLine(speed, every, look),
+               h("div", {}, sline(named("Canvas"), canvas), look.canvas === "set"
+                 ? sline(named("Width"), numberBox(look.canvasW, "", function (value) {
+                           if (Number(value) > 0) look.canvasW = Math.round(Number(value));
+                         }), unit("pixels"),
+                         named("Height"), numberBox(look.canvasH, "", function (value) {
+                           if (Number(value) > 0) look.canvasH = Math.round(Number(value));
+                         }), unit("pixels"))
+                 : null));
   var said = [look.pace === "fps" ? look.every + " fps"
             : look.pace === "interval" ? "frame every " + look.every + " s" : "every frame",
               look.canvas === "set" ? look.canvasW + " \u00d7 " + look.canvasH
             : look.canvas === "half" ? "half size" : "whole screen"];
-  var whole = document.createElement("div");
-  var madeFor = madeForLine(held);
-  if (madeFor) whole.appendChild(madeFor);
-  var halfSize = halfSizeLine();
-  if (halfSize) whole.appendChild(halfSize);
   // A drawing drawn in styles of its own offers them, a row for each of its Styles: lines stacked
   // beside the one label, a line's first being the one it takes unchosen. A style is the file's own
   // text, so it is escaped for the button's label
@@ -457,23 +369,21 @@ function drawingFold(key, held) {
   var drawing = media && media.drawing;
   var chosen = drawing ? styleChoices(drawing, look.style) : [];
   var offered = [];
-  var rows = document.createElement("span");
-  rows.className = "sstylerows";
-  (drawing ? drawing.styles : []).forEach(function (line, at) {
-    if (line.length < 2) return;
-    rows.appendChild(segment(line.map(function (style) {
+  var segments = (drawing ? drawing.styles : []).map(function (line, at) {
+    if (line.length < 2) return null;
+    offered.push(chosen[at]);
+    return segment(line.map(function (style) {
       return [style, style.replace(/&/g, "&amp;").replace(/</g, "&lt;")];
     }), chosen[at], function (value) {
       var picked = styleChoices(drawing, look.style);
       picked[at] = value;
       look.style = styleWord(drawing, picked);
-    }, "The style this drawing is drawn in"));
-    offered.push(chosen[at]);
+    }, "The style this drawing is drawn in");
   });
-  if (offered.length) whole.appendChild(sline(named("Style"), rows));
-  said = offered.concat(said);
-  whole.appendChild(body);
-  return foldSection(key, "Drawing", said.join(", "), whole);
+  var rows = h("span", {className: "sstylerows"}, segments);
+  return foldSection(key, "Drawing", offered.concat(said).join(", "),
+                     h("div", {}, madeForLine(held), halfSizeLine(),
+                       offered.length ? sline(named("Style"), rows) : null, body));
 }
 
 // A line warning that a drawing is turned or doubled otherwise than its Defaults: line says it
@@ -492,19 +402,18 @@ function madeForLine(held) {
   var said = [];
   if (turnWrong) said.push(turns.map(function (turn) { return turn + "\u00b0"; }).join(" or "));
   if (doubleWrong) said.push(doubled ? "pixel doubling at half size" : "full resolution");
-  var use = document.createElement("button");
-  use.type = "button";
-  use.className = "stoggle";
-  use.textContent = "Apply";
-  use.title = "Set the rotation and pixel doubling this drawing is made for";
-  use.onclick = function () {
-    if (turnWrong) setTurn(held, turns[0]);
-    if (doubleWrong) {
-      held.look.double = doubled;
-      held.look.canvas = doubled ? "half" : "whole";
+  var use = h("button", {
+    type: "button", className: "stoggle",
+    title: "Set the rotation and pixel doubling this drawing is made for",
+    onclick: function () {
+      if (turnWrong) setTurn(held, turns[0]);
+      if (doubleWrong) {
+        held.look.double = doubled;
+        held.look.canvas = doubled ? "half" : "whole";
+      }
+      draw();
     }
-    draw();
-  };
+  }, "Apply");
   var line = sline(named("Made for " + said.join(", ")), use);
   line.classList.add("smadefor");
   return line;
@@ -524,18 +433,16 @@ function halfSizeLine() {
   // Is either not doubled at half size? Doubling and half size are judged together, as madeForLine() does
   var larger = both.some(function (held) { return !(held.look.double && held.look.canvas === "half"); });
   if (!drawings || !larger) return null;
-  var use = document.createElement("button");
-  use.type = "button";
-  use.className = "stoggle";
-  use.textContent = "Apply";
-  use.title = "Set both drawings to pixel doubling at half size";
-  use.onclick = function () {
-    both.forEach(function (held) {
-      held.look.double = true;
-      held.look.canvas = "half";
-    });
-    draw();
-  };
+  var use = h("button", {
+    type: "button", className: "stoggle", title: "Set both drawings to pixel doubling at half size",
+    onclick: function () {
+      both.forEach(function (held) {
+        held.look.double = true;
+        held.look.canvas = "half";
+      });
+      draw();
+    }
+  }, "Apply");
   var line = sline(named("Two drawings run faster at half size or paired"), use);
   line.classList.add("smadefor");
   line.title = "Two drawings at full size do not both fit the board's fast memory.";
@@ -606,69 +513,62 @@ function playbackFold(key, held, media) {
     // Nothing, zero or less is no pace, so the figure there stays
     if (Number(value) > 0) look.every = Number(value);
   }, look.pace === "interval" ? 0.05 : 1);
-  // The pace, then how it loops and holds, stacked or in two halves where the section is wide
-  var body = document.createElement("div");
-  body.className = "ssplit";
-  body.appendChild(speedLine(speed, every, look));
-  var looping = document.createElement("div");
-  body.appendChild(looping);
-  looping.appendChild(sline(
-    toggle("&#8635;", "Loop", look.loop, function (on) { look.loop = on; },
-           "Start again after the last frame"),
-    toggle("&#8644;", "Ping pong", held.pingpong, function (on) { held.pingpong = on; },
-           "Play forwards then backwards"),
-    toggle("&#8676;", "First frame as last", look.whole, function (on) { look.whole = on; },
-           firstAsLastAllowed(held, look)
-             ? "Repeat the first frame at the end"
-             : "Needs Ping pong, or Loop off",
-           !firstAsLastAllowed(held, look))));
-
-  var hold = document.createElement("span");
-  hold.className = "shold" + (holdAllowed(held, look) ? "" : " off");
-  hold.title = holdAllowed(held, look) ? "Pause at each end, in seconds"
-                                       : "Needs Loop or Ping pong";
-  hold.appendChild(named("Hold"));
   var atEnd = numberBox(held.hold, "0", function (value) {
     held.hold = value && Number(value) > 0 ? value : "";
   }, 0.5);
   atEnd.disabled = !holdAllowed(held, look);
-  hold.appendChild(atEnd);
-  hold.appendChild(unit(secondHoldAllowed(held, look) ? "seconds at the end," : "seconds"));
-  if (secondHoldAllowed(held, look)) {
-    hold.appendChild(numberBox(look.holdBack, "same", function (value) {
-      look.holdBack = value && Number(value) >= 0 ? value : "";
-    }, 0.5));
-    hold.appendChild(unit("seconds at the start"));
-  }
-  looping.appendChild(sline(hold));
+  var second = secondHoldAllowed(held, look);
+  var hold = h("span", {
+    className: "shold" + (holdAllowed(held, look) ? "" : " off"),
+    title: holdAllowed(held, look) ? "Pause at each end, in seconds" : "Needs Loop or Ping pong"
+  }, named("Hold"), atEnd, unit(second ? "seconds at the end," : "seconds"),
+     second ? [numberBox(look.holdBack, "same", function (value) {
+                 look.holdBack = value && Number(value) >= 0 ? value : "";
+               }, 0.5), unit("seconds at the start")] : null);
+  // The pace, then how it loops and holds, stacked or in two halves where the section is wide
+  var body = h("div", {className: "ssplit"}, speedLine(speed, every, look),
+    h("div", {},
+      sline(toggle("&#8635;", "Loop", look.loop, function (on) { look.loop = on; },
+                   "Start again after the last frame"),
+            toggle("&#8644;", "Ping pong", held.pingpong, function (on) { held.pingpong = on; },
+                   "Play forwards then backwards"),
+            toggle("&#8676;", "First frame as last", look.whole, function (on) { look.whole = on; },
+                   firstAsLastAllowed(held, look)
+                     ? "Repeat the first frame at the end"
+                     : "Needs Ping pong, or Loop off",
+                   !firstAsLastAllowed(held, look))),
+      sline(hold)));
   return foldSection(key, "Playback", playbackSaid(held, look), body);
 }
 
 export function showingLine(held, letter) {
-  var line = document.createElement("div");
-  line.className = "sshowing";
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
-  // Nothing showing takes the same two lines a picture does, so nothing under it moves when one
-  // is chosen
+  return h("div", {className: "sshowing" + (picture ? "" : " empty")},
+           picture ? showingPicture(picture, held, letter) : showingNothing(held, letter));
+}
+
+// What a screen showing nothing of its own says, in the same two lines a picture takes, so nothing
+// under it moves when one is chosen
+function showingNothing(held, letter) {
   var press = "press " + screenButton(letter) + " under a picture below to show it here";
-  if (!picture) {
-    line.classList.add("empty");
-    var under = held.shows ? null : screenUnder(letter);
-    if (held.off) {
-      line.innerHTML = "off in this scene<small>black, at the backlight set above</small>";
-    } else if (under && under.always) {
-      var shown = under.always === "keep" ? "the line kept from the file"
-                                          : "<b>" + pictureSaid(under.always) + "</b>";
-      line.innerHTML = "showing " + shown + " from Always on<small>" + press + " instead</small>";
-    } else if (under) {
-      line.innerHTML = "backlight off in this scene<small>lit only in " +
-                       escapeHtml(spoken(namesOf(under.off))) + "</small>";
-    } else {
-      line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
-                       "<small>" + press + "</small>";
-    }
-    return line;
+  var under = held.shows ? null : screenUnder(letter);
+  if (held.off) return ["off in this scene", h("small", {}, "black, at the backlight set above")];
+  if (under && under.always) {
+    return [under.always === "keep" ? "showing the line kept from the file from Always on"
+              : ["showing ", h("b", {}, pictureSaid(under.always)), " from Always on"],
+            h("small", {}, press + " instead")];
   }
+  if (under) {
+    return ["backlight off in this scene",
+            h("small", {}, "lit only in " + spoken(namesOf(under.off)))];
+  }
+  return [state.scenes.length ? "nothing chosen for this scene" : "nothing showing",
+          h("small", {}, press)];
+}
+
+// What a screen showing a picture says, its name and its kind and size, or for a drawing the
+// canvas it draws on
+function showingPicture(picture, held, letter) {
   var media = mediaNamed(picture);
   var art = mediaArt(picture);
   // A drawing is drawn, not shown, on a canvas
@@ -678,49 +578,33 @@ export function showingLine(held, letter) {
     var canvas = !state.hub.on && screensPaired()
                ? pairCanvas(SCREENS.map(function (one) { return state.screens[one]; }))
                : canvasPixels(held.look, size, held.turn);
-    line.innerHTML = "drawing <b>" + nameShown(picture) + "</b><small>canvas, " + canvas[0] +
-                     " \u00d7 " + canvas[1] + "</small>";
-    return line;
+    return ["drawing ", h("b", {}, nameShown(picture)),
+            h("small", {}, "canvas, " + canvas[0] + " \u00d7 " + canvas[1])];
   }
   var kind = media ? {image: "picture", gif: "gif", folder: "slideshow"}[media.kind] : null;
-  line.innerHTML = "showing <b>" + pictureSaid(picture) + "</b>" +
-                   (media ? "" : " (not on the drive)");
   var about = [kind, art && art.w ? art.w + " \u00d7 " + art.h : null].filter(Boolean);
-  if (about.length) {
-    var small = document.createElement("small");
-    small.textContent = about.join(", ");
-    line.appendChild(small);
-  }
-  return line;
+  return ["showing ", h("b", {}, pictureSaid(picture)), media ? null : " (not on the drive)",
+          about.length ? h("small", {}, about.join(", ")) : null];
 }
 
 // The four sections for a screen or position, with nothing to set until a picture is showing
 // but its orientation, which is how the screen is mounted
 export function lookSections(key, held, size) {
-  var sections = document.createElement("div");
-  sections.className = "settings looksettings";
-  sections.appendChild(orientationFold(key, held));
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
-  if (!picture) return sections;
-  sections.appendChild(placementFold(key, held, size));
-  sections.appendChild(backgroundFold(key, held));
+  var media = picture ? mediaNamed(picture) : null;
   // Is this a pair's second screen? It plays as the first does, so only its placing is offered
-  if (key === "screen" + SCREENS[SCREENS.length - 1] && screensPaired()) return sections;
-  var media = mediaNamed(picture);
-  if (media && media.kind === "drawing") sections.appendChild(drawingFold(key, held));
-  else if (media && media.kind !== "image") sections.appendChild(playbackFold(key, held, media));
-  return sections;
+  var second = key === "screen" + SCREENS[SCREENS.length - 1] && screensPaired();
+  return h("div", {className: "settings looksettings"},
+           orientationFold(key, held),
+           picture ? [placementFold(key, held, size), backgroundFold(key, held)] : null,
+           !picture || second || !media ? null
+             : media.kind === "drawing" ? drawingFold(key, held)
+             : media.kind !== "image" ? playbackFold(key, held, media) : null);
 }
-
 
 // A backlight as a row of its own across the top of a screen's or the hub's box
 export function lightRow(value, change, words, title) {
-  var row = document.createElement("div");
-  row.className = "lightrow";
-  var light = lightSlider(value, change, title);
-  light.firstChild.textContent = words;
-  row.appendChild(light);
-  return row;
+  return h("div", {className: "lightrow"}, lightSlider(value, change, title, words));
 }
 
 // A picture newly chosen starts at the turn it was last given on this screen, and a picture
@@ -769,11 +653,11 @@ addStep(assetSteps, ASSET_ORDER, "screenSettings", function () {
       face.className = "face drawingface";
       face.style.height = face.getBoundingClientRect().width + "px";
       face.style.background = drawingInk(drawing, media.name);
-      face.innerHTML = "<span class='kind'>drawing</span>" +
-        (drawing.icon ? "<span class='drawingicon'>" + drawing.icon + "</span>"
-                      : "<span class='drawingletter'>" + drawing.title[0] + "</span>") +
-        "<span class='drawingtitle'>" + drawing.title + "</span>" +
-        "<div class='label'><b>" + drawing.title + "</b></div>";
+      replace(face, h("span", {className: "kind"}, "drawing"),
+              drawing.icon ? h("span", {className: "drawingicon"}, drawing.icon)
+                           : h("span", {className: "drawingletter"}, drawing.title[0]),
+              h("span", {className: "drawingtitle"}, drawing.title),
+              h("div", {className: "label"}, h("b", {}, drawing.title)));
       return;
     }
     if (!art || !art.w || !img) return;
@@ -795,11 +679,11 @@ addStep(assetSteps, ASSET_ORDER, "screenSettings", function () {
     // A drawing shown by its thumbnail is named as its opening string says, since the thumbnail's
     // size is not the canvas it draws on
     if (label && media.kind === "drawing") {
-      label.innerHTML = "<b>" + media.drawing.title + "</b>";
+      replace(label, h("b", {}, media.drawing.title));
     } else if (label) {
-      label.innerHTML = "<b>" + shown + "</b><br>" +
-        [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
-          .filter(Boolean).join(" \u00b7 ");
+      replace(label, h("b", {}, shown), h("br"),
+              [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
+                .filter(Boolean).join(" \u00b7 "));
     }
   });
 });

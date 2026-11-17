@@ -12856,96 +12856,70 @@ var FOLDS_START_OPEN = {
 };
 function foldSection(key, name, says, body) {
   var id = key + "|" + name;
-  var fold = document.createElement("details");
-  fold.className = "sfold";
-  fold.dataset.section = name;
-  fold.open = foldOpen[id] !== void 0 ? foldOpen[id] : FOLDS_START_OPEN[name];
-  fold.ontoggle = function() {
-    foldOpen[id] = fold.open;
-  };
-  var head = document.createElement("summary");
-  head.appendChild(document.createTextNode(name));
-  var said = document.createElement("small");
-  said.className = "closedonly";
-  said.textContent = says;
-  head.appendChild(said);
-  fold.appendChild(head);
-  fold.appendChild(body);
+  var fold = h("details", {
+    className: "sfold",
+    "data-section": name,
+    open: foldOpen[id] !== void 0 ? foldOpen[id] : FOLDS_START_OPEN[name],
+    ontoggle: function() {
+      foldOpen[id] = fold.open;
+    }
+  }, h("summary", {}, name, h("small", { className: "closedonly" }, says || null)), body);
   return fold;
 }
 function sline() {
-  var row = document.createElement("div");
-  row.className = "sline";
-  for (var at = 0; at < arguments.length; at++) if (arguments[at]) row.appendChild(arguments[at]);
-  return row;
+  return h("div", { className: "sline" }, Array.from(arguments));
 }
 function named(words) {
-  var label = document.createElement("span");
-  label.className = "snamed";
-  label.textContent = words;
-  return label;
+  return h("span", { className: "snamed" }, words);
 }
 function segment(options, chosen, choose, title) {
-  var seg = document.createElement("span");
-  seg.className = "sseg";
-  if (title) seg.title = title;
-  options.forEach(function(option) {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.dataset.value = option[0];
-    button.innerHTML = option[1];
-    button.className = option[0] === chosen ? "on" : "";
-    button.disabled = !!option[2];
-    button.onclick = function() {
-      choose(option[0]);
-      draw();
-    };
-    seg.appendChild(button);
-  });
-  return seg;
+  return h("span", { className: "sseg", title: title || null }, options.map(function(option) {
+    return h("button", {
+      type: "button",
+      "data-value": option[0],
+      html: option[1],
+      className: option[0] === chosen ? "on" : "",
+      disabled: !!option[2],
+      onclick: function() {
+        choose(option[0]);
+        draw();
+      }
+    });
+  }));
 }
 function numberBox(value, placeholder, change, step2) {
-  var box = document.createElement("input");
-  box.type = "number";
-  box.step = step2 || 1;
-  box.value = value;
-  box.placeholder = placeholder;
-  box.onchange = function() {
-    change(box.value);
-    draw();
-  };
+  var box = h("input", {
+    type: "number",
+    step: step2 || 1,
+    value,
+    placeholder,
+    onchange: function() {
+      change(box.value);
+      draw();
+    }
+  });
   return box;
 }
 function unit(words) {
-  var said = document.createElement("span");
-  said.className = "sunit";
-  said.textContent = words;
-  return said;
+  return h("span", { className: "sunit" }, words);
 }
-function lightSlider(value, change, title) {
-  var slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  slider.value = Math.round(value * 100);
-  var figure = document.createElement("span");
-  figure.className = "lightfigure";
-  figure.textContent = slider.value + "%";
-  slider.oninput = function() {
-    figure.textContent = slider.value + "%";
-  };
-  slider.onchange = function() {
-    change(Number(slider.value) / 100);
-    draw();
-  };
-  var label = document.createElement("label");
-  label.className = "opt lightopt";
-  label.appendChild(document.createTextNode("backlight"));
-  label.appendChild(slider);
-  label.appendChild(figure);
-  label.title = title;
-  return label;
+function lightSlider(value, change, title, words) {
+  var figure = h("span", { className: "lightfigure" }, Math.round(value * 100) + "%");
+  var slider = h("input", {
+    type: "range",
+    min: 0,
+    max: 100,
+    step: 5,
+    value: Math.round(value * 100),
+    oninput: function() {
+      figure.textContent = slider.value + "%";
+    },
+    onchange: function() {
+      change(Number(slider.value) / 100);
+      draw();
+    }
+  });
+  return h("label", { className: "opt lightopt", title }, words, slider, figure);
 }
 function rotationMark(turn) {
   return "<svg width='12' height='12' viewBox='0 0 12 12' aria-hidden='true'><g transform='rotate(" + turn + " 6 6)'><rect x='3' y='1' width='6' height='10' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><rect x='4.5' y='8.8' width='3' height='1.4' fill='currentColor'/></g></svg>";
@@ -12983,22 +12957,22 @@ var DOUBLE_GLYPH = "<svg width='12' height='12' viewBox='0 0 12 12' aria-hidden=
 function placementFold(key, held, size) {
   var look = held.look;
   var where = pictureOffset(look, held.shows, size, held.turn);
-  var anchor = document.createElement("span");
-  anchor.className = "sanchor";
-  anchor.title = "Picture position, calculated from its size and the panel's";
-  ANCHOR_NAMES.forEach(function(name, at) {
-    var point = document.createElement("button");
-    point.type = "button";
-    point.className = look.anchor === at ? "on" : "";
-    point.title = name;
-    point.onclick = function() {
-      look.anchor = at;
-      look.x = "";
-      look.y = "";
-      draw();
-    };
-    anchor.appendChild(point);
-  });
+  var anchor = h("span", {
+    className: "sanchor",
+    title: "Picture position, calculated from its size and the panel's"
+  }, ANCHOR_NAMES.map(function(name, at) {
+    return h("button", {
+      type: "button",
+      className: look.anchor === at ? "on" : "",
+      title: name,
+      onclick: function() {
+        look.anchor = at;
+        look.x = "";
+        look.y = "";
+        draw();
+      }
+    });
+  }));
   function typed(axis) {
     return function(value) {
       var other = axis === "x" ? "y" : "x";
@@ -13012,17 +12986,17 @@ function placementFold(key, held, size) {
   x.title = "Pixels from the left. Leave empty to centre";
   y.title = "Pixels from the top. Leave empty to centre";
   x.className = y.className = "sxy";
-  function tiling(down2) {
-    var side = down2 ? "tileDown" : "tile";
+  function tiling(down) {
+    var side = down ? "tileDown" : "tile";
     var seg = segment(
       [["off", "Off"], ["repeat", "Repeat"], ["mirror", "Mirror"]],
       look[side] || "off",
       function(value) {
         look[side] = value;
       },
-      "Fill the screen " + (down2 ? "top to bottom" : "left to right") + " with copies. Mirror flips every other copy to join up the edges"
+      "Fill the screen " + (down ? "top to bottom" : "left to right") + " with copies. Mirror flips every other copy to join up the edges"
     );
-    seg.classList.add(down2 ? "tiledown" : "tileacross");
+    seg.classList.add(down ? "tiledown" : "tileacross");
     return seg;
   }
   var double = toggle(
@@ -13034,146 +13008,150 @@ function placementFold(key, held, size) {
     },
     "Draw each pixel at double size"
   );
-  var body = document.createElement("div");
-  body.className = "ssplit";
-  body.appendChild(sline(anchor, named("x"), x, named("y"), y, double));
-  var across = named("\u2194");
-  across.title = "Across";
-  var down = named("\u2195");
-  down.title = "Down";
-  body.appendChild(sline(named("Tiling"), across, tiling(false), down, tiling(true)));
+  var body = h(
+    "div",
+    { className: "ssplit" },
+    sline(anchor, named("x"), x, named("y"), y, double),
+    sline(
+      named("Tiling"),
+      h("span", { className: "snamed", title: "Across" }, "\u2194"),
+      tiling(false),
+      h("span", { className: "snamed", title: "Down" }, "\u2195"),
+      tiling(true)
+    )
+  );
   return foldSection(key, "Placement", placementSaid(look, where), body);
 }
 var groundCustom = {};
 function backgroundFold(key, held) {
   var look = held.look;
-  var body = document.createElement("div");
-  body.className = "groundpick";
   var names = ["black"].concat(SWATCHES);
   var parts = groundParts(look.bg);
   var chosen = names.filter(function(name) {
     return hexOf(WORDS[name]) === hexOf(parts.full);
   })[0];
   var open = groundCustom[key] || !chosen;
-  var row = document.createElement("div");
-  row.className = "sswatches";
-  names.forEach(function(name) {
-    var swatch = document.createElement("button");
-    swatch.type = "button";
-    swatch.className = !open && chosen === name ? "on" : "";
-    swatch.style.background = rgbInk(WORDS[name]);
-    swatch.title = name;
-    var tag = document.createElement("b");
-    tag.textContent = name;
-    swatch.appendChild(tag);
-    swatch.onclick = function() {
-      look.bg = groundHex(WORDS[name], parts.value);
-      groundCustom[key] = false;
-      draw();
-    };
-    row.appendChild(swatch);
-  });
-  var custom = document.createElement("button");
-  custom.type = "button";
-  custom.className = "custom" + (open ? " on" : "");
   if (open) look.customBg = look.bg;
-  if (look.customBg) custom.style.setProperty("--picked", look.customBg);
-  custom.title = "custom: pick a colour or type a hex code";
-  var customTag = document.createElement("b");
-  customTag.textContent = "custom";
-  custom.appendChild(customTag);
-  custom.onclick = function() {
-    groundCustom[key] = true;
-    if (look.customBg) look.bg = look.customBg;
-    draw();
-  };
-  row.appendChild(custom);
-  body.appendChild(row);
-  if (open) {
-    let pointingAt = function(event) {
-      var bounds = field.getBoundingClientRect();
-      var across = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
-      var down = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
-      look.bg = groundHex(fieldColour(across * 360, 1 - down), parts.value);
-      at.style.left = across * 100 + "%";
-      at.style.top = down * 100 + "%";
-      at.style.background = look.bg;
-      hex.value = look.bg;
-      preview.style.background = look.bg;
-    };
-    var holds = document.createElement("div");
-    holds.className = "scustom";
-    var place = takeApart(parts.full);
-    var field = document.createElement("div");
-    field.className = "field";
-    var at = document.createElement("div");
-    at.className = "at";
-    at.style.left = place.hue / 360 * 100 + "%";
-    at.style.top = (1 - place.sat) * 100 + "%";
-    at.style.background = rgbInk(parts.full);
-    field.appendChild(at);
-    var hex = document.createElement("input");
-    field.onpointerdown = function(event) {
-      field.setPointerCapture(event.pointerId);
-      pointingAt(event);
-    };
-    field.onpointermove = function(event) {
-      if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
-    };
-    field.onpointerup = function() {
+  var row = h(
+    "div",
+    { className: "sswatches" },
+    names.map(function(name) {
+      return h("button", {
+        type: "button",
+        className: !open && chosen === name ? "on" : "",
+        style: { background: rgbInk(WORDS[name]) },
+        title: name,
+        onclick: function() {
+          look.bg = groundHex(WORDS[name], parts.value);
+          groundCustom[key] = false;
+          draw();
+        }
+      }, h("b", {}, name));
+    }),
+    h("button", {
+      type: "button",
+      className: "custom" + (open ? " on" : ""),
+      style: { "--picked": look.customBg || null },
+      title: "custom: pick a colour or type a hex code",
+      onclick: function() {
+        groundCustom[key] = true;
+        if (look.customBg) look.bg = look.customBg;
+        draw();
+      }
+    }, h("b", {}, "custom"))
+  );
+  var figure = h("span", { className: "lightfigure" }, Math.round(parts.value * 100) + "%");
+  var slider = h("input", {
+    type: "range",
+    min: 0,
+    max: 100,
+    step: 5,
+    value: Math.round(parts.value * 100),
+    disabled: chosen === "black",
+    oninput: function() {
+      figure.textContent = slider.value + "%";
+    },
+    onchange: function() {
+      look.bg = groundHex(parts.full, Number(slider.value) / 100);
       draw();
-    };
-    holds.appendChild(field);
-    var typed = document.createElement("label");
-    typed.className = "hexline";
-    typed.appendChild(document.createTextNode("Hex"));
-    hex.type = "text";
-    hex.maxLength = 7;
-    hex.spellcheck = false;
-    hex.value = look.bg;
-    hex.title = "Use the background colour exactly as typed, including dark colours";
-    hex.onchange = function() {
+    }
+  });
+  var bright = h("label", {
+    className: "opt groundbright",
+    title: chosen === "black" ? "Brightness does not apply to black" : "Background brightness, separate from the backlight"
+  }, "brightness", slider, figure);
+  return foldSection(
+    key,
+    "Background",
+    groundSaid(look.bg),
+    h(
+      "div",
+      { className: "groundpick" },
+      row,
+      open ? customGround(look, parts) : null,
+      bright
+    )
+  );
+}
+function customGround(look, parts) {
+  var place = takeApart(parts.full);
+  var at = h("div", { className: "at", style: {
+    left: place.hue / 360 * 100 + "%",
+    top: (1 - place.sat) * 100 + "%",
+    background: rgbInk(parts.full)
+  } });
+  var hex = h("input", {
+    type: "text",
+    maxLength: 7,
+    value: look.bg,
+    title: "Use the background colour exactly as typed, including dark colours",
+    onchange: function() {
       var said = hex.value.replace("#", "").trim().toLowerCase();
       if (/^[0-9a-f]{6}$/.test(said)) look.bg = "#" + said;
       draw();
-    };
-    typed.appendChild(hex);
-    var side = document.createElement("div");
-    side.className = "scustomside";
-    side.appendChild(typed);
-    var preview = document.createElement("div");
-    preview.className = "scustompreview";
+    }
+  });
+  hex.spellcheck = false;
+  var preview = h("div", {
+    className: "scustompreview",
+    style: { background: look.bg },
+    title: "How the background will look"
+  });
+  var field = h("div", {
+    className: "field",
+    onpointerdown: function(event) {
+      field.setPointerCapture(event.pointerId);
+      pointingAt(event);
+    },
+    onpointermove: function(event) {
+      if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
+    },
+    onpointerup: function() {
+      draw();
+    }
+  }, at);
+  function pointingAt(event) {
+    var bounds = field.getBoundingClientRect();
+    var across = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+    var down = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+    look.bg = groundHex(fieldColour(across * 360, 1 - down), parts.value);
+    at.style.left = across * 100 + "%";
+    at.style.top = down * 100 + "%";
+    at.style.background = look.bg;
+    hex.value = look.bg;
     preview.style.background = look.bg;
-    preview.title = "How the background will look";
-    side.appendChild(preview);
-    holds.appendChild(side);
-    body.appendChild(holds);
   }
-  var slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  slider.value = Math.round(parts.value * 100);
-  slider.disabled = chosen === "black";
-  var figure = document.createElement("span");
-  figure.className = "lightfigure";
-  figure.textContent = slider.value + "%";
-  slider.oninput = function() {
-    figure.textContent = slider.value + "%";
-  };
-  slider.onchange = function() {
-    look.bg = groundHex(parts.full, Number(slider.value) / 100);
-    draw();
-  };
-  var bright = document.createElement("label");
-  bright.className = "opt groundbright";
-  bright.appendChild(document.createTextNode("brightness"));
-  bright.appendChild(slider);
-  bright.appendChild(figure);
-  bright.title = chosen === "black" ? "Brightness does not apply to black" : "Background brightness, separate from the backlight";
-  body.appendChild(bright);
-  return foldSection(key, "Background", groundSaid(look.bg), body);
+  return h(
+    "div",
+    { className: "scustom" },
+    field,
+    h(
+      "div",
+      { className: "scustomside" },
+      h("label", { className: "hexline" }, "Hex", hex),
+      preview
+    )
+  );
 }
 function drawingFold(key, held) {
   var look = held.look;
@@ -13200,58 +13178,56 @@ function drawingFold(key, held) {
   canvas.querySelector("[data-value=whole]").title = "As big as the screen";
   canvas.querySelector("[data-value=half]").title = "Half the screen's width and height, using a quarter of the memory. With Pixel double it fills the screen";
   canvas.querySelector("[data-value=set]").title = "A custom size in pixels, positioned like a small picture";
-  var body = document.createElement("div");
-  body.className = "ssplit";
-  body.appendChild(speedLine(speed, every, look));
-  var sized = document.createElement("div");
-  body.appendChild(sized);
-  sized.appendChild(sline(named("Canvas"), canvas));
-  if (look.canvas === "set") {
-    var wide = numberBox(look.canvasW, "", function(value) {
-      if (Number(value) > 0) look.canvasW = Math.round(Number(value));
-    });
-    var high = numberBox(look.canvasH, "", function(value) {
-      if (Number(value) > 0) look.canvasH = Math.round(Number(value));
-    });
-    sized.appendChild(sline(
+  var body = h(
+    "div",
+    { className: "ssplit" },
+    speedLine(speed, every, look),
+    h("div", {}, sline(named("Canvas"), canvas), look.canvas === "set" ? sline(
       named("Width"),
-      wide,
+      numberBox(look.canvasW, "", function(value) {
+        if (Number(value) > 0) look.canvasW = Math.round(Number(value));
+      }),
       unit("pixels"),
       named("Height"),
-      high,
+      numberBox(look.canvasH, "", function(value) {
+        if (Number(value) > 0) look.canvasH = Math.round(Number(value));
+      }),
       unit("pixels")
-    ));
-  }
+    ) : null)
+  );
   var said = [
     look.pace === "fps" ? look.every + " fps" : look.pace === "interval" ? "frame every " + look.every + " s" : "every frame",
     look.canvas === "set" ? look.canvasW + " \xD7 " + look.canvasH : look.canvas === "half" ? "half size" : "whole screen"
   ];
-  var whole = document.createElement("div");
-  var madeFor = madeForLine(held);
-  if (madeFor) whole.appendChild(madeFor);
-  var halfSize = halfSizeLine();
-  if (halfSize) whole.appendChild(halfSize);
   var media = held.shows ? mediaNamed(held.shows) : null;
   var drawing = media && media.drawing;
   var chosen = drawing ? styleChoices(drawing, look.style) : [];
   var offered = [];
-  var rows = document.createElement("span");
-  rows.className = "sstylerows";
-  (drawing ? drawing.styles : []).forEach(function(line, at) {
-    if (line.length < 2) return;
-    rows.appendChild(segment(line.map(function(style) {
+  var segments = (drawing ? drawing.styles : []).map(function(line, at) {
+    if (line.length < 2) return null;
+    offered.push(chosen[at]);
+    return segment(line.map(function(style) {
       return [style, style.replace(/&/g, "&amp;").replace(/</g, "&lt;")];
     }), chosen[at], function(value) {
       var picked = styleChoices(drawing, look.style);
       picked[at] = value;
       look.style = styleWord(drawing, picked);
-    }, "The style this drawing is drawn in"));
-    offered.push(chosen[at]);
+    }, "The style this drawing is drawn in");
   });
-  if (offered.length) whole.appendChild(sline(named("Style"), rows));
-  said = offered.concat(said);
-  whole.appendChild(body);
-  return foldSection(key, "Drawing", said.join(", "), whole);
+  var rows = h("span", { className: "sstylerows" }, segments);
+  return foldSection(
+    key,
+    "Drawing",
+    offered.concat(said).join(", "),
+    h(
+      "div",
+      {},
+      madeForLine(held),
+      halfSizeLine(),
+      offered.length ? sline(named("Style"), rows) : null,
+      body
+    )
+  );
 }
 function madeForLine(held) {
   var media = held.shows ? mediaNamed(held.shows) : null;
@@ -13266,19 +13242,19 @@ function madeForLine(held) {
     return turn + "\xB0";
   }).join(" or "));
   if (doubleWrong) said.push(doubled ? "pixel doubling at half size" : "full resolution");
-  var use = document.createElement("button");
-  use.type = "button";
-  use.className = "stoggle";
-  use.textContent = "Apply";
-  use.title = "Set the rotation and pixel doubling this drawing is made for";
-  use.onclick = function() {
-    if (turnWrong) setTurn(held, turns[0]);
-    if (doubleWrong) {
-      held.look.double = doubled;
-      held.look.canvas = doubled ? "half" : "whole";
+  var use = h("button", {
+    type: "button",
+    className: "stoggle",
+    title: "Set the rotation and pixel doubling this drawing is made for",
+    onclick: function() {
+      if (turnWrong) setTurn(held, turns[0]);
+      if (doubleWrong) {
+        held.look.double = doubled;
+        held.look.canvas = doubled ? "half" : "whole";
+      }
+      draw();
     }
-    draw();
-  };
+  }, "Apply");
   var line = sline(named("Made for " + said.join(", ")), use);
   line.classList.add("smadefor");
   return line;
@@ -13296,18 +13272,18 @@ function halfSizeLine() {
     return !(held.look.double && held.look.canvas === "half");
   });
   if (!drawings || !larger) return null;
-  var use = document.createElement("button");
-  use.type = "button";
-  use.className = "stoggle";
-  use.textContent = "Apply";
-  use.title = "Set both drawings to pixel doubling at half size";
-  use.onclick = function() {
-    both.forEach(function(held) {
-      held.look.double = true;
-      held.look.canvas = "half";
-    });
-    draw();
-  };
+  var use = h("button", {
+    type: "button",
+    className: "stoggle",
+    title: "Set both drawings to pixel doubling at half size",
+    onclick: function() {
+      both.forEach(function(held) {
+        held.look.double = true;
+        held.look.canvas = "half";
+      });
+      draw();
+    }
+  }, "Apply");
   var line = sline(named("Two drawings run faster at half size or paired"), use);
   line.classList.add("smadefor");
   line.title = "Two drawings at full size do not both fit the board's fast memory.";
@@ -13372,80 +13348,96 @@ function playbackFold(key, held, media) {
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function(value) {
     if (Number(value) > 0) look.every = Number(value);
   }, look.pace === "interval" ? 0.05 : 1);
-  var body = document.createElement("div");
-  body.className = "ssplit";
-  body.appendChild(speedLine(speed, every, look));
-  var looping = document.createElement("div");
-  body.appendChild(looping);
-  looping.appendChild(sline(
-    toggle(
-      "&#8635;",
-      "Loop",
-      look.loop,
-      function(on) {
-        look.loop = on;
-      },
-      "Start again after the last frame"
-    ),
-    toggle(
-      "&#8644;",
-      "Ping pong",
-      held.pingpong,
-      function(on) {
-        held.pingpong = on;
-      },
-      "Play forwards then backwards"
-    ),
-    toggle(
-      "&#8676;",
-      "First frame as last",
-      look.whole,
-      function(on) {
-        look.whole = on;
-      },
-      firstAsLastAllowed(held, look) ? "Repeat the first frame at the end" : "Needs Ping pong, or Loop off",
-      !firstAsLastAllowed(held, look)
-    )
-  ));
-  var hold = document.createElement("span");
-  hold.className = "shold" + (holdAllowed(held, look) ? "" : " off");
-  hold.title = holdAllowed(held, look) ? "Pause at each end, in seconds" : "Needs Loop or Ping pong";
-  hold.appendChild(named("Hold"));
   var atEnd = numberBox(held.hold, "0", function(value) {
     held.hold = value && Number(value) > 0 ? value : "";
   }, 0.5);
   atEnd.disabled = !holdAllowed(held, look);
-  hold.appendChild(atEnd);
-  hold.appendChild(unit(secondHoldAllowed(held, look) ? "seconds at the end," : "seconds"));
-  if (secondHoldAllowed(held, look)) {
-    hold.appendChild(numberBox(look.holdBack, "same", function(value) {
+  var second = secondHoldAllowed(held, look);
+  var hold = h(
+    "span",
+    {
+      className: "shold" + (holdAllowed(held, look) ? "" : " off"),
+      title: holdAllowed(held, look) ? "Pause at each end, in seconds" : "Needs Loop or Ping pong"
+    },
+    named("Hold"),
+    atEnd,
+    unit(second ? "seconds at the end," : "seconds"),
+    second ? [numberBox(look.holdBack, "same", function(value) {
       look.holdBack = value && Number(value) >= 0 ? value : "";
-    }, 0.5));
-    hold.appendChild(unit("seconds at the start"));
-  }
-  looping.appendChild(sline(hold));
+    }, 0.5), unit("seconds at the start")] : null
+  );
+  var body = h(
+    "div",
+    { className: "ssplit" },
+    speedLine(speed, every, look),
+    h(
+      "div",
+      {},
+      sline(
+        toggle(
+          "&#8635;",
+          "Loop",
+          look.loop,
+          function(on) {
+            look.loop = on;
+          },
+          "Start again after the last frame"
+        ),
+        toggle(
+          "&#8644;",
+          "Ping pong",
+          held.pingpong,
+          function(on) {
+            held.pingpong = on;
+          },
+          "Play forwards then backwards"
+        ),
+        toggle(
+          "&#8676;",
+          "First frame as last",
+          look.whole,
+          function(on) {
+            look.whole = on;
+          },
+          firstAsLastAllowed(held, look) ? "Repeat the first frame at the end" : "Needs Ping pong, or Loop off",
+          !firstAsLastAllowed(held, look)
+        )
+      ),
+      sline(hold)
+    )
+  );
   return foldSection(key, "Playback", playbackSaid(held, look), body);
 }
 function showingLine(held, letter) {
-  var line = document.createElement("div");
-  line.className = "sshowing";
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
+  return h(
+    "div",
+    { className: "sshowing" + (picture ? "" : " empty") },
+    picture ? showingPicture(picture, held, letter) : showingNothing(held, letter)
+  );
+}
+function showingNothing(held, letter) {
   var press = "press " + screenButton(letter) + " under a picture below to show it here";
-  if (!picture) {
-    line.classList.add("empty");
-    var under = held.shows ? null : screenUnder(letter);
-    if (held.off) {
-      line.innerHTML = "off in this scene<small>black, at the backlight set above</small>";
-    } else if (under && under.always) {
-      var shown = under.always === "keep" ? "the line kept from the file" : "<b>" + pictureSaid(under.always) + "</b>";
-      line.innerHTML = "showing " + shown + " from Always on<small>" + press + " instead</small>";
-    } else if (under) {
-      line.innerHTML = "backlight off in this scene<small>lit only in " + escapeHtml(spoken(namesOf(under.off))) + "</small>";
-    } else {
-      line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") + "<small>" + press + "</small>";
-    }
-    return line;
+  var under = held.shows ? null : screenUnder(letter);
+  if (held.off) return ["off in this scene", h("small", {}, "black, at the backlight set above")];
+  if (under && under.always) {
+    return [
+      under.always === "keep" ? "showing the line kept from the file from Always on" : ["showing ", h("b", {}, pictureSaid(under.always)), " from Always on"],
+      h("small", {}, press + " instead")
+    ];
   }
+  if (under) {
+    return [
+      "backlight off in this scene",
+      h("small", {}, "lit only in " + spoken(namesOf(under.off)))
+    ];
+  }
+  return [
+    state.scenes.length ? "nothing chosen for this scene" : "nothing showing",
+    h("small", {}, press)
+  ];
+}
+function showingPicture(picture, held, letter) {
   var media = mediaNamed(picture);
   var art = mediaArt(picture);
   if (media && media.kind === "drawing") {
@@ -13453,40 +13445,35 @@ function showingLine(held, letter) {
     var canvas = !state.hub.on && screensPaired() ? pairCanvas(SCREENS.map(function(one) {
       return state.screens[one];
     })) : canvasPixels(held.look, size, held.turn);
-    line.innerHTML = "drawing <b>" + nameShown(picture) + "</b><small>canvas, " + canvas[0] + " \xD7 " + canvas[1] + "</small>";
-    return line;
+    return [
+      "drawing ",
+      h("b", {}, nameShown(picture)),
+      h("small", {}, "canvas, " + canvas[0] + " \xD7 " + canvas[1])
+    ];
   }
   var kind = media ? { image: "picture", gif: "gif", folder: "slideshow" }[media.kind] : null;
-  line.innerHTML = "showing <b>" + pictureSaid(picture) + "</b>" + (media ? "" : " (not on the drive)");
   var about = [kind, art && art.w ? art.w + " \xD7 " + art.h : null].filter(Boolean);
-  if (about.length) {
-    var small2 = document.createElement("small");
-    small2.textContent = about.join(", ");
-    line.appendChild(small2);
-  }
-  return line;
+  return [
+    "showing ",
+    h("b", {}, pictureSaid(picture)),
+    media ? null : " (not on the drive)",
+    about.length ? h("small", {}, about.join(", ")) : null
+  ];
 }
 function lookSections(key, held, size) {
-  var sections = document.createElement("div");
-  sections.className = "settings looksettings";
-  sections.appendChild(orientationFold(key, held));
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
-  if (!picture) return sections;
-  sections.appendChild(placementFold(key, held, size));
-  sections.appendChild(backgroundFold(key, held));
-  if (key === "screen" + SCREENS[SCREENS.length - 1] && screensPaired()) return sections;
-  var media = mediaNamed(picture);
-  if (media && media.kind === "drawing") sections.appendChild(drawingFold(key, held));
-  else if (media && media.kind !== "image") sections.appendChild(playbackFold(key, held, media));
-  return sections;
+  var media = picture ? mediaNamed(picture) : null;
+  var second = key === "screen" + SCREENS[SCREENS.length - 1] && screensPaired();
+  return h(
+    "div",
+    { className: "settings looksettings" },
+    orientationFold(key, held),
+    picture ? [placementFold(key, held, size), backgroundFold(key, held)] : null,
+    !picture || second || !media ? null : media.kind === "drawing" ? drawingFold(key, held) : media.kind !== "image" ? playbackFold(key, held, media) : null
+  );
 }
 function lightRow(value, change, words, title) {
-  var row = document.createElement("div");
-  row.className = "lightrow";
-  var light = lightSlider(value, change, title);
-  light.firstChild.textContent = words;
-  row.appendChild(light);
-  return row;
+  return h("div", { className: "lightrow" }, lightSlider(value, change, title, words));
 }
 function chosenAfresh(held) {
   if (held.shows === held.lastShows) return;
@@ -13517,7 +13504,13 @@ addStep(assetSteps, ASSET_ORDER, "screenSettings", function() {
       face.className = "face drawingface";
       face.style.height = face.getBoundingClientRect().width + "px";
       face.style.background = drawingInk(drawing, media.name);
-      face.innerHTML = "<span class='kind'>drawing</span>" + (drawing.icon ? "<span class='drawingicon'>" + drawing.icon + "</span>" : "<span class='drawingletter'>" + drawing.title[0] + "</span>") + "<span class='drawingtitle'>" + drawing.title + "</span><div class='label'><b>" + drawing.title + "</b></div>";
+      replace(
+        face,
+        h("span", { className: "kind" }, "drawing"),
+        drawing.icon ? h("span", { className: "drawingicon" }, drawing.icon) : h("span", { className: "drawingletter" }, drawing.title[0]),
+        h("span", { className: "drawingtitle" }, drawing.title),
+        h("div", { className: "label" }, h("b", {}, drawing.title))
+      );
       return;
     }
     if (!art || !art.w || !img) return;
@@ -13533,9 +13526,14 @@ addStep(assetSteps, ASSET_ORDER, "screenSettings", function() {
     var label = face.querySelector(".label");
     var shown = media.kind === "folder" ? pictureSaid(media.name) : dot > 0 ? file.slice(0, dot) : file;
     if (label && media.kind === "drawing") {
-      label.innerHTML = "<b>" + media.drawing.title + "</b>";
+      replace(label, h("b", {}, media.drawing.title));
     } else if (label) {
-      label.innerHTML = "<b>" + shown + "</b><br>" + [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \xD7 " + art.h].filter(Boolean).join(" \xB7 ");
+      replace(
+        label,
+        h("b", {}, shown),
+        h("br"),
+        [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \xD7 " + art.h].filter(Boolean).join(" \xB7 ")
+      );
     }
   });
 });
