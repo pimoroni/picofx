@@ -5,6 +5,11 @@ builtins = [
     "ptr8",
     "ptr16",
     "ptr32",
+    # autofx drawings, set in the drawing's globals by the board
+    "canvas",
+    "style",
+    "ticks",
+    "ticks_delta",
 ]
 
 # Include:
