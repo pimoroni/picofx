@@ -1,42 +1,152 @@
 /* The sound's Loop, volume and silence on one line above its tiles */
-.soundhead{display:flex;align-items:center;margin:0 0 var(--space-5)}
-.soundvolume{flex:1;display:flex;align-items:center;gap:var(--space-4);margin:0 var(--space-6);
- font-size:var(--text-m);
- color:var(--dim)}
-.soundvolume input[type=range]{flex:1;min-width:4rem;accent-color:var(--accent)}
-.soundvolume input:disabled{opacity:.35}
+.soundhead {
+  display: flex;
+  align-items: center;
+  margin: 0 0 var(--space-5);
+}
+
+.soundvolume {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 var(--space-6);
+  font-size: var(--text-m);
+  color: var(--dim);
+
+  input[type=range] {
+    flex: 1;
+    min-width: 4rem;
+    accent-color: var(--accent);
+  }
+
+  input:disabled {
+    opacity: .35;
+  }
+}
+
 /* A sound's play button, in its tile's corner away from its cross */
-.sound .hear{position:absolute;right:4px;bottom:4px;z-index:2;width:1.3rem;height:1.3rem;
- border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);
- background:var(--bg);border:1px solid var(--line);color:var(--dim);cursor:pointer}
-.sound .hear:hover{color:var(--ink);border-color:var(--ink)}
-.sound .hear.playing{background:var(--accent);border-color:var(--accent);color:#fff}
+.sound .hear {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 2;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--dim);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  &.playing {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+}
+
 /* Silence's face, a sound with nothing in it, as long as a sound tile's preview */
-.card.nothing .face.silenceface{background:#fff;display:flex;align-items:center;width:7.4rem;
- border-right:1px solid var(--line)}
-.card.nothing .face.silenceface svg{display:block;width:100%;height:1.7rem}
+.card.nothing .face.silenceface {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  width: 7.4rem;
+  border-right: 1px solid var(--line);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 1.7rem;
+  }
+}
+
 /* Nothing about the sound is the board's, so on the Sound tab all of it stands back */
-body.setupall #soundPanel{opacity:.35;pointer-events:none}
+body.setupall #soundPanel {
+  opacity: .35;
+  pointer-events: none;
+}
 
 /* The Sound tab's swatch, the shape of the sound playing or silence */
-.accswatch.soundswatch{align-items:center;gap:1px;box-shadow:none;height:.9rem;width:3.2rem}
-.soundswatch span{flex:1;background:var(--accent);border-radius:1px;min-height:2px}
-.soundswatch.silent{height:.2rem;background:var(--line-strong);border-radius:1px}
-.soundswatch.under{border:1px dashed var(--dashed);
- background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 3px,var(--line) 3px,var(--line) 6px)}
-.soundsays{margin:0 0 var(--space-5)}
+.accswatch.soundswatch {
+  align-items: center;
+  gap: 1px;
+  box-shadow: none;
+  height: .9rem;
+  width: 3.2rem;
+}
+
+.soundswatch span {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 1px;
+  min-height: 2px;
+}
+
+.soundswatch.silent {
+  height: .2rem;
+  background: var(--line-strong);
+  border-radius: 1px;
+}
+
+.soundswatch.under {
+  border: 1px dashed var(--dashed);
+  background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px);
+}
+
+.soundsays {
+  margin: 0 0 var(--space-5);
+}
 
 /* The Sound tab's preview, the sound playing drawn at the screens' size on a white tile,
    and stripes for silence as a lamp playing nothing has */
-.ledtab[data-panel=soundPanel] .soundswatch{position:relative;height:2.15rem;width:4.3rem;
- background:#fff;border-radius:var(--radius-xs);padding:0;box-sizing:border-box;overflow:hidden;
- box-shadow:inset 0 0 0 1px var(--line)}
-.ledtab .soundoutline{display:block;width:100%;height:100%}
-.ledtab[data-panel=soundPanel] .soundswatch.silent{height:2.15rem;border-radius:var(--radius-xs);
- background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 3px,var(--line) 3px,var(--line) 6px)}
+.ledtab[data-panel=soundPanel] .soundswatch {
+  position: relative;
+  height: 2.15rem;
+  width: 4.3rem;
+  background: #fff;
+  border-radius: var(--radius-xs);
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ledtab .soundoutline {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ledtab[data-panel=soundPanel] .soundswatch.silent {
+  height: 2.15rem;
+  border-radius: var(--radius-xs);
+  background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px);
+}
 
 /* On repeat, a loop in the corner on a white spot, so it reads over the outline */
-.ledtab .soundswatch .repeatmark{position:absolute;right:2px;bottom:2px;width:.8rem;
- height:.8rem;padding:1px;box-sizing:border-box;color:var(--dim);background:#fff;
- border-radius:50%}
-.discoversounds .sound .hear{z-index:3}
+.ledtab .soundswatch .repeatmark {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: .8rem;
+  height: .8rem;
+  padding: 1px;
+  box-sizing: border-box;
+  color: var(--dim);
+  background: #fff;
+  border-radius: 50%;
+}
+
+.discoversounds .sound .hear {
+  z-index: 3;
+}

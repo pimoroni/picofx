@@ -1,14 +1,47 @@
 /* Lines read from the board's file that no setting here stands for, carried as written */
-.keptlines{margin:var(--space-4) 0;padding:var(--space-4) var(--space-5);
- border:1px dashed var(--line);border-radius:var(--radius);
- font-size:var(--text-m);color:var(--dim)}
-.keptlines .keptsay{margin-bottom:var(--space-3)}
-.keptlines .keptrow{display:flex;align-items:flex-start;gap:var(--space-3);margin:var(--space-1) 0}
-.keptlines code{white-space:pre-wrap;color:var(--ink);flex:1}
-.keptlines .keptdrop{border:0;background:none;color:var(--dim);cursor:pointer;
- font-size:var(--text-l);
- line-height:1;padding:0 var(--space-2)}
-.keptlines .keptdrop:hover{color:var(--ink)}
+.keptlines {
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  font-size: var(--text-m);
+  color: var(--dim);
+
+  .keptsay {
+    margin-bottom: var(--space-3);
+  }
+
+  .keptrow {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin: var(--space-1) 0;
+  }
+
+  code {
+    white-space: pre-wrap;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .keptdrop {
+    border: 0;
+    background: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: var(--text-l);
+    line-height: 1;
+    padding: 0 var(--space-2);
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+}
+
 /* A light a kept line plays, taken until that line goes */
-.sec.keptlamp, .cardlamp.keptlamp i{outline:2px dashed var(--dim);
- outline-offset:2px}
+.sec.keptlamp,
+.cardlamp.keptlamp i {
+  outline: 2px dashed var(--dim);
+  outline-offset: 2px;
+}

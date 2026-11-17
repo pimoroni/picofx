@@ -1,5 +1,21 @@
-.screen-box h3 .bandnone{font-weight:400;opacity:.85}
-.asset.onA{border-color:var(--strip)}
-.asset.onB{border-color:var(--screenB)}
-.asset.onAB{border-color:var(--accent)}
-.screen-box .body.adding{justify-content:center;padding:var(--space-7) var(--space-6)}
+.screen-box h3 .bandnone {
+  font-weight: 400;
+  opacity: .85;
+}
+
+.asset.onA {
+  border-color: var(--strip);
+}
+
+.asset.onB {
+  border-color: var(--screenB);
+}
+
+.asset.onAB {
+  border-color: var(--accent);
+}
+
+.screen-box .body.adding {
+  justify-content: center;
+  padding: var(--space-7) var(--space-6);
+}

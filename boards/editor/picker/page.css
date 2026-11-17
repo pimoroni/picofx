@@ -1,291 +1,923 @@
-:root{
- --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
- --accent:#00857d; --accent-ink:#fff; --strip:#1f6feb; --dark:#191b1d;
- --surface:#fbfaf8; --surface-2:#f0eeea; --line-strong:#c9c3b9; --dim-strong:#6b655c;
- --overlay:rgba(20,20,22,.72); --screenB:#a44ad0; --hold:#8a6415; --hold-bg:#fdf3e0;
- --accent-glow:rgba(15,138,114,.25); --unlit:#2a2d30; --dashed:#a9a49b;
- --space-1:.125rem; --space-2:.25rem; --space-3:.375rem; --space-4:.5rem; --space-5:.75rem;
- --space-6:1rem; --space-7:1.5rem;
- --radius-xs:4px; --radius-s:6px; --radius:8px; --radius-l:12px; --radius-xl:16px;
- --radius-round:999px;
- --font:system-ui,sans-serif; --font-mono:ui-monospace,Menlo,Consolas,monospace;
- --text-xs:.75rem; --text-s:.8125rem; --text-m:.875rem; --text-l:1rem; --text-xl:1.25rem;
- --text-display:3rem;
+:root {
+  --bg: #f5f3ef;
+  --panel: #fff;
+  --ink: #26221e;
+  --dim: #8a8378;
+  --line: #e2ddd4;
+  --accent: #00857d;
+  --accent-ink: #fff;
+  --strip: #1f6feb;
+  --dark: #191b1d;
+  --surface: #fbfaf8;
+  --surface-2: #f0eeea;
+  --line-strong: #c9c3b9;
+  --dim-strong: #6b655c;
+  --overlay: rgba(20, 20, 22, .72);
+  --screenB: #a44ad0;
+  --hold: #8a6415;
+  --hold-bg: #fdf3e0;
+  --accent-glow: rgba(15, 138, 114, .25);
+  --unlit: #2a2d30;
+  --dashed: #a9a49b;
+  --space-1: .125rem;
+  --space-2: .25rem;
+  --space-3: .375rem;
+  --space-4: .5rem;
+  --space-5: .75rem;
+  --space-6: 1rem;
+  --space-7: 1.5rem;
+  --radius-xs: 4px;
+  --radius-s: 6px;
+  --radius: 8px;
+  --radius-l: 12px;
+  --radius-xl: 16px;
+  --radius-round: 999px;
+  --font: system-ui, sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+  --text-xs: .75rem;
+  --text-s: .8125rem;
+  --text-m: .875rem;
+  --text-l: 1rem;
+  --text-xl: 1.25rem;
+  --text-display: 3rem;
 }
-*{box-sizing:border-box}
+
+* {
+  box-sizing: border-box;
+}
+
 /* Hold the footer at the foot of the window when the page is shorter than it */
-body{font:16px/1.5 var(--font);margin:0;background:var(--bg);color:var(--ink);
- min-height:100vh;display:flex;flex-direction:column}
-header{display:flex;align-items:center;gap:var(--space-5);padding:var(--space-5) var(--space-7);
- background:var(--panel);
- border-bottom:1px solid var(--line);position:relative;flex-wrap:wrap}
-header h1{font-size:var(--text-xl);margin:0 auto 0 0}
-header h1 .version{font-size:var(--text-m);font-weight:400;color:var(--dim)}
-button{font:inherit;padding:var(--space-3) var(--space-5);border:1px solid var(--line);
- border-radius:var(--radius);
- background:var(--panel);cursor:pointer;font-size:var(--text-m)}
-button:disabled{opacity:.4;cursor:default}
-button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-main{width:100%;max-width:60rem;margin:var(--space-7) auto;padding:0 var(--space-7);flex-grow:1}
+body {
+  font: 16px/1.5 var(--font);
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);
- padding:var(--space-6) var(--space-7);margin:var(--space-6) 0}
-.panel h2{font-size:var(--text-l);margin:0 0 var(--space-5);display:flex;align-items:baseline;
- gap:var(--space-4)}
-.panel>summary{font:600 var(--text-l) var(--font);color:var(--ink);cursor:pointer;
- display:flex;align-items:baseline;gap:var(--space-4);list-style:none;margin:0}
-.panel>summary::-webkit-details-marker{display:none}
-.panel>summary::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
- border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
- transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
-.panel[open]>summary::before{transform:rotate(-135deg) translate(-2px,-2px)}
-.panel>summary:hover::before{border-color:var(--accent)}
-.panel[open]>summary{margin-bottom:var(--space-5)}
-.says{font-weight:400;font-size:var(--text-m);color:var(--dim)}
+header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-7);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  flex-wrap: wrap;
 
-.chip{display:inline-flex;align-items:center;gap:var(--space-4);
- padding:var(--space-3) var(--space-4);
- border-radius:var(--radius);color:#fff;font:600 var(--text-m) var(--font)}
-.chip.strip{background:var(--strip)}
-.chip input[type=number]{width:4.2rem;padding:var(--space-1) var(--space-3);text-align:center;
- border:1px solid rgba(255,255,255,.55);border-radius:var(--radius-s);
- background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400}
-.chip small{font-weight:400;opacity:.85}
-.chip select{border:1px solid rgba(255,255,255,.55);border-radius:var(--radius-s);
- background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;
- padding:var(--space-1) var(--space-2)}
-.chip select option{color:var(--ink)}
+  h1 {
+    font-size: var(--text-xl);
+    margin: 0 auto 0 0;
+
+    .version {
+      font-size: var(--text-m);
+      font-weight: 400;
+      color: var(--dim);
+    }
+  }
+}
+
+button {
+  font: inherit;
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  cursor: pointer;
+  font-size: var(--text-m);
+
+  &:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+
+  &.on {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+}
+
+main {
+  width: 100%;
+  max-width: 60rem;
+  margin: var(--space-7) auto;
+  padding: 0 var(--space-7);
+  flex-grow: 1;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-7);
+  margin: var(--space-6) 0;
+
+  h2 {
+    font-size: var(--text-l);
+    margin: 0 0 var(--space-5);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  > summary {
+    font: 600 var(--text-l) var(--font);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    list-style: none;
+    margin: 0;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      width: .42rem;
+      height: .42rem;
+      flex-shrink: 0;
+      border-right: 2px solid var(--dim);
+      border-bottom: 2px solid var(--dim);
+      transform: rotate(45deg) translate(-1px, -1px);
+      transition: transform .12s;
+    }
+  }
+
+  &[open] > summary::before {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+  > summary:hover::before {
+    border-color: var(--accent);
+  }
+
+  &[open] > summary {
+    margin-bottom: var(--space-5);
+  }
+}
+
+.says {
+  font-weight: 400;
+  font-size: var(--text-m);
+  color: var(--dim);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  color: #fff;
+  font: 600 var(--text-m) var(--font);
+
+  &.strip {
+    background: var(--strip);
+  }
+
+  input[type=number] {
+    width: 4.2rem;
+    padding: var(--space-1) var(--space-3);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: var(--radius-s);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    font: inherit;
+    font-weight: 400;
+  }
+
+  small {
+    font-weight: 400;
+    opacity: .85;
+  }
+
+  select {
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: var(--radius-s);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    font: inherit;
+    font-weight: 400;
+    padding: var(--space-1) var(--space-2);
+
+    option {
+      color: var(--ink);
+    }
+  }
+}
+
 /* A strip not fitted keeps its chip where it was and the panel its height, and the offer to add
    it stands in the middle of the room the strip took */
-.panel.strip{position:relative}
+.panel.strip {
+  position: relative;
+}
+
 /* Zoomed in, the bar is wider than the room it has and scrolls inside it. The padding
    and the pull back up leave the labels above a cut somewhere to be drawn */
-.scroller{overflow-x:auto;overflow-y:hidden;padding-top:var(--space-6);
- margin-top:calc(-1 * var(--space-6))}
-.scroller::-webkit-scrollbar{height:9px}
-.scroller::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:var(--radius-round)}
-.scroller::-webkit-scrollbar-track{background:var(--surface-2);border-radius:var(--radius-round)}
+.scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: var(--space-6);
+  margin-top: calc(-1 * var(--space-6));
+
+  &::-webkit-scrollbar {
+    height: 9px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: var(--radius-round);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: var(--radius-round);
+  }
+}
+
 /* The things that are done rather than said, the magnifiers and the undo and redo arrows,
    drawn so the cutting row reads as a row of buttons rather than a sentence */
-button.round{width:1.9rem;height:1.75rem;padding:0;display:inline-flex;
- align-items:center;justify-content:center;color:var(--ink)}
-button.round:hover:enabled{border-color:var(--accent);color:var(--accent)}
-button.round svg{display:block}
+button.round {
+  width: 1.9rem;
+  height: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+
+  &:hover:enabled {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  svg {
+    display: block;
+  }
+}
 
 /* ---- the row of cells, which is where the cutting happens ---- */
 /* Every light is a cell. Cells joined together are one section, and a section is one
    entry in the file. The bar is the editing surface, and the drawing above it is the truth */
-.bar{display:flex;gap:2px;align-items:stretch;user-select:none;margin-top:var(--space-6)}
+.bar {
+  display: flex;
+  gap: 2px;
+  align-items: stretch;
+  user-select: none;
+  margin-top: var(--space-6);
+}
+
 /* Not clipped, so a cut can say what it is above the bar rather than inside it */
-.sec{position:relative;min-width:0;border:2px solid var(--line);border-radius:var(--radius);
- background:var(--panel);cursor:pointer;padding:0}
-.sec.picked{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,133,125,.16)}
-/* What the stretch was given, as one of the look's own colours held still. The run
-   above is the one that moves, so this is not the same picture twice */
-.sec .lit{display:block;height:1.5rem;border-radius:var(--radius-s) var(--radius-s) 0 0}
-.sec .lit.nothing{background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 6px,
- var(--line) 6px,var(--line) 12px)}
+.sec {
+  position: relative;
+  min-width: 0;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  cursor: pointer;
+  padding: 0;
+
+  &.picked {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 133, 125, .16);
+  }
+
+  /* What the stretch was given, as one of the look's own colours held still. The run
+     above is the one that moves, so this is not the same picture twice */
+  .lit {
+    display: block;
+    height: 1.5rem;
+    border-radius: var(--radius-s) var(--radius-s) 0 0;
+
+    &.nothing {
+      background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--line) 6px, var(--line) 12px);
+    }
+  }
+}
+
 /* Where a scene sets nothing and Always on shows through, the content shows in full with the
    stripes of nothing over or around it, here over Always on's colours or over dark where the
    stretch is off */
-:root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
- transparent 6px,transparent 12px)}
-.sec .lit.through{position:relative;overflow:hidden}
-.sec .lit.through > span{position:absolute;top:0;bottom:0;overflow:hidden}
-.sec .lit.through > span > span{position:absolute;top:0;bottom:0}
-.sec .lit.through > .off{background:var(--unlit)}
-.sec .lit.through > .empty{background:var(--line)}
-.sec .lit.through::after{content:"";position:absolute;inset:0;background:var(--through)}
+:root {
+  --through: repeating-linear-gradient(45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px, transparent 6px, transparent 12px);
+}
+
+.sec .lit.through {
+  position: relative;
+  overflow: hidden;
+
+  > span {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+
+    > span {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+    }
+  }
+
+  > .off {
+    background: var(--unlit);
+  }
+
+  > .empty {
+    background: var(--line);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--through);
+  }
+}
+
 /* A screen's settings that show Always on's values in a scene, greyed and not to be changed here */
-.frozen{opacity:.45}
-.frozen button,.frozen input{cursor:default}
+.frozen {
+  opacity: .45;
+
+  button,
+  input {
+    cursor: default;
+  }
+}
+
 /* Cutting happens in the coloured band only. The name below it is always plain
    section, so a stretch cut every light still has somewhere to be clicked and picked */
-.sec .cuts{position:absolute;top:0;left:0;right:0;height:1.5rem;pointer-events:none}
-.sec .cut{position:absolute;top:0;bottom:0;transform:translateX(-50%);
- pointer-events:auto;cursor:col-resize}
-/* Hovering the stretch shows every place it could be cut, which is what someone
-   deciding where to cut is asking to be shown. The band behind it is whatever the
-   stretch plays, so the line carries a pale halo and reads against a dark colour on
-   the halo and against a bright one on the line itself */
-.sec .cut::before{content:"";position:absolute;top:2px;bottom:2px;left:50%;width:1px;
- margin-left:-0.5px;background:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.85);
- opacity:0;transition:opacity .1s}
+.sec .cuts {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5rem;
+  pointer-events: none;
+}
+
+.sec .cut {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: col-resize;
+
+  /* Hovering the stretch shows every place it could be cut, which is what someone
+     deciding where to cut is asking to be shown. The band behind it is whatever the
+     stretch plays, so the line carries a pale halo and reads against a dark colour on
+     the halo and against a bright one on the line itself */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 50%;
+    width: 1px;
+    margin-left: -0.5px;
+    background: var(--ink);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .85);
+    opacity: 0;
+    transition: opacity .1s;
+  }
+}
+
 /* Near enough solid, since opacity dims the halo along with the line and it is the halo
    that carries a bright band */
-.sec:hover .cut::before{opacity:.85}
-.sec .cut:hover::before{opacity:1;width:2px;margin-left:-1px;background:var(--accent)}
+.sec:hover .cut::before {
+  opacity: .85;
+}
+
+.sec .cut:hover::before {
+  opacity: 1;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+}
+
 /* Which two lights this cut would fall between, said where it is being aimed */
-.sec .cut::after{content:attr(data-says);position:absolute;bottom:100%;left:50%;
- transform:translateX(-50%);margin-bottom:var(--space-2);padding:var(--space-1) var(--space-3);
- border-radius:var(--radius-s);
- background:var(--ink);color:#fff;font:600 var(--text-xs)/1.6 var(--font);
- white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .1s;z-index:3}
-.sec .cut:hover::after{opacity:1}
-.sec .says{display:block;font:600 var(--text-xs)/1.5 var(--font);color:var(--ink);
- padding:0 var(--space-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
- text-align:center}
-.sec .says em{font-style:normal;font-weight:400;color:var(--dim)}
+.sec .cut::after {
+  content: attr(data-says);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-s);
+  background: var(--ink);
+  color: #fff;
+  font: 600 var(--text-xs)/1.6 var(--font);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .1s;
+  z-index: 3;
+}
+
+.sec .cut:hover::after {
+  opacity: 1;
+}
+
+.sec .says {
+  display: block;
+  font: 600 var(--text-xs)/1.5 var(--font);
+  color: var(--ink);
+  padding: 0 var(--space-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+
+  em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--dim);
+  }
+}
+
 /* The outputs' stretches as cards holding their lamps, evenly spaced so a cut falls between two,
    over a thin band of what the stretch plays. A cut can be made anywhere over the lamps and band.
    The room above the cards holds a cut's label and its cross, clear of the row above */
-.bar.carded{margin-top:var(--space-5)}
-.bar.carded .sec{display:flex;flex-direction:column}
+.bar.carded {
+  margin-top: var(--space-5);
+
+  .sec {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
 /* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
    without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
    and closes up on a narrow panel to leave the lights their room */
-#sides{container-type:inline-size}
-.cardlamp{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
- position:relative;margin:0 clamp(0px,(100cqw - 400px) / 100,4px);
- padding:var(--space-3) 1px var(--space-1);
- border:1px solid transparent;
- border-radius:var(--radius)}
-.cardlamp i{display:block;position:relative;width:min(1.9rem,100%);aspect-ratio:1;
- border-radius:50%;background:var(--unlit);box-sizing:border-box}
-.cardlamp b{font:400 var(--text-xs)/1.5 var(--font);color:var(--dim);max-width:100%;
- overflow:hidden;text-overflow:clip;white-space:nowrap}
-/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
-   what the board does there, in a scene Always on's look in full or dark */
-.cardlamp.unset{border-style:dashed;border-color:var(--dashed);
- background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 6px,var(--line) 6px,var(--line) 12px)}
-.bar.carded .sec .lit{height:.45rem;border-radius:0}
-.bar.carded .sec .cuts{height:auto;bottom:1.1rem}
+#sides {
+  container-type: inline-size;
+}
+
+.cardlamp {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 0 clamp(0px, (100cqw - 400px) / 100, 4px);
+  padding: var(--space-3) 1px var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+
+  i {
+    display: block;
+    position: relative;
+    width: min(1.9rem, 100%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--unlit);
+    box-sizing: border-box;
+  }
+
+  b {
+    font: 400 var(--text-xs)/1.5 var(--font);
+    color: var(--dim);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  /* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
+     what the board does there, in a scene Always on's look in full or dark */
+  &.unset {
+    border-style: dashed;
+    border-color: var(--dashed);
+    background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--line) 6px, var(--line) 12px);
+  }
+}
+
+.bar.carded .sec .lit {
+  height: .45rem;
+  border-radius: 0;
+}
+
+.bar.carded .sec .cuts {
+  height: auto;
+  bottom: 1.1rem;
+}
 
 /* A cut that is already there, dragged to move it along the run or taken out by its
    cross, which joins the two stretches either side. Two acts, two targets,
    since a drag that also meant a click was never going to be told apart reliably */
-.edge{flex:0 0 6px;cursor:col-resize;border-radius:var(--radius-xs);background:transparent;
- align-self:stretch;margin:0 calc(-1 * var(--space-2));z-index:2;position:relative}
-.edge:hover,.edge.holding{background:var(--accent)}
-.edge .drop{position:absolute;top:100%;left:50%;transform:translateX(-50%);
- margin-top:3px;width:1.05rem;height:1.05rem;border-radius:50%;border:1px solid var(--line);
- background:var(--panel);color:var(--dim);cursor:pointer;padding:0;
- font:600 var(--text-xs)/1 var(--font);display:flex;align-items:center;
- justify-content:center;opacity:0;transition:opacity .1s}
-.edge:hover .drop,.edge .drop:hover{opacity:1}
-.edge .drop:hover{border-color:var(--warn);color:var(--warn)}
+.edge {
+  flex: 0 0 6px;
+  cursor: col-resize;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  align-self: stretch;
+  margin: 0 calc(-1 * var(--space-2));
+  z-index: 2;
+  position: relative;
+
+  &:hover,
+  &.holding {
+    background: var(--accent);
+  }
+
+  .drop {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 3px;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--dim);
+    cursor: pointer;
+    padding: 0;
+    font: 600 var(--text-xs)/1 var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .1s;
+  }
+
+  &:hover .drop,
+  .drop:hover {
+    opacity: 1;
+  }
+
+  .drop:hover {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+}
+
 /* Room under the bar for the crosses to sit in */
-.bar{padding-bottom:var(--space-7)}
+.bar {
+  padding-bottom: var(--space-7);
+}
 
 /* What the picked section is playing */
-.chosen{margin-top:var(--space-6);border:1px solid var(--line);border-radius:var(--radius-l);
- padding:var(--space-4) var(--space-5);
- background:var(--panel)}
+.chosen {
+  margin-top: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: var(--space-4) var(--space-5);
+  background: var(--panel);
+}
+
 /* Nothing looks picked while the board is set up */
-body.setupall .chosen.pointing{border-color:var(--line)}
-body.setupall .chosen.pointing::before{display:none}
-.chosen .who{font-size:var(--text-m);color:var(--dim);margin-bottom:var(--space-4)}
-.chosen .who b{color:var(--ink);font-size:var(--text-l)}
+body.setupall .chosen.pointing {
+  border-color: var(--line);
+
+  &::before {
+    display: none;
+  }
+}
+
+.chosen .who {
+  font-size: var(--text-m);
+  color: var(--dim);
+  margin-bottom: var(--space-4);
+
+  b {
+    color: var(--ink);
+    font-size: var(--text-l);
+  }
+}
+
 /* The gallery. A card shows what a look does, and a tap puts it on the stretch being worked on */
-.gallery-head{display:flex;align-items:baseline;gap:var(--space-4);
- margin:var(--space-7) 0 var(--space-4);
- font:600 var(--text-l) var(--font)}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
- gap:var(--space-5);margin:0 0 var(--space-3)}
-.card{border:2px solid var(--line);border-radius:var(--radius-l);overflow:hidden;cursor:pointer;
- background:var(--panel);transition:transform .08s,border-color .12s}
-.card:hover{transform:translateY(-2px)}
-.card.picked{border-color:var(--accent)}
-.card .face{height:2.9rem;display:flex;background:var(--dark)}
-.card .face span{flex:1}
-.card.nothing .face{background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 7px,
- var(--line) 7px,var(--line) 14px)}
-.card .name{padding:var(--space-3) var(--space-5) var(--space-4);
- font:600 var(--text-m) var(--font);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card.picked .name{color:var(--accent)}
+.gallery-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin: var(--space-7) 0 var(--space-4);
+  font: 600 var(--text-l) var(--font);
+}
 
-.tuning{display:grid;grid-template-columns:auto 1fr;gap:var(--space-2) var(--space-5);
- align-items:center}
-.tuning label{font-size:var(--text-m);color:var(--dim);white-space:nowrap}
-.tuning input[type=range]{width:100%;accent-color:var(--accent)}
-.tuning input[type=color]{width:2.8rem;height:1.4rem;padding:1px;border:1px solid var(--line);
- border-radius:var(--radius-s);background:var(--panel);cursor:pointer;justify-self:start}
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.4rem, 1fr));
+  gap: var(--space-5);
+  margin: 0 0 var(--space-3);
+}
 
-pre.file{font:var(--text-m)/1.5 ui-monospace,Consolas,monospace;background:var(--panel);
- border:1px solid var(--line);border-radius:var(--radius-l);padding:var(--space-6);
- white-space:pre-wrap}
-details{margin:var(--space-6) 0}
-summary{cursor:pointer;color:var(--dim);font-size:var(--text-m)}
-footer{margin-top:2.5rem;padding:var(--space-6) var(--space-7) var(--space-6);
- background:var(--panel);
- border-top:1px solid var(--line);color:var(--dim-strong);font-size:var(--text-m)}
-footer .maker{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
- gap:var(--space-5) var(--space-7)}
-footer .brand{display:flex;align-items:center;gap:var(--space-5)}
-footer .brand>svg{flex:none;width:2.75rem;height:2.75rem}
-footer .brand b{display:block;color:var(--ink);font-size:var(--text-l)}
-footer .heart{width:.75rem;height:.7rem;vertical-align:-1px}
-footer .brand b a{color:var(--accent);text-decoration:none}
-footer .brand b a:hover{text-decoration:underline}
-footer nav{display:flex;flex-wrap:wrap;gap:var(--space-5)}
-footer nav a{font-size:var(--text-m);padding:var(--space-3) var(--space-5);
- border:1px solid var(--line);
- border-radius:var(--radius);
- background:var(--panel);color:var(--ink);text-decoration:none;white-space:nowrap}
-footer nav a:hover{border-color:var(--accent);color:var(--accent)}
-footer .company{margin:var(--space-6) 0 0;padding-top:var(--space-5);
- border-top:1px solid var(--surface-2);
- font-size:var(--text-s);line-height:1.6}
+.card {
+  border: 2px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--panel);
+  transition: transform .08s, border-color .12s;
 
+  &:hover {
+    transform: translateY(-2px);
+  }
 
+  &.picked {
+    border-color: var(--accent);
+  }
 
+  .face {
+    height: 2.9rem;
+    display: flex;
+    background: var(--dark);
+
+    span {
+      flex: 1;
+    }
+  }
+
+  &.nothing .face {
+    background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 7px, var(--line) 7px, var(--line) 14px);
+  }
+
+  .name {
+    padding: var(--space-3) var(--space-5) var(--space-4);
+    font: 600 var(--text-m) var(--font);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.picked .name {
+    color: var(--accent);
+  }
+}
+
+.tuning {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-5);
+  align-items: center;
+
+  label {
+    font-size: var(--text-m);
+    color: var(--dim);
+    white-space: nowrap;
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  input[type=color] {
+    width: 2.8rem;
+    height: 1.4rem;
+    padding: 1px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-s);
+    background: var(--panel);
+    cursor: pointer;
+    justify-self: start;
+  }
+}
+
+pre.file {
+  font: var(--text-m)/1.5 ui-monospace, Consolas, monospace;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: var(--space-6);
+  white-space: pre-wrap;
+}
+
+details {
+  margin: var(--space-6) 0;
+}
+
+summary {
+  cursor: pointer;
+  color: var(--dim);
+  font-size: var(--text-m);
+}
+
+footer {
+  margin-top: 2.5rem;
+  padding: var(--space-6) var(--space-7) var(--space-6);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  color: var(--dim-strong);
+  font-size: var(--text-m);
+
+  .maker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5) var(--space-7);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+
+    > svg {
+      flex: none;
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+
+    b {
+      display: block;
+      color: var(--ink);
+      font-size: var(--text-l);
+    }
+  }
+
+  .heart {
+    width: .75rem;
+    height: .7rem;
+    vertical-align: -1px;
+  }
+
+  .brand b a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+
+    a {
+      font-size: var(--text-m);
+      padding: var(--space-3) var(--space-5);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--ink);
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    }
+  }
+
+  .company {
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--surface-2);
+    font-size: var(--text-s);
+    line-height: 1.6;
+  }
+}
 
 /* ---- the lamps in the wiring view ---- */
+.cardlamp.carried {
+  opacity: .35;
+}
 
-.cardlamp.carried{opacity:.35}
-.cardlamp.landing{box-shadow:-3px 0 0 var(--accent)}
-.cardlamp.landing.after{box-shadow:3px 0 0 var(--accent)}
+.cardlamp.landing {
+  box-shadow: -3px 0 0 var(--accent);
+
+  &.after {
+    box-shadow: 3px 0 0 var(--accent);
+  }
+}
 
 /* Pointing at one channel lights the edges of all three of its output, each in the
    colour of the channel it is driven from. An outline rather than a border, so nothing
    moves as it comes and goes, and inset so it reads as the edge thickening */
-.cardlamp.chan.kin{outline:2px solid var(--chan);outline-offset:-1px}
+.cardlamp.chan.kin {
+  outline: 2px solid var(--chan);
+  outline-offset: -1px;
+}
 
 /* One set of looks, drawn for the kind being worked on. A tab per kind, and a kind the
    board has none of is offered but not taken. It says what breaking an output out would
    give rather than leaving a gap where a choice used to be */
-.tabs{display:flex;align-items:baseline;gap:var(--space-3);margin:var(--space-7) 0 var(--space-4)}
-.tabs button{font-size:var(--text-m);padding:var(--space-3) var(--space-5);
- border-radius:var(--radius)}
-.tabs button.on{border-color:var(--accent);color:var(--accent);font-weight:600;
- background:#f0faf9}
-.tabs .says{margin-left:auto}
+.tabs {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: var(--space-7) 0 var(--space-4);
 
-/* Sided, the two tabs sit over the sides they are for and on the edge of the cards they
-   change, so which lights a tab means is read from where it is and what it changes from
-   what it is joined to */
-/* Inset by more than the box's corner radius, so its rounded corners stay whole either
-   side of the tab rather than being squared off by it */
-.tabs.sides{justify-content:space-between;gap:0;margin-bottom:0;padding:0 var(--space-6)}
-.tabs.sides button{border-radius:var(--radius-l) var(--radius-l) 0 0;
- border-bottom-color:transparent;
- position:relative;top:1px;background:var(--bg)}
-.tabs.sides button.on{background:var(--panel);border-color:var(--line);
- border-bottom-color:var(--panel);color:var(--accent);font-weight:600}
-.tabs.sides button:disabled{opacity:.5}
+  button {
+    font-size: var(--text-m);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius);
+
+    &.on {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+      background: #f0faf9;
+    }
+  }
+
+  .says {
+    margin-left: auto;
+  }
+
+  /* Sided, the two tabs sit over the sides they are for and on the edge of the cards they
+     change, so which lights a tab means is read from where it is and what it changes from
+     what it is joined to */
+  /* Inset by more than the box's corner radius, so its rounded corners stay whole either
+     side of the tab rather than being squared off by it */
+  &.sides {
+    justify-content: space-between;
+    gap: 0;
+    margin-bottom: 0;
+    padding: 0 var(--space-6);
+
+    button {
+      border-radius: var(--radius-l) var(--radius-l) 0 0;
+      border-bottom-color: transparent;
+      position: relative;
+      top: 1px;
+      background: var(--bg);
+
+      &.on {
+        background: var(--panel);
+        border-color: var(--line);
+        border-bottom-color: var(--panel);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      &:disabled {
+        opacity: .5;
+      }
+    }
+  }
+}
+
 /* A look this kind of lamp cannot play stays in the set, so the set never changes
    length under the pointer and nobody wonders where a card went */
-.card.cannot{opacity:.35;cursor:default}
-.card.cannot:hover{transform:none}
+.card.cannot {
+  opacity: .35;
+  cursor: default;
+
+  &:hover {
+    transform: none;
+  }
+}
 
 /* The two kinds side by side in one panel. The colour outputs pack to the left, the mono
    lamps to the right, and the gap between them is what an output crosses. Each side is
    as wide as what it holds, so the divide moves as outputs are broken out and put back */
-.sides{display:flex;align-items:flex-start;gap:var(--space-6)}
-.side{min-width:0;display:flex;flex-direction:column}
-/* A side holding nothing has nothing to cut and nothing to show, so it says so and
-   stands aside */
-.side.empty>div[id$="Bar"]{display:none}
-.side.nothing{font-size:var(--text-m);color:var(--dim);padding:var(--space-6) var(--space-3);
- text-align:center;
- border:1px dashed var(--line);border-radius:var(--radius-l);background:#fcfbf9}
+.sides {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
 
-#sides.monofirst #sideA .cross{left:-.3rem;right:auto}
-#sides.monofirst #sideB .cross{right:-.3rem;left:auto}
+.side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 
+  /* A side holding nothing has nothing to cut and nothing to show, so it says so and
+     stands aside */
+  &.empty > div[id$="Bar"] {
+    display: none;
+  }
+
+  &.nothing {
+    font-size: var(--text-m);
+    color: var(--dim);
+    padding: var(--space-6) var(--space-3);
+    text-align: center;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-l);
+    background: #fcfbf9;
+  }
+}
+
+#sides.monofirst #sideA .cross {
+  left: -.3rem;
+  right: auto;
+}
+
+#sides.monofirst #sideB .cross {
+  right: -.3rem;
+  left: auto;
+}
 
 /* Scenes take turns, so they are a grid of cards over the frame they open, one card a
    scene. The bar is only drawn once there is more than the one everything starts in, and
@@ -293,535 +925,1752 @@ footer .company{margin:var(--space-6) 0 0;padding-top:var(--space-5);
    cards sit in a tray that is Always on, since it plays under every scene, and Always on's
    own card is the tray's first column, running down every row */
 /* --cardheight is a scene card's three rows, which the add button matches when it stands alone */
-.tabbar{--cardheight:4.75rem;display:grid;gap:var(--space-4);margin:var(--space-3) 0 var(--space-4);
- grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
+.tabbar {
+  --cardheight: 4.75rem;
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-3) 0 var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr));
+}
+
 /* Each card carries its scene's colour as a band along the top and a tint behind, painted in
    the background under a top border made clear, so its contents never move */
-.tab{--band:linear-gradient(var(--scene),var(--scene));--tall:4px;
- --tint:color-mix(in srgb,var(--scene) 16%,#fbfaf8);position:relative;
- display:flex;flex-direction:column;justify-content:center;gap:var(--space-3);
- padding:var(--space-3) var(--space-4);border:1px solid var(--line);border-top-color:transparent;
- border-radius:var(--radius);cursor:pointer;text-align:left;min-height:var(--cardheight);
- overflow:hidden;
- background:var(--band) 0 0 / 100% var(--tall) no-repeat border-box,var(--tint)}
-.tab b,.tab small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tab:hover{border-color:var(--dim);border-top-color:transparent}
-/* The one being edited is ringed in its scene's colour, as the page rings anything chosen, over
-   a lighter tint */
-.tab.on,.tab.on:hover{--tint:color-mix(in srgb,var(--scene) 7%,#fff);
- border-color:var(--scene);border-top-color:transparent;
- box-shadow:0 0 0 1px var(--scene),0 0 0 4px color-mix(in srgb,var(--scene) 22%,transparent)}
-.tab.always,.tab.always:hover,.tab.always.on{grid-column:1;min-height:0;background:none;
- justify-content:flex-start;align-items:flex-start;gap:var(--space-2);
- padding:var(--space-3) var(--space-4) var(--space-3) var(--space-3);
- border:0;border-right:1px dashed var(--line-strong);border-radius:0;box-shadow:none}
-.tab.always .role{font-size:var(--text-xs)}
-.tab.always .says{color:var(--ink);white-space:normal;line-height:1.3}
-.tabbar .plus{margin:0;width:100%;min-height:var(--cardheight);align-self:stretch;box-sizing:border-box;
- justify-content:center;border-style:dashed}
-.tab b{display:flex;align-items:center;gap:var(--space-3);
- font:600 var(--text-s)/1.3 var(--font);color:var(--ink)}
-.tab small{font-size:var(--text-xs);color:var(--dim)}
-.tab.carried{opacity:.4}
-.tab.landing{box-shadow:-2px 0 0 var(--accent)}
-.plus{margin-left:auto;align-self:center;display:flex;align-items:center;gap:var(--space-3);
- padding:var(--space-3) var(--space-5);
- border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:var(--radius);
- background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);cursor:pointer;
- font:600 var(--text-s) var(--font)}
-.plus:hover{background:color-mix(in srgb,var(--accent) 16%,transparent);border-color:var(--accent)}
-.plus svg{display:block}
+.tab {
+  --band: linear-gradient(var(--scene), var(--scene));
+  --tall: 4px;
+  --tint: color-mix(in srgb, var(--scene) 16%, #fbfaf8);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-top-color: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  min-height: var(--cardheight);
+  overflow: hidden;
+  background: var(--band) 0 0 / 100% var(--tall) no-repeat border-box, var(--tint);
+
+  b,
+  small {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &:hover {
+    border-color: var(--dim);
+    border-top-color: transparent;
+  }
+
+  /* The one being edited is ringed in its scene's colour, as the page rings anything chosen, over
+     a lighter tint */
+  &.on,
+  &.on:hover {
+    --tint: color-mix(in srgb, var(--scene) 7%, #fff);
+    border-color: var(--scene);
+    border-top-color: transparent;
+    box-shadow: 0 0 0 1px var(--scene), 0 0 0 4px color-mix(in srgb, var(--scene) 22%, transparent);
+  }
+
+  &.always,
+  &.always:hover,
+  &.always.on {
+    grid-column: 1;
+    min-height: 0;
+    background: none;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+    border: 0;
+    border-right: 1px dashed var(--line-strong);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  &.always .role {
+    font-size: var(--text-xs);
+  }
+
+  &.always .says {
+    color: var(--ink);
+    white-space: normal;
+    line-height: 1.3;
+  }
+}
+
+.tabbar .plus {
+  margin: 0;
+  width: 100%;
+  min-height: var(--cardheight);
+  align-self: stretch;
+  box-sizing: border-box;
+  justify-content: center;
+  border-style: dashed;
+}
+
+.tab b {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font: 600 var(--text-s)/1.3 var(--font);
+  color: var(--ink);
+}
+
+.tab small {
+  font-size: var(--text-xs);
+  color: var(--dim);
+}
+
+.tab.carried {
+  opacity: .4;
+}
+
+.tab.landing {
+  box-shadow: -2px 0 0 var(--accent);
+}
+
+.plus {
+  margin-left: auto;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  cursor: pointer;
+  font: 600 var(--text-s) var(--font);
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: var(--accent);
+  }
+
+  svg {
+    display: block;
+  }
+}
 
 /* The picked scene's settings sit in a folder tab joined to the top left of its frame, one
    size for every scene and for Always on's note, so the frame never moves between them. What
    the page says about the scene, and the way to remove it, sit beside the tab */
-.scenetabrow{display:flex;align-items:flex-end;gap:var(--space-5)}
-.scenetabrow[hidden]{display:none}
-.scenetab{position:relative;z-index:1;flex:none;width:40rem;max-width:75%;height:3rem;
- box-sizing:border-box;display:flex;align-items:center;margin-bottom:-1.5px;
- padding:var(--space-3) var(--space-6) var(--space-2);border:1.5px solid var(--frame);
- border-bottom:0;
- border-top-color:transparent;border-radius:var(--radius) var(--radius) 0 0;
- background:var(--frameband) 0 0 / 100% 4px no-repeat border-box,var(--panel)}
-.scenetab #sceneSettings{width:100%}
-.sceneaside{flex:1;min-width:0;height:2.6rem;box-sizing:border-box;display:flex;
- align-items:center;gap:var(--space-4);padding-bottom:var(--space-3)}
+.scenetabrow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-5);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.scenetab {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 40rem;
+  max-width: 75%;
+  height: 3rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  margin-bottom: -1.5px;
+  padding: var(--space-3) var(--space-6) var(--space-2);
+  border: 1.5px solid var(--frame);
+  border-bottom: 0;
+  border-top-color: transparent;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--frameband) 0 0 / 100% 4px no-repeat border-box, var(--panel);
+
+  #sceneSettings {
+    width: 100%;
+  }
+}
+
+.sceneaside {
+  flex: 1;
+  min-width: 0;
+  height: 2.6rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+}
+
 /* Everything inside the frame belongs to the card picked above it, outlined in its colour */
-.scenebody{border:1px solid transparent;border-radius:var(--radius-l);padding:0}
-.scenebody.framed .panel,.scenebody.framed #wiringRow,.scenebody.framed .chosen{background:var(--surface)}
+.scenebody {
+  border: 1px solid transparent;
+  border-radius: var(--radius-l);
+  padding: 0;
+
+  &.framed .panel,
+  &.framed #wiringRow,
+  &.framed .chosen {
+    background: var(--surface);
+  }
+}
 
 /* ---- choosing a colour ---- */
+.playing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-m);
+  color: var(--dim);
 
-.playing{display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-m);
- color:var(--dim)}
-.playing select{font:inherit;font-size:var(--text-m);padding:var(--space-1) var(--space-3);
- border-radius:var(--radius-s);
- border:1px solid var(--line);background:var(--panel);color:inherit}
+  select {
+    font: inherit;
+    font-size: var(--text-m);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-s);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: inherit;
+  }
+}
 
 /* One of the colours the file names, in the row to pick from */
-.swatch{width:2.1rem;height:2.1rem;padding:0;border-radius:var(--radius);
- border:2px solid var(--line);
- cursor:pointer;position:relative}
-.swatch.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,133,125,.2)}
-.swatch b{position:absolute;left:0;right:0;top:calc(100% + 2px);
- font:400 var(--text-xs)/1 var(--font);color:var(--dim);text-align:center}
+.swatch {
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border-radius: var(--radius);
+  border: 2px solid var(--line);
+  cursor: pointer;
+  position: relative;
 
-/* The custom swatch, and the field it opens. Hue runs across and saturation down, at one
-   value throughout. How bright it burns is the setting below, never the field */
-.swatch.custom{background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
-.swatch.custom::after{content:"";position:absolute;inset:25%;border-radius:50%;
- background:var(--panel)}
-.swatch.custom b{color:var(--ink)}
-.field{position:relative;width:15rem;height:9rem;border-radius:var(--radius-l);
- border:1px solid var(--line);margin:0 0 var(--space-6);cursor:crosshair;touch-action:none;
- background:linear-gradient(to bottom,rgba(255,255,255,0),#fff),
- linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
-.field .at{position:absolute;width:.85rem;height:.85rem;border-radius:50%;
- border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);transform:translate(-50%,-50%);
- pointer-events:none}
-.hexline{display:flex;align-items:center;gap:var(--space-4);margin:0 0 var(--space-6)}
-.hexline label{font-size:var(--text-m);color:var(--dim)}
-.hexline input{font:inherit;font-family:var(--font-mono);
- font-size:var(--text-m);width:6.5rem;padding:var(--space-2) var(--space-4);
- border-radius:var(--radius);
- border:1px solid var(--line);background:var(--panel);color:inherit}
+  &.on {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 133, 125, .2);
+  }
 
+  b {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 2px);
+    font: 400 var(--text-xs)/1 var(--font);
+    color: var(--dim);
+    text-align: center;
+  }
+
+  /* The custom swatch, and the field it opens. Hue runs across and saturation down, at one
+     value throughout. How bright it burns is the setting below, never the field */
+  &.custom {
+    background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 25%;
+      border-radius: 50%;
+      background: var(--panel);
+    }
+
+    b {
+      color: var(--ink);
+    }
+  }
+}
+
+.field {
+  position: relative;
+  width: 15rem;
+  height: 9rem;
+  border-radius: var(--radius-l);
+  border: 1px solid var(--line);
+  margin: 0 0 var(--space-6);
+  cursor: crosshair;
+  touch-action: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff),
+              linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+
+  .at {
+    position: absolute;
+    width: .85rem;
+    height: .85rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+}
+
+.hexline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-6);
+
+  label {
+    font-size: var(--text-m);
+    color: var(--dim);
+  }
+
+  input {
+    font: inherit;
+    font-family: var(--font-mono);
+    font-size: var(--text-m);
+    width: 6.5rem;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: inherit;
+  }
+}
 
 /* ---- what this page adds ---- */
+.tabbar,
+.scenetabrow {
+  margin-left: calc(-1 * var(--space-6));
+  margin-right: calc(-1 * var(--space-6));
+}
 
-.tabbar,.scenetabrow{margin-left:calc(-1 * var(--space-6));margin-right:calc(-1 * var(--space-6))}
 /* A card whose look takes a colour carries a mark at the end of its name's row, as far
    from the card's right edge as from the row's top and bottom */
-.card{position:relative}
-:root{--mark:20px;--namerow:2.1rem}
-.groundpick{container-type:inline-size}
-.sswatches{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,2.1rem);
- justify-content:space-between;gap:var(--space-2);margin-top:var(--space-4)}
-.sswatches button{width:auto;height:auto;aspect-ratio:1;padding:0;border:2px solid var(--line);
- border-radius:var(--radius-s);cursor:pointer;position:relative}
-.sswatches button b{display:none;position:absolute;left:50%;right:auto;top:calc(100% + 2px);
- transform:translateX(-50%);font:400 var(--text-xs)/1 var(--font);color:var(--dim);
- white-space:nowrap;pointer-events:none}
-@container (min-width:34rem){
- .sswatches{margin-bottom:var(--space-6)}
- .sswatches button b{display:block}
+.card {
+  position: relative;
 }
-.sswatches button.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
-.sswatches button.custom{background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
-.sswatches button.custom::after{content:"";position:absolute;inset:24%;border-radius:50%;
- background:var(--picked,#fff);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
-.sswatches button.custom:not([style*="--picked"])::after{box-shadow:0 0 0 1px rgba(0,0,0,.25);
- background:repeating-linear-gradient(45deg,#f4f1ec,#f4f1ec 2px,#a9a194 2px,#a9a194 3.5px)}
-.scustom{display:flex;align-items:flex-start;gap:var(--space-5);margin-top:var(--space-4)}
-.scustom .field{flex:1;width:auto;height:6.5rem;margin:0}
-.scustom .hexline{display:flex;align-items:center;gap:var(--space-3);margin:0;
- font-size:var(--text-m);
- color:var(--dim)}
-.scustom .hexline input{width:5.2rem}
-.scustomside{display:flex;flex-direction:column;gap:var(--space-3);align-self:stretch}
-.scustompreview{flex:1;border-radius:var(--radius);border:1px solid var(--line);min-height:3rem}
+
+:root {
+  --mark: 20px;
+  --namerow: 2.1rem;
+}
+
+.groundpick {
+  container-type: inline-size;
+}
+
+.sswatches {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 2.1rem);
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+
+  button {
+    width: auto;
+    height: auto;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    position: relative;
+
+    b {
+      display: none;
+      position: absolute;
+      left: 50%;
+      right: auto;
+      top: calc(100% + 2px);
+      transform: translateX(-50%);
+      font: 400 var(--text-xs)/1 var(--font);
+      color: var(--dim);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  }
+}
+
+@container (min-width: 34rem) {
+  .sswatches {
+    margin-bottom: var(--space-6);
+
+    button b {
+      display: block;
+    }
+  }
+}
+
+.sswatches button.on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.sswatches button.custom {
+  background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 24%;
+    border-radius: 50%;
+    background: var(--picked, #fff);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+  }
+
+  &:not([style*="--picked"])::after {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .25);
+    background: repeating-linear-gradient(45deg, #f4f1ec, #f4f1ec 2px, #a9a194 2px, #a9a194 3.5px);
+  }
+}
+
+.scustom {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+
+  .field {
+    flex: 1;
+    width: auto;
+    height: 6.5rem;
+    margin: 0;
+  }
+
+  .hexline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0;
+    font-size: var(--text-m);
+    color: var(--dim);
+
+    input {
+      width: 5.2rem;
+    }
+  }
+}
+
+.scustomside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-self: stretch;
+}
+
+.scustompreview {
+  flex: 1;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  min-height: 3rem;
+}
+
 /* The looks in groups, a heading over each row */
-.groupedlooks .gallery-head,.programview .gallery-head{margin:var(--space-6) 0 var(--space-3);
- font-size:var(--text-l)}
-.groupedlooks .gallery-head .says,.programview .gallery-head .says{font:400 var(--text-m) var(--font);
- color:var(--dim)}
+.groupedlooks .gallery-head,
+.programview .gallery-head {
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: var(--text-l);
+}
+
+.groupedlooks .gallery-head .says,
+.programview .gallery-head .says {
+  font: 400 var(--text-m) var(--font);
+  color: var(--dim);
+}
+
 /* Nothing, and a sound's silence, as a card made small at the end of a line. It keeps the cards'
    own corners, border and face, the face beside the name */
-.card.nothing.small{margin-left:auto;align-self:center;display:flex;align-items:stretch;
- border-radius:var(--radius);cursor:pointer}
-.card.nothing.small .face{width:2.4rem;height:auto;min-height:1.7rem}
-.card.nothing.small .name{padding:var(--space-3) var(--space-5);font-size:var(--text-m);
- align-self:center}
-.chosen .who .stretchtools + .direction{margin-left:0}
+.card.nothing.small {
+  margin-left: auto;
+  align-self: center;
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--radius);
+  cursor: pointer;
+
+  .face {
+    width: 2.4rem;
+    height: auto;
+    min-height: 1.7rem;
+  }
+
+  .name {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-m);
+    align-self: center;
+  }
+}
+
+.chosen .who .stretchtools + .direction {
+  margin-left: 0;
+}
+
 /* A cut's cross sits above the bar, in the room already kept there for where a new cut would
    fall. The two never show at once, since one is pointed at on a cut and the other inside a
    stretch. So the bar keeps no room under it for the cross */
-.edge .drop{top:auto;bottom:100%;margin-top:0;margin-bottom:3px}
-.bar{padding-bottom:0}
-@keyframes signalflash{from{opacity:1}to{opacity:.2}}
+.edge .drop {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 3px;
+}
+
+.bar {
+  padding-bottom: 0;
+}
+
+@keyframes signalflash {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: .2;
+  }
+}
+
 /* The figure beside each slider is a box the file's value is typed in and its unit, each a
    column of the sliders' grid sized to this panel's own. The drawer's handle runs down the
    right, and with the drawer shut the two columns are gone */
-body.figures .chosen .tuning{grid-template-columns:auto 1fr auto}
+body.figures .chosen .tuning {
+  grid-template-columns: auto 1fr auto;
+}
+
 /* A scene's and a sound's toggles in the page's own colour */
-.sceneset,#sound{--hub:var(--accent)}
+.sceneset,
+#sound {
+  --hub: var(--accent);
+}
+
 /* No tab row over the gallery on the pages built on the tabs page, and no gap left for one */
-body[data-pageway] #looks>.tabs:empty{display:none}
-.leds .stretchcount{white-space:nowrap}
+body[data-pageway] #looks > .tabs:empty {
+  display: none;
+}
+
+.leds .stretchcount {
+  white-space: nowrap;
+}
 
 /* One set of pictures, each able to go to A, to B, or to both */
-.assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:var(--space-5)}
-.asset{position:relative;border:2px solid var(--line);border-radius:var(--radius-l);overflow:hidden;
- background:var(--panel);padding:0}
-.asset .face{position:relative;height:3.6rem;display:flex;align-items:center;
- justify-content:center;overflow:hidden;
- font-size:var(--text-xs);color:var(--dim);
- background:linear-gradient(135deg,var(--surface-2),var(--line))}
-.asset .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.asset .kind{position:absolute;top:2px;left:2px;font-size:var(--text-xs);
- background:var(--overlay);color:#fff;border-radius:var(--radius-xs);padding:0 var(--space-3);
- z-index:1}
-/* The file name is only wanted when you go looking for it, so it lies over the
-   picture on hover or on keyboard focus rather than taking a row of its own */
-.asset .label{position:absolute;left:0;right:0;bottom:0;font-size:var(--text-xs);
- padding:var(--space-2) var(--space-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
- background:var(--overlay);color:#fff;opacity:0;transition:opacity .12s;
- pointer-events:none;z-index:1}
-.asset:hover .label,.asset:focus-within .label{opacity:1}
+.assets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr));
+  gap: var(--space-5);
+}
+
+.asset {
+  position: relative;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  background: var(--panel);
+  padding: 0;
+
+  .face {
+    position: relative;
+    height: 3.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: var(--text-xs);
+    color: var(--dim);
+    background: linear-gradient(135deg, var(--surface-2), var(--line));
+
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .kind {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: var(--text-xs);
+    background: var(--overlay);
+    color: #fff;
+    border-radius: var(--radius-xs);
+    padding: 0 var(--space-3);
+    z-index: 1;
+  }
+
+  /* The file name is only wanted when you go looking for it, so it lies over the
+     picture on hover or on keyboard focus rather than taking a row of its own */
+  .label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: var(--overlay);
+    color: #fff;
+    opacity: 0;
+    transition: opacity .12s;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &:hover .label,
+  &:focus-within .label {
+    opacity: 1;
+  }
+}
+
 /* Off in a scene's gallery is a small card at the end of the first heading, as Nothing is in
    the looks, with its face black and its screens' buttons at its end */
-.assets .offhead,.sounds .offhead{grid-column:1/-1;flex-basis:100%;display:flex;
- align-items:center;gap:var(--space-4);margin:var(--space-3) 0 calc(-1 * var(--space-3))}
-.assets .offhead:first-child,.sounds .offhead:first-child{margin-top:0}
-.assets .offhead .foldhead,.sounds .offhead .foldhead{margin:0}
-.offhead .card.nothing.small{flex-shrink:0}
-.offhead .card.nothing.small .name{overflow:visible}
-.card.nothing.small.offasset{cursor:default;flex-shrink:0}
-.card.nothing.small.offasset:hover{transform:none}
-.card.nothing.small.offasset .face{background:#000;flex-shrink:0;width:auto;display:flex;
- align-items:center;padding:0 var(--space-5);color:#c8cdd0;font:600 var(--text-m) var(--font)}
-.offasset .pick{display:flex;align-items:stretch;border-left:1px solid var(--line)}
-.offasset .pick button{border:0;border-radius:0;padding:0 var(--space-4);font-size:var(--text-s);
- background:var(--panel)}
-.offasset .pick button+button{border-left:1px solid var(--line)}
-.offasset .pick button.lit{background:var(--strip);color:#fff}
-.offasset .pick button.lit.b{background:var(--screenB)}
-.asset .pick{display:flex;border-top:1px solid var(--line)}
-.asset .pick button{flex:1;border:0;border-radius:0;padding:var(--space-2);font-size:var(--text-s);
- font-weight:700;color:var(--dim);background:var(--panel)}
-.asset .pick button:first-child{border-right:1px solid var(--line)}
-.asset .pick button.lit{background:var(--strip);color:#fff}
-.asset .pick button.lit.b{background:var(--screenB)}
-/* Deleting is offered where the file is, quiet until the pointer arrives */
-.bin{position:absolute;top:2px;right:2px;z-index:2;width:1.2rem;height:1.2rem;
- border-radius:var(--radius-s);background:var(--overlay);color:#fff;line-height:1.2rem;
- text-align:center;font-size:var(--text-m);cursor:pointer;opacity:0;transition:opacity .12s}
-.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin,.progcard:hover .bin,
-.progcard:focus-within .bin{opacity:1}
-.bin:hover{background:var(--warn)}
-/* A copy beside the bin, or in the bin's place on an example, which has none */
-.copytile{right:1.6rem}
-.copytile.alone{right:2px}
-.copytile:hover{background:var(--accent)}
-.sound{position:relative}
+.assets .offhead,
+.sounds .offhead {
+  grid-column: 1/-1;
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-3) 0 calc(-1 * var(--space-3));
+}
 
-.screen-box{border:2px solid var(--line);border-radius:var(--radius-l);overflow:hidden}
-.screen-box.a{border-color:var(--screenA)}
-.screen-box.b{border-color:var(--screenB)}
-.screen-box h3{font-size:var(--text-m);margin:0;padding:var(--space-3) var(--space-6);color:#fff;
- background:var(--dim);
- display:flex;align-items:center;gap:var(--space-3)}
-/* As tall as while the screen is fitted, when it holds the panel's size, so the band keeps its
-   height as the screen is added and removed */
-.screen-box h3{box-sizing:border-box;min-height:37px}
-/* The panel's size is a fact about the board, not about a scene, so it rides in
-   the coloured band with the port's name instead of among the settings */
-.screen-box h3 select.inband{margin-left:var(--space-3);border:1px solid rgba(255,255,255,.55);
- border-radius:var(--radius-s);background:rgba(255,255,255,.15);color:#fff;font:inherit;
- font-size:var(--text-s);padding:var(--space-1) var(--space-2)}
-.screen-box h3 select.inband option{color:var(--ink)}
-.keep{display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;
- width:calc(100% - 1.8rem);margin:0 var(--space-6) var(--space-5);text-align:left;
- padding:var(--space-3) var(--space-4);
- border:2px solid var(--line);border-radius:var(--radius);background:var(--panel);
- font-size:var(--text-s)}
-.keep.picked{border-color:var(--accent)}
-.keep b{flex-shrink:0}
-/* The entry says itself in full, since a truncated one is the half a reader cannot check */
-.keep code{color:var(--dim);font-size:var(--text-xs);line-height:1.45;word-break:break-word;
- flex:1 1 100%}
-.screen-box.a h3{background:var(--screenA)}
-.screen-box.b h3{background:var(--screenB)}
-.screen-box .body{padding:var(--space-5) var(--space-6);display:flex;flex-direction:column;
- gap:var(--space-5);
- align-items:center}
-select{font:inherit;font-size:var(--text-m);padding:var(--space-2) var(--space-3);
- border:1px solid var(--line);border-radius:var(--radius-s)}
+.assets .offhead:first-child,
+.sounds .offhead:first-child {
+  margin-top: 0;
+}
+
+.assets .offhead .foldhead,
+.sounds .offhead .foldhead {
+  margin: 0;
+}
+
+.offhead .card.nothing.small {
+  flex-shrink: 0;
+
+  .name {
+    overflow: visible;
+  }
+}
+
+.card.nothing.small.offasset {
+  cursor: default;
+  flex-shrink: 0;
+
+  &:hover {
+    transform: none;
+  }
+
+  .face {
+    background: #000;
+    flex-shrink: 0;
+    width: auto;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-5);
+    color: #c8cdd0;
+    font: 600 var(--text-m) var(--font);
+  }
+}
+
+.offasset .pick {
+  display: flex;
+  align-items: stretch;
+  border-left: 1px solid var(--line);
+
+  button {
+    border: 0;
+    border-radius: 0;
+    padding: 0 var(--space-4);
+    font-size: var(--text-s);
+    background: var(--panel);
+
+    + button {
+      border-left: 1px solid var(--line);
+    }
+
+    &.lit {
+      background: var(--strip);
+      color: #fff;
+
+      &.b {
+        background: var(--screenB);
+      }
+    }
+  }
+}
+
+.asset .pick {
+  display: flex;
+  border-top: 1px solid var(--line);
+
+  button {
+    flex: 1;
+    border: 0;
+    border-radius: 0;
+    padding: var(--space-2);
+    font-size: var(--text-s);
+    font-weight: 700;
+    color: var(--dim);
+    background: var(--panel);
+
+    &:first-child {
+      border-right: 1px solid var(--line);
+    }
+
+    &.lit {
+      background: var(--strip);
+      color: #fff;
+
+      &.b {
+        background: var(--screenB);
+      }
+    }
+  }
+}
+
+/* Deleting is offered where the file is, quiet until the pointer arrives */
+.bin {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: var(--radius-s);
+  background: var(--overlay);
+  color: #fff;
+  line-height: 1.2rem;
+  text-align: center;
+  font-size: var(--text-m);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.asset:hover .bin,
+.asset:focus-within .bin,
+.sound:hover .bin,
+.progcard:hover .bin,
+.progcard:focus-within .bin {
+  opacity: 1;
+}
+
+.bin:hover {
+  background: var(--warn);
+}
+
+/* A copy beside the bin, or in the bin's place on an example, which has none */
+.copytile {
+  right: 1.6rem;
+
+  &.alone {
+    right: 2px;
+  }
+
+  &:hover {
+    background: var(--accent);
+  }
+}
+
+.sound {
+  position: relative;
+}
+
+.screen-box {
+  border: 2px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+
+  &.a {
+    border-color: var(--screenA);
+  }
+
+  &.b {
+    border-color: var(--screenB);
+  }
+
+  h3 {
+    font-size: var(--text-m);
+    margin: 0;
+    padding: var(--space-3) var(--space-6);
+    color: #fff;
+    background: var(--dim);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  /* As tall as while the screen is fitted, when it holds the panel's size, so the band keeps its
+     height as the screen is added and removed */
+  h3 {
+    box-sizing: border-box;
+    min-height: 37px;
+
+    /* The panel's size is a fact about the board, not about a scene, so it rides in
+       the coloured band with the port's name instead of among the settings */
+    select.inband {
+      margin-left: var(--space-3);
+      border: 1px solid rgba(255, 255, 255, .55);
+      border-radius: var(--radius-s);
+      background: rgba(255, 255, 255, .15);
+      color: #fff;
+      font: inherit;
+      font-size: var(--text-s);
+      padding: var(--space-1) var(--space-2);
+
+      option {
+        color: var(--ink);
+      }
+    }
+  }
+}
+
+.keep {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  width: calc(100% - 1.8rem);
+  margin: 0 var(--space-6) var(--space-5);
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-size: var(--text-s);
+
+  &.picked {
+    border-color: var(--accent);
+  }
+
+  b {
+    flex-shrink: 0;
+  }
+
+  /* The entry says itself in full, since a truncated one is the half a reader cannot check */
+  code {
+    color: var(--dim);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    word-break: break-word;
+    flex: 1 1 100%;
+  }
+}
+
+.screen-box.a h3 {
+  background: var(--screenA);
+}
+
+.screen-box.b h3 {
+  background: var(--screenB);
+}
+
+.screen-box .body {
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+select {
+  font: inherit;
+  font-size: var(--text-m);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+
 /* One sound plays at a time, so these behave as a gallery of one choice, each
    showing its shape and how long it runs */
-.sounds{display:flex;flex-wrap:wrap;gap:var(--space-5)}
-.sound{width:8.4rem;padding:var(--space-4) var(--space-4) var(--space-3);
- border:2px solid var(--line);
- border-radius:var(--radius-l);background:var(--panel);text-align:left;cursor:pointer}
-.sound:hover{border-color:var(--dim)}
-.sound.picked{border-color:var(--accent)}
-/* Always on's sound, playing in a scene with none of its own, in the striped and dashed frame */
-.sound.under{border-style:dashed;border-color:var(--dashed);
- background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 6px,var(--line) 6px,var(--line) 12px)}
-.sound svg{display:block;width:100%;height:1.8rem}
-.sound b{display:block;font:600 var(--text-s)/1.5 var(--font);color:var(--ink);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sound small{color:var(--dim);font-size:var(--text-xs)}
-#status{font-size:var(--text-m);color:var(--dim)}
-.banner{padding:var(--space-5) var(--space-6);border-radius:var(--radius-l);margin:var(--space-6) 0;
- background:#e7f2f1}
-.banner.warn{background:var(--warn-bg);color:var(--warn)}
-.banner.hold{background:var(--hold-bg);color:var(--hold)}
-.banner pre{margin:var(--space-3) 0 0;white-space:pre-wrap;font-size:var(--text-m)}
-/* ---- where the board is set up ---- */
+.sounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
 
+.sound {
+  width: 8.4rem;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-l);
+  background: var(--panel);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--dim);
+  }
+
+  &.picked {
+    border-color: var(--accent);
+  }
+
+  /* Always on's sound, playing in a scene with none of its own, in the striped and dashed frame */
+  &.under {
+    border-style: dashed;
+    border-color: var(--dashed);
+    background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--line) 6px, var(--line) 12px);
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 1.8rem;
+  }
+
+  b {
+    display: block;
+    font: 600 var(--text-s)/1.5 var(--font);
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    color: var(--dim);
+    font-size: var(--text-xs);
+  }
+}
+
+#status {
+  font-size: var(--text-m);
+  color: var(--dim);
+}
+
+.banner {
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-l);
+  margin: var(--space-6) 0;
+  background: #e7f2f1;
+
+  &.warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+
+  &.hold {
+    background: var(--hold-bg);
+    color: var(--hold);
+  }
+
+  pre {
+    margin: var(--space-3) 0 0;
+    white-space: pre-wrap;
+    font-size: var(--text-m);
+  }
+}
+
+/* ---- where the board is set up ---- */
 /* The board's own colour, which only its facts and the setup controls wear */
-:root{--board:#56708f}
+:root {
+  --board: #56708f;
+}
 
 /* A board fact as it reads in place */
-.facts{margin:var(--space-1) 0 var(--space-5)}
+.facts {
+  margin: var(--space-1) 0 var(--space-5);
+}
 
 /* Saving in the header, the next thing to do filled in the page's colour */
-:root{--warn:#b33;--warn-bg:#fbeaea}
-header #status{margin-left:auto}
-header button,.floatbar button{font:inherit;font-size:var(--text-m);
- padding:var(--space-3) var(--space-5);
- border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--ink);
- cursor:pointer}
-header button.primary,.floatbar button.primary{background:var(--accent);color:#fff;
- border-color:var(--accent);font-weight:600}
-header button:disabled,.floatbar button:disabled{opacity:.4;cursor:default}
+:root {
+  --warn: #b33;
+  --warn-bg: #fbeaea;
+}
 
-.previewnote{margin:var(--space-2) 0 var(--space-4);font-size:var(--text-m);color:var(--dim)}
+header #status {
+  margin-left: auto;
+}
+
+header button,
+.floatbar button {
+  font: inherit;
+  font-size: var(--text-m);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+header button.primary,
+.floatbar button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+header button:disabled,
+.floatbar button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.previewnote {
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: var(--text-m);
+  color: var(--dim);
+}
 
 /* While a program runs in their place the effects stand back, a note above them saying why */
-.programnote{display:flex;align-items:flex-start;gap:var(--space-4);
- margin:var(--space-3) 0 var(--space-5);
- padding:var(--space-4) var(--space-5);border:1.5px dashed var(--board);
- border-radius:var(--radius-l);background:#eef2f7;
- color:var(--board);font-size:var(--text-m)}
-.programnote[hidden]{display:none}
-body.programmed #looks,body.programmed #tabs,body.programmed #sceneTabRow,
-body.programmed #tabStack>.panel:not(#boardPanel){opacity:.3}
+.programnote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin: var(--space-3) 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1.5px dashed var(--board);
+  border-radius: var(--radius-l);
+  background: #eef2f7;
+  color: var(--board);
+  font-size: var(--text-m);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+body.programmed #looks,
+body.programmed #tabs,
+body.programmed #sceneTabRow,
+body.programmed #tabStack > .panel:not(#boardPanel) {
+  opacity: .3;
+}
 
 /* The save button's menu */
-header .savearrow,.floatbar .savearrow{padding:var(--space-3) var(--space-4);
- margin-left:calc(-1 * var(--space-5));
- border-top-left-radius:0;border-bottom-left-radius:0}
-.savemenu{position:absolute;right:1rem;top:100%;z-index:6;width:19rem;background:#fff;
- border:1px solid var(--line);border-radius:var(--radius-l);box-shadow:0 8px 22px rgba(0,0,0,.12);
- padding:var(--space-4) var(--space-5)}
+header .savearrow,
+.floatbar .savearrow {
+  padding: var(--space-3) var(--space-4);
+  margin-left: calc(-1 * var(--space-5));
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.savemenu {
+  position: absolute;
+  right: 1rem;
+  top: 100%;
+  z-index: 6;
+  width: 19rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+  padding: var(--space-4) var(--space-5);
+}
+
 /* The board's chip in the header */
-header .boardchip{display:inline-flex;align-items:center;gap:var(--space-3);
- padding:var(--space-3) var(--space-4);
- border:1.5px solid var(--board);border-radius:var(--radius);background:#eef2f7;color:var(--board);
- font:600 var(--text-m) var(--font)}
-header .boardchip.on{background:var(--board);color:#fff}
-body.programpage #tabs,body.programpage #sceneTabRow,body.programpage #sceneBody,
-body.programpage #programNote{display:none}
-.progwords .progargs{margin:var(--space-4) 0 0}
-.proggrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--space-4)}
-.progcard{position:relative;display:block;padding:0;border:2px solid var(--line);
- border-radius:var(--radius-l);overflow:hidden;background:#fff;text-align:left;cursor:pointer;
- font:inherit;
- color:var(--ink)}
-.progcard:hover{border-color:#b9c4d2}
-.progcard.picked{border-color:var(--board);box-shadow:0 0 0 2px var(--board)}
-.progname{display:block;padding:var(--space-3) var(--space-4);font-size:var(--text-m);
- font-weight:600;
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .boardchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--board);
+  border-radius: var(--radius);
+  background: #eef2f7;
+  color: var(--board);
+  font: 600 var(--text-m) var(--font);
+
+  &.on {
+    background: var(--board);
+    color: #fff;
+  }
+}
+
+body.programpage #tabs,
+body.programpage #sceneTabRow,
+body.programpage #sceneBody,
+body.programpage #programNote {
+  display: none;
+}
+
+.progwords .progargs {
+  margin: var(--space-4) 0 0;
+}
+
+.proggrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.progcard {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+
+  &:hover {
+    border-color: #b9c4d2;
+  }
+
+  &.picked {
+    border-color: var(--board);
+    box-shadow: 0 0 0 2px var(--board);
+  }
+}
+
+.progname {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-m);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* What a program uses is a row of small drawings along the foot of its thumbnail, named beside
    the picked one and as chips choosing which are shown. Drawn at 18px wherever they appear, so a
    chip reads the same as a card */
-.featureicon{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;
- stroke-linecap:round;stroke-linejoin:round}
-.featureicon .f{fill:currentColor;stroke:none}
-.featurefilter{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);
- margin:var(--space-2) 0 var(--space-2);
- font-size:var(--text-m);color:var(--dim)}
-.featurefilter>span{margin-right:var(--space-2)}
-.featurechip{display:inline-flex;align-items:center;gap:var(--space-2);
- padding:var(--space-1) var(--space-4) var(--space-1) var(--space-3);
- border:1.5px solid var(--line);border-radius:var(--radius-round);background:#fff;color:var(--ink);
- font:inherit;font-size:var(--text-s);cursor:pointer}
-.featurechip:hover{border-color:var(--board)}
-.featurechip.on{background:var(--board);border-color:var(--board);color:#fff}
-.featureclears{display:flex;gap:var(--space-2)}
-.featureclear{border:0;padding:0 var(--space-1);background:none;color:var(--board);font:inherit;
- font-size:var(--text-s);
- text-decoration:underline;cursor:pointer}
+.featureicon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  .f {
+    fill: currentColor;
+    stroke: none;
+  }
+}
+
+.featurefilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-2);
+  font-size: var(--text-m);
+  color: var(--dim);
+
+  > span {
+    margin-right: var(--space-2);
+  }
+}
+
+.featurechip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4) var(--space-1) var(--space-3);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-round);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-s);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--board);
+  }
+
+  &.on {
+    background: var(--board);
+    border-color: var(--board);
+    color: #fff;
+  }
+}
+
+.featureclears {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.featureclear {
+  border: 0;
+  padding: 0 var(--space-1);
+  background: none;
+  color: var(--board);
+  font: inherit;
+  font-size: var(--text-s);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* The covers in the header, in place of the page's strapline, small enough to keep the header
    its height. Where the header grows too narrow for them they take a slim line of their own
    under it, each half its width */
-body[data-pageway^=head] header .says{display:none}
-body[data-pageway^=head] header h1{margin-right:0}
-@media (max-width:1180px){
- body[data-pageway^=head] header h1{margin-right:auto}
+body[data-pageway^=head] header .says {
+  display: none;
 }
 
+body[data-pageway^=head] header h1 {
+  margin-right: 0;
+}
+
+@media (max-width: 1180px) {
+  body[data-pageway^=head] header h1 {
+    margin-right: auto;
+  }
+}
 
 /* Tabs split under the header, the same tabs on a line of their own under its first, split evenly
    across the page's own column so they stand over what they open */
-body[data-pageway=headsplit] header{flex-wrap:wrap;padding-bottom:0}
-body[data-pageway=headsplit] header h1{margin-right:auto}
-body.scenesintab #looks>.shelf{margin-top:0}
+body[data-pageway=headsplit] header {
+  flex-wrap: wrap;
+  padding-bottom: 0;
+
+  h1 {
+    margin-right: auto;
+  }
+}
+
+body.scenesintab #looks > .shelf {
+  margin-top: 0;
+}
+
 /* The header's spacer, which holds the drive buttons at the right */
-.setuphead{margin-left:auto}
+.setuphead {
+  margin-left: auto;
+}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
-:root{--boardOuts:#3f5a6b;--screenA:#1f6feb}
-.chip.boardchip{display:inline-flex;align-items:center;gap:var(--space-4);
- padding:var(--space-3) var(--space-4);
- border-radius:var(--radius);color:#fff;font:600 var(--text-m) var(--font)}
-.boardchip small{font-weight:400;opacity:.85}
-.boardchip select{border:1px solid rgba(255,255,255,.55);border-radius:var(--radius-s);
- background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
- font-size:var(--text-s);padding:var(--space-1) var(--space-2)}
-.boardchip select option{color:var(--ink)}
+:root {
+  --boardOuts: #3f5a6b;
+  --screenA: #1f6feb;
+}
+
+.chip.boardchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  color: #fff;
+  font: 600 var(--text-m) var(--font);
+}
+
+.boardchip small {
+  font-weight: 400;
+  opacity: .85;
+}
+
+.boardchip select {
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: var(--radius-s);
+  background: rgba(255, 255, 255, .15);
+  color: #fff;
+  font: inherit;
+  font-weight: 400;
+  font-size: var(--text-s);
+  padding: var(--space-1) var(--space-2);
+
+  option {
+    color: var(--ink);
+  }
+}
+
 /* The outputs' setup hint sits on the line of their box, which it fits at the page's full width.
    On a narrower page it is cut short with its whole text kept in its tooltip, so the line never
    grows taller, and where too little of it would show it is left out */
-#outFacts{display:flex;align-items:center;margin-top:0;container-type:inline-size}
-#outFacts .chip{flex:0 1 auto;min-width:0;white-space:nowrap}
-#outFacts .chip small{min-width:0;overflow:hidden;text-overflow:ellipsis}
-/* The Wiring chip opens the outputs' wiring view and closes it, so it answers the pointer, and
-   shows pressed while the view is open */
-#outFacts .boardchip{cursor:pointer}
-#outFacts .boardchip:hover{filter:brightness(1.12)}
+#outFacts {
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+  container-type: inline-size;
+
+  .chip {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+
+    small {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* The Wiring chip opens the outputs' wiring view and closes it, so it answers the pointer, and
+     shows pressed while the view is open */
+  .boardchip {
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.12);
+    }
+  }
+}
+
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once. A run's cards stand back around
    its lights, which are the board's */
-body.setupall #tabs,body.setupall #sceneTabRow,
-body.setupall #looks,body.setupall [id$=Chosen],
-body.setupall .headsteps,body.setupall .stretchcount{opacity:.35;pointer-events:none}
+body.setupall #tabs,
+body.setupall #sceneTabRow,
+body.setupall #looks,
+body.setupall [id$=Chosen],
+body.setupall .headsteps,
+body.setupall .stretchcount {
+  opacity: .35;
+  pointer-events: none;
+}
+
 /* A lamp out of the order the lamps are wired in is bold, since a lamp has colours enough */
-body.setupall #outPanel .cardlamp.astray b{font-weight:700;color:var(--ink)}
+body.setupall #outPanel .cardlamp.astray b {
+  font-weight: 700;
+  color: var(--ink);
+}
+
 /* ---- the LED sections as an accordion, where a closed one says in a swatch what it plays ---- */
-.accswatch{display:inline-flex;width:8rem;height:.55rem;border-radius:var(--radius-xs);
- overflow:hidden;
- align-self:center;margin-left:var(--space-2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-.accswatch span{display:block;height:100%}
-.accswatch .nothing{background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 3px,
- var(--line) 3px,var(--line) 6px)}
-details[open]>summary .accswatch{display:none}
+.accswatch {
+  display: inline-flex;
+  width: 8rem;
+  height: .55rem;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  align-self: center;
+  margin-left: var(--space-2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+
+  span {
+    display: block;
+    height: 100%;
+  }
+
+  .nothing {
+    background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px);
+  }
+}
+
+details[open] > summary .accswatch {
+  display: none;
+}
 
 /* The space between the gallery and the tabs is the gallery's, so wherever the gallery is
    placed, the tabs sit at the spacing of whatever is above them */
-#looks{margin-bottom:var(--space-7)}
-.ledtab{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-3);border:0;
- border-bottom:2px solid transparent;border-radius:0;background:none;
- padding:var(--space-1) var(--space-1) var(--space-4);margin-bottom:-1px;cursor:pointer;
- color:var(--dim)}
-.ledtab b{font:600 var(--text-l) var(--font)}
-.ledtab:hover{color:var(--ink)}
-.ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
-.ledtab .accswatch{margin:0}
-.ledtab b{white-space:nowrap}
-.ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}
+#looks {
+  margin-bottom: var(--space-7);
+}
+
+.ledtab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  padding: var(--space-1) var(--space-1) var(--space-4);
+  margin-bottom: -1px;
+  cursor: pointer;
+  color: var(--dim);
+
+  b {
+    font: 600 var(--text-l) var(--font);
+  }
+
+  &:hover {
+    color: var(--ink);
+  }
+
+  &.on {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  .accswatch {
+    margin: 0;
+  }
+
+  b {
+    white-space: nowrap;
+  }
+
+  .accswatch:not(.screenswatch):not(.soundswatch) {
+    max-width: 100%;
+  }
+}
+
 /* The browser holds some element in view still as a page changes, and choosing a tab hides
    the one it held, so it picks another and scrolls to hold that. The page then jumps though
    nothing changed height. Nothing above the tabs moves, so the page holds itself */
-html{overflow-anchor:none}
+html {
+  overflow-anchor: none;
+}
+
 /* The scrollbar's room is kept whether the page scrolls or not, so a short tab does not widen it */
-html{scrollbar-gutter:stable}
+html {
+  scrollbar-gutter: stable;
+}
+
 /* The Screens tab's swatch shows its two screens side by side, each with its picture and in the
    screen's own colour */
-.accswatch.screenswatch{gap:var(--space-2);box-shadow:none;height:.9rem;width:3.2rem}
-.screencell{flex:1;border-radius:var(--radius-xs);background:var(--unlit) center/cover no-repeat;
- box-shadow:inset 0 0 0 1.5px var(--cell)}
+.accswatch.screenswatch {
+  gap: var(--space-2);
+  box-shadow: none;
+  height: .9rem;
+  width: 3.2rem;
+}
+
+.screencell {
+  flex: 1;
+  border-radius: var(--radius-xs);
+  background: var(--unlit) center/cover no-repeat;
+  box-shadow: inset 0 0 0 1.5px var(--cell);
+}
+
 /* The Screens tab has room across, so its screens sit beside its name at the tab's full
    height, large enough to see what each shows, and the tab is no taller than the rest */
-.ledtab[data-panel=screensPanel],.ledtab[data-panel=soundPanel]{flex-direction:row;
- align-items:flex-start;gap:var(--space-4)}
-.ledtab[data-panel=screensPanel] .screenswatch{height:2.15rem;width:auto;gap:var(--space-3)}
-.ledtab[data-panel=screensPanel] .screencell{flex:0 0 2.15rem;border-radius:var(--radius-xs);
- box-shadow:none}
+.ledtab[data-panel=screensPanel],
+.ledtab[data-panel=soundPanel] {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.ledtab[data-panel=screensPanel] .screenswatch {
+  height: 2.15rem;
+  width: auto;
+  gap: var(--space-3);
+}
+
+.ledtab[data-panel=screensPanel] .screencell {
+  flex: 0 0 2.15rem;
+  border-radius: var(--radius-xs);
+  box-shadow: none;
+}
+
 /* Under the Screens and Sound tabs' names, where the others have their swatch, a word on
    what they hold. It takes no width of its own, so a tab stays its name's width whatever it
    says, the longest running a few pixels into the gap before the preview */
-.ledtab .tabunder{display:block;font:var(--text-xs)/.55rem var(--font);color:var(--dim);
- white-space:nowrap;width:0;overflow:visible}
-.ledtab .tabname{display:flex;flex-direction:column;gap:var(--space-3)}
+.ledtab .tabunder {
+  display: block;
+  font: var(--text-xs)/.55rem var(--font);
+  color: var(--dim);
+  white-space: nowrap;
+  width: 0;
+  overflow: visible;
+}
+
+.ledtab .tabname {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 /* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
    names above them */
-#ledTabs:has([data-panel=sensorPanel]){gap:var(--space-6)}
-#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
- [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
-#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
- [data-panel=soundPanel],[data-panel=sensorPanel]))>.accswatch{width:100%}
-#ledTabs:has([data-panel=sensorPanel]) .ledtab:is([data-panel=screensPanel],[data-panel=soundPanel],
- [data-panel=sensorPanel]){flex:none}
-.boardchip.sensor{background:var(--board)}
+#ledTabs:has([data-panel=sensorPanel]) {
+  gap: var(--space-6);
+
+  .ledtab:not(:is([data-panel=screensPanel], [data-panel=soundPanel], [data-panel=sensorPanel])) {
+    flex: 0 1 8rem;
+
+    > .accswatch {
+      width: 100%;
+    }
+  }
+
+  .ledtab:is([data-panel=screensPanel], [data-panel=soundPanel], [data-panel=sensorPanel]) {
+    flex: none;
+  }
+}
+
+.boardchip.sensor {
+  background: var(--board);
+}
+
 /* The Sound section's tiles are drawn as the pictures' are, their sound filling a face the
    pictures' height edge to edge, over its name and length */
 /* Three across, a sound being long and a picture near square, so the outline has room */
-.sounds{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-5)}
-.sound{padding:0;overflow:hidden;width:auto}
-.sound svg{height:3.6rem;border-bottom:1px solid var(--line)}
-.sound b{padding:var(--space-3) var(--space-4) 0}
-.sound small{display:block;padding:0 var(--space-4) var(--space-3)}
+.sounds {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+}
+
+.sound {
+  padding: 0;
+  overflow: hidden;
+  width: auto;
+
+  svg {
+    height: 3.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  b {
+    padding: var(--space-3) var(--space-4) 0;
+  }
+
+  small {
+    display: block;
+    padding: 0 var(--space-4) var(--space-3);
+  }
+}
+
 /* A screen showing nothing wears the stripes of nothing, as a lamp playing nothing and an empty
    sound do, and one dark because another scene shows on it is dark, as such a lamp is */
-.ledtab[data-panel=screensPanel] .screencell.nothing{box-shadow:none;
- background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 3px,var(--line) 3px,var(--line) 6px)}
-.ledtab[data-panel=screensPanel] .screencell.dark{background:var(--unlit);box-shadow:none}
+.ledtab[data-panel=screensPanel] .screencell.nothing {
+  box-shadow: none;
+  background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px);
+}
+
+.ledtab[data-panel=screensPanel] .screencell.dark {
+  background: var(--unlit);
+  box-shadow: none;
+}
+
 /* A screen showing a picture with no thumbnail yet, a white tile */
-.ledtab[data-panel=screensPanel] .screencell.blank{background:#fff;
- box-shadow:inset 0 0 0 1px var(--line)}
-.screencell.a{--cell:#1f6feb}
-.screencell.b{--cell:#a44ad0}
+.ledtab[data-panel=screensPanel] .screencell.blank {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.screencell.a {
+  --cell: #1f6feb;
+}
+
+.screencell.b {
+  --cell: #a44ad0;
+}
+
 /* Hardware not fitted is an empty place in a dashed outline. A screen or hub position, being
    square, is also crossed through once, and a strip's bar is too thin for a cross */
-:root{--cross:linear-gradient(to top right,transparent calc(50% - .7px),#c9c3b9 calc(50% - .7px),
- #c9c3b9 calc(50% + .7px),transparent calc(50% + .7px))}
-.screencell.absent,.ledtab[data-panel=screensPanel] .screencell.absent{
- background:var(--cross) transparent;box-shadow:none;outline:1px dashed var(--dashed);
- outline-offset:-1px}
+:root {
+  --cross: linear-gradient(to top right, transparent calc(50% - .7px), #c9c3b9 calc(50% - .7px), #c9c3b9 calc(50% + .7px), transparent calc(50% + .7px));
+}
+
+.screencell.absent,
+.ledtab[data-panel=screensPanel] .screencell.absent {
+  background: var(--cross) transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--dashed);
+  outline-offset: -1px;
+}
+
 /* A screen a scene turns off is black, and one showing Always on's picture has the stripes of
    nothing over it, as the lamps and bars do */
-.ledtab[data-panel=screensPanel] .screencell.off{background:#000;box-shadow:none}
-.screen-box select:disabled,.screen-box button:disabled{opacity:.75;cursor:default}
-.places{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-4);width:100%}
-.place{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--space-2);
- border:2px solid transparent;border-radius:var(--radius);
- padding:var(--space-3) var(--space-2) var(--space-3);cursor:pointer}
-.place:hover{background:var(--hubwash)}
-.place.picked{border-color:var(--hub)}
-.place.empty{cursor:default}
-.place.empty:hover{background:none}
-.sunit{font-size:var(--text-s);color:var(--dim)}
-.stoggle{border:1.5px solid var(--line);border-radius:var(--radius);background:var(--panel);
- padding:var(--space-2) var(--space-4);font:600 var(--text-s) var(--font);color:var(--ink);
- display:inline-flex;
- align-items:center;gap:var(--space-3);cursor:pointer}
-.stoggle.on{border-color:var(--hub,var(--strip));color:var(--hub,var(--strip));
- background:color-mix(in srgb,var(--hub,var(--strip)) 8%,transparent)}
-.stoggle:disabled{opacity:.4;cursor:default}
-.screen-box.a{--hub:#1f6feb}
-.screen-box.b{--hub:#a44ad0}
-.lightopt input[type=range]{width:6.5rem;accent-color:var(--hub,var(--strip))}
-.lightfigure{min-width:2.4rem;font-variant-numeric:tabular-nums;color:var(--ink)}
-.place.picked{border-color:var(--group,var(--hub));
- background:color-mix(in srgb,var(--group,var(--hub)) 13%,transparent)}
-.place.picked:hover{background:color-mix(in srgb,var(--group,var(--hub)) 18%,transparent)}
-.groupseg{display:inline-flex;border:1.5px solid var(--line);border-radius:var(--radius);
- overflow:hidden;
- margin-top:var(--space-1)}
-.groupseg button{border:0;border-right:1px solid var(--line);border-radius:0;background:var(--panel);
- padding:var(--space-1) var(--space-4);font:700 var(--text-s) var(--font);color:var(--ink);
- cursor:pointer}
-.groupseg button:last-child{border-right:0}
-.groupseg button.on{color:#fff}
-.groupseg button:disabled{opacity:.35;cursor:default}
+.ledtab[data-panel=screensPanel] .screencell.off {
+  background: #000;
+  box-shadow: none;
+}
+
+.screen-box select:disabled,
+.screen-box button:disabled {
+  opacity: .75;
+  cursor: default;
+}
+
+.places {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.place {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-2) var(--space-3);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--hubwash);
+  }
+
+  &.picked {
+    border-color: var(--hub);
+  }
+
+  &.empty {
+    cursor: default;
+
+    &:hover {
+      background: none;
+    }
+  }
+}
+
+.sunit {
+  font-size: var(--text-s);
+  color: var(--dim);
+}
+
+.stoggle {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: var(--space-2) var(--space-4);
+  font: 600 var(--text-s) var(--font);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+
+  &.on {
+    border-color: var(--hub, var(--strip));
+    color: var(--hub, var(--strip));
+    background: color-mix(in srgb, var(--hub, var(--strip)) 8%, transparent);
+  }
+
+  &:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+}
+
+.screen-box.a {
+  --hub: #1f6feb;
+}
+
+.screen-box.b {
+  --hub: #a44ad0;
+}
+
+.lightopt input[type=range] {
+  width: 6.5rem;
+  accent-color: var(--hub, var(--strip));
+}
+
+.lightfigure {
+  min-width: 2.4rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.place.picked {
+  border-color: var(--group, var(--hub));
+  background: color-mix(in srgb, var(--group, var(--hub)) 13%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--group, var(--hub)) 18%, transparent);
+  }
+}
+
+.groupseg {
+  display: inline-flex;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: var(--space-1);
+
+  button {
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--panel);
+    padding: var(--space-1) var(--space-4);
+    font: 700 var(--text-s) var(--font);
+    color: var(--ink);
+    cursor: pointer;
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    &.on {
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: .35;
+      cursor: default;
+    }
+  }
+}
+
 /* One line under the numbers, cut short where a tile is too narrow, its whole in the tooltip */
-.groupsaid{font-size:var(--text-xs);color:var(--dim);text-align:center;white-space:nowrap;
- overflow:hidden;
- text-overflow:ellipsis;max-width:100%}
+.groupsaid {
+  font-size: var(--text-xs);
+  color: var(--dim);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 /* Each picture whole in its tile, the tile as tall as the picture needs, the rows lined up at
    the bottom. Small pictures show at their true size, their pixels kept square */
-.assets{align-items:end}
+.assets {
+  align-items: end;
+}
+
 /* A group's heading, pressed to fold or open it, its arrow the panels' */
-.foldhead{padding:0;border:0;border-radius:0;background:none;color:var(--ink);text-align:left}
-.foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
- border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
- transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
-.foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
-.foldhead:hover::before{border-color:var(--accent)}
+.foldhead {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+
+  &::before {
+    content: "";
+    width: .42rem;
+    height: .42rem;
+    flex-shrink: 0;
+    border-right: 2px solid var(--dim);
+    border-bottom: 2px solid var(--dim);
+    transform: rotate(45deg) translate(-1px, -1px);
+    transition: transform .12s;
+  }
+
+  &.open::before {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+  &:hover::before {
+    border-color: var(--accent);
+  }
+}
+
 /* Across the Screens gallery's grid and the Sound tab's row */
-.assets .foldhead,.sounds .foldhead{grid-column:1/-1;flex-basis:100%;
- margin:var(--space-3) 0 calc(-1 * var(--space-3));
- font-size:var(--text-l)}
-.assets .foldhead:first-child,.sounds .foldhead:first-child{margin-top:0}
-.assets .foldhead .says,.sounds .foldhead .says{font:400 var(--text-m) var(--font);
- color:var(--dim)}
+.assets .foldhead,
+.sounds .foldhead {
+  grid-column: 1/-1;
+  flex-basis: 100%;
+  margin: var(--space-3) 0 calc(-1 * var(--space-3));
+  font-size: var(--text-l);
+}
+
+.assets .foldhead:first-child,
+.sounds .foldhead:first-child {
+  margin-top: 0;
+}
+
+.assets .foldhead .says,
+.sounds .foldhead .says {
+  font: 400 var(--text-m) var(--font);
+  color: var(--dim);
+}
+
 /* Six positions and "all" under every picture, so the pictures are wider for them */
-.assets.hubbed{grid-template-columns:repeat(auto-fill,minmax(9rem,1fr))}
-.assets.hubbed .asset .pick button{padding:var(--space-2) 0;border-right:1px solid var(--line)}
-.assets.hubbed .asset .pick button:last-child{border-right:0;flex:1.6}
-.assets.hubbed .asset .pick button.lit{background:var(--screenA);color:#fff}
+.assets.hubbed {
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+
+  .asset .pick button {
+    padding: var(--space-2) 0;
+    border-right: 1px solid var(--line);
+
+    &:last-child {
+      border-right: 0;
+      flex: 1.6;
+    }
+
+    &.lit {
+      background: var(--screenA);
+      color: #fff;
+    }
+  }
+}

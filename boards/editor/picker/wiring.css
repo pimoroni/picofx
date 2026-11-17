@@ -1,72 +1,246 @@
-.howfar{font-size:var(--text-s);color:var(--dim);min-width:2.8rem;text-align:center;
- font-variant-numeric:tabular-nums}
+.howfar {
+  font-size: var(--text-s);
+  color: var(--dim);
+  min-width: 2.8rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* The arrow an output crosses on. It sits on the corner of the lamp pointed at, pointing at the
    side it would move to */
-.cross{position:absolute;top:-.45rem;width:1.2rem;height:1.2rem;padding:0;
- border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;
- color:var(--rgbout);border-color:#d9c8f5;background:var(--panel);
- box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.cardlamp:hover .cross{display:inline-flex}
-#sideA .cross{right:-.3rem}
-#sideB .cross{left:-.3rem}
-.cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
-.cross svg{display:block}
-.cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
+.cross {
+  position: absolute;
+  top: -.45rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: var(--rgbout);
+  border-color: #d9c8f5;
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+}
+
+.cardlamp:hover .cross {
+  display: inline-flex;
+}
+
+#sideA .cross {
+  right: -.3rem;
+}
+
+#sideB .cross {
+  left: -.3rem;
+}
+
+.cross:hover:enabled {
+  border-color: var(--rgbout);
+  background: #f6f1ff;
+}
+
+.cross svg {
+  display: block;
+}
+
+.cross.boardarrow {
+  color: var(--boardOuts);
+  border-color: var(--boardOuts);
+}
+
 /* A run's zoom, steps and Join all, at the right of the row naming its wiring or its strip */
-.headsteps{margin-left:auto;display:flex;align-items:center;gap:var(--space-3);flex:none}
-.headsteps .stoggle{border:1.5px solid var(--line);border-radius:var(--radius);
- background:var(--panel);
- padding:var(--space-2) var(--space-4);font:600 var(--text-s) var(--font);color:var(--ink);
- display:inline-flex;
- align-items:center;gap:var(--space-3);cursor:pointer}
-.headsteps .stoggle:disabled{opacity:.4;cursor:default}
+.headsteps {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+
+  .stoggle {
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    padding: var(--space-2) var(--space-4);
+    font: 600 var(--text-s) var(--font);
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+  }
+}
 
 /* ---- the wiring, while the board is set up ----
    The board's connectors under both sides of the outputs, a faint line from every
    pin to its lamp, never none, brought forward by pointing at the lamp or the connector */
-#outPanel.wired{position:relative}
-#outPanel.wired .sides{position:relative;z-index:1}
-/* The connectors cover the stretch's settings that stand back under them, in the panel's own
-   colour. Their box holds its inner margin, so its height is all of theirs */
-#outPanel.wired #wiringRow{position:relative;z-index:1;display:flow-root}
-#wiringRow{background:var(--panel)}
+#outPanel.wired {
+  position: relative;
+
+  .sides {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* The connectors cover the stretch's settings that stand back under them, in the panel's own
+     colour. Their box holds its inner margin, so its height is all of theirs */
+  #wiringRow {
+    position: relative;
+    z-index: 1;
+    display: flow-root;
+  }
+}
+
+#wiringRow {
+  background: var(--panel);
+}
+
 /* The connectors sit in one strip, the board's edge, and a connector is its pins and its
    number with nothing round it. Drawn as a box, a connector reads as a thing to pick up and
    drag next to the lamps it feeds. Pins narrow to keep every connector on a narrow page */
-.wireboard{margin:2.8rem 0 0;position:relative;z-index:1;background:var(--unlit);
- border-radius:var(--radius-s);
- padding:var(--space-3) var(--space-4) var(--space-2)}
-.wireconnectors{display:flex;justify-content:space-between;gap:var(--space-4)}
+.wireboard {
+  margin: 2.8rem 0 0;
+  position: relative;
+  z-index: 1;
+  background: var(--unlit);
+  border-radius: var(--radius-s);
+  padding: var(--space-3) var(--space-4) var(--space-2);
+}
+
+.wireconnectors {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
 /* What the wiring says, ruled off under the connectors, and the way back to how the board comes.
    The words wrap beside the button, which keeps its place */
-.wirefoot{display:flex;align-items:center;gap:var(--space-5);margin-top:var(--space-3);
- padding:var(--space-3) var(--space-3) var(--space-2);border-top:1px solid rgba(255,255,255,.12);
- font:400 var(--text-s)/1.4 var(--font);color:var(--dashed)}
-.wirefoot>span{flex:1 1 0;min-width:0}
-.wirefoot b{color:#fff}
-.wirereset{flex:none;border:1px solid rgba(255,255,255,.35);border-radius:var(--radius-s);
- background:transparent;color:#fff;padding:var(--space-1) var(--space-4);
- font:600 var(--text-xs) var(--font);
- cursor:pointer}
-.wirereset:hover:enabled{background:rgba(255,255,255,.12);border-color:#fff}
-.wirereset:disabled{opacity:.35;cursor:default}
-.wireconnector{padding:0 var(--space-3);cursor:default;flex:0 1 auto;min-width:0}
-.wirepins{display:flex;gap:var(--space-3);justify-content:center}
-.wirepin{display:block;flex:0 1 auto;width:.8rem;min-width:4px;height:.45rem;
- border-radius:var(--radius-xs)}
-/* A colour output is one lamp, so one pin */
-.wirepin.whole{width:2.9rem;background:var(--line-strong)}
-.wirepin.single{width:1.4rem;background:var(--line-strong)}
-.wireconnector b{display:block;text-align:center;color:var(--dashed);
- font:600 var(--text-xs)/1.4 var(--font)}
-.wireconnector:hover b{color:#fff}
+.wirefoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  border-top: 1px solid rgba(255, 255, 255, .12);
+  font: 400 var(--text-s)/1.4 var(--font);
+  color: var(--dashed);
+
+  > span {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  b {
+    color: #fff;
+  }
+}
+
+.wirereset {
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: #fff;
+  padding: var(--space-1) var(--space-4);
+  font: 600 var(--text-xs) var(--font);
+  cursor: pointer;
+
+  &:hover:enabled {
+    background: rgba(255, 255, 255, .12);
+    border-color: #fff;
+  }
+
+  &:disabled {
+    opacity: .35;
+    cursor: default;
+  }
+}
+
+.wireconnector {
+  padding: 0 var(--space-3);
+  cursor: default;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.wirepins {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.wirepin {
+  display: block;
+  flex: 0 1 auto;
+  width: .8rem;
+  min-width: 4px;
+  height: .45rem;
+  border-radius: var(--radius-xs);
+
+  /* A colour output is one lamp, so one pin */
+  &.whole {
+    width: 2.9rem;
+    background: var(--line-strong);
+  }
+
+  &.single {
+    width: 1.4rem;
+    background: var(--line-strong);
+  }
+}
+
+.wireconnector b {
+  display: block;
+  text-align: center;
+  color: var(--dashed);
+  font: 600 var(--text-xs)/1.4 var(--font);
+}
+
+.wireconnector:hover b {
+  color: #fff;
+}
+
 /* Over the side boxes, so a line runs all the way up to its lamp. A line ends at the foot
    of its lamp and only runs down from there, so it never crosses a lamp */
-svg.wirelines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
- overflow:visible;z-index:2}
-svg.wirelines path{fill:none;stroke-width:1.6;opacity:.16}
-svg.wirelines path.wirehot{opacity:1;stroke-width:2.4}
-#outPanel .cardlamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
-.wirepin.wirehot{outline:2px solid #fff;outline-offset:1px}
-#outPanel .cardlamp.moving{z-index:3;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+svg.wirelines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 2;
 
+  path {
+    fill: none;
+    stroke-width: 1.6;
+    opacity: .16;
+
+    &.wirehot {
+      opacity: 1;
+      stroke-width: 2.4;
+    }
+  }
+}
+
+#outPanel .cardlamp.wirehot {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.wirepin.wirehot {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
+#outPanel .cardlamp.moving {
+  z-index: 3;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
+}

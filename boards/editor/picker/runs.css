@@ -1,1 +1,3 @@
-.boardchip.outs{background:var(--boardOuts)}
+.boardchip.outs {
+  background: var(--boardOuts);
+}

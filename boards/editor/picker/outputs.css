@@ -1,3 +1,5 @@
 /* A board whose outputs start with its mono ones lays them out first, and the colour side
    follows them on the right */
-#sides.monofirst #sideB{order:-1}
+#sides.monofirst #sideB {
+  order: -1;
+}

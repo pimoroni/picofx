@@ -1,15 +1,55 @@
-.cardlamps{display:flex;padding:var(--space-4) 0 var(--space-3)}
+.cardlamps {
+  display: flex;
+  padding: var(--space-4) 0 var(--space-3);
+}
+
 /* A broken-out lamp has a dot in the colour of the channel that drives it, centred on the edge of
    its light at the top left and ringed off the light. Which output that is has no mark of its own */
-.cardlamp.chan i::after{content:"";position:absolute;left:calc(14.645% - 16%);
- top:calc(14.645% - 16%);width:32%;height:32%;border-radius:50%;background:var(--chan);
- box-shadow:0 0 0 2px var(--panel)}
-.shelf{border:1px solid var(--line);border-radius:var(--radius-l);background:var(--panel);
- padding:var(--space-5) var(--space-6) var(--space-6);margin:0 0 var(--space-6)}
-.shelf.bare{border:none;background:none;padding:0;margin:var(--space-6) 0 var(--space-6)}
-.shelf .says{display:block;margin:0 0 var(--space-4)}
-.groupedlooks .gallery-head:first-child{margin-top:0}
+.cardlamp.chan i::after {
+  content: "";
+  position: absolute;
+  left: calc(14.645% - 16%);
+  top: calc(14.645% - 16%);
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: var(--chan);
+  box-shadow: 0 0 0 2px var(--panel);
+}
+
+.shelf {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  background: var(--panel);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  margin: 0 0 var(--space-6);
+
+  &.bare {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: var(--space-6) 0 var(--space-6);
+  }
+
+  .says {
+    display: block;
+    margin: 0 0 var(--space-4);
+  }
+}
+
+.groupedlooks .gallery-head:first-child {
+  margin-top: 0;
+}
+
 /* A looks heading's fold button sits in its row, which keeps the heading's spacing */
-.groupedlooks .lookshead>.foldhead{display:flex;align-items:baseline;gap:var(--space-4);margin:0;
- font:inherit}
-body[data-pageway] #looks>.shelf.bare{margin-top:0}
+.groupedlooks .lookshead > .foldhead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin: 0;
+  font: inherit;
+}
+
+body[data-pageway] #looks > .shelf.bare {
+  margin-top: 0;
+}

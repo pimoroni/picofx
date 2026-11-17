@@ -1,64 +1,202 @@
 /* Under the chosen stretch's name, what the board plays where the scene leaves it empty */
-.chosen .underhint{font-size:var(--text-m);color:var(--dim);margin:var(--space-2) 0 0}
+.chosen .underhint {
+  font-size: var(--text-m);
+  color: var(--dim);
+  margin: var(--space-2) 0 0;
+}
+
 /* Which way a stretch runs, at the end of the line naming it, greyed where its look is the
    same from either end */
-.chosen .who.withway{display:flex;align-items:center;gap:var(--space-4)}
+.chosen .who.withway {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 /* A stand-in says what it stands in for, under the stretch playing it */
-.chosen .standin{margin-top:var(--space-4);font-size:var(--text-m);color:var(--dim)}
+.chosen .standin {
+  margin-top: var(--space-4);
+  font-size: var(--text-m);
+  color: var(--dim);
+}
 
 /* One colour picker for a stretch's colour and a screen's background. One row of swatches spans
    the section, each as wide as "magenta" and no wider, spread to keep both ends flush and named
    under them once the section has room. Custom comes last as a rainbow ring whose middle is the
    custom colour, or Nothing's stripes until there is one. The field sits under the row, with the
    hex beside it over the colour itself */
-.chosen .colourpick{margin-top:var(--space-4)}
-/* The sliders follow the colour where a stretch has one */
-.chosen .colourpick + .tuning{margin-top:var(--space-4)}
+.chosen .colourpick {
+  margin-top: var(--space-4);
+
+  /* The sliders follow the colour where a stretch has one */
+  + .tuning {
+    margin-top: var(--space-4);
+  }
+}
+
 /* On a narrow page the buttons move under the stretch's name, whole, rather than squeeze it */
-.chosen .who.withway{flex-wrap:wrap;row-gap:var(--space-3)}
+.chosen .who.withway {
+  flex-wrap: wrap;
+  row-gap: var(--space-3);
+}
+
 /* A colour of a palette, beside its slider */
-.palettechip{width:1.1rem;height:.9rem;border-radius:var(--radius-xs);border:1px solid var(--line)}
+.palettechip {
+  width: 1.1rem;
+  height: .9rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+}
+
 /* A setting's icon before its name, a line drawing in the name's grey */
-.chosen .tuning label.withicon{display:inline-flex;align-items:center;gap:var(--space-3)}
-.settingicon{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;
- stroke-linecap:round;stroke-linejoin:round}
-.settingicon .filled{fill:currentColor;stroke:none}
+.chosen .tuning label.withicon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.settingicon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  .filled {
+    fill: currentColor;
+    stroke: none;
+  }
+}
+
 /* A signal's timings named by the state each holds, drawn as the signal shows it, a flashing
    lamp pulsing as it would */
-.chosen .tuning label.signalstate{display:inline-flex;align-items:center;gap:var(--space-3)}
-.signalface{display:block;flex:none}
-.signalface .flashing{animation:signalflash 1s steps(2,jump-none) infinite}
-body.figures .chosen .tuning.figuresopen{grid-template-columns:auto 1fr auto auto auto}
-.chosen .tuning:not(.figuresopen) .figurebox,
-.chosen .tuning:not(.figuresopen) .figureunit{display:none}
-/* No taller than the row's own label, so opening the drawer moves no slider */
-.figurebox{box-sizing:content-box;justify-self:end;padding:0 var(--space-3);
- height:calc(1.2rem - 2px);
- line-height:calc(1.2rem - 2px);
- border:1px solid var(--line);border-radius:var(--radius-s);font:600 var(--text-s) var(--font);
- text-align:right;font-variant-numeric:tabular-nums}
-span.figurebox{border:0}
-.figurebox.paletteswatches{display:inline-flex;gap:2px;padding:0;justify-self:start}
-.chosen .tuning:not(.figuresopen) .paletteswatches{display:none}
-.figureunit{font-size:var(--text-s);color:var(--dim)}
-.figurehandle{grid-column:-2;align-self:stretch;width:1.5rem;padding:0;border:1px solid var(--line);
- border-radius:var(--radius-s);background:var(--panel);color:var(--dim);
- font:600 var(--text-xl)/1 var(--font);
- cursor:pointer}
-.figurehandle:hover{color:var(--ink);border-color:var(--dim)}
-/* Blink's colours, each a chip the picker under them changes while it is ringed */
-.blinklist{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3);
- margin-bottom:var(--space-1);
- font-size:var(--text-m);color:var(--dim)}
-.blinksay{margin-right:var(--space-2)}
-.blinkchip{width:1.6rem;height:1.6rem;padding:0;border:2px solid var(--line);
- border-radius:var(--radius-s);
- background:var(--chip);cursor:pointer}
-.blinkchip.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
-.blinkdrop{border:none;background:none;padding:0 var(--space-3) 0 0;
- margin-left:calc(-1 * var(--space-2));color:var(--dim);
- cursor:pointer;font-size:var(--text-m);line-height:1}
-.blinkmore{margin-left:var(--space-3);padding:var(--space-1) var(--space-4);
- border:1px dashed var(--line);border-radius:var(--radius-s);
- background:none;color:var(--ink);font-size:var(--text-s);cursor:pointer}
+.chosen .tuning label.signalstate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
 
+.signalface {
+  display: block;
+  flex: none;
+
+  .flashing {
+    animation: signalflash 1s steps(2, jump-none) infinite;
+  }
+}
+
+body.figures .chosen .tuning.figuresopen {
+  grid-template-columns: auto 1fr auto auto auto;
+}
+
+.chosen .tuning:not(.figuresopen) .figurebox,
+.chosen .tuning:not(.figuresopen) .figureunit {
+  display: none;
+}
+
+/* No taller than the row's own label, so opening the drawer moves no slider */
+.figurebox {
+  box-sizing: content-box;
+  justify-self: end;
+  padding: 0 var(--space-3);
+  height: calc(1.2rem - 2px);
+  line-height: calc(1.2rem - 2px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font: 600 var(--text-s) var(--font);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+span.figurebox {
+  border: 0;
+}
+
+.figurebox.paletteswatches {
+  display: inline-flex;
+  gap: 2px;
+  padding: 0;
+  justify-self: start;
+}
+
+.chosen .tuning:not(.figuresopen) .paletteswatches {
+  display: none;
+}
+
+.figureunit {
+  font-size: var(--text-s);
+  color: var(--dim);
+}
+
+.figurehandle {
+  grid-column: -2;
+  align-self: stretch;
+  width: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--panel);
+  color: var(--dim);
+  font: 600 var(--text-xl)/1 var(--font);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ink);
+    border-color: var(--dim);
+  }
+}
+
+/* Blink's colours, each a chip the picker under them changes while it is ringed */
+.blinklist {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-m);
+  color: var(--dim);
+}
+
+.blinksay {
+  margin-right: var(--space-2);
+}
+
+.blinkchip {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--chip);
+  cursor: pointer;
+
+  &.on {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+}
+
+.blinkdrop {
+  border: none;
+  background: none;
+  padding: 0 var(--space-3) 0 0;
+  margin-left: calc(-1 * var(--space-2));
+  color: var(--dim);
+  cursor: pointer;
+  font-size: var(--text-m);
+  line-height: 1;
+}
+
+.blinkmore {
+  margin-left: var(--space-3);
+  padding: var(--space-1) var(--space-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink);
+  font-size: var(--text-s);
+  cursor: pointer;
+}

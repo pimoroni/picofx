@@ -109,6 +109,10 @@ refuses a stylesheet with no part beside it.
 A rule goes in the stylesheet of the part that draws what it styles. `page.css` keeps the tokens,
 the page's frame and the rules for what several parts draw.
 
+Stylesheets are written a declaration to a line, and a rule that extends the one above it nests
+inside it, as `&.on` or `.name` under `.chip`. The drive's copy is minified for the browsers in
+`tools/build_editor.py`, which flattens the nesting for those that cannot read it.
+
 Use the tokens declared on `:root` in `page.css` rather than literal values:
 
 - `--space-1` to `--space-7` for gaps, margins and padding, .125rem to 1.5rem.

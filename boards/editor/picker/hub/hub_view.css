@@ -1,25 +1,87 @@
-.sound.quiet svg{opacity:.6}
+.sound.quiet svg {
+  opacity: .6;
+}
 
 /* Two screens or a Screen Hub is a board fact, always shown and changed while editing the
    board. The hub is one box across both connectors, in the colour of the one its screens come
    through, with its six positions in a row under its band */
-.hubswitch{display:inline-flex;align-items:stretch;border-radius:var(--radius);overflow:hidden;
- background:var(--panel);box-shadow:inset 0 0 0 1.5px var(--screenA);
- font:600 var(--text-m) var(--font)}
+.hubswitch {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1.5px var(--screenA);
+  font: 600 var(--text-m) var(--font);
+}
+
 /* The chip leads the first choice, so it wears that choice's fill when it is the one made */
-.hublead{display:flex;align-items:center;padding:0 var(--space-1) 0 var(--space-4)}
-.hublead.on{background:var(--screenA)}
-.hubswitch button{border:0;border-radius:0;background:transparent;color:var(--screenA);
- font:inherit;line-height:1.3;padding:var(--space-3) var(--space-4);cursor:pointer}
-.hubswitch button.on{background:var(--screenA);color:#fff}
-.hubswitch button:not(.on):hover{background:rgba(31,111,235,.1)}
-.hubbox h3 .hubcount{font-weight:400;opacity:.85;margin-left:var(--space-3)}
+.hublead {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-1) 0 var(--space-4);
+
+  &.on {
+    background: var(--screenA);
+  }
+}
+
+.hubswitch button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--screenA);
+  font: inherit;
+  line-height: 1.3;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+
+  &.on {
+    background: var(--screenA);
+    color: #fff;
+  }
+
+  &:not(.on):hover {
+    background: rgba(31, 111, 235, .1);
+  }
+}
+
+.hubbox h3 .hubcount {
+  font-weight: 400;
+  opacity: .85;
+  margin-left: var(--space-3);
+}
+
 /* The letter sits in the position's corner, as on the silk, and its panel size in the middle */
-.placetop{display:flex;align-items:center;justify-content:center;min-height:1.5rem;
- width:100%}
-.placesize{font-size:var(--text-xs);padding:var(--space-1) var(--space-1);
- border-radius:var(--radius-s)}
-.placetop .placechip{color:var(--hub);margin-right:var(--space-2)}
-.placenone{display:flex;align-items:center;justify-content:center;width:100%;
- aspect-ratio:1;border-radius:var(--radius-s);font-size:var(--text-xs);color:var(--dim);
- background:var(--cross) transparent;outline:1px dashed var(--dashed);outline-offset:-1px}
+.placetop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.5rem;
+  width: 100%;
+}
+
+.placesize {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-1);
+  border-radius: var(--radius-s);
+}
+
+.placetop .placechip {
+  color: var(--hub);
+  margin-right: var(--space-2);
+}
+
+.placenone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-s);
+  font-size: var(--text-xs);
+  color: var(--dim);
+  background: var(--cross) transparent;
+  outline: 1px dashed var(--dashed);
+  outline-offset: -1px;
+}

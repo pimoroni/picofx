@@ -1,3 +1,5 @@
 /* A group's members are outlined in its colour, and the picked group is filled with a tint of it.
    Under every position are the three group numbers, the one it is in lit in its colour */
-.place.grouped{border-color:var(--group)}
+.place.grouped {
+  border-color: var(--group);
+}

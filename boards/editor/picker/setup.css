@@ -1,46 +1,151 @@
-.panel.stripout > :not(summary):not(.leds){visibility:hidden}
+.panel.stripout > :not(summary):not(.leds) {
+  visibility: hidden;
+}
+
 /* Level with a screen's words when it is not fitted */
-.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:8rem;
- transform:translate(-50%,-50%)}
-.panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
+.panel.stripout .addstrip,
+.panel.stripout .stripblocked {
+  position: absolute;
+  left: 50%;
+  top: 8rem;
+  transform: translate(-50%, -50%);
+}
+
+.panel.stripout .stripblocked {
+  width: max-content;
+  max-width: calc(100% - 3rem);
+  text-align: center;
+}
+
 /* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
    stretches are the scene's, so only the lamps answer the pointer */
-body.setupall .cardlamp{cursor:grab;background:var(--panel);border-style:solid;
- border-color:var(--line)}
-body.setupall .cardlamp:active{cursor:grabbing}
-body.setupall .bar.carded .sec{pointer-events:none}
-body.setupall .bar.carded .cardlamp{pointer-events:auto}
-body.setupall .bar.carded .sec>:not(.cardlamps):not(.stripbeads),
-body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
+body.setupall .cardlamp {
+  cursor: grab;
+  background: var(--panel);
+  border-style: solid;
+  border-color: var(--line);
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+body.setupall .bar.carded .sec {
+  pointer-events: none;
+}
+
+body.setupall .bar.carded .cardlamp {
+  pointer-events: auto;
+}
+
+body.setupall .bar.carded .sec > :not(.cardlamps):not(.stripbeads),
+body.setupall .bar.carded .edge {
+  opacity: .3;
+  pointer-events: none;
+}
+
 /* Cutting is the scene's, so no place to cut is offered while the board is set up. A place takes
    the pointer of its own, which the card's standing back does not take from it */
-body.setupall .bar.carded .sec .cut{display:none}
+body.setupall .bar.carded .sec .cut {
+  display: none;
+}
+
 /* A board setting's add button where the part is not fitted, and its remove button where it is */
-.boardadd{display:inline-flex;align-items:center;gap:var(--space-3)}
-.boardadd .boardicon{color:var(--board)}
-.boardremove{font:inherit;font-size:var(--text-xs);line-height:1.2;
- padding:var(--space-1) var(--space-3);border-radius:var(--radius-s);cursor:pointer}
-.boardchip .boardremove,.screen-box h3 .boardremove{border:1px solid rgba(255,255,255,.55);
- background:rgba(255,255,255,.15);color:#fff}
-.boardchip .boardremove:hover,.screen-box h3 .boardremove:hover{background:rgba(255,255,255,.3)}
-.screen-box h3 .boardremove{margin-left:auto}
+.boardadd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  .boardicon {
+    color: var(--board);
+  }
+}
+
+.boardremove {
+  font: inherit;
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.boardchip .boardremove,
+.screen-box h3 .boardremove {
+  border: 1px solid rgba(255, 255, 255, .55);
+  background: rgba(255, 255, 255, .15);
+  color: #fff;
+}
+
+.boardchip .boardremove:hover,
+.screen-box h3 .boardremove:hover {
+  background: rgba(255, 255, 255, .3);
+}
+
+.screen-box h3 .boardremove {
+  margin-left: auto;
+}
+
 /* The board's chip, the same on every fact, so one is learnt and the rest are recognised */
-.boardicon{color:var(--board);flex:0 0 auto}
+.boardicon {
+  color: var(--board);
+  flex: 0 0 auto;
+}
+
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
-.boardicon{width:16px;height:16px;margin:-1.5px}
+.boardicon {
+  width: 16px;
+  height: 16px;
+  margin: -1.5px;
+}
 
-.programnote .boardicon{margin-top:var(--space-2)}
-header .boardchip .boardicon{color:currentColor}
+.programnote .boardicon {
+  margin-top: var(--space-2);
+}
 
-.boardchip .boardicon{color:#fff;opacity:.9}
-.facts .hint{font-size:var(--text-s);color:var(--dim);margin-left:var(--space-4)}
-#outFacts .hint{min-width:0;flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@container (max-width:600px){#outFacts .hint{display:none}}
-body.setupall #outFacts .boardchip{
- box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),inset 0 3px 6px rgba(0,0,0,.45)}
+header .boardchip .boardicon {
+  color: currentColor;
+}
+
+.boardchip .boardicon {
+  color: #fff;
+  opacity: .9;
+}
+
+.facts .hint {
+  font-size: var(--text-s);
+  color: var(--dim);
+  margin-left: var(--space-4);
+}
+
+#outFacts .hint {
+  min-width: 0;
+  flex: 1 1 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container (max-width: 600px) {
+  #outFacts .hint {
+    display: none;
+  }
+}
+
+body.setupall #outFacts .boardchip {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .6), inset 0 3px 6px rgba(0, 0, 0, .45);
+}
 
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */
-body.setupall #assets,body.setupall #screensSays,
-body.setupall .screen-box .settings{opacity:.35;pointer-events:none}
-.screen-box h3 .boardicon{color:#fff;opacity:.9}
+body.setupall #assets,
+body.setupall #screensSays,
+body.setupall .screen-box .settings {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.screen-box h3 .boardicon {
+  color: #fff;
+  opacity: .9;
+}

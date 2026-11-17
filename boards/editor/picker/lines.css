@@ -1,4 +1,9 @@
-.card .tint{position:absolute;right:calc((var(--namerow) - var(--mark)) / 2);
- bottom:calc((var(--namerow) - var(--mark)) / 2);width:var(--mark);height:var(--mark);
- display:block;color:#b5aea3}
-
+.card .tint {
+  position: absolute;
+  right: calc((var(--namerow) - var(--mark)) / 2);
+  bottom: calc((var(--namerow) - var(--mark)) / 2);
+  width: var(--mark);
+  height: var(--mark);
+  display: block;
+  color: #b5aea3;
+}
