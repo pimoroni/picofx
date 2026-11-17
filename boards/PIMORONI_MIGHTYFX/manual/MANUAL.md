@@ -384,7 +384,7 @@ page.
 
 [[Update available]] shows what's new and offers the one file your board needs.
 Save to the board first, then download the file. Hold **Boot**, press
-**RST**, then let go of **Boot**, and drag the file onto the drive
+**Reset**, then let go of **Boot**, and drag the file onto the drive
 that appears. The
 board restarts by itself, and your FX drive and the files on it are kept. Open
 `PICKER.html` from the drive again afterwards, to use the picker that comes
@@ -1163,7 +1163,7 @@ board, which then runs the program as it would at power-on.
 The effects stop while a program runs, and **Boot** and ejecting do nothing. The
 drive is always shown, even with `drive=manual`, so you can still edit
 `effects.txt`. Saving it restarts the board with the new file. With
-`reload=manual`, press **RST** to apply the change. A program can read files
+`reload=manual`, press **Reset** to apply the change. A program can read files
 from this drive while it is shown, so its pictures and sounds can sit beside it
 here.
 
