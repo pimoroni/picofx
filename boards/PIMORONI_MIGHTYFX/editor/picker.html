@@ -21632,7 +21632,7 @@ var REMOTE_STEPS = ["nothing", "next", "previous", "first", "restart"];
 function remoteLine(button, choice) {
   var said = choice;
   var scene = choice === "order" ? sceneInOrder(button) : choice.indexOf("scene:") === 0 ? sceneMarked(choice.slice(6)) : null;
-  if (choice.indexOf("scene:") === 0 && !scene) return null;
+  if ((choice === "order" || choice.indexOf("scene:") === 0) && !scene) return null;
   if (scene) {
     said = "scene " + scene.name.trim();
     if (/[="']/.test(scene.name)) said = scene.name.indexOf('"') < 0 ? '"' + said + '"' : "'" + said + "'";

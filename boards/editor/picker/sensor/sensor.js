@@ -666,12 +666,13 @@ function sensorNotes() {
 
 var REMOTE_STEPS = ["nothing", "next", "previous", "first", "restart"];
 
-// A button's line, or null where the choice names a scene no longer there
+// A button's line, or null where the choice names a scene no longer there, or a number's place
+// holds none
 function remoteLine(button, choice) {
   var said = choice;
   var scene = choice === "order" ? sceneInOrder(button)
             : choice.indexOf("scene:") === 0 ? sceneMarked(choice.slice(6)) : null;
-  if (choice.indexOf("scene:") === 0 && !scene) return null;
+  if ((choice === "order" || choice.indexOf("scene:") === 0) && !scene) return null;
   if (scene) {
     said = "scene " + scene.name.trim();
     // A name holding = or a quote is quoted, as it would otherwise read as the next button
