@@ -915,7 +915,7 @@ function discoverRenderBrowser() {
     // An index with none of this kind has none to offer yet, as with sounds before any ship
     var any = check.index.examples.some(function (entry) { return discoverTab(entry) === kind; });
     scrolling.push(h("div", {className: "discoverwaiting", role: "status"}, every.length
-      ? "Every example here needs hardware that is not ticked."
+      ? "Every example here needs hardware that is not selected."
       : any ? "The drive has every example."
       : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
   } else {

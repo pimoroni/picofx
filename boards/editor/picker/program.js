@@ -742,7 +742,7 @@ function programListing() {
   });
   if (!shown) {
     parts.push(h("p", {className: "prognone"},
-                 listed ? "Every program here needs hardware that is not ticked."
+                 listed ? "Every program here needs hardware that is not selected."
                         : "There are no programs on this drive."));
   }
   return parts;

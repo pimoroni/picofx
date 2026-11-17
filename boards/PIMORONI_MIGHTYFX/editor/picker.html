@@ -14288,7 +14288,7 @@ function programListing() {
     parts.push(h(
       "p",
       { className: "prognone" },
-      listed ? "Every program here needs hardware that is not ticked." : "There are no programs on this drive."
+      listed ? "Every program here needs hardware that is not selected." : "There are no programs on this drive."
     ));
   }
   return parts;
@@ -15297,7 +15297,7 @@ function discoverRenderBrowser() {
     var any = check.index.examples.some(function(entry) {
       return discoverTab(entry) === kind;
     });
-    scrolling.push(h("div", { className: "discoverwaiting", role: "status" }, every.length ? "Every example here needs hardware that is not ticked." : any ? "The drive has every example." : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
+    scrolling.push(h("div", { className: "discoverwaiting", role: "status" }, every.length ? "Every example here needs hardware that is not selected." : any ? "The drive has every example." : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
   } else {
     var updatable = offers.filter(function(offer) {
       return discover.newer[offer[0]] && discoverReleased(discoverEntry(offer[0]).firmware) === true;
