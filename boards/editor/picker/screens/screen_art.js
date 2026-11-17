@@ -1,4 +1,5 @@
 import {WORDS, rgbInk} from "../colours.js";
+import {h, replace} from "../dom.js";
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
 import {LED_PANELS} from "../led_sections.js";
 import {capture, state} from "../scenes.js";
@@ -108,35 +109,32 @@ function panelDrawing(screen) {
              (extent - bottom - name.y / PER_MM) + ") scale(" + (1 / PER_MM) + ")' " +
              "fill='" + NAME_INK + "'>" + svgTag("path", {d: name.d}) + "</g>");
 
-  var holder = document.createElement("div");
-  holder.className = "holder";
-  holder.innerHTML =
-    "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " + extent +
-    "'><g transform='rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) + ")'>" +
-    parts.join("") + "</g></svg>";
+  var holder = h("div", {
+    className: "holder",
+    html: "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " +
+          extent + "'><g transform='rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) +
+          ")'>" + parts.join("") + "</g></svg>"
+  });
+  if (!art) return holder;
 
   // The picture as the board will draw it, its own pixels centred and cropped by the lit window
   // with black around it. The window sits on the exact centre of the drawn module, so a turned
   // module swaps its width and height and nothing else moves. The picture itself stays upright,
   // which is what a viewer of a mounted screen sees
-  if (art) {
-    var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
-    var scale = (DRAWN / extent) * (litW / px[0]);
-    var windowW = (quarter ? litH : litW) * (DRAWN / extent);
-    var windowH = (quarter ? litW : litH) * (DRAWN / extent);
-    var pane = document.createElement("div");
-    pane.style.cssText = "position:absolute;overflow:hidden;" +
-      "left:" + ((DRAWN - windowW) / 2) + "px;top:" + ((DRAWN - windowH) / 2) + "px;" +
-      "width:" + windowW + "px;height:" + windowH + "px;" +
-      "display:flex;align-items:center;justify-content:center";
-    var img = document.createElement("img");
-    img.src = art.url;
-    img.style.cssText = "flex:none;width:" + (art.w * scale) + "px;height:" +
-                        (art.h * scale) + "px" + (art.pixelated ? ";image-rendering:pixelated" : "");
-    pane.appendChild(img);
-    holder.style.position = "relative";
-    holder.appendChild(pane);
-  }
+  var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
+  var scale = (DRAWN / extent) * (litW / px[0]);
+  var windowW = (quarter ? litH : litW) * (DRAWN / extent);
+  var windowH = (quarter ? litW : litH) * (DRAWN / extent);
+  holder.style.position = "relative";
+  holder.append(h("div", {
+    style: {position: "absolute", overflow: "hidden", left: (DRAWN - windowW) / 2 + "px",
+            top: (DRAWN - windowH) / 2 + "px", width: windowW + "px", height: windowH + "px",
+            display: "flex", "align-items": "center", "justify-content": "center"}
+  }, h("img", {
+    src: art.url,
+    style: {flex: "none", width: art.w * scale + "px", height: art.h * scale + "px",
+            "image-rendering": art.pixelated ? "pixelated" : null}
+  })));
   return holder;
 }
 
@@ -223,27 +221,24 @@ export function mediaArt(name, style) {
 
 // The tab's swatch is the two screens, each showing what its screen shows
 tabSwatches.screensPanel = function (swatch) {
-  swatch.textContent = "";
   swatch.className = "accswatch screenswatch";
-  SCREENS.forEach(function (letter) {
+  replace(swatch, SCREENS.map(function (letter) {
     var screen = state.screens[letter];
-    var cell = document.createElement("span");
-    cell.className = "screencell " + letter.toLowerCase();
     // A screen showing nothing of the scene's own shows Always on's picture where it has one
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
     var shown = screen.shows || (under && under.always) || null;
     var art = screen.there && shown && shown !== "keep"
               ? mediaArt(shown, screen.look && screen.look.style) : null;
-    // Always on's picture wears the stripes of nothing over it
-    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") +
-                                          "url(" + art.url + ")";
-    if (!screen.there) cell.classList.add("absent");
-    else if (screen.off) cell.classList.add("off");
     // A picture with no thumbnail yet is a white tile, its screen showing something
-    else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && under.off ? "dark" : "nothing");
-    swatch.appendChild(cell);
-  });
+    var marked = !screen.there ? "absent" : screen.off ? "off" : art ? ""
+               : shown ? "blank" : under && under.off ? "dark" : "nothing";
+    // Always on's picture wears the stripes of nothing over it
+    return h("span", {
+      className: "screencell " + letter.toLowerCase() + (marked ? " " + marked : ""),
+      style: {"background-image": art ? (under && under.always ? "var(--through), " : "") +
+                                        "url(" + art.url + ")" : null}
+    });
+  }));
   swatch.title = SCREENS.map(function (letter) {
     var screen = state.screens[letter];
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
@@ -257,19 +252,13 @@ tabSwatches.screensPanel = function (swatch) {
 function sizesUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named = document.createElement("span");
-  named.className = "tabname";
-  named.appendChild(tab.querySelector("b"));
-  var sizes = document.createElement("small");
-  sizes.className = "tabunder";
   var fitted = SCREENS.map(function (letter) {
     return state.screens[letter].there ? state.screens[letter].size : "";
   });
-  sizes.textContent = fitted.some(Boolean)
-    ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
-    : "no screens";
-  named.appendChild(sizes);
-  tab.insertBefore(named, tab.firstChild);
+  tab.prepend(h("span", {className: "tabname"}, tab.querySelector("b"),
+                h("small", {className: "tabunder"}, fitted.some(Boolean)
+                  ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
+                  : "no screens")));
 }
 
 // A picture newly chosen is given its starting turn before anything else is drawn, since
@@ -283,18 +272,12 @@ addStep(drawSteps.after, DRAW_AFTER, "screens", function () {
   screenParts.renderTab();
 });
 
-(function () {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "screensPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Screens</summary>" +
-                    "<p class='says screenssays' id='screensSays'></p>" +
-                    "<div class='screens-head' id='screensHead'></div>" +
-                    "<div class='assets' id='assets'></div>";
-  var after = document.getElementById(LED_PANELS[LED_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
-}());
+document.getElementById(LED_PANELS[LED_PANELS.length - 1]).after(
+  h("details", {className: "panel", id: "screensPanel", open: true},
+    h("summary", {}, "Screens"),
+    h("p", {className: "says screenssays", id: "screensSays"}),
+    h("div", {className: "screens-head", id: "screensHead"}),
+    h("div", {className: "assets", id: "assets"})));
 
 // A board with no screen ports keeps the panel out of sight, for the parts that draw into it
 if (SCREENS.length) {
@@ -390,9 +373,7 @@ function drawingArt(name, wide, high, style) {
   if (drawingArts[key]) return drawingArts[key];
   var media = mediaNamed(name);
   var drawing = media.drawing;
-  var canvas = document.createElement("canvas");
-  canvas.width = wide;
-  canvas.height = high;
+  var canvas = h("canvas", {width: wide, height: high});
   var g = canvas.getContext("2d");
   // A thumbnail covers the canvas once it has loaded. Until then there is nothing to show, so a
   // screen keeps what it showed before, and only a drawing with no thumbnail shows its face
@@ -461,9 +442,7 @@ function composedArt(screen, look, art) {
   var image = artImage(art);
   if (!image) return null;
 
-  var canvas = document.createElement("canvas");
-  canvas.width = wide;
-  canvas.height = high;
+  var canvas = h("canvas", {width: wide, height: high});
   composeOnto(canvas.getContext("2d"), screen, look, art, image, wide, high);
   var made = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
   composed[key] = made;
@@ -546,12 +525,9 @@ function liveGif(drawing, still, screen, look, art) {
 
   gifDecoder(art).then(function (gif) {
     if (!shown.isConnected || gif.frames < 2) return;
-    var canvas = document.createElement("canvas");
-    canvas.width = still.w;
-    canvas.height = still.h;
-    canvas.className = shown.className;
+    var canvas = h("canvas", {width: still.w, height: still.h, className: shown.className});
     canvas.style.cssText = shown.style.cssText;
-    shown.parentNode.replaceChild(canvas, shown);
+    shown.replaceWith(canvas);
     playing.canvas = canvas;
     nextGifFrame(playing, gif);
   }).catch(function () {});

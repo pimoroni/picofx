@@ -12005,23 +12005,37 @@ function panelDrawing(screen) {
   }
   var name = PRINTED[screen.size] || PRINTED["2.8"];
   parts.push("<g transform='translate(" + (left - name.x / PER_MM) + " " + (extent - bottom - name.y / PER_MM) + ") scale(" + 1 / PER_MM + ")' fill='" + NAME_INK + "'>" + svgTag("path", { d: name.d }) + "</g>");
-  var holder = document.createElement("div");
-  holder.className = "holder";
-  holder.innerHTML = "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " + extent + "'><g transform='rotate(" + turn + " " + extent / 2 + " " + extent / 2 + ")'>" + parts.join("") + "</g></svg>";
-  if (art) {
-    var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
-    var scale = DRAWN / extent * (litW / px[0]);
-    var windowW = (quarter ? litH : litW) * (DRAWN / extent);
-    var windowH = (quarter ? litW : litH) * (DRAWN / extent);
-    var pane = document.createElement("div");
-    pane.style.cssText = "position:absolute;overflow:hidden;left:" + (DRAWN - windowW) / 2 + "px;top:" + (DRAWN - windowH) / 2 + "px;width:" + windowW + "px;height:" + windowH + "px;display:flex;align-items:center;justify-content:center";
-    var img = document.createElement("img");
-    img.src = art.url;
-    img.style.cssText = "flex:none;width:" + art.w * scale + "px;height:" + art.h * scale + "px" + (art.pixelated ? ";image-rendering:pixelated" : "");
-    pane.appendChild(img);
-    holder.style.position = "relative";
-    holder.appendChild(pane);
-  }
+  var holder = h("div", {
+    className: "holder",
+    html: "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " + extent + "'><g transform='rotate(" + turn + " " + extent / 2 + " " + extent / 2 + ")'>" + parts.join("") + "</g></svg>"
+  });
+  if (!art) return holder;
+  var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
+  var scale = DRAWN / extent * (litW / px[0]);
+  var windowW = (quarter ? litH : litW) * (DRAWN / extent);
+  var windowH = (quarter ? litW : litH) * (DRAWN / extent);
+  holder.style.position = "relative";
+  holder.append(h("div", {
+    style: {
+      position: "absolute",
+      overflow: "hidden",
+      left: (DRAWN - windowW) / 2 + "px",
+      top: (DRAWN - windowH) / 2 + "px",
+      width: windowW + "px",
+      height: windowH + "px",
+      display: "flex",
+      "align-items": "center",
+      "justify-content": "center"
+    }
+  }, h("img", {
+    src: art.url,
+    style: {
+      flex: "none",
+      width: art.w * scale + "px",
+      height: art.h * scale + "px",
+      "image-rendering": art.pixelated ? "pixelated" : null
+    }
+  })));
   return holder;
 }
 var pictureQueue = [];
@@ -12096,21 +12110,18 @@ function mediaArt(name, style) {
   return styled ? mediaArt(name) : null;
 }
 tabSwatches.screensPanel = function(swatch) {
-  swatch.textContent = "";
   swatch.className = "accswatch screenswatch";
-  SCREENS.forEach(function(letter) {
+  replace(swatch, SCREENS.map(function(letter) {
     var screen = state.screens[letter];
-    var cell = document.createElement("span");
-    cell.className = "screencell " + letter.toLowerCase();
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
     var shown = screen.shows || under && under.always || null;
     var art = screen.there && shown && shown !== "keep" ? mediaArt(shown, screen.look && screen.look.style) : null;
-    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") + "url(" + art.url + ")";
-    if (!screen.there) cell.classList.add("absent");
-    else if (screen.off) cell.classList.add("off");
-    else if (!art) cell.classList.add(shown ? "blank" : under && under.off ? "dark" : "nothing");
-    swatch.appendChild(cell);
-  });
+    var marked = !screen.there ? "absent" : screen.off ? "off" : art ? "" : shown ? "blank" : under && under.off ? "dark" : "nothing";
+    return h("span", {
+      className: "screencell " + letter.toLowerCase() + (marked ? " " + marked : ""),
+      style: { "background-image": art ? (under && under.always ? "var(--through), " : "") + "url(" + art.url + ")" : null }
+    });
+  }));
   swatch.title = SCREENS.map(function(letter) {
     var screen = state.screens[letter];
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
@@ -12121,19 +12132,17 @@ tabSwatches.screensPanel = function(swatch) {
 function sizesUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named2 = document.createElement("span");
-  named2.className = "tabname";
-  named2.appendChild(tab.querySelector("b"));
-  var sizes = document.createElement("small");
-  sizes.className = "tabunder";
   var fitted = SCREENS.map(function(letter) {
     return state.screens[letter].there ? state.screens[letter].size : "";
   });
-  sizes.textContent = fitted.some(Boolean) ? fitted.map(function(size) {
-    return size ? size + '"' : "none";
-  }).join(", ") : "no screens";
-  named2.appendChild(sizes);
-  tab.insertBefore(named2, tab.firstChild);
+  tab.prepend(h(
+    "span",
+    { className: "tabname" },
+    tab.querySelector("b"),
+    h("small", { className: "tabunder" }, fitted.some(Boolean) ? fitted.map(function(size) {
+      return size ? size + '"' : "none";
+    }).join(", ") : "no screens")
+  ));
 }
 addStep(drawSteps.before, DRAW_BEFORE, "screenTurns", function() {
   SCREENS.forEach(function(letter) {
@@ -12144,15 +12153,16 @@ addStep(drawSteps.after, DRAW_AFTER, "screens", function() {
   sizesUnderName();
   screenParts.renderTab();
 });
-(function() {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "screensPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Screens</summary><p class='says screenssays' id='screensSays'></p><div class='screens-head' id='screensHead'></div><div class='assets' id='assets'></div>";
-  var after = document.getElementById(LED_PANELS[LED_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
-})();
+document.getElementById(LED_PANELS[LED_PANELS.length - 1]).after(
+  h(
+    "details",
+    { className: "panel", id: "screensPanel", open: true },
+    h("summary", {}, "Screens"),
+    h("p", { className: "says screenssays", id: "screensSays" }),
+    h("div", { className: "screens-head", id: "screensHead" }),
+    h("div", { className: "assets", id: "assets" })
+  )
+);
 if (SCREENS.length) {
   TAB_NAMES.screensPanel = "Screens";
   addStep(TAB_PANELS, FEATURE_TABS, "screens", "screensPanel");
@@ -12220,9 +12230,7 @@ function drawingArt(name, wide, high, style) {
   if (drawingArts[key]) return drawingArts[key];
   var media = mediaNamed(name);
   var drawing = media.drawing;
-  var canvas = document.createElement("canvas");
-  canvas.width = wide;
-  canvas.height = high;
+  var canvas = h("canvas", { width: wide, height: high });
   var g = canvas.getContext("2d");
   var thumb = media.thumbHandle ? mediaArt(name, style) : null;
   var loaded = thumb ? artImage(thumb) : null;
@@ -12277,9 +12285,7 @@ function composedArt(screen, look, art) {
   if (composed[key]) return composed[key];
   var image = artImage(art);
   if (!image) return null;
-  var canvas = document.createElement("canvas");
-  canvas.width = wide;
-  canvas.height = high;
+  var canvas = h("canvas", { width: wide, height: high });
   composeOnto(canvas.getContext("2d"), screen, look, art, image, wide, high);
   var made = { url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high };
   composed[key] = made;
@@ -12347,12 +12353,9 @@ function liveGif(drawing, still, screen, look, art) {
   var playing = { screen: Object.assign({}, screen), look, art, at: 0, canvas: null };
   gifDecoder(art).then(function(gif) {
     if (!shown.isConnected || gif.frames < 2) return;
-    var canvas = document.createElement("canvas");
-    canvas.width = still.w;
-    canvas.height = still.h;
-    canvas.className = shown.className;
+    var canvas = h("canvas", { width: still.w, height: still.h, className: shown.className });
     canvas.style.cssText = shown.style.cssText;
-    shown.parentNode.replaceChild(canvas, shown);
+    shown.replaceWith(canvas);
     playing.canvas = canvas;
     nextGifFrame(playing, gif);
   }).catch(function() {
@@ -13636,30 +13639,28 @@ addStep(screensHeadSteps.after, HEAD_AFTER, "screenPair", function() {
     var other = SCREENS.filter(function(one) {
       return one !== letter;
     })[0];
-    var place = document.createElement("div");
-    place.className = "pairplace";
-    var segment2 = document.createElement("span");
-    segment2.className = "groupseg";
-    var button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Paired";
-    button.className = screensPaired() ? "on pairon" : "";
-    button.title = "Show Screen A's picture or drawing on both screens in step.";
-    button.onclick = function() {
-      togglePair();
-      draw();
-    };
-    if (fromAlways.length) {
-      button.disabled = true;
-      button.className = "";
-      button.title = "Pairs this scene's own pictures on both screens";
-    }
-    segment2.appendChild(button);
-    place.appendChild(segment2);
-    var said = document.createElement("small");
-    said.className = "groupsaid";
-    said.textContent = fromAlways.indexOf(letter) >= 0 ? "not available" : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on" : screensPaired() ? "paired with " + screenShown(other) : picturesMatch(state.screens[letter], state.screens[other]) ? "matches " + screenShown(other) : "on its own";
-    place.appendChild(said);
+    var place = h(
+      "div",
+      { className: "pairplace" },
+      h("span", { className: "groupseg" }, h("button", {
+        type: "button",
+        className: !fromAlways.length && screensPaired() ? "on pairon" : "",
+        title: fromAlways.length ? "Pairs this scene's own pictures on both screens" : "Show Screen A's picture or drawing on both screens in step.",
+        disabled: fromAlways.length > 0,
+        onclick: function() {
+          togglePair();
+          draw();
+        }
+      }, "Paired")),
+      // A pair by hand says so, and two screens showing the same picture the same way say they
+      // match, since they are sent as a pair until a setting after the file differs. The screen
+      // showing Always on's picture already says so in its own line below
+      h(
+        "small",
+        { className: "groupsaid" },
+        fromAlways.indexOf(letter) >= 0 ? "not available" : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on" : screensPaired() ? "paired with " + screenShown(other) : picturesMatch(state.screens[letter], state.screens[other]) ? "matches " + screenShown(other) : "on its own"
+      )
+    );
     body.insertBefore(place, body.querySelector(".sshowing") || body.querySelector(".looksettings"));
   });
 });
@@ -13689,68 +13690,91 @@ function mediaGroups() {
     return !at || group[2].length;
   });
 }
+function offCard() {
+  return h(
+    "div",
+    {
+      className: "card nothing small offasset",
+      title: "Turn a screen off in this scene",
+      style: { visibility: state.at < 0 ? "hidden" : null }
+    },
+    h("div", { className: "face" }, "Off"),
+    h("div", { className: "pick" }, SCREENS.map(function(letter) {
+      var screen = state.screens[letter];
+      return h("button", {
+        className: screen.off ? "lit" + (letter === "B" ? " b" : "") : "",
+        disabled: !screen.there,
+        onclick: function() {
+          screen.off = !screen.off;
+          if (screen.off) screen.shows = null;
+          draw();
+        }
+      }, screenButton(letter));
+    }))
+  );
+}
+function assetTile(media) {
+  var name = media.name;
+  var on = {};
+  SCREENS.forEach(function(l) {
+    on[l] = state.screens[l].there && state.screens[l].shows === name;
+  });
+  var art = mediaArt(name);
+  return h(
+    "div",
+    {
+      className: "asset" + (on.A && on.B ? " onAB" : on.A ? " onA" : on.B ? " onB" : ""),
+      "data-name": name,
+      title: name
+    },
+    h(
+      "div",
+      {
+        className: "face",
+        style: { background: art ? "repeating-conic-gradient(#e8e4dc 0% 25%, #cbc5bb 0% 50%) 0 0/12px 12px" : null }
+      },
+      // The extension stands in only until the picture arrives
+      art ? h("img", { src: art.url }) : name.split(".").pop(),
+      media.kind === "image" ? null : h("span", { className: "kind" }, media.kind === "folder" ? "slideshow" : media.kind === "drawing" ? "drawing" : "gif"),
+      h("div", { className: "label" }, nameShown(name))
+    ),
+    h("div", { className: "pick" }, SCREENS.map(function(letter) {
+      var lit = on[letter];
+      return h("button", {
+        className: lit ? "lit" + (letter === "B" ? " b" : "") : "",
+        disabled: !state.screens[letter].there,
+        style: { opacity: state.screens[letter].there ? null : ".3" },
+        onclick: function() {
+          var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
+          screen.shows = screen.shows !== name ? name : screen.kept ? "keep" : null;
+          screen.off = false;
+          draw();
+        }
+      }, screenButton(letter));
+    })),
+    // An example keeps no bin here, as flashing the board's examples again brings it back. Where
+    // the board's examples can be discovered, discover/screens/discover_screens.js gives it one
+    isExampleMedia(name) ? null : binButton(name, media.kind),
+    media.kind === "drawing" && state.fileHandle ? drawingCopyTile(name) : null
+  );
+}
 function renderAssets() {
-  var box = document.getElementById("assets");
-  box.textContent = "";
   document.getElementById("screensSays").textContent = !state.fileHandle ? "open the FX drive to see its pictures and drawings" : !state.scanned ? "reading the drive..." : state.media.length ? "one set of pictures, each shown on A, B or both" : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
   var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
-  if (!grouped) {
-    var alone = document.createElement("div");
-    alone.className = "offhead";
-    alone.appendChild(offCard());
-    box.appendChild(alone);
-  }
+  var parts = grouped ? [] : [h("div", { className: "offhead" }, offCard())];
   groups.forEach(function(group, at) {
     var open = groupOpen(group);
     if (grouped) {
       var fold = foldHead(group[0], group[1], open, function() {
         groupsOpen[group[0]] = !open;
       });
-      if (at === 0) {
-        var head = document.createElement("div");
-        head.className = "offhead";
-        head.appendChild(fold);
-        head.appendChild(offCard());
-        box.appendChild(head);
-      } else {
-        box.appendChild(fold);
-      }
+      parts.push(at === 0 ? h("div", { className: "offhead" }, fold, offCard()) : fold);
     }
     if (grouped && !open) return;
-    group[2].forEach(assetTile);
-    if (group[0] === OWN_GROUP) adder();
-  });
-  assetSteps.forEach(function(step2) {
-    step2();
-  });
-  function offCard() {
-    var cell = document.createElement("div");
-    cell.className = "card nothing small offasset";
-    cell.title = "Turn a screen off in this scene";
-    if (state.at < 0) cell.style.visibility = "hidden";
-    cell.innerHTML = "<div class='face'>Off</div>";
-    var pick2 = document.createElement("div");
-    pick2.className = "pick";
-    SCREENS.forEach(function(letter) {
-      var screen = state.screens[letter];
-      var button = document.createElement("button");
-      button.textContent = screenButton(letter);
-      button.className = screen.off ? "lit" + (letter === "B" ? " b" : "") : "";
-      button.disabled = !screen.there;
-      button.onclick = function() {
-        screen.off = !screen.off;
-        if (screen.off) screen.shows = null;
-        draw();
-      };
-      pick2.appendChild(button);
-    });
-    cell.appendChild(pick2);
-    return cell;
-  }
-  function adder() {
-    if (state.fileHandle)
-      box.appendChild(adderTile(
+    parts = parts.concat(group[2].map(assetTile));
+    if (group[0] === OWN_GROUP && state.fileHandle) {
+      parts.push(adderTile(
         "add pictures or drawings",
         {
           description: "Pictures and drawings the board can play",
@@ -13759,61 +13783,12 @@ function renderAssets() {
         "pictures",
         /\.(gif|png|jpe?g|py)$/i
       ));
-  }
-  function assetTile(media) {
-    var name = media.name;
-    var on = {};
-    SCREENS.forEach(function(l) {
-      on[l] = state.screens[l].there && state.screens[l].shows === name;
-    });
-    var cell = document.createElement("div");
-    cell.className = "asset" + (on.A && on.B ? " onAB" : on.A ? " onA" : on.B ? " onB" : "");
-    cell.dataset.name = name;
-    var face = document.createElement("div");
-    face.className = "face";
-    var art = mediaArt(name);
-    if (art) {
-      face.style.background = "repeating-conic-gradient(#e8e4dc 0% 25%, #cbc5bb 0% 50%) 0 0/12px 12px";
-      var img = document.createElement("img");
-      img.src = art.url;
-      face.appendChild(img);
-    } else {
-      face.textContent = name.split(".").pop();
     }
-    if (media.kind !== "image") {
-      var kind = document.createElement("span");
-      kind.className = "kind";
-      kind.textContent = media.kind === "folder" ? "slideshow" : media.kind === "drawing" ? "drawing" : "gif";
-      face.appendChild(kind);
-    }
-    cell.appendChild(face);
-    cell.title = name;
-    var label = document.createElement("div");
-    label.className = "label";
-    label.textContent = nameShown(name);
-    face.appendChild(label);
-    var pick2 = document.createElement("div");
-    pick2.className = "pick";
-    SCREENS.forEach(function(letter) {
-      var button = document.createElement("button");
-      button.textContent = screenButton(letter);
-      var lit = on[letter];
-      button.className = lit ? "lit" + (letter === "B" ? " b" : "") : "";
-      button.disabled = !state.screens[letter].there;
-      if (button.disabled) button.style.opacity = ".3";
-      button.onclick = function() {
-        var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
-        screen.shows = screen.shows !== name ? name : screen.kept ? "keep" : null;
-        screen.off = false;
-        draw();
-      };
-      pick2.appendChild(button);
-    });
-    cell.appendChild(pick2);
-    if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
-    if (media.kind === "drawing" && state.fileHandle) cell.appendChild(drawingCopyTile(name));
-    box.appendChild(cell);
-  }
+  });
+  replace(document.getElementById("assets"), parts);
+  assetSteps.forEach(function(step2) {
+    step2();
+  });
 }
 function renderScreensTab() {
   renderScreensParts();
@@ -13828,118 +13803,109 @@ function renderScreensTab() {
     var chip = band.querySelector(".boardicon");
     var size = band.querySelector("select.inband");
     if (!chip || !size) return;
-    var fact = document.createElement("span");
-    fact.className = "bandfact";
-    fact.title = "Board setup, shared by every scene";
+    var fact = h("span", { className: "bandfact", title: "Board setup, shared by every scene" }, chip);
     band.insertBefore(fact, size);
-    fact.appendChild(chip);
-    fact.appendChild(size);
+    fact.append(size);
     band.title = "";
   });
 }
 screenParts.renderTab = renderScreensTab;
 function renderScreenBoxes() {
-  var box = document.getElementById("screensHead");
-  box.textContent = "";
-  SCREENS.forEach(function(letter) {
-    var screen = state.screens[letter];
-    var side = document.createElement("div");
-    side.className = "screen-box " + letter.toLowerCase();
-    var head = document.createElement("h3");
-    head.appendChild(document.createTextNode(screenShown(letter)));
-    side.appendChild(head);
-    var body = document.createElement("div");
-    body.className = "body";
-    side.appendChild(body);
-    if (!screen.there) {
-      body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
-      add.onclick = function() {
-        screen.there = true;
-        screen.shows = null;
-        screen.kept = null;
+  replace(document.getElementById("screensHead"), SCREENS.map(screenBox));
+}
+function screenBox(letter) {
+  var screen = state.screens[letter];
+  if (!screen.there) {
+    return h(
+      "div",
+      { className: "screen-box " + letter.toLowerCase() },
+      h("h3", {}, screenShown(letter)),
+      h("div", { className: "body adding" }, h("button", {
+        onclick: function() {
+          screen.there = true;
+          screen.shows = null;
+          screen.kept = null;
+          draw();
+        }
+      }, "add this screen"))
+    );
+  }
+  var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"]).filter(function(inches) {
+    return inches !== "hub";
+  });
+  var size = h(
+    "select",
+    {
+      className: "inband",
+      title: "Panel fitted, shared by every scene",
+      onchange: function() {
+        if (size.value) screen.size = size.value;
         draw();
-      };
-      body.appendChild(add);
-      box.appendChild(side);
-      return;
-    }
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\xD7";
-    drop.title = "Remove this screen from every scene";
-    drop.onclick = function() {
-      screen.there = false;
-      store();
-      allBodies().forEach(function(held2) {
-        held2.screens[letter].shows = null;
-        held2.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
-    var size = document.createElement("select");
-    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"]).filter(function(inches) {
-      return inches !== "hub";
+      }
+    },
+    screen.size ? null : h("option", { value: "", selected: true }, "fitted size"),
+    offered.map(function(inches) {
+      return h("option", { value: inches, selected: screen.size === inches }, inches + " inch");
+    })
+  );
+  var under = screen.shows ? null : screenUnder(letter);
+  var held = screen;
+  if (under && under.always) {
+    var always = state.always.body.screens[letter];
+    held = Object.assign({}, screen, {
+      shows: null,
+      turn: always.turn || 0,
+      look: always.look || screen.look
     });
-    if (!screen.size) {
-      var quiet = document.createElement("option");
-      quiet.value = "";
-      quiet.textContent = "fitted size";
-      quiet.selected = true;
-      size.appendChild(quiet);
-    }
-    offered.forEach(function(inches) {
-      var option = document.createElement("option");
-      option.value = inches;
-      option.textContent = inches + " inch";
-      if (screen.size === inches) option.selected = true;
-      size.appendChild(option);
-    });
-    size.onchange = function() {
-      if (size.value) screen.size = size.value;
-      draw();
-    };
-    size.className = "inband";
-    size.title = "Panel fitted, shared by every scene";
-    head.insertBefore(size, drop);
-    body.appendChild(previewInScene(screen, letter));
-    var under = screen.shows ? null : screenUnder(letter);
-    var held = screen;
-    if (under && under.always) {
-      var always = state.always.body.screens[letter];
-      held = Object.assign({}, screen, {
-        shows: null,
-        turn: always.turn || 0,
-        look: always.look || screen.look
-      });
-    }
-    var sections = lookSections("screen" + letter, held, screen.size);
-    var light = lightRow(held.look.backlight, function(value) {
-      screen.look.backlight = value;
-    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
-    if (held !== screen) {
-      frozen(sections);
-      frozen(light);
-    }
-    body.appendChild(sections);
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(light, body.firstChild);
-    if (screen.kept) {
-      var keep = document.createElement("button");
-      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
-      keep.title = screen.kept;
-      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
-      keep.onclick = function() {
+  }
+  var preview = previewInScene(screen, letter);
+  var sections = lookSections("screen" + letter, held, screen.size);
+  var light = lightRow(held.look.backlight, function(value) {
+    screen.look.backlight = value;
+  }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
+  if (held !== screen) {
+    frozen(sections);
+    frozen(light);
+  }
+  var body = h("div", { className: "body" }, light, preview, sections);
+  body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+  return h(
+    "div",
+    { className: "screen-box " + letter.toLowerCase() },
+    h(
+      "h3",
+      {},
+      screenShown(letter),
+      size,
+      // Taking the screen out is the only way to have none, as a screen showing nothing
+      // would say the same thing twice
+      h("button", {
+        className: "drop",
+        title: "Remove this screen from every scene",
+        onclick: function() {
+          screen.there = false;
+          store();
+          allBodies().forEach(function(held2) {
+            held2.screens[letter].shows = null;
+            held2.screens[letter].kept = null;
+          });
+          apply(slotAt(state.at).body);
+          draw();
+        }
+      }, "\xD7")
+    ),
+    body,
+    // What the file already says for this screen, where the picker did not write it and
+    // no picture can stand for it. It is a line of its own under the settings
+    screen.kept ? h("button", {
+      className: "keep" + (screen.shows === "keep" ? " picked" : ""),
+      title: screen.kept,
+      onclick: function() {
         screen.shows = "keep";
         draw();
-      };
-      side.appendChild(keep);
-    }
-    box.appendChild(side);
-  });
+      }
+    }, h("b", {}, "Keep as is"), h("code", {}, screen.kept)) : null
+  );
 }
 function renderScreensParts() {
   renderScreensHead();

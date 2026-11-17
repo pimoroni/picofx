@@ -1,3 +1,4 @@
+import {h} from "../dom.js";
 import {DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
 import {BODY_ORDER, bodyParts, state} from "../scenes.js";
 import {turnForChosen} from "./screen_settings.js";
@@ -79,39 +80,26 @@ addStep(screensHeadSteps.after, HEAD_AFTER, "screenPair", function () {
     var body = document.querySelector("#screensHead .screen-box." + letter.toLowerCase() + " .body");
     if (!body) return;
     var other = SCREENS.filter(function (one) { return one !== letter; })[0];
-    var place = document.createElement("div");
-    place.className = "pairplace";
-
-    var segment = document.createElement("span");
-    segment.className = "groupseg";
-    var button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Paired";
-    button.className = screensPaired() ? "on pairon" : "";
-    button.title = "Show Screen A's picture or drawing on both screens in step.";
-    button.onclick = function () {
-      togglePair();
-      draw();
-    };
-    if (fromAlways.length) {
-      button.disabled = true;
-      button.className = "";
-      button.title = "Pairs this scene's own pictures on both screens";
-    }
-    segment.appendChild(button);
-    place.appendChild(segment);
-
-    // A pair by hand says so, and two screens showing the same picture the same way say they
-    // match, since they are sent as a pair until a setting after the file differs
-    var said = document.createElement("small");
-    said.className = "groupsaid";
-    // The screen showing Always on's picture already says so in its own line below
-    said.textContent = fromAlways.indexOf(letter) >= 0 ? "not available"
-                     : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on"
-                     : screensPaired() ? "paired with " + screenShown(other)
-                     : picturesMatch(state.screens[letter], state.screens[other])
-                       ? "matches " + screenShown(other) : "on its own";
-    place.appendChild(said);
+    var place = h("div", {className: "pairplace"},
+      h("span", {className: "groupseg"}, h("button", {
+        type: "button", className: !fromAlways.length && screensPaired() ? "on pairon" : "",
+        title: fromAlways.length ? "Pairs this scene's own pictures on both screens"
+                                 : "Show Screen A's picture or drawing on both screens in step.",
+        disabled: fromAlways.length > 0,
+        onclick: function () {
+          togglePair();
+          draw();
+        }
+      }, "Paired")),
+      // A pair by hand says so, and two screens showing the same picture the same way say they
+      // match, since they are sent as a pair until a setting after the file differs. The screen
+      // showing Always on's picture already says so in its own line below
+      h("small", {className: "groupsaid"},
+        fromAlways.indexOf(letter) >= 0 ? "not available"
+        : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on"
+        : screensPaired() ? "paired with " + screenShown(other)
+        : picturesMatch(state.screens[letter], state.screens[other])
+          ? "matches " + screenShown(other) : "on its own"));
     body.insertBefore(place, body.querySelector(".sshowing") || body.querySelector(".looksettings"));
   });
 });
