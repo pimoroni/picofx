@@ -5844,8 +5844,22 @@ var drawHeld = false;
 function holdDrawing(on) {
   drawHeld = on;
 }
+var drawOwed = false;
+function drawFromLoad() {
+  var focused = document.activeElement;
+  if (!focused || !focused.matches("select")) {
+    draw();
+    return;
+  }
+  if (drawOwed) return;
+  drawOwed = true;
+  focused.addEventListener("blur", function() {
+    if (drawOwed) draw();
+  }, { once: true });
+}
 function draw() {
   if (drawHeld) return;
+  drawOwed = false;
   var across = window.scrollX;
   var down = window.scrollY;
   var focused = focusPlace();
@@ -5862,16 +5876,42 @@ function draw() {
   refocus(focused);
   if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
 }
-var FIELDS = "input, select, textarea";
+var FIELDS = "input, select, textarea, button, [role=button], [role=tab]";
+function identity(element) {
+  var data = Array.prototype.filter.call(element.attributes, function(one) {
+    return one.name.indexOf("data-") === 0 && one.name !== "data-focus";
+  }).map(function(one) {
+    return one.name + "=" + one.value;
+  });
+  return [
+    element.tagName,
+    element.getAttribute("role") || "",
+    element.name || "",
+    element.getAttribute("aria-label") || element.textContent.trim().slice(0, 60)
+  ].concat(data).join("|");
+}
 function focusPlace() {
   var field = document.activeElement;
   if (!field || field === document.body || !field.matches(FIELDS)) return null;
-  var place = { field, key: field.dataset.focus || null, box: null, index: -1, caret: null };
+  var place = {
+    field,
+    key: field.dataset.focus || null,
+    box: null,
+    index: -1,
+    same: null,
+    rank: 0,
+    caret: null
+  };
   if (!place.key) {
     var box = field.parentElement ? field.parentElement.closest("[id]") : null;
     if (!box) return null;
+    var all = Array.prototype.slice.call(box.querySelectorAll(FIELDS));
     place.box = box.id;
-    place.index = Array.prototype.indexOf.call(box.querySelectorAll(FIELDS), field);
+    place.index = all.indexOf(field);
+    place.same = identity(field);
+    place.rank = all.slice(0, place.index).filter(function(one) {
+      return identity(one) === place.same;
+    }).length;
   }
   try {
     if (typeof field.selectionStart === "number") place.caret = [field.selectionStart, field.selectionEnd];
@@ -5887,7 +5927,11 @@ function refocus(place) {
     field = document.querySelector("[data-focus='" + place.key + "']");
   } else {
     var box = document.getElementById(place.box);
-    field = box ? box.querySelectorAll(FIELDS)[place.index] || null : null;
+    var all = box ? Array.prototype.slice.call(box.querySelectorAll(FIELDS)) : [];
+    var same = all.filter(function(one) {
+      return identity(one) === place.same;
+    });
+    field = same[place.rank] || same[0] || all[place.index] || null;
   }
   if (!field || field.disabled) return;
   field.focus({ preventScroll: true });
@@ -10798,7 +10842,6 @@ document.addEventListener("keydown", function(event) {
   event.preventDefault();
   setSetup(!setupOn);
   draw();
-  document.querySelector("#outFacts .boardchip").focus();
 });
 var TAB_NAMES = { outPanel: BOARD.output_words.tab };
 BOARD.strips.forEach(function(strip) {
@@ -11360,7 +11403,7 @@ function loadThumbs(sources) {
     waiting++;
     image.onload = image.onerror = function() {
       waiting--;
-      if (!waiting) draw();
+      if (!waiting) drawFromLoad();
     };
     image.src = src;
   });
@@ -11624,7 +11667,7 @@ async function rescanPrograms() {
     if (await ownState(drive.dirHandle) !== ownSeen) {
       setPrograms(await drivePrograms(drive.dirHandle, true));
       forgetMissingPrograms();
-      draw();
+      drawFromLoad();
     }
   } catch (e) {
   }
@@ -11894,7 +11937,7 @@ async function rescanMedia() {
   } catch (e) {
     return;
   }
-  if (driveSaid() !== was) draw();
+  if (driveSaid() !== was) drawFromLoad();
 }
 function adderTile(label, kinds, what, takes) {
   return h(
@@ -12097,8 +12140,8 @@ addStep(connectSteps, CONNECT_ORDER, "driveFiles", async function() {
     await scanNamed(drive.dirHandle, await (await drive.fileHandle.getFile()).text());
   } catch (e) {
   }
-  draw();
-  scanMedia(drive.dirHandle).then(draw, function() {
+  drawFromLoad();
+  scanMedia(drive.dirHandle).then(drawFromLoad, function() {
   });
 });
 setInterval(rescanMedia, 5e3);
@@ -13036,8 +13079,6 @@ function lookCard(isMono, look, on) {
       onclick: function() {
         var run = galleryRun(isMono);
         landLook(run, stretchFor(run, isMono), look.name);
-        var again = document.querySelector("#looks .card[data-look='" + (look.name || "") + "']");
-        if (again) again.focus({ preventScroll: true });
       }
     },
     h("div", { className: "face" }, cells),
@@ -15164,7 +15205,7 @@ function readNextPicture() {
     if (state.art[next.name]) state.art[next.name].gone = true;
   }).then(function() {
     pictureReading = null;
-    draw();
+    drawFromLoad();
     readNextPicture();
   });
 }
@@ -15342,7 +15383,7 @@ function artImage(art) {
   if (loadedArt[art.url]) return loadedArt[art.url].complete ? loadedArt[art.url] : null;
   var image = new Image();
   image.onload = function() {
-    draw();
+    drawFromLoad();
   };
   image.src = art.url;
   loadedArt[art.url] = image;

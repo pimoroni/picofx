@@ -1,6 +1,6 @@
 import {banner} from "../banner.js";
 import {h, replace} from "../dom.js";
-import {DRAW_AFTER, addStep, draw, drawSteps} from "../draw.js";
+import {DRAW_AFTER, addStep, draw, drawFromLoad, drawSteps} from "../draw.js";
 import {nameShown} from "../drive.js";
 import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia
@@ -99,7 +99,6 @@ function soundHead() {
                state.soundVolume = 100;
                state.soundKept = null;
                draw();
-               refocusCard("#sound .soundhead .card");
              }
            }, h("div", {className: "face"}), h("div", {className: "name"}, "Nothing")));
 }
@@ -159,16 +158,9 @@ function soundSilenceCard() {
       state.soundVolume = 100;
       state.soundOff = true;
       draw();
-      refocusCard("#sound .offhead .card");
     }
   }, h("div", {className: "face silenceface"}, soundOutline(silentBars())),
      h("div", {className: "name"}, "Silence"));
-}
-
-// Keep the keyboard on a card the draw has made afresh, found by selector=
-function refocusCard(selector) {
-  var again = document.querySelector(selector);
-  if (again) again.focus({preventScroll: true});
 }
 
 // The volume the board plays the sound at, a percentage in steps of five
@@ -381,7 +373,7 @@ async function profileSound(name, handle) {
       bars.push(peak);
     }
     state.soundInfo[name] = {seconds: Math.max(1, Math.round(dataSize / byteRate)), bars: bars};
-    draw();
+    drawFromLoad();
   } catch (e) {
     state.soundInfo[name] = null;
   }

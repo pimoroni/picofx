@@ -4,7 +4,7 @@ import {
   PROGRAMS, boardSet, programNamed, programsElsewhere, setPrograms
 } from "../board_settings.js";
 import {h} from "../dom.js";
-import {DRAW_AFTER, addStep, draw, drawSteps} from "../draw.js";
+import {DRAW_AFTER, addStep, draw, drawFromLoad, drawSteps} from "../draw.js";
 import {drive, driveTrouble, nameShown} from "../drive.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../drive_files.js";
 import {
@@ -72,7 +72,7 @@ export function discoverSay(kind, text, warn) {
   setTimeout(function () {
     if (discover[kind].notice !== notice) return;
     discover[kind].notice = null;
-    draw();
+    drawFromLoad();
   }, DISCOVER_NOTICE_MS);
 }
 
@@ -231,7 +231,7 @@ async function discoverCheck(kind, quiet) {
     for (var at = 0; at < files.length; at++) {
       discover.files[files[at].path] = await discoverFileState(files[at], find);
       reading[0] = at + 1;
-      if (at % 20 === 19) draw();
+      if (at % 20 === 19) drawFromLoad();
     }
     Object.keys(discover.movedTo).forEach(function (old) {
       var moved = discoverEntry(discover.movedTo[old]);

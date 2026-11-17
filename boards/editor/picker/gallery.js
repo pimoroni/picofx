@@ -41,9 +41,6 @@ function lookCard(isMono, look, on) {
     onclick: function () {
       var run = galleryRun(isMono);
       landLook(run, stretchFor(run, isMono), look.name);
-      // The draw has made the cards afresh, so the keyboard stays on this look's new card
-      var again = document.querySelector("#looks .card[data-look='" + (look.name || "") + "']");
-      if (again) again.focus({preventScroll: true});
     }
   }, h("div", {className: "face"}, cells),
      h("div", {className: "name"}, look.name || "Nothing"),

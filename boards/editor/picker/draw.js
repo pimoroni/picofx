@@ -47,8 +47,26 @@ export function holdDrawing(on) {
   drawHeld = on;
 }
 
+// Whether a load has a draw waiting for a dropdown to be left
+var drawOwed = false;
+
+// Draw for something that finished loading, or where a dropdown has the focus, once it is left.
+// A draw makes the dropdown afresh, which shuts its list while it is open
+export function drawFromLoad() {
+  var focused = document.activeElement;
+  if (!focused || !focused.matches("select")) {
+    draw();
+    return;
+  }
+  if (drawOwed) return;
+  drawOwed = true;
+  focused.addEventListener("blur", function () { if (drawOwed) draw(); }, {once: true});
+}
+
 export function draw() {
   if (drawHeld) return;
+  // Any draw takes in what a load was waiting to show
+  drawOwed = false;
   // A draw empties and refills much of the page, and reads its layout part way through, and a
   // browser may move the scroll to hold something in view while it is half drawn, seen in Chrome
   // as a jump of the whole page when a tab was chosen. So the page ends a draw scrolled where it
@@ -65,23 +83,41 @@ export function draw() {
   if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
 }
 
-// The fields a draw gives focus back to, those typed in or chosen from, so a pressed button is left
-// as the browser leaves it
-var FIELDS = "input, select, textarea";
+// What a draw gives focus back to, the fields typed in or chosen from and the controls pressed.
+// Nearly every press draws, which would otherwise leave the keyboard at the top of the page
+var FIELDS = "input, select, textarea, button, [role=button], [role=tab]";
 
-// Where the focused field is, as {field, key, box, index, caret}, or null where none is. A draw
-// makes most fields afresh, and a load that ends while someone types draws too, as each of the
-// drive's pictures does once read. The field is found again by its data-focus, or by its place
-// among the fields of the nearest box with an id
+// What says which control an element is, whatever state it shows: its kind, its data- values and
+// its name, label or words
+function identity(element) {
+  var data = Array.prototype.filter.call(element.attributes, function (one) {
+    return one.name.indexOf("data-") === 0 && one.name !== "data-focus";
+  }).map(function (one) { return one.name + "=" + one.value; });
+  return [element.tagName, element.getAttribute("role") || "", element.name || "",
+          element.getAttribute("aria-label") || element.textContent.trim().slice(0, 60)]
+    .concat(data).join("|");
+}
+
+// Where the focused field or control is, as {field, key, box, index, same, rank, caret}, or null
+// where none is. A draw makes most of them afresh, and a load that ends while someone types draws
+// too, as each of the drive's pictures does once read. One is found again by its data-focus, or
+// else in the nearest box with an id, by its identity() and how many before it share that, or by
+// its place among the box's fields where a press has changed what it says
 function focusPlace() {
   var field = document.activeElement;
   if (!field || field === document.body || !field.matches(FIELDS)) return null;
-  var place = {field: field, key: field.dataset.focus || null, box: null, index: -1, caret: null};
+  var place = {field: field, key: field.dataset.focus || null, box: null, index: -1, same: null,
+               rank: 0, caret: null};
   if (!place.key) {
     var box = field.parentElement ? field.parentElement.closest("[id]") : null;
     if (!box) return null;
+    var all = Array.prototype.slice.call(box.querySelectorAll(FIELDS));
     place.box = box.id;
-    place.index = Array.prototype.indexOf.call(box.querySelectorAll(FIELDS), field);
+    place.index = all.indexOf(field);
+    place.same = identity(field);
+    place.rank = all.slice(0, place.index).filter(function (one) {
+      return identity(one) === place.same;
+    }).length;
   }
   // Only text fields have a caret, and asking another type for one throws
   try {
@@ -101,7 +137,9 @@ function refocus(place) {
     field = document.querySelector("[data-focus='" + place.key + "']");
   } else {
     var box = document.getElementById(place.box);
-    field = box ? box.querySelectorAll(FIELDS)[place.index] || null : null;
+    var all = box ? Array.prototype.slice.call(box.querySelectorAll(FIELDS)) : [];
+    var same = all.filter(function (one) { return identity(one) === place.same; });
+    field = same[place.rank] || same[0] || all[place.index] || null;
   }
   if (!field || field.disabled) return;
   field.focus({preventScroll: true});

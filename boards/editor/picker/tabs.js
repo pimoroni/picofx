@@ -34,15 +34,13 @@ document.addEventListener("click", function (event) {
   draw();
 });
 
-// Enter and Space work the Wiring chip as a click does, and the keyboard stays on the chip the
-// draw has made afresh
+// Enter and Space work the Wiring chip as a click does
 document.addEventListener("keydown", function (event) {
   if (event.key !== "Enter" && event.key !== " ") return;
   if (!event.target.matches || !event.target.matches("#outFacts .boardchip")) return;
   event.preventDefault();
   setSetup(!setupOn);
   draw();
-  document.querySelector("#outFacts .boardchip").focus();
 });
 
 export var TAB_NAMES = {outPanel: BOARD.output_words.tab};

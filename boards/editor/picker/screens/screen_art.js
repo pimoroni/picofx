@@ -1,6 +1,6 @@
 import {WORDS, rgbInk} from "../colours.js";
 import {h, replace} from "../dom.js";
-import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
+import {DRAW_AFTER, DRAW_BEFORE, addStep, drawFromLoad, drawSteps} from "../draw.js";
 import {LED_PANELS} from "../led_sections.js";
 import {capture, state} from "../scenes.js";
 import {
@@ -195,7 +195,7 @@ function readNextPicture() {
     if (state.art[next.name]) state.art[next.name].gone = true;
   }).then(function () {
     pictureReading = null;
-    draw();
+    drawFromLoad();
     readNextPicture();
   });
 }
@@ -421,7 +421,7 @@ var loadedArt = {};
 function artImage(art) {
   if (loadedArt[art.url]) return loadedArt[art.url].complete ? loadedArt[art.url] : null;
   var image = new Image();
-  image.onload = function () { draw(); };
+  image.onload = function () { drawFromLoad(); };
   image.src = art.url;
   loadedArt[art.url] = image;
   return null;

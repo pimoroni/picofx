@@ -1,7 +1,7 @@
 import {banner} from "./banner.js";
 import {screenHooks} from "./board.js";
 import {h} from "./dom.js";
-import {addStep, draw} from "./draw.js";
+import {addStep, draw, drawFromLoad} from "./draw.js";
 import {
   CAN_REACH_A_DRIVE, CONNECT_ORDER, connectSteps, drive, driveTrouble, isHiddenName
 } from "./drive.js";
@@ -198,7 +198,7 @@ async function rescanMedia() {
   } catch (e) {
     return;
   }
-  if (driveSaid() !== was) draw();
+  if (driveSaid() !== was) drawFromLoad();
 }
 
 export function adderTile(label, kinds, what, takes) {
@@ -400,9 +400,9 @@ addStep(connectSteps, CONNECT_ORDER, "driveFiles", async function () {
   } catch (e) {
     // The walk finds them with the rest
   }
-  draw();
+  drawFromLoad();
   // Walked without holding up the steps after, so effects.txt is read back meanwhile
-  scanMedia(drive.dirHandle).then(draw, function () {});
+  scanMedia(drive.dirHandle).then(drawFromLoad, function () {});
 });
 
 setInterval(rescanMedia, 5000);

@@ -2,7 +2,7 @@ import {banner} from "./banner.js";
 import {
   PROGRAMS, boardSet, programNamed, programsReadSteps, programsReadingSteps, setPrograms
 } from "./board_settings.js";
-import {addStep, draw} from "./draw.js";
+import {addStep, draw, drawFromLoad} from "./draw.js";
 import {CONNECT_ORDER, connectSteps, drive, driveTrouble, isHiddenName} from "./drive.js";
 import {BOARD} from "./looks.js";
 
@@ -30,7 +30,7 @@ export function loadThumbs(sources) {
     waiting++;
     image.onload = image.onerror = function () {
       waiting--;
-      if (!waiting) draw();
+      if (!waiting) drawFromLoad();
     };
     image.src = src;
   });
@@ -329,7 +329,7 @@ async function rescanPrograms() {
     if (await ownState(drive.dirHandle) !== ownSeen) {
       setPrograms(await drivePrograms(drive.dirHandle, true));
       forgetMissingPrograms();
-      draw();
+      drawFromLoad();
     }
   } catch (e) {
     // A drive that went away is read again when it is opened
