@@ -337,6 +337,14 @@ export function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
+// The first scene a file's name= reaches, or null. autofx matches names in any case
+export function sceneNamed(name) {
+  var wanted = name.trim().toLowerCase();
+  return state.scenes.filter(function (scene) {
+    return scene.name.trim().toLowerCase() === wanted;
+  })[0] || null;
+}
+
 // What the sensor part says about scenes for what is fitted, filled in by sensor/ where the board
 // has one. canWait says whether something fitted can change scenes, so a scene can wait for it,
 // and without it a waiting scene waits forever. triggerLeads gives the places of the scenes a

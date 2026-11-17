@@ -8570,6 +8570,12 @@ function sceneMarked(mark) {
     return sceneMark(scene) === mark;
   })[0] || null;
 }
+function sceneNamed(name) {
+  var wanted = name.trim().toLowerCase();
+  return state.scenes.filter(function(scene) {
+    return scene.name.trim().toLowerCase() === wanted;
+  })[0] || null;
+}
 var sceneHooks = {
   canWait: function() {
     return false;
@@ -11240,9 +11246,7 @@ function sceneHeading(scene) {
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
   var named2 = after && after !== inOrder ? after.name.trim() || "Scene" : null;
   var read = scene.read;
-  var sameAfter = read && (read.after === named2 || read.after && !scene.then && !state.scenes.some(function(other) {
-    return other.name === read.after;
-  }));
+  var sameAfter = read && (read.after === named2 || read.after && !scene.then && !sceneNamed(read.after));
   if (read && read.written && scene.name === read.name && sceneRestarts(scene) === read.restart && sameAfter && (read.seconds === null ? scene.waits : !scene.waits && scene.seconds === read.seconds)) {
     return read.written;
   }
@@ -13723,9 +13727,7 @@ function absorbFile(text) {
   });
   state.scenes.forEach(function(scene) {
     if (!scene.read.after) return;
-    var named3 = state.scenes.filter(function(other) {
-      return other.name === scene.read.after;
-    })[0];
+    var named3 = sceneNamed(scene.read.after);
     if (named3) scene.then = sceneMark(named3);
     else scene.read.written = scene.read.line;
   });

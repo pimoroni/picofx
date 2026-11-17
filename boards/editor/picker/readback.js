@@ -23,8 +23,8 @@ import {
 } from "./reading.js";
 import {blank, fileHead, outs, runs, settle} from "./runs.js";
 import {
-  BODY_ORDER, apply, blankBody, bodyParts, capture, hasContent, sceneMark, settleLoneScene, slotAt,
-  state
+  BODY_ORDER, apply, blankBody, bodyParts, capture, hasContent, sceneMark, sceneNamed,
+  settleLoneScene, slotAt, state
 } from "./scenes.js";
 import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./strips.js";
 import {NOTHING_PLAYING, currentText} from "./writing.js";
@@ -214,7 +214,7 @@ function absorbFile(text) {
   // leaves its heading as written
   state.scenes.forEach(function (scene) {
     if (!scene.read.after) return;
-    var named = state.scenes.filter(function (other) { return other.name === scene.read.after; })[0];
+    var named = sceneNamed(scene.read.after);
     if (named) scene.then = sceneMark(named);
     else scene.read.written = scene.read.line;
   });

@@ -6,7 +6,8 @@ import {boardTokens, unquoted} from "../reading.js";
 import {BOARD_CHIP_CLASSES} from "../runs.js";
 import {PART_DRAWINGS, REMOTE_COLOURS} from "../scene_tray.js";
 import {
-  BODY_ORDER, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
+  BODY_ORDER, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneNamed, sceneRestarts,
+  state
 } from "../scenes.js";
 import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
@@ -715,7 +716,7 @@ function remoteChoiceRead(button, said) {
   }
   var named = /^scene\s+(.+)$/i.exec(said);
   if (!named) return null;
-  var scene = state.scenes.filter(function (one) { return one.name.trim() === named[1].trim(); })[0];
+  var scene = sceneNamed(named[1]);
   if (!scene) return null;
   if (isNumber(button)) return sceneInOrder(button) === scene ? "order" : null;
   return "scene:" + sceneMark(scene);

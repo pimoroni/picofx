@@ -1,7 +1,9 @@
 import {boardLine} from "./board.js";
 import {HEADER} from "./looks.js";
 import {fileHead, lampLines} from "./runs.js";
-import {apply, bodyParts, sceneAfter, sceneRestarts, slotAt, state, store} from "./scenes.js";
+import {
+  apply, bodyParts, sceneAfter, sceneNamed, sceneRestarts, slotAt, state, store
+} from "./scenes.js";
 
 // ---- what the whole file says now -------------------------------------------------------
 
@@ -28,7 +30,7 @@ function sceneHeading(scene) {
   var read = scene.read;
   // A file's "then" naming no scene keeps the heading as written, while the scene has none
   var sameAfter = read && (read.after === named || (read.after && !scene.then &&
-    !state.scenes.some(function (other) { return other.name === read.after; })));
+    !sceneNamed(read.after)));
   if (read && read.written && scene.name === read.name && sceneRestarts(scene) === read.restart &&
       sameAfter && (read.seconds === null ? scene.waits
                                           : !scene.waits && scene.seconds === read.seconds)) {
