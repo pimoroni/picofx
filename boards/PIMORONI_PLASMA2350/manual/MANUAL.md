@@ -957,6 +957,10 @@ means a more serious one:
 A setting with an invalid value is ignored and noted in `errors.txt`,
 and the effect uses its default instead.
 
+If the FX drive doesn't appear on your computer, double-press **Boot** to show
+it. This can happen on a Mac that was locked when the board was plugged in or
+restarted. The Mac ejects the drive, and it stays hidden after you log in.
+
 A drive that cannot be repaired can be returned to how it shipped by
 installing the board's `-full` firmware from the
 [picofx releases](https://github.com/pimoroni/picofx/releases/latest).
