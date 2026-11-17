@@ -4,7 +4,7 @@ from sensor import IR
 
 from picofx import ColourPlayer
 from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WARM, YELLOW
-from picofx.mono import BlinkFX, NoneFX, PulseFX, RandomFX, StaticFX
+from picofx.mono import BlinkFX, FlashFX, FlickerFX, NoneFX, PulseFX, RandomFX, StaticFX
 
 """
 Play a different effect on each of Mighty FX's outputs, and turn them on and off by
@@ -39,8 +39,8 @@ effects = [
     StaticFX(brightness=0.5),
     BlinkFX(speed=0.5),
     PulseFX(speed=0.5),
-    NoneFX(),
-    NoneFX(),
+    FlashFX(speed=0.5),
+    FlickerFX(),
 ]
 player.effects = effects
 

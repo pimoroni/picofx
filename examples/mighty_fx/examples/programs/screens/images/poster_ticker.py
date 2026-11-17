@@ -43,9 +43,9 @@ canvas.font = font.load(MESSAGE_FONT)
 poster = image(screen.width, screen.height)
 try:
     poster.load_into(POSTER)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{POSTER}' is missing! Check it is on the board") from None
+    raise RuntimeError(f"'{POSTER}' is missing or corrupt! Check it is on the board") from None
 
 canvas.blit(poster, 0, 0)
 
@@ -94,6 +94,6 @@ try:
         canvas.blit(message, x, y)
         screen.update(canvas)
 
-# Turn off the panel and all the outputs
+# Stop any running effects and turn off all the outputs
 finally:
     mighty.shutdown()

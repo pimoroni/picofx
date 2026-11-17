@@ -38,9 +38,9 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 # A single-frame GIF loads as one sprite, drawn through a colour table that rewriting recolours
 try:
     logo = spritesheet.load(LOGO_PATH).sprite(0)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{LOGO_PATH}' is missing! Check it is on the board") from None
+    raise RuntimeError(f"'{LOGO_PATH}' is missing or corrupt! Check it is on the board") from None
 
 palette = logo.palette
 

@@ -8,13 +8,9 @@ from picovector import color, image, mat3, shape
 """
 Spin every built-in shape both filled and outlined.
 
-Each row reads in pairs, a rectangle, a circle, an ellipse, a star, a squircle, a pie, an
-arc, and a triangle as the plainest regular polygon.
-
 A shape is built once at unit size and placed by a transform, whose scale sets its size.
-
-Note that stroke() changes the shape it is called on rather than handing back a copy, so a
-filled shape and its stroked twin are built separately below.
+stroke() changes the shape it is called on rather than handing back a copy, so each filled
+shape and its stroked twin are built separately.
 
 Press "Boot" to exit the program.
 
@@ -24,7 +20,7 @@ Args: Screen size = 2.8, Rotation = 0
 
 # Constants for drawing
 BACKGROUND = color.rgb(10, 12, 16)      # The panel behind the shapes
-ACROSS = 4                              # Cells across the panel, so two shapes to a pair
+ACROSS = 4                              # Cells across the panel, so two pairs to a row
 DOWN = 4                                # And down it
 REACH = 0.34                            # How much of a cell's narrower side a shape takes
 STROKE = 0.14                           # Stroke width, in the shape's own units
@@ -73,7 +69,7 @@ try:
         turned = pacer.elapsed / TURN_MS * 360
         for index, drawing in enumerate(SHAPES):
             # oklch holds every hue at one lightness, so no cell glares or sinks
-            canvas.pen = color.oklch(LIGHTNESS, CHROMA, index * 360 / len(SHAPES))
+            canvas.pen = color.oklch(LIGHTNESS, CHROMA, index * 256 / len(SHAPES))
 
             across = (index % ACROSS + 0.5) * CELL[0]
             down = (index // ACROSS + 0.5) * CELL[1]

@@ -2,7 +2,7 @@ import sys
 
 from mighty_fx import MightyFX, SPCE
 from picovector import color, font, image, shape
-from screens import SCREEN_TYPES, Reserve
+from screens import SCREEN_TYPES
 
 """
 Show the eight ways a picture can be rotated and mirrored on a screen.
@@ -20,7 +20,7 @@ Args: Screen size = 2.8
 """
 
 # Constants
-HOLD = 44                   # Frames each orientation is held for, a little under two seconds
+HOLD = 44                   # Frames each orientation is held for
 LETTER = "F"                # The mark, and the reason it is an F is that it has no symmetry
 LETTER_FILL = 0.62          # How much of the square the drawn letter reaches across
 CAPTION_FACE = font.winds   # The narrowest ROM pixel face, so the caption stays out of the way
@@ -46,10 +46,9 @@ ORDER = tuple((rotation, mirror) for mirror in (False, True)
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens,
-# and the screen on it with a reserve for a source this size
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES)
+screen = ScreenType(mighty.spce_a)
 
 # The mark is a square of the panel's longest side to cover it at every turn, too big for the canvas
 # region. SIDE is the square no turn crops, and END the strip beyond it that comes and goes

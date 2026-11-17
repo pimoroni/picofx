@@ -8,14 +8,14 @@ from picovector import color, font
 """
 Mix evenly spaced hues and pick text colours that stay readable on any background.
 
-The top two strips are the same eight hues through hsv and oklch. hsv lets the lightness wander
+The top two strips are eight evenly spaced hues through hsv and oklch. hsv lets the lightness wander
 so its yellow glares and its blue sinks, where oklch holds it even.
 
 An amount in this module runs 0 to 255 and not 0 to 1, so mix(a, b, 0.5) hands back the first colour
 unchanged where mix(a, b, 128) is the halfway blend.
 
-The screens drive the panel at 12 bit, so a channel has 16 levels in steps of 17. Two colours
-less than a step apart show as one, and a colour picked on a whole step shows as it was written.
+The screens drive the panel at 12 bit, so a channel has 16 levels in steps of 17. A colour picked
+on a whole step shows as it was written, and two colours less than a step apart can show as one.
 
 Press "Boot" to exit the program.
 
@@ -56,8 +56,8 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 canvas = screen.canvas()
 canvas.font = LABEL_FACE
 
-# A panel under 320 tall, a 1.54" or a 2.8" on its side, is too short for every row, so it leaves out
-# tones, ramp stepping through colours too, and its strips are a little shallower
+# A panel under 320 tall, a 1.54" or a 2.8" on its side, has no room for every row, so it leaves out
+# the tones row and draws its strips a little shallower
 EVERY_ROW = canvas.height >= 320
 STRIP_H = STRIP if EVERY_ROW else STRIP - 6
 
@@ -88,12 +88,12 @@ try:
 
     # Draw a heading per colour call and a row of what it returns, each pair moving the next down the panel
 
-    # hsv() takes a hue of 0 to 255, where oklch below takes degrees
+    # hsv() and oklch() both take a hue of 0 to 255 for a full turn
     down = heading("hsv: even numbers, wandering lightness", MARGIN)
     down = strip([color.hsv(index * 256 // HUES, 255, 255) for index in range(HUES)], down)
 
-    down = heading("oklch: even lightness, same hues", down)
-    down = strip([color.oklch(LIGHTNESS, CHROMA, index * 360 / HUES) for index in range(HUES)],
+    down = heading("oklch: even lightness, even hues", down)
+    down = strip([color.oklch(LIGHTNESS, CHROMA, index * 256 / HUES) for index in range(HUES)],
                  down)
 
     # harmony() hands back the base first, so the complement's copy of it is dropped
