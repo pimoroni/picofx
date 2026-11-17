@@ -231,6 +231,7 @@ function stripEdge(run, at, where) {
     className: "edge", title: "drag to move this cut, or click to remove it",
     onmousedown: function (e) {
       e.preventDefault();
+      remember(run);
       // The bar is rebuilt on every move, so what is held onto is where the bar lives and not the
       // bar itself, which would be a node already thrown away
       setHolding({run: run, which: at, where: where, had: run.sections.length});

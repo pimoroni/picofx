@@ -10379,6 +10379,7 @@ function stripEdge(run, at, where) {
       title: "drag to move this cut, or click to remove it",
       onmousedown: function(e) {
         e.preventDefault();
+        remember(run);
         setHolding({ run, which: at, where, had: run.sections.length });
         edge.classList.add("holding");
       }
