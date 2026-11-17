@@ -1,6 +1,5 @@
 // ---- building elements ----------------------------------------------------------------------
-// The element builder the parts make their markup with, so a piece of the page reads as the tree
-// it makes.
+// The element builder the parts make their markup with, so the code reads as the tree it makes.
 
 // Make an element, "svg:" before the tag for one in the SVG namespace, with its properties and
 // children. A property named on... is set as the element's handler, as onclick, so code that clears
@@ -27,7 +26,7 @@ export function h(tag, props, ...children) {
   return element;
 }
 
-// Whether a key is a property of the element that can be set, as disabled or value are
+// Whether a key is set as a property, as disabled or value are, which on an SVG element none is
 function settable(element, key) {
   if (element instanceof SVGElement || !(key in element) || typeof element[key] === "function") return false;
   for (var holder = element; holder; holder = Object.getPrototypeOf(holder)) {

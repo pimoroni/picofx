@@ -2,10 +2,9 @@ import {SWATCHES, wordFor} from "./colours.js";
 
 // ---- blinking through several colours -----------------------------------------------------
 // Blink takes one colour or several. With several it blinks through them in turn, one a beat,
-// which is picofx's rgb_blink. The list is the stretch's blinks, {colours, at}, where at is the
-// one the picker above is changing. A stretch with no list has the one colour it always had.
-// A list is written with the words and hexes at full and the stretch's brightness as level=,
-// since rgb_blink takes one level for all of them.
+// which is picofx's rgb_blink. The list is the stretch's blinks, {colours, at}, where `at` is the
+// one the colour picker is changing. A list is written with the words and hexes at full and the
+// stretch's brightness as level=, since rgb_blink takes one level for all of them.
 
 // The swatches a stretch offers. A blink through several colours offers black too, as a turn
 // with the light off

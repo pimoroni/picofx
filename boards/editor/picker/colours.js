@@ -46,6 +46,7 @@ export function hexRgb(hex) {
           parseInt(hex.slice(5, 7), 16)];
 }
 
+// The lamps out of wired order, which are those not on every longest run of lamps in wired order
 export function astrayOf(side) {
   var wired = side.order.map(function (lamp) { return side.wiring.indexOf(lamp); });
   var count = wired.length;
@@ -78,10 +79,7 @@ export function astrayOf(side) {
 }
 
 // ---- choosing a colour ---------------------------------------------------------------------
-// Under the stretch it is for, twelve swatches and a custom one that opens a hue and
-// saturation field with a hex box beside it. The field holds no brightness, and the hex box
-// shows and sets the colour at the stretch's brightness. A swatch is written as its word, since
-// every one is a word autofx names, and the field writes hex.
+// The colour words autofx names, the swatches made of them and the field's hue and saturation.
 
 // The words the file names and their values, which are picofx's own. A swatch is drawn in
 // its true value, since the round trip from a written word to a swatch is the point of them
@@ -110,10 +108,11 @@ export function fieldColour(hue, sat) {
   return hueRgb(hue).map(function (v) { return Math.round(v + (255 - v) * (1 - sat)); });
 }
 
-// A second setting that is a count, such as Emergency's flashes, stops only at its values,
-// with a tick at each while there are few enough to tell apart
+// The most ticks a slider shows, past which they are too close to tell apart
 var MOST_TICKS = 16;
 
+// Make a second setting that is a count, such as Emergency's flashes, stop only at its values,
+// with a tick at each while there are no more than MOST_TICKS
 export function detented(box, where, count) {
   var range = box.querySelector("input[data-focus='" + where + "-mood']");
   if (!range || count < 2) return;
@@ -126,10 +125,10 @@ export function detented(box, where, count) {
 }
 
 // ---- how bright a stretch is -------------------------------------------------------------
-// Every look has a brightness, the first slider in the list, written only below full. A look
-// given a custom colour writes it in that colour's hex, dimmed, as a screen's background is.
-// Any other, a swatch's word included, writes it as the stretch's level=, which scales
-// whatever the look plays
+// Every look has a brightness, the first slider in the list, written only below full. A custom
+// colour carries it in its hex, as lines.js writes it
+
+// The lowest brightness the slider and the hex box set
 export var FAINTEST = 0.05;
 
 export function atBrightness(hex, level) {

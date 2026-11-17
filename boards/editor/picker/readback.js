@@ -31,9 +31,9 @@ import {NOTHING_PLAYING, currentText} from "./writing.js";
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
-// own settings or kept word for word in its scene, so a file comes back without loss. This first
-// step reads the board line and the scenes, and keeps every entry. The steps after it read
-// screens, sound and the lights out of the kept lines.
+// own settings or kept word for word in its scene, so a file comes back without loss. This part
+// reads the board line, the scenes and the lights. The parts with a share of a scene, such as
+// the screens and sound, first read theirs out of the kept lines.
 
 // The lines this page writes of its own accord, which a file read back does not keep
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat([NOTHING_PLAYING]);
@@ -44,8 +44,7 @@ var notesNow = {};
 
 // A scene heading, as autofx reads one. Where a word is neither a time nor restart, the heading
 // is kept as written, since writing it again would lose it. "then" ends the settings, and the
-// rest of the heading after it is the name of the scene after, whatever words it holds, so a
-// scene called "then" or "restart" can be named there
+// rest of the heading names the scene after, so a scene called "then" or "restart" can follow it
 function readHeading(line) {
   var inner = line.slice(1, -1);
   var colon = inner.indexOf(":");
@@ -76,8 +75,8 @@ function readHeading(line) {
 }
 
 // The file in parts, as the board line's tokens and the comments above it, then each scene's
-// kept entries, the always-on section first. A line with no colon after an entry carries it
-// on, as autofx reads one, and a comment goes with the entry or heading below it
+// kept entries, Always on's first. A line with no colon after an entry carries it on, as autofx
+// reads one, and a comment goes with the entry or heading below it
 function readEffects(text) {
   var parsed = {tokens: [], comments: [], slots: [{heading: null, comments: [], kept: []}]};
   var comments = [];
@@ -131,9 +130,9 @@ function readEffects(text) {
   return parsed;
 }
 
-// The program a file runs, opening the program tab with it chosen, where the page knows the
-// program and writes its arguments back as the file has them. Otherwise both stay on the board
-// line as written, and the page opens on the effects. A file running no program changes no tab
+// Read the program a file runs. Where the page knows it and writes its arguments back as the file
+// has them, the program tab opens with it chosen. Otherwise both stay on the board line as
+// written, and the page opens on the effects. A file running no program changes no tab
 function readProgram(named, argued) {
   boardSet.program = null;
   if (!named) {
@@ -313,8 +312,8 @@ function orderSaid(said) {
 }
 
 // Where a file has no wiring comment, a line naming whole outputs out of number order can only have
-// been written for lamps wired that way. So the always-on lines, then each scene's, say the order
-// in the order they name them, and the outputs they leave out follow in number order
+// been written for lamps wired that way. So Always on's lines, then each scene's, give the order
+// they name them in, and the outputs they leave out follow in number order
 function orderImplied(bodies) {
   var named = [];
   var needed = false;
@@ -327,7 +326,7 @@ function orderImplied(bodies) {
       })) return;
       var outputs = places.map(function (place) { return place.out + 1; });
       // A look that deals its lights out names gapped sets such as 1,4,7, which say nothing of the
-      // wiring, so a list counts if it has no gaps or runs both up and down. Only the second needs it
+      // wiring. A list counts with no gaps or running both ways, and only the second needs an order
       var steps = outputs.slice(1).map(function (out, at) { return out - outputs[at]; });
       if (steps.some(function (step) { return Math.abs(step) !== 1; }) &&
           !(steps.some(function (step) { return step > 0; }) &&
@@ -394,9 +393,9 @@ function stretchWriting(run, texts, span) {
   return null;
 }
 
-// Rounded values let several places on a slider write the same lines, such as Campfire's speed at
-// 0.44 and 0.45. Each slider moves to the roundest of those places, as a person sets a slider, so a
-// save reads back at the place it was saved at
+// Move each slider to the roundest of the places that write the same lines, as a person sets a
+// slider, so a save reads back where it was saved. Several places can write them once values are
+// rounded, such as Campfire's speed at 0.44 and 0.45
 function roundSliders(run, section, look, texts) {
   function roundness(step) {
     return step % 20 === 0 ? 3 : step % 10 === 0 ? 2 : step % 2 === 0 ? 1 : 0;
@@ -438,8 +437,7 @@ function sameLines(written, texts) {
   });
 }
 
-// Whether lines differ only in their values, which a slider placed more finely may close, as a
-// palette's colours are closed by its slider
+// Whether lines differ only in their values, which a slider placed more finely may close
 function sameShape(written, texts) {
   function shape(line) { return line.replace(/=[^\s:]+/g, "=#"); }
   return written.length === texts.length && written.every(function (line, at) {
@@ -447,9 +445,8 @@ function sameShape(written, texts) {
   });
 }
 
-// A slider moving two settings rounds each its own way, so the place its figure gives can leave
-// the other a step out. Each slider in turn is looked along its whole reach for a place where
-// every line matches
+// Look along each slider's whole reach for a place where every line matches. A slider that moves
+// two settings rounds each its own way, so the place one gives can leave the other a step out
 function refineSliders(run, section, look, texts) {
   var sliders = ["pace", "mood"];
   for (var pass = 0; pass < 2; pass++) {
@@ -469,8 +466,8 @@ function refineSliders(run, section, look, texts) {
   return false;
 }
 
-// Each slider set to the place that writes the lines' value for the setting it moves, a value
-// past its reach held as typed
+// Set each slider to the place that writes the lines' value for the setting it moves. A value no
+// place writes exactly is held as typed
 function solveSliders(run, section, look, texts) {
   ["pace", "mood"].forEach(function (slider) {
     var key = figureKey(run, section, look, slider);
@@ -487,10 +484,10 @@ function solveSliders(run, section, look, texts) {
   });
 }
 
-// The groups of kept lines from one place that could be one stretch, as consecutive lines naming
-// one run's lights, together an unbroken run with no light named twice, clear of the stretches
-// already read. The most lines first, so a look that deals its lights out over several lines, or
-// writes its spare ones as none, is read whole rather than as its first line alone
+// The groups of kept lines starting at kept line `at` that could be one stretch, as consecutive
+// lines naming one run's lights, together an unbroken span with no light named twice and clear of
+// the stretches already read. The most lines come first, so a look that deals its lights out over
+// several lines or writes its spare ones as none is read whole rather than as its first line alone
 function groupsFrom(at, read) {
   var found = [];
   runs.forEach(function (run) {
@@ -552,7 +549,7 @@ function readLights(bodies) {
 
   bodies.forEach(function (body) {
     apply(body);
-    // The wiring the page said, else the one the lines imply, else number order
+    // Check if the page said the wiring. Otherwise the lines imply it, or it is number order
     if (said) {
       setLayout(wiring.map(function (one, out) {
         return {broken: said.some(function (place) {
@@ -658,8 +655,8 @@ function heldOfToken(token) {
 
 // The board line's tokens this page does not hold, after its own
 addStep(boardLineSteps.after, BOARD_LINE_AFTER, "readback", function (line) {
-  // A strip or screen whose setting the page writes itself leaves out any kept for it, which
-  // coming later would be the one the board takes
+  // Leave out a kept token for a strip or screen whose setting the page writes itself, since the
+  // later token would be the one the board takes
   var lower = (line || "").toLowerCase();
   var kept = boardResidue.filter(function (token) {
     var name = heldOfToken(token);
@@ -774,7 +771,7 @@ addStep(connectSteps, CONNECT_ORDER, "readback", async function () {
   rememberRead(text);
 });
 
-// Read or passed over by choice, the file is this page's to save over without asking again
+// Remember the file, read or passed over by choice, as this page's to save over without asking
 function rememberRead(text) {
   try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
 }

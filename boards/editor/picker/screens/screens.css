@@ -69,8 +69,7 @@ body.setupall .lightrow {
   color: var(--dim);
 }
 
-/* Where the sections have the room, as the hub's strip has, placement and playback are two
-   equal halves with a line between */
+/* The settings' own width decides when placement and playback stand side by side */
 .looksettings {
   container-type: inline-size;
 }

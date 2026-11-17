@@ -14,8 +14,7 @@ import {ASSET_ORDER, assetSteps, drawingSaid, mediaNamed} from "../../screens/sc
 // ---- examples to discover, on the Screens tab ---------------------------------------------------
 // The Screens tab's examples line, where its example drawings and pictures start, and the rules
 // naming each kind where the drive has both. An example on the drive can be deleted, as it can be
-// downloaded again, and carries its mark, Update or the firmware it needs. discover.js does
-// the rest. build_editor.py takes this folder only for a board with screens.
+// downloaded again, and carries its Update or Needs mark. discover.js does the rest.
 
 addStep(assetSteps, ASSET_ORDER, "discover", function () {
   var box = document.getElementById("assets");

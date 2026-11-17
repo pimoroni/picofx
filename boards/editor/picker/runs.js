@@ -18,8 +18,8 @@ export var outs = Run("out", false);
 export var mono = Run("mono", true);
 export var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 
-// The one stretch being worked on, which is the run it is in and its place in that run.
-// One set of looks can only be for one stretch, so the other run shows no mark at all
+// The run holding the one stretch being worked on, which is that run's picked stretch. One set
+// of looks can only be for one stretch, so the other run shows no mark at all
 export var active = MONO_FIRST ? mono : outs;
 
 // Make a run the one worked on
@@ -27,8 +27,8 @@ export function activate(run) {
   active = run;
 }
 
-// Which kind of lamp the one set of looks is drawn for. It follows whatever was last
-// pointed at, so the cards are always the ones for the lights being worked on
+// Whether the one set of looks is drawn for mono lamps. It follows whatever was last pointed at,
+// so the cards are always the ones for the lights being worked on
 export var showing = MONO_FIRST;
 for (var m = 0; m < OUTS; m++) setLayout(wiring, order.concat(placesOf(m)));
 
@@ -100,9 +100,9 @@ function whatEachHolds(run) {
   });
 }
 
-// Lamps no stretch claims become one of their own, which is what an output's three
-// channels are the moment it is broken out. A stretch they land inside becomes two, so
-// every other lamp keeps what it was playing
+// Put a run's stretches back on the lamps they held. Lamps no stretch claims become one of their
+// own, as an output's three channels are when it is broken out, and a stretch they land inside
+// becomes two, so every other lamp keeps what it was playing
 function putStretchesBack(run, was) {
   var mine = {};
   was.forEach(function (one, which) {
@@ -138,8 +138,8 @@ export function acrossWiring(change) {
   settle();
 }
 
-// A cut is one run's step. A change to the wiring is every run's, since each holds lamps
-// that moved, so the snapshots it takes share a mark and are stepped over together
+// A cut is one run's step. A change to the wiring is every run's, since each holds lamps that
+// moved, so its snapshots take marks next to each other and are stepped over together
 var thisStep = 0;
 
 export function remember(run) {
@@ -186,8 +186,8 @@ export function stepOn(run) {
   draw();
 }
 
-// Every lamp is in exactly one section, and no section spans a colour lamp and a mono
-// one. They do not play the same looks, so a stretch over both could not be given one
+// Fit the runs' stretches to their lamps again, so every lamp is in exactly one stretch and no
+// stretch spans a colour lamp and a mono one, which do not play the same looks
 export function settle() {
   runs.forEach(function (run) {
     run.lamps = lampsFor(run);
@@ -250,9 +250,8 @@ export function settle() {
   });
 }
 
-// The one stretch being worked on. Everything that changes it comes through here, so
-// the mark, the tools and the set of looks can never end up about different things.
-// Setting up the board gives no stretch a look, so nothing is picked while it is on
+// Make a stretch the one being worked on, so the mark, the tools and the set of looks are about
+// the same thing. Setting up the board gives no stretch a look, so nothing is picked while it is on
 export function pick(run, at) {
   if (setupOn) return;
   active = run;
@@ -321,8 +320,7 @@ export function joinAll(run) {
 }
 
 // ---- the wiring itself -------------------------------------------------------------------
-// One output broken out or put back, in the scene on show. The board part does it to every
-// scene, and the wiring part slides the lamps to their new places
+// One output broken out or put back, in the scene on show
 
 export function breakOutWiring(out) {
   if (wiring[out].broken) return;
@@ -340,9 +338,8 @@ export function breakOutWiring(out) {
   draw();
 }
 
-// Breaking out and putting back are done to one output, and what is done next is nearly
-// always to its lamps, so the mark and the set of looks go to the stretch holding them.
-// While the board is set up the output is held, and picked once setting up ends
+// Pick the stretch holding an output's lamps, since what follows breaking it out or putting it
+// back is nearly always done to them. During setup the output is held, and picked once setup ends
 export function pickOutput(out) {
   if (setupOn) {
     heldOutput = out;
@@ -453,10 +450,10 @@ document.addEventListener("mouseup", function () {
   draw();
 });
 
-// A look given to a stretch. A line kept as written that already plays some of its lights is
-// asked about first, since the board refuses a light set twice. Agreed, the kept lines go, and
-// declined, nothing changes. A strip not fitted takes no look, and a new look starts in its own
-// colour with its second setting afresh
+// Give a look to a stretch. A line kept as written that already plays some of its lights is
+// asked about first, since the board reports a light set twice. The kept lines go if the change is
+// agreed, and nothing changes if not. A strip not fitted takes no look, and a new look starts in
+// its own colour with its second setting afresh
 export function landLook(run, at, name) {
   var section = run.sections[at];
   if (section && name) {
@@ -526,7 +523,7 @@ export function stretchFor(run, isMono) {
   return run.picked;
 }
 
-// Draw the set of looks for mono lamps or for colour ones
+// Set whether the set of looks is drawn for mono lamps
 export function setShowing(isMono) {
   showing = isMono;
 }
@@ -536,32 +533,32 @@ export function setShowing(isMono) {
 export var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
 export var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
 
+// ---- the step back and step on icons ------------------------------------------------------
+
 export var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
            "<path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";
 export var ON = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/>" +
          "<path d='M13.5 8 H6.5 A4 4 0 0 0 6.5 15'/>";
 
-// The chosen stretch's panel. The parts below add to whatever it drew, each after the one before
+// Later parts' steps for the chosen stretch's panel, each drawn after the one before
 export var chosenSteps = [];
 
 // ---- the chosen stretch's panel, pointing at its stretch -------------------------------------
 
-// How far the point stays from the panel's corners, and the least of a stretch it points at
+// Pixels the point stays from the panel's corners, and the least of a stretch it points at
 export var NOTCH_INSET = 14;
 
 settle();
 
-// What the parts below write above the scenes, lines straight under the file's header and then,
-// after a blank line, lines above the board line. Each is a list of functions giving lines
+// What later parts write above the scenes, each a list of functions giving lines. The lines of
+// `under` go straight under the file's header and those of `above` after a blank line
 export var fileHead = {under: [], above: []};
 
-// The board opens as it ships, every colour output one colour lamp, each side whole and playing
-// the look the board's description opens it with. The strips play nothing, since what is wired
-// to them is unknown
+// The look the colour side opens playing, from the board's description. Every colour output opens
+// as one colour lamp, and the strips play nothing since what is wired to them is unknown
 export var OPENING_LOOK = BOARD.opening.colour;
 
-// Every lamp of a stretch cycling through the same hue together, picofx's rainbow, which
-// Rainbow plays only on a single lamp. It sits beside Rainbow in the gallery
+// Every lamp cycling through the hues together, picofx's rainbow, which Rainbow plays on one lamp
 LOOKS.splice(LOOKS.indexOf(lookNamed("Rainbow")) + 1, 0, {
   name: "Colour cycle", mood: "Saturation", spans: true, onMono: false,
   strip: ["#e33", "#ea3", "#3a5", "#3cc", "#36c", "#a3c", "#e33"],
@@ -599,9 +596,7 @@ export var setupOn = false;
 // The panels that hold a board fact, and the colour each one's box takes
 export var BOARD_CHIP_CLASSES = {outPanel: "outs"};
 
-// Whether the board facts in this panel can be changed just now. Every board setting is changed
-// where it is shown, and only the outputs' wiring waits for its own view, where lights are
-// dragged into place
+// Whether this panel's board facts can be changed now. The wiring changes only in its own view
 export function canEdit(panel) { return panel === "outPanel" ? setupOn : true; }
 
 // ---- selection waits while the board is set up ------------------------------------------------
@@ -636,14 +631,13 @@ export function setSetupMode(on) {
   }
 }
 
-// A strip's stretch is picked through the runs' pick(), which makes the strip the run being
-// worked on, so only one stretch on the page is ever marked
+// Whether a stretch is the one being worked on. A strip's stretch is picked through pick() too,
+// so only one stretch on the page is ever marked
 export function isPicked(run, at) { return run === active && run.picked === at; }
 
 // ---- what a stretch plays, carried through the tools -----------------------------------------
 // Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
-// splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
-// stretch playing nothing
+// joinAll() starts from one stretch playing nothing
 export function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,

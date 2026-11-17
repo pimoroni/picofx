@@ -10,16 +10,16 @@ import {BOARD} from "./looks.js";
 import {apply, driveParts, slotAt, state, store} from "./scenes.js";
 
 // ---- the drive's files ---------------------------------------------------------------------------
-// The files on the FX drive. A walk of the drive finds each part's own files, and files are added
-// to it from this computer and deleted from it.
+// This part keeps track of the files on the FX drive. A walk of the drive finds each part's own
+// files, and the page copies files onto the drive from this computer and deletes them from it.
 
 state.fileHandle = null;
 state.scanned = false;
 
 var scanBusy = false;
 
-// The folders a picture, a drawing and a sound are kept in, each added file going into its own.
-// The top of the drive is read too, so a file dropped there still plays
+// The folders a picture, a drawing and a sound are kept in. An added file goes into its kind's
+// folder, and the top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
 // The folders of examples the walk reads, under examples/ on a board that carries them. Each file
@@ -28,9 +28,7 @@ var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 
 // Each example folder's sections, as [name, what it holds, members, whether it starts folded], in
 // its sections.txt's order. A drawing joins a section with a Section: line, as a program does, and
-// a drawing section starts folded where sections.txt marks it so. A picture or a sound is a member
-// by path, a file or a slideshow's folder, or folder/* for each file in that folder on its own,
-// and its section starts folded
+// a section of pictures or sounds always starts folded
 export var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
@@ -64,8 +62,7 @@ export var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pi
 // groups keep theirs here too, under names that begin "looks"
 export var groupsOpen = {};
 
-// Whether a group, as [name, what it holds, files, whether it starts folded], is open, each
-// starting as its folder's sections say
+// Whether a group is open, which is as its folder's sections say until it is folded or opened
 export function groupOpen(group) {
   return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
 }
@@ -109,8 +106,8 @@ function mediaFolderFor(name) {
 }
 
 export async function scanMedia(dir) {
-  // One walk at a time, built aside and landed whole, so a redraw mid-scan never sees half a
-  // drive and two walks can never lace their findings together
+  // Check if a walk is under way. One runs at a time, built aside and landed whole, so a redraw
+  // mid-scan never sees half a drive and two walks never mix their findings
   if (scanBusy) return;
   scanBusy = true;
   driveParts.forEach(function (part) { if (part.begin) part.begin(); });
@@ -132,7 +129,8 @@ export async function scanMedia(dir) {
     for await (var pair of folder.entries()) {
       var name = pair[0], handle = pair[1];
       if (isHiddenName(name)) continue;
-      // A name in a media folder and at the top is the folder's, read first
+      // Check if a media folder, read first, already has the name, or it is one of the drive's own
+      // folders at the top
       if (name in homes || (top && handle.kind !== "file" && kept.indexOf(name) >= 0)) continue;
       if (await taken(name, handle)) homes[name] = folder;
     }
@@ -222,7 +220,7 @@ export function binButton(name, kind) {
   }, "\u00d7");
 }
 
-// A count of files of one kind, its word taken from the plural what=, such as "1 sound"
+// A count of files of one kind such as "1 sound", from the plural what=
 function filesCounted(count, what) {
   return count + " " + (count === 1 ? what.replace(/s$/, "") : what);
 }
@@ -350,10 +348,10 @@ async function entryIn(folder, name) {
   }
 }
 
-// The files effects.txt names, found ahead of the walk so what the screens and the speaker show is
+// Find the files effects.txt names ahead of the walk, so what the screens and the speaker show is
 // there while the rest of the drive is read. Each is looked for as autofx looks, in its kind's
 // folder and then at the top of the drive, or by its path from the top. A drawing's thumbnail comes
-// with it. The walk lands everything afterwards
+// with it, and the walk lands everything afterwards
 async function scanNamed(dir, text) {
   var names = [];
   var named = /\b(?:file|folder)=(?:"([^"]+)"|(\S+))/g;

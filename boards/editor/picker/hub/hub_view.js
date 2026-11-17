@@ -46,7 +46,7 @@ function takePlaceOff(place) {
 function placeTile(place) {
   var picked = place === placePicked && placeThere(place);
   var name = h("b", {className: "placename"}, place);
-  // An empty position offers a panel, at the size it last had
+  // Check if the position is empty. It offers a panel, at the size it last had
   if (!state.hub.sizes[place]) {
     var add = boardButton("add a panel");
     add.onclick = function (event) {
@@ -99,7 +99,7 @@ function placeTile(place) {
 }
 
 // The picked position's settings, the same sections a screen has. What each position shows is
-// said under its module, and the position being set is the one filled, so the strip says neither
+// said under its module, and the position being set is the one filled, so the settings say neither
 function placeSettings() {
   if (!placeThere(placePicked)) return h("div", {className: "hubsettings"});
   var held = state.places[placePicked];
@@ -146,7 +146,6 @@ function hubPace() {
 function renderHubHead() {
   var box = document.getElementById("screensHead");
   box.classList.add("hubbed");
-  // The hub is drawn for its screens through A, but may be wired the other way round
   var port = h("select", {
     className: "inband", name: "hubPort", "aria-label": "Hub wiring",
     title: "Which connectors the hub's SPI and Selects are plugged into, as labelled on the hub",

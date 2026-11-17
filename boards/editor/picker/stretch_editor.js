@@ -21,17 +21,14 @@ import {barCells, splitTools, washFor} from "./stretch_bar.js";
 import {SETTING_ICONS, SIGNAL_INK, SIGNAL_STATES, SIGNAL_TINT, customColours} from "./strips.js";
 
 // ---- the stretch editor -------------------------------------------------------------------------
-// The chosen stretch's colour picker, a signal's states and a palette's colours, and the boxes its
-// figures are typed in.
+// The chosen stretch's colour picker, a signal's states, a palette's colours and its figure boxes.
 
-// The picker is the one a screen's background has. It is one row of swatches spanning the
-// stretch's width, named under them when there is room, and the custom field under the row
-// with the hex beside it over the colour itself
+// Draw the colour picker, a row of swatches across the stretch, named under them where there is
+// room, then the custom field, and beside it the hex over the colour itself
 function renderColourPick(box, run) {
   var section = run.sections[run.picked];
-  // Every draw settles the model and settling makes the stretches afresh, so a handler
-  // that kept the stretch it was made with would write onto one the run no longer holds.
-  // Each reaches the live one through the run when it fires
+  // Settling the model makes the stretches afresh, so a handler that kept the stretch it was made
+  // with would write onto one the run no longer holds. Each reaches the live one through the run
   function live() { return run.sections[run.picked]; }
   var remembered = run.id + ":" + section.from;
   var offered = swatchesFor(run, section);
@@ -40,8 +37,8 @@ function renderColourPick(box, run) {
     return hexOf(WORDS[name]) === chosenHex;
   })[0] || null;
   var open = section.custom || !chosenWord;
-  // The custom swatch's middle is the custom colour at its own brightness, kept while a swatch is
-  // chosen, and empty until there is one
+  // Check if custom is the choice, and keep its colour at its own brightness for the custom
+  // swatch's middle, which stays while a named swatch is chosen and is empty until there is one
   if (open) {
     customColours[remembered] = {colour: section.colour || "#ffffff",
                                  level: section.level === undefined ? 1 : section.level};
@@ -85,8 +82,8 @@ function renderColourPick(box, run) {
                                               background: rgbInk(fieldColour(parts.hue, parts.sat))}});
   var field = h("div", {className: "field"}, at);
 
-  // Held down and dragged. Only the mark and the box move while the pointer is down, so
-  // the field is never rebuilt under it
+  // Held down and dragged. Only the mark, the hex and the colour beside it change while the pointer
+  // is down, so the field is never rebuilt under it
   function pointingAt(event) {
     var box2 = field.getBoundingClientRect();
     var across = Math.max(0, Math.min(1, (event.clientX - box2.left) / box2.width));
@@ -110,9 +107,8 @@ function renderColourPick(box, run) {
   };
   field.onpointerup = function () { draw(); };
 
-  // A hex is how a colour arrives from somewhere else, so it is typed rather than hunted
-  // for. It is the colour as written, at the stretch's brightness, as a screen's background
-  // has it, so one typed in sets the colour and the brightness both
+  // A hex is how a colour arrives from somewhere else, so it is typed rather than hunted for. It is
+  // the colour as written at the stretch's brightness, so typing one sets both
   var hex = h("input", {
     type: "text", maxLength: 7, value: atBrightness(section.colour || "#ffffff", section.level),
     id: "hex-" + run.id, name: "hex",
@@ -137,8 +133,7 @@ function renderColourPick(box, run) {
   });
   hex.spellcheck = false;
 
-  // Beside the field, the hex over the colour itself, as large as the room allows, as a
-  // screen's custom background has it
+  // Beside the field, the hex over the colour itself, as large as the room allows
   var preview = h("div", {
     className: "scustompreview", title: "The colour as written, at its brightness",
     style: {background: atBrightness(section.colour || "#ffffff", section.level)}
@@ -263,7 +258,7 @@ chosenSteps.push(function (where, run) {
     tuning.removeChild(speed.previousElementSibling);
     tuning.removeChild(speed);
   }
-  // Ease is about every state, so it comes before them, after Brightness
+  // The Fade slider, which writes ease=, is about every state, so it comes before them
   var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
   if (ease) {
     var easeLabel = ease.previousElementSibling;
@@ -348,7 +343,7 @@ chosenSteps.push(function (where, run) {
   var section = run && run.sections[run.picked];
   var who = box && box.querySelector(".chosen .who");
   if (!section || !who) return;
-  // The name and its count stay one piece of text, the toggle set apart at the end
+  // Keep the name and its count one piece of text, and set the toggle apart at the end
   who.appendChild(h("span", {}, Array.from(who.childNodes)));
   who.classList.add("withway");
   if (run.strip) who.appendChild(splitTools(where, run));
@@ -437,7 +432,7 @@ chosenSteps.push(function (where, run) {
     var cells, way = null, key = null, widest = 3;
     var timing = range.dataset.timing;
     if (timing) {
-      // A signal's timing is its seconds already, typed past the slider's ends as it is
+      // A signal's timing is already in seconds, and its box takes a figure past the slider's ends
       widest = Math.max(String(range.min).length, String(range.max).length) + 2;
       cells = figureCells(figureSaid(Number(range.value)), "s",
                           "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
@@ -446,8 +441,8 @@ chosenSteps.push(function (where, run) {
         mine.timings[timing] = Math.round(typed * 100) / 100;
       });
     } else if (slider === "mood" && look.mood === "Palette") {
-      // A palette is its colours, not a number, so its slot shows them, across the box and unit
-      // columns from where the boxes start, being wider than a box
+      // A palette is its colours, not a number, so its slot shows them. They are wider than a box,
+      // so they span the box and unit columns
       var swatches = h("span", {className: "figurebox paletteswatches",
                                 style: {"grid-column": "span 2"}});
       paintPalette(swatches, sectionLines(run, section, look));
@@ -462,8 +457,7 @@ chosenSteps.push(function (where, run) {
       key = figureKey(run, section, look, slider);
       if (key) {
         way = figureWay(key, look);
-        // As wide as the widest figure the slider can reach, so dragging it never resizes its
-        // column and with it the slider
+        // As wide as the widest figure the slider reaches, so dragging it never resizes its column
         [0, 0.5, 1].forEach(function (place) {
           var reach = figureSaid(way.show(settingIn(linesAt(run, section, look, slider, place),
                                                    key)));

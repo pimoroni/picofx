@@ -10,14 +10,12 @@ import {
 
 // ---- the two screens paired -------------------------------------------------------------------
 // Two screens paired in a scene show one picture or drawing, played once and sent to both in
-// step, each placed by its own turn and look. Screen B shows what Screen A shows, at A's pace
+// step. Each is placed by its own turn and look. Screen B shows what Screen A shows, at A's pace
 // and in A's style, so B's box offers only its placing. A pair is the scene's, as what its
 // screens show is, so each scene can pair them or not.
 //
 // The file writes a pair as one entry naming both, screenA,B. A setting the two screens differ
 // in is given for each, A's then B's, separated by a comma, and one they agree in is given once.
-// Two screens showing the same GIF, slideshow or still played the same way are written as a pair
-// too, without being paired, as a hub joins its positions, and each screen keeps its own placing.
 
 state.screensPaired = false;
 
@@ -62,9 +60,9 @@ addStep(bodyParts, BODY_ORDER, "screenPair", {
   read: readPairedScreens
 });
 
-// ---- the toggle, under each screen ---------------------------------------------------------------
-// Under each screen's panel, where a hub position has its group's numbers, is a toggle and a line
-// saying which screen it is paired with. The two toggles always show the same
+// ---- the toggle, under each screen --------------------------------------------------------------
+// Under each screen's panel is a toggle and a line saying how it is sent beside the other screen.
+// The two toggles always show the same
 
 addStep(screensHeadSteps.after, HEAD_AFTER, "screenPair", function () {
   if (SCREENS.length < 2 || state.hub.on) return;

@@ -16,11 +16,10 @@ import {BOARD} from "./looks.js";
 // gives its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:"
 // the program tab's section it is offered in, "Thumbnail:" what its thumbnail draws where it has
 // no picture, and "Firmware:" the lowest firmware it runs on. The first sentence of the rest says
-// what it does, and what it uses is read from its source. A picture is the one named, else
-// name.png beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT
-// orders the sections and says what each holds.
+// what it does, and what it uses is read from its source. sections.txt in EXAMPLES_ROOT orders the
+// sections and says what each holds.
 
-// Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
+// Decode pictures for thumbnails ahead of showing them, so a thumbnail is drawn whole the first
 // time and never fills in late. Once all are in, the page is drawn again for any already showing
 export function loadThumbs(sources) {
   var waiting = 0;
@@ -45,7 +44,7 @@ export var OWN_FOLDER = "programs";
 // The program tab's sections in sections.txt's order, as [name, what it holds, starts folded]
 export var SECTIONS = [];
 
-// Each program's pictures as object URLs, by its path: its own, and a second screen's after it
+// Each program's pictures as object URLs by its path, its own and then a second screen's
 export var PICTURES = {};
 
 // How far reading the programs has got, as [read, of], while it is under way, else null
@@ -66,7 +65,7 @@ var PROGRAM_USES = [["outputs", "{board}\\.(outputs|monos)\\b|ColourPlayer|MonoP
                     ["sound", "{board}\\.wav\\b"],
                     ["remote", "aye_arr|from sensor import IR"],
                     ["qwst", "^from (breakout_\\w+|lsm6ds3) import"],
-                    // Only where one is needed, an optional one being written "ANALOG if"
+                    // Only a needed one, as an optional one is written "ANALOG if"
                     ["analog", "sensor=ANALOG\\)"],
                     ["motor", "MotorDriver|SPCE\\.MOTOR"],
                     ["servo", "^from servo import|{board}\\.servo_[lr]\\b"],
@@ -132,7 +131,7 @@ export function openingString(source) {
 }
 
 // One program as the page describes it, from its path, its folder under EXAMPLES_ROOT ("" for one
-// at the top of the drive) and its source, or null for a drawing
+// outside it) and its source, or null for a drawing
 export function programFrom(path, folder, source) {
   var opening = openingString(source);
   if (/^\s*Drawing:/m.test(opening)) return null;
@@ -322,7 +321,7 @@ var programsBusy = false;
 // Read the user's own programs again where they have changed on the drive, as the effects' media
 // are, so a program saved from an editor shows without opening the drive again
 async function rescanPrograms() {
-  // Not until every program has been read once, as the examples are kept from that read
+  // Check if every program has been read once, as the examples are kept from that read
   if (!drive.dirHandle || programsBusy || !programsKnown) return;
   programsBusy = true;
   try {
@@ -341,9 +340,8 @@ setInterval(rescanPrograms, 5000);
 
 // Copy a Python file from one folder into the user's own, with the pictures named after it renamed
 // to match, for the user to change. An example keeps its name where it is free, and the user's own
-// always takes a new one, its number counted on, so name_2 duplicates as the first of name_3,
-// name_4 and on that is free. Its Section line is dropped so the copy is listed as the user's own.
-// Returns the copy's file name
+// always counts its number on, so name_2 duplicates as the first free one of name_3, name_4 and
+// on. The copy drops its Section line so it is listed as the user's own. Returns its file name
 export async function copyToOwn(from, name, into, own, suffixes) {
   var stem = name.replace(/\.py$/i, "");
   var base = own ? stem.replace(/_\d+$/, "") : stem;
@@ -415,15 +413,14 @@ export async function removeProgram(path) {
 // Whether the open drive's programs have been read, which takes a while as each file is read whole
 export var programsKnown = false;
 
-// The program effects.txt names is read first, so the file is read back with it known, and the rest
-// without holding up the steps after
+// Read the program effects.txt names before the steps after, and the rest without holding them up
 addStep(connectSteps, CONNECT_ORDER, "drivePrograms", async function () {
   programsKnown = false;
   await readNamedProgram();
   readDrivePrograms();
 });
 
-// The program effects.txt's board line names, read on its own as the list of programs to begin with
+// Read the program effects.txt's board line names on its own, as the programs to begin with
 async function readNamedProgram() {
   try {
     var text = await (await drive.fileHandle.getFile()).text();

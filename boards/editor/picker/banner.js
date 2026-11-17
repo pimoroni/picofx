@@ -1,8 +1,7 @@
 import {h, replace} from "./dom.js";
 
 // ---- the banner ---------------------------------------------------------------------------------
-// The line that says what the page is doing, and the spots that move along it while a save is
-// under way.
+// The line that says what the page is doing, and the spots that move along it during a save.
 
 var SPOT_STEP_MS = 120;
 
@@ -27,11 +26,11 @@ export function saving(text) {
   }, SPOT_STEP_MS);
 }
 
-// The parts that also show what banner() says, each given its text and warn as banner() is
+// The steps that also show what banner() says, each given its text and warn= as banner() is
 export var bannerSteps = [];
 
-// The text of the save the banner reports on, or null where it reports on something else. An edit
-// after that save takes the banner down
+// The text of the save the banner reports on, or null where it reports on something else. An
+// edit made after that save takes the banner down once the page's text no longer matches it
 export var reportedSave = null;
 
 // Mark the banner as reporting on the save of this text, until banner() next changes it

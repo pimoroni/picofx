@@ -16,11 +16,11 @@ import {boardBox, boardButton, removeButton, small} from "../setup.js";
 import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../tabs.js";
 
 // ---- the Sensor tab -----------------------------------------------------------------------------
-// What is on the sensor connector and what it does, as a tab after Sound. Only what is fitted is
-// board setup. What each of a remote's buttons does is set on the Always on
-// tab for every scene, and a scene can change any button while it shows, as it can any light.
-// Two buttons are the board's in every scene: OK / Stop puts it in standby and wakes it, so there
-// is always a way to stop it, and Play / Pause holds the effects where they stand.
+// This part draws the Sensor tab, after Sound, for what is on the sensor connector and what it
+// does. Only what is fitted is board setup. What each of a remote's buttons does is set on the
+// Always on tab for every scene, and a scene can change any button while it shows, as it can any
+// light. Two buttons are the board's in every scene. OK / Stop puts it in standby and wakes it, so
+// there is always a way to stop it, and Play / Pause holds the effects where they stand.
 
 // What the sensor connector can have on it, as [kind, as the choice says it, under the tab's name]
 var SENSOR_KINDS = [["none", "not fitted", "none"],
@@ -72,9 +72,9 @@ var REMOTE_FIXED = {OK_STOP: ["standby", "Standby and wake, in every scene"],
 sceneHooks.canWait = function () { return remoteFitted() || pirFitted(); };
 sceneHooks.waitsFor = function () { return pirFitted() ? "motion" : "a button"; };
 
-// The scenes a scene goes to on what is fitted, from each trigger's choice in that scene: its
-// own, then Always on's, then the trigger's default. The tab being edited holds its choices in
-// state.remote rather than its body
+// The places of the scenes a scene goes to on what is fitted, from each trigger's choice in that
+// scene. Its own choice comes first, then Always on's, then the trigger's default. The tab being
+// edited holds its choices in state.remote rather than its body
 sceneHooks.triggerLeads = function (at) {
   var count = state.scenes.length;
   var always = state.at < 0 ? state.remote : state.always.body && state.always.body.remote || {};
@@ -112,8 +112,8 @@ function sceneInOrder(button) {
   return state.scenes[(number || 10) - 1] || null;
 }
 
-// What a button does on the tab being edited, as {choice, from}. From is own where the tab
-// chooses it, always where a scene leaves it to Always on, and fixed for the board's own buttons
+// What a button does on the tab being edited, as {choice, from}. Its from is "own" where the tab
+// chooses it, "always" where a scene leaves it to Always on and "fixed" for the board's own buttons
 function remoteResolved(button) {
   if (REMOTE_FIXED[button]) return {choice: REMOTE_FIXED[button][0], from: "fixed"};
   if (state.remote[button] !== undefined) return {choice: state.remote[button], from: "own"};
@@ -150,8 +150,8 @@ function sceneSelfDiffers(scene) {
   return !scene.waits && !sceneRestarts(scene);
 }
 
-// The trigger in this tab that goes to the scene showing, which waits and does not restart, so
-// does nothing, or null
+// The trigger in this tab that does nothing as it goes to the scene showing, which waits and does
+// not restart, or null
 function triggerDoingNothing() {
   if (state.at < 0) return null;
   var showing = state.scenes[state.at];
@@ -244,7 +244,7 @@ function remoteChoice(button) {
                                : own,
                  groups);
   choice.value = resolved.from === "own" ? resolved.choice : "";
-  // Going to the scene showing where that begins it again reads as from the start
+  // Check if it goes to the scene showing where that begins it again, which reads as from the start
   if (showing && choice.value === "scene:" + sceneMark(showing) && sceneRestarts(showing)) {
     choice.value = "restart";
   }
@@ -288,9 +288,9 @@ function remoteLeader(row) {
          endY.toFixed(2);
 }
 
-// With no remote fitted the whole remote is washed. Fitted, each button doing nothing is darkened
-// and washed, as is a join unless both its ends are in use. The art is drawn twice under two
-// masks that are each other's opposite, so nothing stacks
+// With no remote fitted the whole remote is faded. Fitted, each button doing nothing is darkened
+// and faded, as is a join unless both its ends are in use. The art is drawn twice under two masks
+// that are each other's opposite, so nothing stacks
 var REMOTE_WASHED = " opacity='0.35'";
 var REMOTE_IDLE = " filter='url(#raDark)' opacity='0.5'";
 var REMOTE_MASK = "x='60' y='15' width='80' height='140'";
@@ -659,9 +659,9 @@ function sensorNotes() {
 // remote names them, each with what it does, which is nothing, a step, or scene and the scene's
 // name. A motion: line holds starts= and stops= the same way, each with its after= and cancel=
 // delay where it has one. Like board: lines, these lines add up, and a trigger given twice in one
-// tab is a repeat. The page writes a line for each trigger, so a name needs no quotes, and reads
-// several to a line, where a name runs on to the next trigger or is quoted. Always on's lines are
-// above the first heading and a scene's under its own
+// tab is a repeat. The page writes a line for each trigger and quotes a name only where it holds =
+// or a quote. It reads several to a line, where a name runs on to the next trigger or is quoted.
+// Always on's lines are above the first heading and a scene's under its own
 
 var REMOTE_STEPS = ["nothing", "next", "previous", "first", "restart"];
 
@@ -726,7 +726,7 @@ addStep(boardLineSteps.after, BOARD_LINE_AFTER, "sensor", function (line) {
   return (line || "board:") + " sensor=" + state.sensorKind;
 });
 
-// Read what is fitted from the board line, the token taken so it is not written twice
+// Read what is fitted from the board line, and take its token so it is not written twice
 function readSensorBoard() {
   state.sensorKind = "none";
   filterResidue(function (token) {
@@ -737,8 +737,8 @@ function readSensorBoard() {
 }
 
 // Take each body's remote: lines, or motion: lines for a PIR Stick, that the page can hold as its
-// choices. A line is taken whole or not at all: one with a trigger the page cannot hold, or one the
-// tab already gave, stays as written, as does every line for what is not fitted. A repeated
+// choices. A line is taken whole or not at all. One with a trigger the page cannot hold or one the
+// tab already gave stays as written, as does every line for what is not fitted. A repeated
 // trigger is noted for the tab
 function readRemoteLines(bodies) {
   var entry = pirFitted() ? /^motion:(.*)$/i : /^remote:(.*)$/i;
@@ -821,7 +821,7 @@ addStep(bodyParts, BODY_ORDER, "sensor", {
     var changed = body.remote && Object.keys(body.remote).length;
     return always || changed ? [pirFitted() ? "pir" : "remote", "Sensor"] : null;
   },
-  // A tab's remote: or motion: lines come after its other lines, in the order of the triggers
+  // A tab's remote: or motion: lines, in the order of the triggers
   entries: function (body, lines) {
     if (!body.remote) return lines;
     var timings = body.motionTiming || {};

@@ -9,14 +9,9 @@ import {STRIPS, stripBlockedBy} from "./strips.js";
 
 // ---- the LED sections as tabs -----------------------------------------------------------
 // The outputs and each strip as tabs, one section shown at a time, so the one being worked on
-// is never a scroll away. Choosing a tab makes it the one worked on, and the gallery goes in
-// its box, as the screens' pictures and the programs sit under what they are for. Each tab
-// says in a small swatch what its section plays.
-//
-// The tabs sit in the scene's body and not with the scene tabs, and are drawn as a row of
-// names with a line under the chosen one, so they read as parts of one board and not as
-// another row of scenes. The outputs' wiring view opens from their Wiring chip and closes when
-// another tab is chosen.
+// is never a scroll away. Choosing a tab makes it the one worked on, and the gallery goes in its
+// box. The tabs sit in the scene's body, apart from the scene tabs, as parts of one board. The
+// outputs' wiring view opens from their Wiring chip and closes when another tab is chosen.
 
 // Open or close the outputs' wiring view, and show the tab chosen
 function setSetup(on) {
@@ -24,8 +19,7 @@ function setSetup(on) {
   showChosen();
 }
 
-// The Wiring chip opens the outputs' wiring view, where it shows pressed, and a second click
-// closes it
+// The Wiring chip opens the outputs' wiring view and shows pressed, and a second click closes it
 document.addEventListener("click", function (event) {
   if (event.target.closest("select, input, button, header")) return;
   if (!event.target.closest("#outFacts .boardchip")) return;
@@ -45,13 +39,14 @@ document.addEventListener("keydown", function (event) {
 export var TAB_NAMES = {outPanel: BOARD.output_words.tab};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
-// The sections with a tab, the LED ones and any other a page adds. A board whose strips are what it
-// is for has their tabs first and opens on the first one fitted
+// The sections with a tab, the LED ones and those the feature parts add. A board whose strips are
+// what it is for has the strips' tabs first
 export var TAB_PANELS = LED_PANELS.slice();
 if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
 // The tabs the feature parts add after the LED ones, in this order
 export var FEATURE_TABS = ["screens", "sound", "sensor"];
 
+// The tab shown, at first the first strip fitted where the board's strips are what it is for
 export var chosenTab = "outPanel";
 if (BOARD.strips_first) {
   var firstFitted = STRIPS.filter(function (strip) { return strip.there; })[0];
@@ -72,7 +67,7 @@ addStep(drawSteps.before, DRAW_BEFORE, "tabs", function () {
   showChosen();
 });
 
-// Every tab's section stays laid out in one shared place, only the chosen one seen, so the
+// Show only the chosen tab's section. Every section stays laid out in one shared place, so the
 // place is as tall as the tallest and choosing a tab never moves what is below it
 export function showChosen() {
   TAB_PANELS.forEach(function (panel) {
@@ -82,18 +77,17 @@ export function showChosen() {
     node.classList.toggle("tabhidden", panel !== chosenTab);
     node.classList.add("tabbed");
   });
-  // The looks stay where they are and stand back, so the tabs do not move under the
-  // pointer, where the section shown is one they mean nothing for
+  // Where the section shown is one the looks mean nothing for, they stay in place and stand back,
+  // so the tabs do not move under the pointer
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
-  // Under the sections, the looks go in the box of the one they are for, as a screen's pictures do
+  // Under the sections, the looks go in the box of the one they are for
   if (chosenTakesLooks()) {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }
 
-// With the looks in the box of the section they are for, the shared place is held at the tallest
-// box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
-// It runs after every part has drawn, when the boxes are at their full height
+// Hold the shared place at the tallest section's height, counting the looks into every LED
+// section, so choosing a tab moves nothing. The sections must be drawn in full first
 export function holdTabsPlace() {
   var stack = document.getElementById("tabStack");
   var looks = document.getElementById("looks");
@@ -116,7 +110,7 @@ export function holdTabsPlace() {
   stack.style.minHeight = tallest + "px";
 }
 
-// A tab's swatch, drawn by whichever part has that panel
+// The function that draws each tab's swatch, by panel, set by the part that has the panel
 export var tabSwatches = {};
 
 export function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
@@ -151,7 +145,7 @@ function stepTab(event, panel) {
   choose(TAB_PANELS[to]);
 }
 
-// The tabs as a tablist, only the chosen one in the page's tab order
+// Draw the tabs as a tablist, where only the chosen one is in the page's tab order
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   replace(bar, TAB_PANELS.map(function (panel) {
@@ -172,7 +166,7 @@ function renderLedTabs() {
   }));
 }
 
-// A section shown as a tab is not folded away, since the tab is how it is left
+// Keep a section shown as a tab open, since the tab is how it is left
 export function keptOpen(panel) {
   var node = document.getElementById(panel);
   node.addEventListener("toggle", function () {
@@ -191,8 +185,7 @@ addStep(drawSteps.after, DRAW_AFTER, "tabs", function () {
   renderLedTabs();
 });
 
-// The tabs, then the one place every tab's section is laid out in. A section a page adds after
-// one of these lands in it too
+// The tabs, then the place every section is laid out in, including one a part adds after these
 var sectionStack = h("div", {className: "tabstack", id: "tabStack"});
 document.getElementById("outPanel").before(h("div", {className: "ledtabs", id: "ledTabs",
                                                   role: "tablist",

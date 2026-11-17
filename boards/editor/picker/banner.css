@@ -1,4 +1,4 @@
-/* The board's outputs as it lights them while a save is written */
+/* A row of spots lit in turn while a save is written */
 .spots {
   display: inline-flex;
   gap: var(--space-3);

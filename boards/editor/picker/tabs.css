@@ -72,8 +72,8 @@ body.nolooks #looks {
   pointer-events: none;
 }
 
-/* In the box of the section they are for, the looks are hidden with it, every section keeping
-   its place so the tabs' place stays as tall as the tallest */
+/* The looks sit in the box of the section they are for and are hidden with it. Every section keeps
+   its place, so the tabs' place stays as tall as the tallest */
 #looks {
   margin: var(--space-6) 0 0;
 }

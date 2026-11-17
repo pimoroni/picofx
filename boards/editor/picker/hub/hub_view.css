@@ -2,9 +2,7 @@
   opacity: .6;
 }
 
-/* Two screens or a Screen Hub is a board fact, always shown and changed while editing the
-   board. The hub is one box across both connectors, in the colour of the one its screens come
-   through, with its six positions in a row under its band */
+/* Two screens or a Screen Hub is a board fact, always shown and changed while editing the board */
 .hubswitch {
   display: inline-flex;
   align-items: stretch;

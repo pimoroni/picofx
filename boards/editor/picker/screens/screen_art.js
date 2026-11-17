@@ -11,8 +11,9 @@ import {
 import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../tabs.js";
 
 // ---- the screens drawn --------------------------------------------------------------------------
-// The screen modules and what they show: the tab's head and boxes, pictures read off the drive,
-// drawings, and a look drawn on the module with a gif kept playing.
+// This part draws the screen modules and what they show, and reads the pictures off the drive. It
+// makes a drawing's face, composes a look onto the module and keeps a gif playing there, and adds
+// the Screens tab and its swatch.
 
 function svgTag(name, attrs, inner) {
   var out = "<" + name;
@@ -73,7 +74,7 @@ function panelDrawing(screen) {
   var litH = made.lit[1];
   var litX = left + boardW / 2 - litW / 2;
   var litY = up(boardH / 2) - litH / 2;
-  // A screen may be handed its picture outright, as the program page's preview is
+  // A screen may be handed its picture outright as art=, in place of what it shows
   var art = screen.art || (screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null);
 
   parts.push(svgTag("rect", {x: litX, y: litY, width: litW, height: litH,
@@ -202,12 +203,12 @@ function readNextPicture() {
 
 export function mediaArt(name, style) {
   var media = mediaNamed(name);
-  // A drawing in a style with a thumbnail of its own is shown by that, held under its name and style
+  // A drawing in a style with its own thumbnail is shown by that, held under name#style
   style = styleNamed(media, style);
   var styled = style && media && media.styleThumbs ? media.styleThumbs[style] : null;
   var key = styled ? name + "#" + style : name;
   var held = state.art[key];
-  // The drawing's own thumbnail stands in while a style's loads, so the screen keeps a picture
+  // Check if it is held already, where the drawing's own thumbnail stands in while a style's loads
   if (held) return held.ratio ? held : styled ? mediaArt(name) : null;
   // A slideshow and a drawing are shown by a thumbnail, a picture by itself
   var handle = styled || (media && (media.thumbHandle || media.handle));
@@ -219,7 +220,7 @@ export function mediaArt(name, style) {
   return styled ? mediaArt(name) : null;
 }
 
-// The tab's swatch is the two screens, each showing what its screen shows
+// The tab's swatch is a cell for each screen, showing what it shows
 tabSwatches.screensPanel = function (swatch) {
   swatch.className = "accswatch screenswatch";
   replace(swatch, SCREENS.map(function (letter) {
@@ -229,7 +230,7 @@ tabSwatches.screensPanel = function (swatch) {
     var shown = screen.shows || (under && under.always) || null;
     var art = screen.there && shown && shown !== "keep"
               ? mediaArt(shown, screen.look && screen.look.style) : null;
-    // A picture with no thumbnail yet is a white tile, its screen showing something
+    // A picture with no thumbnail yet is a white tile, since its screen does show something
     var marked = !screen.there ? "absent" : screen.off ? "off" : art ? ""
                : shown ? "blank" : under && under.off ? "dark" : "nothing";
     // Always on's picture wears the stripes of nothing over it
@@ -262,7 +263,7 @@ function sizesUnderName() {
 }
 
 // A picture newly chosen is given its starting turn before anything else is drawn, since
-// writing the file applies every scene in turn and would take it as already chosen
+// writing the file applies every scene one after another and would take it as already chosen
 addStep(drawSteps.before, DRAW_BEFORE, "screenTurns", function () {
   SCREENS.forEach(function (letter) { screenParts.turnForChosen(letter); });
 });
@@ -279,7 +280,7 @@ document.getElementById(LED_PANELS[LED_PANELS.length - 1]).after(
     h("div", {className: "screens-head", id: "screensHead"}),
     h("div", {className: "assets", id: "assets"})));
 
-// A board with no screen ports keeps the panel out of sight, for the parts that draw into it
+// Check if the board has screen ports, or else hide the panel, kept for the parts that draw into it
 if (SCREENS.length) {
   TAB_NAMES.screensPanel = "Screens";
   addStep(TAB_PANELS, FEATURE_TABS, "screens", "screensPanel");
@@ -301,7 +302,7 @@ export function canvasPixels(look, size, turn) {
   return panel;
 }
 
-// The picture as drawn, in pixels, or null until it has loaded or where it fills the screen
+// The picture as drawn, in pixels, or null until it has loaded or where a drawing fills the screen
 function picturePixels(shows, look, size, turn) {
   var scale = look.double ? 2 : 1;
   if (shows && kindOf(shows) === "drawing") {
@@ -327,14 +328,11 @@ export function pictureOffset(look, shows, size, turn) {
   return {x: side(look.anchor % 3, 0), y: side(Math.floor(look.anchor / 3), 1)};
 }
 
-// ---- drawings -------------------------------------------------------------------------------------
+// ---- drawings ---------------------------------------------------------------------------------
 // A drawing is a Python file drawn on a screen, drawing file=rings.py. It is listed only where
-// its opening string has a "Drawing:" line giving its name, read as a program's lines are. Other
-// lines may give Icon:, any Unicode character, Colour:, one of the board's colour words or a hex,
-// and Section:, the gallery section an example drawing is listed in. The first sentence of the
-// rest describes it. A Python file without a Drawing: line is not listed, whether drawing or
-// program. The page cannot run one, so a drawing is shown by its icon on its colour, or its
-// initial where it names no icon. A drawing that names no colour takes one from its name
+// its opening string has a Drawing: line, as drawingSaid() reads it. The page cannot run one, so
+// a drawing is shown by its thumbnail where it has one, or else by its icon or initial on its
+// colour. A drawing that names no colour takes one from its name
 
 // A hue from a name, the same each time. The hash is mixed again after its first pass, which
 // barely moves between names of one length
@@ -363,8 +361,8 @@ export function drawingInk(drawing, name) {
 // A drawing at a canvas's size, for where a picture's pixels are drawn. Its thumbnail covers the
 // canvas, or where it has none its colour fills the canvas with its icon or initial in the middle
 function drawingArt(name, wide, high, style) {
-  // Kept by the thumbnail it is made from, so a style's found on a later read of the drive
-  // replaces the drawing's that stood in for it. One still loading is stood in for, and not kept
+  // Kept by the thumbnail it is made from, so a style's thumbnail found on a later read replaces
+  // the drawing's own that stood in for it. Art made while it still loads is not kept
   style = styleNamed(mediaNamed(name), style);
   var styleThumbs = (mediaNamed(name) || {}).styleThumbs || {};
   var styled = !!style && !!styleThumbs[style];
@@ -449,7 +447,7 @@ function composedArt(screen, look, art) {
   return made;
 }
 
-// The picture placed on a panel's canvas, as the board draws it, from the image's frame now
+// Draw the picture onto a panel's canvas as the board draws it, from the image's frame now
 function composeOnto(g, screen, look, art, image, wide, high) {
   g.imageSmoothingEnabled = false;
   g.fillStyle = look.bg;
@@ -470,8 +468,8 @@ function composeOnto(g, screen, look, art, image, wide, high) {
     g.restore();
   }
 
-  // Lay copies out from where the first sits along each side that tiles, and turn every other one
-  // round on a side that mirrors
+  // Lay copies out from where the first sits along each side that tiles, and flip every other one
+  // on a side that mirrors
   var tileDown = look.tileDown || "off";
   var firstX = look.tile === "off" ? left : left - Math.ceil(left / pictureW) * pictureW;
   var firstY = tileDown === "off" ? top : top - Math.ceil(top / pictureH) * pictureH;
@@ -494,11 +492,11 @@ function composeOnto(g, screen, look, art, image, wide, high) {
 
 // ---- a gif keeps playing on its screen ----------------------------------------------------------
 // A canvas given a gif always draws its first frame, so a composed picture of one is a still. Where
-// the browser can decode a gif itself (ImageDecoder, in Chrome and Edge), the preview is a canvas
-// stepping through the gif's frames at its own timings, each composed as the board draws it.
-// Any other browser keeps showing the still
+// the browser can decode a gif itself with ImageDecoder, the preview is a canvas stepping through
+// the gif's frames at their own timings, each composed as the board draws it. Any other browser
+// keeps showing the still
 
-// Each gif's decoder, shared by every preview showing it, and the frames it has already given
+// Each gif's decoder and its frame count, by URL, shared by every preview showing it
 var gifDecoders = {};
 
 function gifDecoder(art) {
@@ -533,7 +531,7 @@ function liveGif(drawing, still, screen, look, art) {
   }).catch(function () {});
 }
 
-// One frame composed onto the preview, then the next after that frame's own time, until the
+// Compose one frame onto the preview, then the next after that frame's own time, until the
 // preview leaves the page
 function nextGifFrame(playing, gif) {
   if (!playing.canvas.isConnected) return;

@@ -20,15 +20,14 @@ import {GLASS_IN, GLASS_OUT, ZOOMS_OVER} from "./strips.js";
 // The wiring row over the outputs and each strip's header row, with their steps back and on, and
 // the wiring drawn and changed while the board is set up.
 
-// Light an output's three channels, each at its own edge and in its own colour, so what the
+// Outline an output's three channels, each at its own edge and in its own colour, so what the
 // arrow would rejoin is visible before it is pressed
 export function showKin(out, on) {
   (kinOf[out] || []).forEach(function (node) { node.classList.toggle("kin", on); });
 }
 
-// The one act there is, said as a direction. A colour output crosses to the mono side and
-// becomes three mono lights, and those three cross back as one colour output. It shows only
-// where the wiring can be changed, in the board's colour, and only on an output that breaks out
+// The arrow that splits a colour output into three mono lights, or rejoins the three as one. It
+// shows only where the wiring can be changed, and only on an output that breaks out
 export function crossing(out, colour) {
   if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
   var says = colour
@@ -94,8 +93,7 @@ function wiredLamps() {
   return lamps;
 }
 
-// The board as the out-of-order rule reads it, a side of the same lamps
-// in wired order and in build order
+// The lamps as astrayOf() reads them, in wired order and in build order
 function wiredSide() {
   var wired = wiredLamps();
   var byKey = {};
@@ -113,7 +111,7 @@ function lampNode(key) {
   return lampsShown().filter(function (node) { return node.dataset.key === key; })[0] || null;
 }
 
-// A line, its lamp and its pin brought forward, or let go
+// Bring forward the lines, lamps and pins of the keys given, or let them go
 export function bringForward(keys, on) {
   keys.forEach(function (key) {
     document.querySelectorAll("#outPanel [data-key='" + key + "']").forEach(function (node) {
@@ -190,8 +188,8 @@ function connector(one, out) {
   }, h("div", {className: "wirepins"}, pins), h("b", {}, shortName({out: out, colour: true})));
 }
 
-// Faint lines, never none. With no line at all, the lamps over a connector read as the ones
-// it feeds, which a rearranged build is not
+// Draw a faint line from every pin to its lamp, never none. With no line, the lamps over a
+// connector read as the ones it feeds, which in a rearranged build they are not
 function drawLines() {
   var panel = document.getElementById("outPanel");
   var from = panel.getBoundingClientRect();
@@ -216,10 +214,10 @@ function drawLines() {
 }
 
 // ---- the move shown ------------------------------------------------------------------------
-// Every lamp measured before a move and played back from its old place to its new one, the
-// one carried lifted above the rest. The drag ending draws the page again straight after
-// the drop, which would replace the lamps mid-slide, so every draw until the page is next
-// idle plays the slide from the same starting places
+// Every lamp is measured before a move and played back from its old place to its new one, and
+// the one carried is lifted above the rest. The drag ending draws the page straight after the
+// drop, which would replace the lamps mid-slide, so every draw until the page is next idle plays
+// the slide from the same starting places
 
 var sliding = null;
 
@@ -260,7 +258,7 @@ function placeInPanel(node) {
   return {left: box.left - panel.left, top: box.top - panel.top};
 }
 
-// Every lamp's place now, for the next draw to slide each from, the one carried lifted
+// Record every lamp's place, and the one carried, for each draw until the page is idle
 function slideFrom(carried) {
   var was = {};
   lampsShown().forEach(function (node) { was[node.dataset.key] = placeInPanel(node); });
@@ -292,9 +290,8 @@ function playSlide() {
   });
 }
 
-// Breaking an output out, its three lamps open out of where its one stood, each sliding
-// from there to its own place. Putting one back, the lamp it becomes closes in from the
-// middle of the three. The other lamps make way as they do for a move
+// Break an output out. Its three lamps open out of where its one lamp stood and slide to their
+// own places, and the other lamps make way as they do for a move
 function breakOut(out) {
   slideFrom(null);
   var whole = sliding.was[lampKey({out: out, channel: null})];
@@ -333,10 +330,10 @@ addStep(drawSteps.after, DRAW_AFTER, "wiring", function () {
 // The lines run between things the page has laid out, so they follow the layout
 window.addEventListener("resize", function () { if (setupOn) draw(); });
 
-// ---- the facts, in place --------------------------------------------------------------------
+// ---- an output with no arrow----------------------------------------------------------------
 
-// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
-// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
+// Where the wiring cannot be changed an output's arrow is left out. What stands in its place is
+// absolutely placed, as the arrow is, or each output's lamps would sit further apart outside setup
 function noArrow() {
   return h("span", {style: {position: "absolute"}});
 }

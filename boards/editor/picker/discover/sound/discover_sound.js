@@ -10,9 +10,8 @@ import {hearing, setHearing, soundSteps, soundTileSteps, stopHearing} from "../.
 
 // ---- examples to discover, on the Sound tab -----------------------------------------------------
 // The Sound tab's examples line, where its example sounds start. An example sound on the drive
-// can be deleted, as it can be downloaded again, and carries its mark, Update or the firmware it
-// needs. discover.js does the rest. build_editor.py takes this folder only for a board with
-// sound.
+// can be deleted, as it can be downloaded again, and carries its Update or Needs mark.
+// discover.js does the rest.
 
 soundTileSteps.push(function (tile, name) {
   if (!name) return;

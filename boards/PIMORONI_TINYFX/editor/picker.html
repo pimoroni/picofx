@@ -529,8 +529,6 @@ button.round {
   }
 }
 
-/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
-   without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
    and closes up on a narrow panel to leave the lights their room */
@@ -538,6 +536,8 @@ button.round {
   container-type: inline-size;
 }
 
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
+   without moving a lamp */
 .cardlamp {
   flex: 1 1 0;
   min-width: 0;
@@ -931,11 +931,9 @@ footer {
     margin-left: auto;
   }
 
-  /* Sided, the two tabs sit over the sides they are for and on the edge of the cards they
-     change, so which lights a tab means is read from where it is and what it changes from
-     what it is joined to */
-  /* Inset by more than the box's corner radius, so its rounded corners stay whole either
-     side of the tab rather than being squared off by it */
+  /* Sided, the two tabs sit over the sides they are for and on the edge of the cards they change,
+     so which lights a tab means is read from where it is. Each is inset by more than the box's
+     corner radius, so the box's rounded corners stay whole either side of it */
   &.sides {
     justify-content: space-between;
     gap: 0;
@@ -1241,6 +1239,11 @@ footer {
 }
 
 /* ---- choosing a colour ---- */
+/* One colour picker for a stretch's colour and a screen's background. One row of swatches spans
+   the section, each as wide as "magenta" and no wider, spread to keep both ends flush and named
+   under them once the section has room. Custom comes last as a rainbow ring whose middle is the
+   custom colour, or Nothing's stripes until there is one. The field sits under the row, with the
+   hex beside it over the colour itself */
 .playing {
   display: flex;
   align-items: center;
@@ -1557,7 +1560,7 @@ body.figures .chosen .tuning {
   --hub: var(--accent);
 }
 
-/* No tab row over the gallery on the pages built on the tabs page, and no gap left for one */
+/* No empty tab row over the gallery, and no gap left for one */
 body[data-pageway] #looks > .tabs:empty {
   display: none;
 }
@@ -2242,9 +2245,7 @@ body.programpage #programNote {
   cursor: pointer;
 }
 
-/* The covers in the header, in place of the page's strapline, small enough to keep the header
-   its height. Where the header grows too narrow for them they take a slim line of their own
-   under it, each half its width */
+/* With the page's tabs in the header, its strapline is hidden */
 body[data-pageway^=head] header .says {
   display: none;
 }
@@ -2495,7 +2496,7 @@ html {
 
 /* Under the Screens and Sound tabs' names, where the others have their swatch, a word on
    what they hold. It takes no width of its own, so a tab stays its name's width whatever it
-   says, the longest running a few pixels into the gap before the preview */
+   says. The longest runs a few pixels into the gap before the preview */
 .ledtab .tabunder {
   display: block;
   font: var(--text-xs)/.55rem var(--font);
@@ -2511,7 +2512,7 @@ html {
   gap: var(--space-3);
 }
 
-/* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
+/* The Sensor tab leaves the row short of room, so only the lights' stripes narrow, never past the
    names above them */
 #ledTabs:has([data-panel=sensorPanel]) {
   gap: var(--space-6);
@@ -2838,7 +2839,7 @@ html {
     }
   }
 }
-/* The board's outputs as it lights them while a save is written */
+/* A row of spots lit in turn while a save is written */
 .spots {
   display: inline-flex;
   gap: var(--space-3);
@@ -2937,7 +2938,7 @@ html {
     color: var(--warn);
   }
 }
-/* It is the screens' toggle, its rules repeated for the pages that have no screens */
+/* The direction toggle, a .stoggle drawn in the accent colour while on */
 .chosen .direction {
   margin-left: auto;
   border: 1.5px solid var(--line);
@@ -3377,13 +3378,10 @@ body:has(>dialog.firmwaresheet[open]) {
   justify-content: center;
 }
 
-/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom.
-   It takes its own room less the gap, so beads join exactly where the gap closes. Its corners and
-   edge close up with the gap, so the joined strip is square and even.
-   A gap under a pixel is drawn as a whole pixel, which a browser draws evenly, and is filled
-   with the beads' own colour, which deepens as --fill rises from 0 to 1 while the gap closes. The
-   fill is the bead drawn again half a gap and half a pixel to either side, in its colour as
-   painted, overlapping its neighbours so no seam is left where they meet */
+/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom,
+   and its corners close up with the gap so joined beads make a square, even strip. A gap under a
+   pixel is drawn as a whole one filled with the beads' colour, deepening as --fill rises to 1. The
+   fill is the bead drawn again half a gap and half a pixel to either side, so no seam is left */
 .stripbeads b {
   --filled: color-mix(in srgb, currentColor calc(var(--fill) * 100%), transparent);
   display: block;
@@ -3867,8 +3865,8 @@ body.nolooks #looks {
   pointer-events: none;
 }
 
-/* In the box of the section they are for, the looks are hidden with it, every section keeping
-   its place so the tabs' place stays as tall as the tallest */
+/* The looks sit in the box of the section they are for and are hidden with it. Every section keeps
+   its place, so the tabs' place stays as tall as the tallest */
 #looks {
   margin: var(--space-6) 0 0;
 }
@@ -3928,8 +3926,8 @@ body.nolooks #looks {
   font-weight: 600;
 }
 
-/* A line the board named, marked in the file where the page still writes it as the board read
-   it, the board's words after it */
+/* A line the board reported, marked while the page still writes it as the board read it. The
+   board's words follow it */
 .file .s-problem {
   background: var(--warn-bg);
   box-shadow: 0 0 0 2px var(--warn-bg);
@@ -4054,8 +4052,8 @@ canvas.progthumb {
   background: var(--dark);
 }
 
-/* The chosen program, or the space it will take, the same size either way so choosing one moves
-   nothing on the page. What the board runs is said along its top */
+/* The chosen program, or the space it will take. The picture's place is one size either way, and
+   what the board runs is said along its top */
 .proghero {
   display: flex;
   flex-direction: column;
@@ -4323,9 +4321,9 @@ header h1 + .headswitch {
     color: var(--dim);
     padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
 
-    /* The chosen tab and the chosen scene carry one mark, a band painted in the background from the
-       outer edge under a top border made clear, running the width of the top. Every tab keeps the
-       same border, so nothing in a tab moves when it is chosen */
+    /* The chosen tab is marked as the chosen scene is, by a 3px band painted from the border's
+       outer edge under a transparent top border. Every tab keeps the same border, so nothing in a
+       tab moves when it is chosen */
     &.on {
       color: var(--ink);
       border-top-color: transparent;
@@ -4350,8 +4348,8 @@ header h1 + .headswitch {
   }
 }
 
-/* The row is always the header's whole width, so it never fits beside the title and rejoins its
-   line on a wide window, and its padding narrows the tabs to the column */
+/* The row takes the header's whole width, so it wraps under the title until header.oneline puts
+   it on the title's line. Its padding narrows the tabs to the page's column */
 .headswitch.headsplit {
   order: 10;
   flex: 1 0 100%;
@@ -4368,8 +4366,7 @@ header h1 + .headswitch {
   }
 }
 
-/* A narrow window shrinks the other header covers, but these tabs keep their size, so they are
-   one height at every width */
+/* A narrow window keeps these tabs their size, so they are one height at every width */
 @media (max-width: 1180px) {
   header .headswitch.headsplit {
     margin: 0 0 -1px;
@@ -4420,8 +4417,8 @@ header.oneline {
   align-items: flex-end;
 
   /* The buttons keep the header's own top padding above and below them, and the tabs run from the
-     buttons' top edge to the header's foot, so the tabs' height follows from the buttons'. Both
-     figures are measured and set by the page, --headgap below the buttons and --tabheight */
+     buttons' top edge to the header's foot, so the tabs' height follows from the buttons'. The
+     page measures and sets --headgap below the buttons, --buttonheight and --tabheight */
   h1 {
     flex: 1 1 0;
     margin: 0 0 var(--headgap, .8rem);
@@ -4452,15 +4449,14 @@ header .headswitch.headsplit .cover {
   padding-top: 0;
   padding-bottom: 0;
 
-  /* The cover fills the tab, with a picture the tab's height less an inset at a screen's
-     shape and a label a size up. A program's name sits beside its label, so the label
-     never moves when one is picked */
+  /* A picture the tab's height less an inset, at a screen's shape */
   .coverface {
     height: calc(var(--tabheight, 3.1rem) - .6rem);
     width: calc((var(--tabheight, 3.1rem) - .6rem) * 4 / 3);
   }
 }
 
+/* A program's name sits beside its label, so the label never moves when one is picked */
 .headswitch.headsplit .cover > span {
   display: flex;
   align-items: baseline;
@@ -4479,19 +4475,19 @@ header .headswitch.headsplit .cover {
   overflow: hidden;
   text-overflow: ellipsis;
 
-  /* On a phone a tab is its name, the program chosen being shown on its page */
+  /* On a phone a tab shows only its name, since the chosen program is shown on its page */
   @media (max-width: 40rem) {
     display: none;
   }
 }
 
-/* The way into scenes, at the end of the effects tab while there are none, the row it had above
-   the gallery gone */
+/* With no scenes yet, the way into them sits at the end of the effects tab and the scene tabs' row
+   above the gallery is hidden */
 body.scenesintab #tabs {
   display: none;
 }
 
-/* With nothing above it the gallery comes up under the tabs, the kind tabs' empty row taken out */
+/* The empty kind tabs' row is hidden, so the gallery comes up under the tabs with nothing above */
 body.scenesintab #looks > .tabs.sides:empty {
   display: none;
 }
@@ -4502,7 +4498,7 @@ body.scenesintab #looks > .tabs.sides:empty {
   flex: none;
   opacity: 1;
 
-  /* On a phone it is its + alone, its words kept for a screen reader and its tooltip */
+  /* On a phone it shows only its +. Its words stay for a screen reader and in its tooltip */
   @media (max-width: 40rem) {
     gap: 0;
     padding: var(--space-3);
@@ -4752,12 +4748,13 @@ body.scenesintab #looks > .tabs.sides:empty {
   white-space: nowrap;
 }
 
-/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
-   the bin and copy tile shown there */
+/* An example being downloaded, faded until it is done */
 .discoverbusy {
   opacity: .6;
 }
 
+/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
+   the bin and copy tile shown there */
 .discoverpill {
   position: absolute;
   top: 4px;
@@ -5190,7 +5187,7 @@ body[data-pageway] #looks > .shelf.bare {
     }
   }
 
-  /* On a phone the bar keeps the drive and the save, the page it is on being in view below */
+  /* On a phone the bar keeps the drive and the save, since the page it is on is in view below */
   @media (max-width: 40rem) {
     gap: var(--space-4);
     padding: var(--space-4) var(--space-5);
@@ -5352,9 +5349,9 @@ body[data-pageway] #looks > .shelf.bare {
   }
 }
 
-/* A scene card's icons row, as tall as an icon even where it has none, and its last row, how it
-   ends at the left and its remote number at the right, as tall as a number, so every card's rows
-   line up */
+/* A scene card's icon row keeps an icon's height where it has none, and its last row keeps a
+   number's height, so every card's rows line up. The last row holds how the scene ends and its
+   remote number */
 .tab .cardparts {
   display: flex;
   align-items: center;
@@ -5508,9 +5505,6 @@ body[data-pageway] #looks > .shelf.bare {
   line-height: 1.35;
   color: var(--dim);
 }
-/* The Sensor tab has no swatch, its name and what is fitted under it saying all there is. The
-   remote sits in the middle of the section with its buttons' rows down either side, each row
-   centred on its leader's height and the same width, so each side reads as one column */
 .ledtab[data-panel=sensorPanel] .sensorswatch {
   display: none;
 }
@@ -5535,6 +5529,8 @@ body[data-pageway] #looks > .shelf.bare {
   }
 }
 
+/* The remote sits in the middle of the section with its buttons' rows down either side, each row
+   centred on its leader's height and the same width, so each side reads as one column */
 .remotediagram {
   display: grid;
   grid-template-columns: 1fr var(--middle) 1fr;
@@ -6009,11 +6005,7 @@ body.setupall #soundPanel {
   color: var(--dim);
 }
 
-/* One colour picker for a stretch's colour and a screen's background. One row of swatches spans
-   the section, each as wide as "magenta" and no wider, spread to keep both ends flush and named
-   under them once the section has room. Custom comes last as a rainbow ring whose middle is the
-   custom colour, or Nothing's stripes until there is one. The field sits under the row, with the
-   hex beside it over the colour itself */
+/* The colour picker under a stretch's settings, styled in page.css under choosing a colour */
 .chosen .colourpick {
   margin-top: var(--space-4);
 
@@ -6767,10 +6759,8 @@ var PARTY_SECOND = ["green", "white", "yellow", "warm", "red"];
 var PARTY_THIRD = ["blue", "green", "cyan", "white", "magenta"];
 var LOOKS = [
   {
-    // The one look with nothing moving in it. A scene that wants a lamp to sit at one
-    // colour has no effect to reach for otherwise, and on a board whose only light of
-    // its own is a single LED that is most of what it is for. The colour is chosen
-    // rather than slid to, so this is the one look whose settings are not two sliders
+    // The one look with nothing moving in it, so a scene can hold a lamp at one colour. The colour
+    // is chosen, not slid to, so this is the one look whose settings are not two sliders
     name: "Solid",
     mood: "Brightness",
     spans: true,
@@ -8727,7 +8717,7 @@ function renderChosenPanel(where, run) {
       "data-focus": where + "-" + key,
       id: where + "-" + key,
       name: key,
-      // Through the run, as a page that makes the stretches afresh leaves this one behind
+      // Through the run, since settling makes the run's stretches afresh and leaves this one behind
       oninput: function() {
         run.sections[run.picked][key] = Number(range.value);
         drawParts.preview();
@@ -9480,7 +9470,7 @@ var EFFECTS = {
   flash_sequence: function(t, s, pos) {
     return flashing(offsetOf(t, s) + pos / num(s.length, 1), s);
   },
-  // A light sweeping the run and bouncing back, one pass out and one back to a cycle
+  // A light sweeping the run and bouncing back, crossing it once a cycle as picofx's sweep does
   sweep: function(t, s, pos) {
     var swing = t * num(s.speed, 1) % 2;
     var head = (swing < 1 ? swing : 2 - swing) * (num(s.length, 1) - 1);
@@ -9798,7 +9788,7 @@ function directionToggle(run, section) {
     "aria-pressed": section.reversed && moves ? "true" : "false",
     disabled: !moves,
     title: !moves ? !look ? "Which end it starts from, for looks that travel" : widthOf(section) < 2 ? "One light has no direction" : look.name + " looks the same from either end" : section.reversed ? "Travels from the far end" : "Travels from the near end",
-    // Through the run, as a page that makes the stretches afresh leaves this one behind
+    // Through the run, since every settle makes the stretches afresh and leaves this one stale
     onclick: function() {
       remember(run);
       var live = run.sections[run.picked];
@@ -11399,7 +11389,7 @@ function removeButton(what, act) {
     type: "button",
     className: "boardremove",
     title: "Take this " + what + " off the board, in every scene",
-    // A hub position picks itself on a click, which a removed one cannot be
+    // The click goes no further, since what holds the button may pick itself on a click
     onclick: function(event) {
       event.stopPropagation();
       if (state.scenes.length && !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
@@ -12134,7 +12124,7 @@ var PROGRAM_USES = [
   ["sound", "{board}\\.wav\\b"],
   ["remote", "aye_arr|from sensor import IR"],
   ["qwst", "^from (breakout_\\w+|lsm6ds3) import"],
-  // Only where one is needed, an optional one being written "ANALOG if"
+  // Only a needed one, as an optional one is written "ANALOG if"
   ["analog", "sensor=ANALOG\\)"],
   ["motor", "MotorDriver|SPCE\\.MOTOR"],
   ["servo", "^from servo import|{board}\\.servo_[lr]\\b"],
@@ -12997,7 +12987,7 @@ var FEATURES = [
     "motors",
     "<rect class='f' x='1.5' y='5' width='15' height='14' rx='3.5'/><rect class='f' x='16.5' y='10.5' width='6' height='3' rx='1'/>"
   ],
-  // A servo from the side, its mounting tabs and its arm, the arm no longer than the body
+  // A servo from the side with its mounting tabs, and an arm no longer than its body
   [
     "servo",
     "servos",
@@ -13391,7 +13381,7 @@ function programCard(path) {
       title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " + uses.map(function(key) {
         return featureNamed(key)[1];
       }).join(", ") : ""),
-      // Picked again, the program is put back, leaving none chosen
+      // Pressing the chosen program again chooses none
       onclick: function() {
         boardSet.program = boardSet.program === path ? null : path;
         draw();
@@ -13514,7 +13504,7 @@ function programWords(path) {
       { className: "progwhere" },
       path + (program.example ? ", built in" : ", on the drive")
     ),
-    // What it uses, each drawn and named, as the filter below names them
+    // What it uses, each drawn and named in full
     uses.length ? h("div", { className: "herouses" }, uses.map(function(key) {
       return h("span", {}, featureIcon(key), featureNamed(key)[1]);
     })) : null,
@@ -13646,7 +13636,7 @@ function featureFilter() {
         }
       }, featureIcon(feature[0]), feature[2]);
     }),
-    // Buttons to turn every chip on, or every chip off for ticking what is to hand. They
+    // Buttons to turn every chip on, or every chip off to then turn on what is to hand. They
     // are kept together in one box where the row wraps
     h(
       "div",
@@ -16483,6 +16473,7 @@ function renderSceneSettings() {
     { className: "sceneset" },
     sceneNameField(scene),
     sceneEnds(scene),
+    // A waiting scene has no time and no scene after
     scene.waits ? null : sceneSeconds(scene),
     scene.waits || state.scenes.length === 1 ? null : sceneThen(scene),
     sceneRestart(scene)
@@ -17545,7 +17536,7 @@ addStep(bodyParts, BODY_ORDER, "sensor", {
     var changed = body.remote && Object.keys(body.remote).length;
     return always || changed ? [pirFitted() ? "pir" : "remote", "Sensor"] : null;
   },
-  // A tab's remote: or motion: lines come after its other lines, in the order of the triggers
+  // A tab's remote: or motion: lines, in the order of the triggers
   entries: function(body, lines) {
     if (!body.remote) return lines;
     var timings = body.motionTiming || {};
@@ -18027,8 +18018,8 @@ function soundTile(name) {
     info && info.bars ? soundOutline(info.bars) : flatLine(picked ? "#0f8a72" : "#c9c3b9"),
     h("b", {}, nameShown(name)),
     h("small", {}, info && info.seconds ? info.seconds + "s" + (picked && state.soundLoop ? ", on repeat" : "") : state.sounds.indexOf(name) < 0 ? "not on the drive" : null),
-    // An example keeps no bin here, as flashing the board's examples again brings it back.
-    // Where the board's examples can be discovered, discover/sound/discover_sound.js gives it one
+    // An example keeps no bin here, as flashing the board's examples again brings it back. A
+    // later part can give it one through soundTileSteps
     state.sounds.indexOf(name) >= 0 && !isExampleMedia(name) ? binButton(name, "wav") : null
   );
   soundTileSteps.forEach(function(step2) {

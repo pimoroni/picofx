@@ -19,8 +19,7 @@ import {headSteps} from "./wiring.js";
 // The tooltip on everything that wears the board's chip
 export var BOARD_SETTING_SAYS = "Board setup, shared by every scene";
 
-// What follows a strip's length on the board line, its brightness or its colour order, as the
-// choice on its chip
+// What follows a strip's length on the board line, its brightness or colour order, as a choice
 function stripChipChoice(run) {
   var choice;
   if (run.made === null) {
@@ -55,7 +54,7 @@ function stripChipChoice(run) {
 }
 STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
 
-// The chip a board setting's add button carries, before its words
+// A board setting's add button, the board's chip before its words
 export function boardButton(words) {
   return h("button", {type: "button", className: "boardadd"}, boardIcon(), words);
 }
@@ -65,7 +64,7 @@ export function removeButton(what, act) {
   return h("button", {
     type: "button", className: "boardremove",
     title: "Take this " + what + " off the board, in every scene",
-    // A hub position picks itself on a click, which a removed one cannot be
+    // The click goes no further, since what holds the button may pick itself on a click
     onclick: function (event) {
       event.stopPropagation();
       // Check if there are scenes to lose it, since nothing brings back what they played on it
@@ -76,8 +75,8 @@ export function removeButton(what, act) {
   }, "remove");
 }
 
-// Nothing looks picked while setup is on. The marks are drawn by the pages below, so they
-// are taken off once drawn
+// Take the picked marks off, so nothing looks picked while setup is on. The bars and the gallery
+// draw them earlier in the draw, so they are taken off once drawn
 function unmark() {
   document.querySelectorAll(".sec.picked, .card.picked").forEach(function (one) {
     one.classList.remove("picked");
@@ -94,9 +93,8 @@ export function small(words) {
   return h("small", {}, words);
 }
 
-// The board's chip, three legs a side, set three apart as the smallest spacing that still
-// reads as legs at 16px. It carries the board's tooltip itself, so a chip with no box around it
-// says it too
+// The board's chip, three legs a side, set three apart as the smallest spacing that still reads as
+// legs at 16px. It carries the board's tooltip, so a chip with no box around it says it too
 export function boardIcon() {
   return h("svg:svg", {viewBox: "0 0 14 14", width: "13", height: "13", class: "boardicon",
                        "aria-hidden": "true",
@@ -110,7 +108,7 @@ export function boardIcon() {
 
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
-  // Check if there is wiring to set, since one light has none and its row keeps only the steps
+  // Check if the board has one light, which has no wiring to set, so its row keeps only the steps
   if (ONE_LIGHT) {
     replace(box);
     headSteps(box, active.strip ? lastOutputRun : active);
@@ -132,7 +130,7 @@ function renderOutFacts() {
   chip.setAttribute("tabindex", "0");
   chip.setAttribute("aria-pressed", String(setupOn));
   replace(box, chip, hint);
-  // The outputs' controls are for whichever side was last worked on, as the tools are
+  // The outputs' controls are for whichever side was last worked on, as the settings below are
   headSteps(box, active.strip ? lastOutputRun : active);
 }
 
@@ -149,8 +147,8 @@ function renderLeds(where, run) {
     renderStripOut(box, run, panel);
     return;
   }
-  // The strip's own count box is already the board's, so the icon goes inside it and it
-  // takes the strip's colour
+  // Check if the strip can be edited. Its count box is then the board's own, so the icon goes
+  // inside it and it takes the strip's colour
   if (canEdit(panel)) {
     renderStripChip(where, run);
     var says = box.querySelector(".says");
@@ -176,7 +174,7 @@ addStep(drawSteps.after, DRAW_AFTER, "setup", function () {
   paintAll();
 });
 
-// A strip's chip, its length and its order or brightness to set, shown while the board is set up
+// A strip's chip, its length and its order or brightness to set
 function renderStripChip(where, run) {
   var count = h("input", {
     type: "number", min: STRIP_FEWEST, max: STRIP_MOST, value: run.leds,

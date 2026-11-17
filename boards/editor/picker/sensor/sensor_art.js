@@ -2,9 +2,9 @@ import {hexRgb} from "../colours.js";
 import {REMOTE_RAINBOW} from "../scene_tray.js";
 
 // ---- the Aye Arr Remote, drawn from its artwork -----------------------------------------------
-// The remote as its artwork draws it, in the artwork's own units, one element a line, for the
-// Sensor tab to lay its buttons' rows beside. Its three bitmaps, the rotate buttons' rainbows and
-// the 0 button's ring, are drawn as arcs in their places, which stay sharp at any size.
+// The Aye Arr Remote as its artwork draws it, in the artwork's own units, one element a line. Its
+// three bitmaps, the rotate buttons' rainbows and the 0 button's ring, are drawn as arcs in their
+// places, which stay sharp at any size.
 
 // Every button, with its name as aye_arr's PimoroniRemote names it, its column, its row in the
 // remote's own layout, and what its face is
@@ -270,14 +270,14 @@ export var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
                         ["M91.24,115.386", "7_WARM", "8_WHITE"],
                         ["M107.185,108.225", "8_WHITE", "9_COOL"]];
 
-// A join's own outline, which a clip can take without any of the pad around it
+// A join's own outline, apart from the pad around it
 export function remoteArtJoin(start) {
   var line = REMOTE_ART.filter(function (one) { return one.indexOf("d='" + start) >= 0; })[0];
   return line.match(/d='([^']*)'/)[1];
 }
 
-// The art as svg markup, each rainbow where the artwork has its bitmap. The rotate buttons' come
-// after the remote's body, and the 0 ring after the 9 button's ring
+// The art as SVG markup, each rainbow where the artwork has its bitmap. The rotate buttons' come
+// after the remote's body, and the 0 ring after the 9 button's face
 export function remoteArt() {
   var body = REMOTE_ART.indexOf("</g>") + 1;
   var nine = remoteArtAt("9_COOL");
@@ -291,9 +291,9 @@ export function remoteArt() {
 
 
 // ---- the PIR Stick, drawn from its artwork ------------------------------------------------------
-// The PIR Stick as its artwork draws it, in the artwork's own units, 22.692 across and 77.102
-// high, one element a line. The page shows through the board's mounting hole. The artwork's style
-// classes are written as fills, as a style in the page would reach every drawing on it
+// The PIR Stick as its artwork draws it, in the artwork's own units, one element a line. The page
+// shows through the board's mounting hole. The artwork's style classes are written as fills, as a
+// style in the page would reach every drawing on it
 export var PIR_ART = [
   // The board, with its mounting hole
   "<path d='M19.85,0H2.842C1.277,0,.008,1.269.008,2.835v71.008c-.117,1.683,1.152,3.142,2.835,3.26,0,0,17.008,0,17.008,0,1.683-.117,2.952-1.577,2.835-3.26,0,0,0-71.008,0-71.008,0-1.565-1.269-2.835-2.835-2.835ZM11.346,35.291c-1.957,0-3.543-1.586-3.543-3.543s1.586-3.543,3.543-3.543,3.543,1.586,3.543,3.543-1.586,3.543-3.543,3.543Z'/>",

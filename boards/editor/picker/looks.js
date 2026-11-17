@@ -1,15 +1,14 @@
 import {h, replace} from "./dom.js";
 import {draw} from "./draw.js";
 
-// The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
-// the parts in this folder and any of the board's own, each run after the parts it imports, those
-// in a feature folder only for a board with that feature. This part holds the board and the looks.
+// The board's description and the looks of the FX picker, the page that saves what the board
+// plays as effects.txt. README.md says how the page is made from its parts.
 
-// What the build wrote into the page: the board's description and picofx's version
+// What the build wrote into the page, the board's description and picofx's version
 var BUILD = JSON.parse(document.getElementById("build").textContent);
 
-// The board the page is for, from its editor/fx_board.json. It holds the board's outputs, strips
-// and screen ports, whether it has a hub, sound and the network looks, and the examples it offers
+// The board the page is for, from its editor/fx_board.json. It holds the board's outputs, strips,
+// screens and hub, whether it has sound and a sensor, and the examples it offers
 export var BOARD = BUILD.board;
 
 // picofx's version, with "preview" after it in a page built for no release
@@ -80,8 +79,7 @@ export function nameSet(target, set) {
   return target.nameSet ? target.nameSet(set) : target.name + rangify(set);
 }
 
-// The playing outputs split round-robin into up to three groups, which is how a
-// three-colour look lands one colour per light in turn
+// The playing outputs dealt round-robin into `ways` groups, one colour per light in turn
 function roundRobin(playing, ways) {
   var groups = [];
   playing.forEach(function (which, i) {
@@ -91,8 +89,7 @@ function roundRobin(playing, ways) {
   return groups;
 }
 
-// A run cut into up to three contiguous parts, as selectors, low end first or high
-// end first to match how it is wired
+// A run cut into `ways` contiguous parts as selectors, far end first for a reversed stretch
 function runThirds(name, count, reversed, ways, lights) {
   // Places along the stretch, numbered by the run's own lights where the stretch has them, so
   // a stretch partway along a strip names its own lights
@@ -110,13 +107,13 @@ function runThirds(name, count, reversed, ways, lights) {
   return parts;
 }
 
-// A mono output has no colour to be given, so the setting comes back off the line
-// before it is written. What is left is the same effect, in whatever the lamp is
+// Take the colour setting off a line for a mono lamp, which has no colour to be given. What is
+// left is the same effect, in the lamp's own colour
 function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
 }
 
-// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
+// Make a toggle with its icon for anything on or off, greyed where playback would refuse it
 export function toggle(icon, words, on, flip, title, refused) {
   return h("button", {
     type: "button", className: "stoggle" + (on && !refused ? " on" : ""), "data-words": words,
@@ -142,10 +139,8 @@ var PARTY_THIRD = ["blue", "green", "cyan", "white", "magenta"];
 
 export var LOOKS = [
   {
-    // The one look with nothing moving in it. A scene that wants a lamp to sit at one
-    // colour has no effect to reach for otherwise, and on a board whose only light of
-    // its own is a single LED that is most of what it is for. The colour is chosen
-    // rather than slid to, so this is the one look whose settings are not two sliders
+    // The one look with nothing moving in it, so a scene can hold a lamp at one colour. The colour
+    // is chosen, not slid to, so this is the one look whose settings are not two sliders
     name: "Solid", mood: "Brightness", spans: true, onMono: true, solid: true,
     strip: ["#d94a3d", "#e0a03a", "#3fa672", "#3a7fd9", "#8a4ad0", "#d94a9e", "#e8e2d6"],
     entries: function (target, pace, mood, colour) {
@@ -300,8 +295,6 @@ export var LOOKS = [
                      tone(PARTY_THIRD, mood)];
       var groups;
       if (target.kind === "outputs") {
-        // A target whose lamps are not whole outputs, such as broken-out channels, names
-        // its own sets of them, and nameSet() asks it for them
         groups = roundRobin(target.playing, Math.min(3, target.playing.length))
                  .map(function (group) {
                    return nameSet(target, group);
@@ -354,8 +347,7 @@ export function whyNot(look, target) {
   return "play this on " + target.label.toLowerCase();
 }
 
-// The lines one look's own entries write for one target, in the form that target can take. The
-// effects part writes a stretch through this as the board will play it
+// The lines one look's own entries write for one target, in the form that target can take
 export function lookLines(look, target, pace, mood, colour) {
   if (!look || !canPlay(look, target)) return [];
   var lines = (target.count === 1 && look.alone)
@@ -364,18 +356,9 @@ export function lookLines(look, target, pace, mood, colour) {
   return target.colour ? lines : lines.map(withoutColour);
 }
 
-// Scanner and Chase light each output as the light reaches it and let it go slowly, a fade
-// split into its rise and its fall, as one fade both ways rises too slowly to reach full before
-// the light moves on. The fall is the Trail the light leaves, a slider of its own, so Speed sets
-// only how fast it moves. Scanner's trail runs long, as sweep_trail.py has it, and Chase's runs
-// short, as a runway light's does
-//
-// The rise is sweep_trail.py's 0.05s in proportion, since that is tuned to its one speed and
-// spacing, and a fixed rise leaves a fast scanner's head short of full. There the head covers
-// each light for about a third of a second, as a sweep reaches extent lights either side and
-// crosses length - 1 of them a cycle, so the rise is 15% of however long it covers one. A chase's
-// flash lasts 0.2s at speed 1, window 0.4 and duty 0.5, so its rise is always a quarter of it
+// The share of the time Scanner's head covers a light that its fade takes to rise
 export var RISE_OF_DWELL = 0.15;
+// The share of Chase's flash that its fade takes to rise
 export var RISE_OF_FLASH = 0.25;
 
 export function numberIn(line, key, otherwise) {
@@ -387,8 +370,8 @@ export function riseFor(seconds) {
   return Math.max(0.01, r2(seconds));
 }
 
-// On and off at a pace, lit for a share of each beat, picofx's blink. Given several colours
-// it blinks through them in turn, one a beat, which is rgb_blink (see blink.js)
+// On and off at a pace, lit for a share of each beat, picofx's blink. blink.js covers a blink
+// through several colours
 export function blinkSpeed(pace) { return lerp(0.3, 3, pace); }
 export function blinkDuty(mood) { return lerp(0.1, 0.9, mood); }
 
@@ -402,10 +385,9 @@ export function marqueeGap(mood) { return Math.round(lerp(2, 6, mood)); }
 export var SETTING_NAMES = {"Rainbow": "Spread", "Wave": "Spread", "Campfire": "Intensity",
                      "Pelican crossing": "Fade"};
 
-// A signal's timings are its own sliders, one for each part of its sequence in seconds, each
-// starting at a real signal's. They are the stretch's timings, which the lines read through the
-// stretch being written or played. Each part is its setting, its name, where it starts and the
-// slider's two ends, in seconds
+// A signal's timings are its own sliders, one for each part of its sequence, each starting at a
+// real signal's. The lines read them from the stretch being written or played. Each part is its
+// setting, its name, where it starts and the slider's two ends, in seconds
 export var SIGNAL_TIMINGS = {
   "Traffic light": [["red_interval", "Red", 12, 2, 60],
                     ["red_amber_interval", "Red and amber", 2, 1, 10],

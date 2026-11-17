@@ -48,7 +48,7 @@ function offeredGroups() {
   }));
   return groups.map(function (group) {
     var paths = group[1].map(function (one) { return one.path; });
-    // Numbers in titles counted, so name 2 comes before name 10
+    // Compare numbers in titles as numbers, so name 2 comes before name 10
     paths.sort(function (a, b) {
       return programTitle(a).localeCompare(programTitle(b), undefined, {numeric: true});
     });
@@ -64,7 +64,7 @@ function groupSays(title) {
   return listed ? listed[1] : "";
 }
 
-// Whether each of the program tab's groups is folded, by name, for those folded or opened
+// Whether each group the user has folded or opened is now folded, by name
 var programsFolded = {};
 
 // Whether a group is folded. Each starts open unless sections.txt marks its section folded
@@ -147,7 +147,7 @@ export var FEATURES = [
   ["motor", "motors", "motors",
    "<rect class='f' x='1.5' y='5' width='15' height='14' rx='3.5'/>" +
    "<rect class='f' x='16.5' y='10.5' width='6' height='3' rx='1'/>"],
-  // A servo from the side, its mounting tabs and its arm, the arm no longer than the body
+  // A servo from the side with its mounting tabs, and an arm no longer than its body
   ["servo", "servos", "servos",
    "<rect class='f' x='4' y='10' width='16' height='11' rx='1.5'/>" +
    "<rect class='f' x='1' y='13' width='22' height='3' rx='1'/>" +
@@ -183,8 +183,8 @@ export function programTitle(path) {
 }
 
 // ---- thumbnails ----------------------------------------------------------------------------------
-// A thumbnail is a screen's shape at half a 2.8" panel's pixels, drawn or a picture, a captured
-// frame or a drive program's own
+// A thumbnail is a screen's shape at half a 2.8" panel's pixels. It is the program's picture where
+// it has one, else drawn here
 
 var THUMB_W = 160, THUMB_H = 120;
 
@@ -194,7 +194,7 @@ function thumbCanvas(kind, seed, uses) {
   return canvas;
 }
 
-// A lamp's colour on a mono output, a warm white as bright as the colour, an unlit lamp unchanged
+// A lamp's colour on a mono output, a warm white as bright as the colour. An unlit lamp stays unlit
 function monoInk(ink) {
   if (ink === "#3a3f44") return ink;
   var level = (parseInt(ink.slice(1, 3), 16) * 0.2126 + parseInt(ink.slice(3, 5), 16) * 0.7152 +
@@ -204,7 +204,7 @@ function monoInk(ink) {
          Math.round(160 * level) + ")";
 }
 
-// A rectangle with rounded corners, filled
+// Fill a rectangle with rounded corners
 function fillRounded(g, x, y, w, h, r) {
   g.beginPath();
   g.moveTo(x + r, y);
@@ -219,8 +219,8 @@ function fillRounded(g, x, y, w, h, r) {
 // What marks a machine's motion
 var MOTION = "#ffd21f";
 
-// A turn along part of an ellipse from one angle to another, backwards being anticlockwise, with
-// a head at its end pointing along it
+// Draw an arrow along part of an ellipse from one angle to another, anticlockwise where backwards=
+// is true, with its head at the end pointing along it
 function drawTurn(g, x, y, rx, ry, from, to, backwards) {
   g.strokeStyle = MOTION;
   g.lineWidth = 2.5;
@@ -240,7 +240,7 @@ function drawTurn(g, x, y, rx, ry, from, to, backwards) {
   g.fill();
 }
 
-// A wheel seen edge on, upright and centred on its axle, with its turn beside it to the right
+// Draw a wheel seen edge on, upright and centred on its axle, with an arrow to its right
 function drawWheel(g, x, y) {
   g.fillStyle = "#62666e";
   fillRounded(g, x - 7.5, y - 42, 15, 84, 7.5);
@@ -252,8 +252,8 @@ function drawWheel(g, x, y) {
 // A servo's colours, its body's translucent blue lighter towards the top, and its white horn
 var BLUE = "#2f62d6", BLUE_DARK = "#1d43a6", BLUE_LIGHT = "#5d8bef", WHITE = "#eef1f5";
 
-// A micro servo from the side, its body's top left corner at (x, y - 4), its spline on top and the
-// wires out of its lower left. Its horn, where it has one, is long to the right of the spline
+// Draw a micro servo from the side with its body's top left corner at (x, y - 4). Its spline is on
+// top, its wires leave its lower left, and where horn= is true its horn runs right of the spline
 function drawServo(g, x, y, horn) {
   g.lineWidth = 3;
   g.lineCap = "round";
@@ -269,8 +269,8 @@ function drawServo(g, x, y, horn) {
   g.fillRect(x - 15, y + 6, 98, 9);
   g.fillStyle = BLUE;
   g.fillRect(x - 15, y + 6, 98, 6);
-  // The body steps in twice towards the top, each step drawn before the one below so it hides its
-  // rounded foot. The upper step is lighter and lit along its top edge
+  // The body steps in twice towards the top, each drawn before the step below, which hides its
+  // rounded foot. The upper step is lighter, and the step below it is lit along its top edge
   g.fillStyle = BLUE_LIGHT;
   fillRounded(g, x + 4, y - 22, 26, 14, 4);
   g.fillStyle = "#4677e3";
@@ -289,7 +289,7 @@ function drawServo(g, x, y, horn) {
   }
 }
 
-// The servo's sweep, part of a turn round its spline, across the front of its horn
+// Draw the servo's sweep, an arrow round its spline across the front of its horn
 function drawSweep(g, x, y) {
   drawTurn(g, x + 17, y - 36, 36, 8, Math.PI * 0.95, Math.PI * 0.12, true);
 }
@@ -298,8 +298,8 @@ function drawSweep(g, x, y) {
 var SILVER = "#c3cad3", SILVER_LIGHT = "#dfe4ea", BRASS = "#d9a93a", BRASS_DARK = "#a77d1f",
     PLASTIC = "#4b5058";
 
-// A micro metal gearmotor from the side at a height, its pins and end cap to the left, then its
-// can, its gearbox and the shaft
+// Draw a micro metal gearmotor from the side, centred on height y. Its pins and end cap are on the
+// left, then come its can, its gearbox and the shaft
 function drawMotor(g, y) {
   g.fillStyle = SILVER;
   g.fillRect(12, y - 13, 10, 3);
@@ -338,7 +338,7 @@ function drawMotor(g, y) {
   g.fillRect(121, y - 3, 25, 2);
 }
 
-// A repeatable scatter, so a thumbnail is the same every time it is drawn
+// A seeded source of random numbers, so a thumbnail is the same every time it is drawn
 function scatter(seed) {
   var state = seed * 9301 + 49297;
   return function () {
@@ -398,7 +398,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
     return;
   }
   if (kind.indexOf("outputs:") === 0) {
-    // What the outputs do, as a lamp for each on the board's dark, spread across seven lamps' width
+    // What the outputs do, a lamp for each on a dark background, spread across seven lamps' width
     fill("#16181b");
     var inks = {rainbow: ["#ff2d1a", "#ff9022", "#ffd21f", "#22c65a", "#28e0e0", "#2b5cff", "#9a46ff"],
                 warm: ["#ffb060", "#ffc27a", "#ff9022", "#ffb060", "#ffc27a", "#ff9022", "#ffb060"],
@@ -495,7 +495,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
   }
   switch (kind) {
   case "shot":
-    // A captured frame not yet read from the drive, shown as the dark background it is drawn on
+    // An example with no picture read from the drive, on the dark background a frame is drawn on
     fill("#111");
     break;
   case "stars":
@@ -536,8 +536,8 @@ function programThumb(path) {
 
 export var programView = null;
 
-// A card's copy tile, in the bin's place on an example, which has none, or beside the bin on the
-// user's own. An example is customised and one of the user's own duplicated, into the folder named
+// A card's copy tile. An example has no bin, so the tile takes its place, and one of the user's own
+// has it beside the bin. It copies the file into folder=, as Customise or Duplicate says
 export function copyTile(example, file, folder, copy) {
   return h("span", {
     className: "bin copytile" + (example ? " alone" : ""),
@@ -563,7 +563,7 @@ export function programCard(path) {
     "data-path": path,
     title: ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
       uses.map(function (key) { return featureNamed(key)[1]; }).join(", ") : ""),
-    // Picked again, the program is put back, leaving none chosen
+    // Pressing the chosen program again chooses none
     onclick: function () {
       boardSet.program = boardSet.program === path ? null : path;
       draw();
@@ -599,8 +599,8 @@ export function programCard(path) {
 // What the parts after this one add to each program card, each given the card and its path
 export var programCardSteps = [];
 
-// The screen size a program is shown on: screen A's, else the program's own default, else a 2.8".
-// Its picture was taken at its defaults, so what it is given changes nothing here
+// The screen size a program is shown on, which is screen A's, else the program's own default, else
+// 2.8". Its picture was taken at its defaults, so the arguments it is given change nothing here
 function sizeShown(path) {
   var screen = state.screens && state.screens.A;
   if (screen && screen.there && screen.size) return screen.size;
@@ -685,7 +685,7 @@ function programWords(path) {
            h("p", {}, program.does || "No description."),
            h("p", {className: "progwhere"},
              path + (program.example ? ", built in" : ", on the drive")),
-           // What it uses, each drawn and named, as the filter below names them
+           // What it uses, each drawn and named in full
            uses.length ? h("div", {className: "herouses"}, uses.map(function (key) {
              return h("span", {}, featureIcon(key), featureNamed(key)[1]);
            })) : null,
@@ -693,7 +693,7 @@ function programWords(path) {
 }
 
 // The picked program large, with what it does, what it needs and what it takes. With none picked
-// the box keeps its size, an empty panel in the picture's place, so choosing one moves nothing
+// an empty panel keeps the picture's place, which is one size either way
 function programHero(path) {
   return h("div", {className: "proghero" + (path ? "" : " unchosen")},
            heroNote(path),
@@ -764,16 +764,15 @@ programsReadingSteps.push(renderProgramView);
 export var programViewSteps = [];
 
 // ---- choosing by what is to hand ----------------------------------------------------------------
-// A chip for each thing an offered program can use, all on to begin with. A chip turned off is
-// something not to hand, so every program needing it goes, and a program stays only while all it
-// uses is on. One screen or two is had with either a screen or two, so it has no chip of its own.
-// Every board has its outputs and its Boot button, and any RGB output, so none of those has one
+// A chip for each thing an offered program can use, all on to begin with. Turning a chip off hides
+// every program that uses it. "One screen or two" has no chip, since a screen or two screens meet
+// it, and nor do the outputs, the Boot button and any RGB output, which come with the board
 
 export var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
 export var unhad = [];
 
-// Set the parts the program filter takes as not to hand
+// Set the things the program filter treats as not to hand
 export function setUnhad(list) {
   unhad = list;
 }
@@ -822,7 +821,7 @@ function featureFilter() {
                }
              }, featureIcon(feature[0]), feature[2]);
            }),
-           // Buttons to turn every chip on, or every chip off for ticking what is to hand. They
+           // Buttons to turn every chip on, or every chip off to then turn on what is to hand. They
            // are kept together in one box where the row wraps
            h("div", {className: "featureclears"},
              [["all", function () { return []; }],
@@ -839,16 +838,16 @@ function featureFilter() {
 }
 
 // ---- moving between the two pages ---------------------------------------------------------------
-// Two tabs split under the header, the effects tab holding the way into scenes until there are some
+// Two tabs split under the header. The effects tab holds the way into scenes until there are some
 
-// Go back to the effects, so the file runs them again
+// Go back to the effects, choosing no program so the board plays them again
 function toEffects() {
   setProgramPage(false);
   boardSet.program = null;
   draw();
 }
 
-// Over to the programs with none chosen, until one is picked
+// Go over to the programs, with none chosen until one is picked
 function toProgram() {
   setProgramPage(true);
   draw();
@@ -865,10 +864,9 @@ function effectsFace() {
 function renderPageSwitch() {
   var inHeader = document.getElementById("headSwitch");
   var program = boardSet.program;
-  // Split under the header, the tabs are drawn as the tabs off its foot are
+  // The tabs split under the header, hanging from its foot
   inHeader.className = "headswitch headsplit headtabs";
-  // Two tabs, each showing what it would run, with the page shown marked. They sit small in the
-  // header where the page's name is, taking no room from the page
+  // Two tabs, each showing what it would run, with the page shown marked
   replace(inHeader, [["effects", "Effects"],
                      ["program", "Programs", program ? programTitle(program) : ""]].map(function (one) {
     // With no program chosen its tab shows a starfield, or the lamps lit on a board without screens
@@ -916,12 +914,12 @@ addStep(drawSteps.after, DRAW_AFTER, "program", function () {
   paintAll();
 });
 
-// The width of the page's column in rem. It must match the stylesheet's
+// The width of the page's column in rem. It must match the 57.2rem in program.css
 var COLUMN_REM = 57.2;
 
-// Split under the header, the tabs stand over the page's column. Where the window is wide
-// enough for the name to fit left of that column and the rest right of it, all three share one
-// line, measured, since what fits depends on the name and on which buttons show
+// Put the name, the tabs and the header's buttons on one line where the window is wide enough for
+// the name to fit left of the page's column and the buttons right of it. It is measured, since what
+// fits depends on the name and on which buttons show
 function headerOnOneLine() {
   var header = document.querySelector("header");
   header.classList.remove("oneline");
@@ -944,7 +942,7 @@ function headerOnOneLine() {
   // keep that height on two rows too, so moving between one and two changes nothing
   var above = parseFloat(style.paddingTop);
   var border = parseFloat(style.borderBottomWidth) || 0;
-  // Its exact height, a whole-pixel one leaving the spacing half a pixel out
+  // The button's exact height, since a whole-pixel one can leave the spacing half a pixel out
   var button = document.getElementById("open").getBoundingClientRect().height;
   header.style.setProperty("--headgap", (above - border) + "px");
   header.style.setProperty("--buttonheight", button + "px");
@@ -955,8 +953,8 @@ function headerOnOneLine() {
 
 window.addEventListener("resize", headerOnOneLine);
 
-// Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
-// kept above the gallery for it. Once there are scenes their cards take that place
+// Move the way into scenes to the end of the effects tab before there are any, so no row is kept
+// above the gallery for it. Once there are scenes their cards take that place
 function scenesInTheTab() {
   var into = !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");

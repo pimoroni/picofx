@@ -6,9 +6,9 @@ import {widthOf} from "./outputs.js";
 import {activate, active, copyBlinks, copyExact, mono, outs, runs, settle} from "./runs.js";
 
 // ---- scenes ---------------------------------------------------------------------------
-// Adding, removing and reordering scenes, and what a scene leaves to Always on. A scene's body is
-// every run's cuts, what each stretch plays and its steps to undo, and other parts add their own
-// share to it.
+// This part holds the scenes and Always on, adds and removes scenes and says what a scene leaves
+// to Always on. A scene's body is every run's cuts, what each stretch plays and its steps to undo,
+// and later parts add their own share to it.
 
 // What a lamp's tip says after its name where the scene plays nothing on it
 export function underSaid(run, which) {
@@ -45,7 +45,7 @@ export function stretchUnder(run, section) {
   var notes = [];
   if (looks.length) notes.push("Always on's " + spoken(looks) +
                                (showing < widthOf(section) ? " on " + showing : ""));
-  // The scenes are named for what uses the lights anywhere in the file, never for which came first
+  // Check if other scenes light some of these lamps. The note names every scene that does
   if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
                                 ", lit only in " + spoken(scenes));
   var tips = [];
@@ -59,8 +59,8 @@ export function stretchUnder(run, section) {
 
 export var state = {at: -1, always: {body: null}, scenes: []};
 
-// What each output was carried from where a stand-in took its place, which is the
-// scene's, so it is held in the body with the stretches it is about
+// What each output played before a stand-in took its place, so putting it back gives the look it
+// had. A settle makes the stretches afresh, so it is held by output and captured with the scene
 export var carried = {};
 
 function copyRun(run) {
@@ -102,22 +102,18 @@ function mostPlayedOn(among) {
   return most;
 }
 
-// A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
-// length are the board's, so they sit outside the body and are not captured. The parts below
-// keep their own share of a scene in the body too, and each runs after the runs' own, in the
-// order BODY_ORDER states. A part registers how it captures, applies and blanks that share,
-// whether the share has content, and how it adds to the scene's lines. It also registers how
-// it reads its share back from a file's board line and kept lines, and the names of what it
-// plays. A scene's tab shows the icon and name a part gives where the scene sets it, and when
-// the first scene is made, a part keeps back for Always on what is meant for every scene
+// The parts that keep a share of each scene's body, run after the runs' own in the order
+// BODY_ORDER states. Each registers any of capture, apply, blank, hasContent, entries, readBoard,
+// read and named, and sets for the icon and name on the scene's tab. split keeps back for Always
+// on what is meant for every scene when the first scene is made
 export var bodyParts = [];
 export var BODY_ORDER = ["screens", "sound", "sensor", "hub", "screenSettings", "hubGroups",
                          "screenPair", "readback"];
 
 // The parts that keep files on the FX drive, each registering how a walk of the drive finds
 // them (begin, then file or folder for each entry, then land), what it found as text to tell
-// one walk from the next, and how the scenes let go of a deleted file before the drive is walked
-// again (forget) and after it (gone)
+// one walk from the next (said), and how the scenes let go of a deleted file before the drive is
+// walked again (forget) and after it (gone)
 export var driveParts = [];
 export var DRIVE_ORDER = ["screens", "sound", "hub"];
 
@@ -143,8 +139,8 @@ export function apply(body) {
   bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
 
-// A scene with nothing playing in it, cut as the board is now, which is what the always-on
-// tab is left holding once its content has been carried into the first
+// A scene with nothing playing in it, cut as the board is now. Always on is left holding one once
+// its content has moved into the first scene
 export function blankBody() {
   var body = capture();
   Object.keys(body.runs).forEach(function (name) {
@@ -229,19 +225,18 @@ export function switchTo(which) {
 export function addScene() {
   store();
   var made;
-  // Where scenes can wait for a button, a new one does, as one made for a remote mostly stands
-  // alone. The first waits, as a time would only bring it back to itself
+  // Check if this is the first scene. It waits, as a time would only bring it back to itself
   if (!state.scenes.length) {
     made = {name: "Scene 1", seconds: 10, restart: false, waits: true, body: capture()};
     state.always.body = blankBody();
-    // What a part keeps with Always on rather than carrying into the first scene, such as what
-    // the sensor's triggers do, which is meant for every scene
+    // Let each part keep with Always on what is meant for every scene, not move it to the first
     bodyParts.forEach(function (part) { if (part.split) part.split(state.always.body, made.body); });
   } else {
     var before = state.scenes[state.scenes.length - 1];
+    // A later scene waits where scenes can wait for a button, as one for a remote stands alone
     made = {name: freeSceneName(), seconds: before.seconds,
             restart: before.restart, waits: sceneHooks.canWait(), body: copyBody(before.body)};
-    // A scene that stayed alone takes its time again, without a sensor to move it on
+    // Check if the first scene waited only for being alone, with nothing fitted to move it on
     if (state.scenes.length === 1 && !sceneHooks.canWait()) before.waits = false;
   }
   state.scenes.push(made);
@@ -253,8 +248,7 @@ export function addScene() {
 function removeScene(which) {
   store();
   var gone = state.scenes.splice(which, 1)[0];
-  // Taking the last scene away leaves nothing playing, so its content comes back to
-  // the tab that plays all the way through, which is where the page started
+  // Check if the last scene has gone while Always on plays nothing, which then takes its content
   if (!state.scenes.length && !hasContent(state.always.body))
     state.always.body = gone.body;
   state.at = state.scenes.length ? Math.min(which, state.scenes.length - 1) : -1;
@@ -266,8 +260,8 @@ function removeScene(which) {
 function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
 
 // Stretch Always on's card down every row the scenes' cards and the add button wrap into, as
-// many as the tray's width leaves room for. Where the scenes fill their last row, the add button
-// is a thin bar the width of the tray under them, so it never takes a row as a lone card
+// many as the tray's width leaves room for. Where the scenes fill their last row, the add button is
+// a thin bar across the scenes' columns under them, so it never takes a row as a lone card
 export function spanTray() {
   var box = document.getElementById("tabs");
   var always = box.querySelector(".tab.always");
@@ -286,7 +280,7 @@ export function spanTray() {
   always.style.gridRow = "1 / span " + Math.ceil((scenes + 1) / perRow);
 }
 
-// Beside the frame's tab, where the picked scene comes in the turns and the way to remove it,
+// Draw beside the frame's tab where the picked scene comes in the order and the way to remove it,
 // or for Always on how many scenes it plays under
 export function renderSceneAside() {
   var aside = document.getElementById("sceneAside");
@@ -327,11 +321,13 @@ export function renderSceneAside() {
 
 // ---- how a scene ends ---------------------------------------------------------------------------
 // A scene either shows for its time and then goes to the scene after it, or waits until a button
-// changes it. The scene after is the next in order unless the scene names another with then=, so
-// a timed run of scenes need not follow the order the remote's numbers take
+// or motion changes it. The scene after is the next in order unless the scene names another with
+// then=, so timed scenes need not follow the order the remote's numbers take
+
+// The count of marks given so far
+var sceneMarks = 0;
 
 // A scene's mark, given once and kept while it is moved or renamed, by which other parts name it
-var sceneMarks = 0;
 export function sceneMark(scene) {
   if (!scene.mark) scene.mark = "s" + (++sceneMarks);
   return scene.mark;
@@ -381,7 +377,7 @@ function sceneLeads(at) {
   return sceneHooks.triggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
 }
 
-// Which scenes can show from the places in `starts`, by place, those included
+// Which scenes can show from the places in `starts`, including those, as a flag for each place
 function scenesReachedFrom(starts) {
   var reached = state.scenes.map(function () { return false; });
   var waiting = [];
@@ -417,7 +413,7 @@ function unreachedScenes() {
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
   if (!unreached.length || sceneHooks.canWait()) return {scenes: unreached, stopper: null};
 
-  // Without a sensor the turns are one line from the first scene, which a waiting scene ends
+  // With nothing fitted to change scenes, they follow one line from the first until one waits
   var stop = state.scenes[0];
   var seen = [];
   while (!stop.waits && seen.indexOf(stop) < 0) {

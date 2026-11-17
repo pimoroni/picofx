@@ -4,10 +4,15 @@ import {
 } from "./looks.js";
 import {OPENING_LOOK, blank, mono, outs, settle} from "./runs.js";
 
-// ---- the looks and the opening stretch, once every part is in place -----------------------------
-// The looks' own tuning and the looks added beside the catalogue's, then each run opened on one
-// stretch playing the board's opening look. Each needs parts before it, so they run here.
+// ---- the looks and the opening stretch, once the looks and the runs are in place ----------------
+// The looks' own tuning and the looks added beside those in looks.js, then the outputs, and the
+// mono side where the board names a look for it, opened on one stretch playing that look. Each
+// needs parts before it, so they run here.
 
+// Scanner and Chase split their fade into a quick rise and a fall that Trail sets, since one fade
+// both ways rises too slowly to reach full before the light moves on. Scanner's rise follows how
+// long the head covers a light, 1/3s in sweep_trail.py at speed 1, length 7 and extent 1.
+// Chase's follows its flash, 0.2s at speed 1 and window 0.4
 (function (scanner, chase) {
   scanner.mood = "Trail";
   chase.mood = "Trail";
@@ -65,8 +70,8 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Chase")) + 1, 0, {
 });
 
 // Red, red and amber, green, amber on three lamps, as Pelican crossing takes its five. It lands
-// on the first three playing lights, and any beyond them are told to stay dark. The intervals
-// keep a real signal's proportions, and the pace scales them all
+// on the first three playing lights, and any beyond them are told to stay dark. Its intervals are
+// the stretch's timings, which SIGNAL_TIMINGS starts at a real signal's
 LOOKS.splice(LOOKS.indexOf(lookNamed("Pelican crossing")), 0, {
   name: "Traffic light", mood: "Fade", spans: false, onMono: true,
   strip: ["#ff0000", "#ff7800", "#00d28c", "#111111", "#111111", "#111111", "#111111"],
@@ -117,8 +122,8 @@ Object.keys(SIGNAL_TIMINGS).forEach(function (name) {
   wave.detents = spreadStops;
 }(lookNamed("Rainbow"), lookNamed("Wave")));
 
-// Campfire's intensity is how far its flicker dips. The effect's own brightness is held at full
-// so the stretch's Brightness is the one that sets how bright it is. Its pace is the model's
+// Campfire's intensity is how far its flicker dips. The effect's own brightness is left at
+// picofx's default of full, so the stretch's Brightness alone sets how bright it is
 (function (campfire) {
   campfire.entries = function (target, pace, mood) {
     return [target.selector + " colour=ff5a00: flicker_each dimness=" + lerp(0.15, 0.8, mood) +

@@ -15,7 +15,7 @@ import {TAB_NAMES} from "./tabs.js";
 // The row of scene cards, each with its colour, its time or what it waits for, and the icons of
 // the parts it sets.
 
-// What a scene's card says under its name, its time or that it waits. The scene after is named
+// What a scene's card says about how it ends, its time or that it waits. The scene after is named
 // only where it is chosen, since a time implies the next in order
 function sceneTurn(scene) {
   var after = sceneAfter(scene);
@@ -27,8 +27,8 @@ function sceneTurn(scene) {
 }
 
 // ---- each scene's colour and the parts it sets ----------------------------------------------
-// Each scene has a colour of its own, its tab's band and tint and its name wherever the page names
-// it, so what the page says about a scene leads back to its tab. Always on has a neutral grey
+// Each scene has a colour of its own, which is its tab's band and tint and the frame round what it
+// sets. Always on has a neutral grey
 
 // The colours of the Aye Arr Remote's number buttons, 1 to 9, from its artwork, and the rainbow
 // round its 0. Scene 1 takes button 1, so a scene's colour is the button that goes to it. Scene
@@ -62,8 +62,8 @@ function sceneEdge(scene) {
     ? "color-mix(in srgb, " + sceneColour(scene) + " 72%, #2b2a28)" : sceneColour(scene);
 }
 
-// Check if a scene's colour is too pale to show against the page, as the remote's white and
-// yellow are, by its luma
+// Check if a scene's colour is too pale to show against the page by its luma, as the remote's
+// white and yellow are
 function sceneIsPale(scene) {
   var hex = sceneColour(scene).replace("#", "");
   var red = parseInt(hex.slice(0, 2), 16);
@@ -131,13 +131,13 @@ function alwaysSays(body) {
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }
 
-// The id of a scene's tab, Always on's being which= -1
+// The id of a scene's tab, where Always on's which= is -1
 function sceneTabId(which) {
   return which < 0 ? "sceneTabAlways" : "sceneTab" + which;
 }
 
-// The scene before or after with the arrow keys, from Always on to the last scene without
-// wrapping, or the first or last with Home and End. The keyboard stays on the tab shown
+// Step through the tabs with the arrow keys, from Always on to the last scene without wrapping.
+// Home goes to Always on and End to the last scene. The keyboard stays on the tab shown
 function stepScenes(event, which) {
   var last = state.scenes.length - 1;
   var to = {ArrowRight: Math.min(last, which + 1), ArrowDown: Math.min(last, which + 1),
@@ -204,8 +204,8 @@ function sceneTab(which, slot, name, says) {
       e.preventDefault();
       if (carriedTab === null || carriedTab === which) return;
       store();
-      // The scene being edited is followed by identity, since moving any tab shifts
-      // the numbers of the ones it passes
+      // The scene being edited is followed by identity, since moving any tab shifts the places
+      // of the ones it passes
       var editing = state.at >= 0 ? state.scenes[state.at] : null;
       var moved = state.scenes.splice(carriedTab, 1)[0];
       state.scenes.splice(which, 0, moved);
@@ -276,7 +276,7 @@ function sceneNameField(scene) {
   return field;
 }
 
-// How a scene ends, shown for a time or waiting. A waiting scene has no time and no scene after
+// How a scene ends, shown for a time or waiting
 function sceneEnds(scene) {
   var ends = h("select", {
     className: "sceneends", name: "sceneEnds", "aria-label": "How the scene ends",
@@ -324,10 +324,9 @@ function sceneThen(scene) {
   return then;
 }
 
-// Whether the scene's effects begin again each time it comes round, a toggle with its icon as the
-// screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of theirs
-// is the file's. A scene going back to itself always restarts, so its toggle is held on. A scene
-// that never shows again starts once, so its toggle is greyed
+// The Restart toggle, named with the heading's own word as the screens' Loop and Ping pong are.
+// A scene that goes back to itself always restarts, so the toggle is held on, and one that never
+// shows again has nothing to restart, so it is greyed
 function sceneRestart(scene) {
   var loops = sceneLoops(scene);
   var once = !sceneShowsAgain(scene);
@@ -367,9 +366,8 @@ function renderScenes() {
                          "stroke-width='1.8' stroke-linecap='round'/>"}),
      state.scenes.length ? "another scene" : "split into scenes");
 
-  // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make. Always on is the tray
-  // the scenes' cards sit in, its own card the tray's first column
+  // A file with no scenes plays as one, and a lone tab offers no choice, so Always on's card waits
+  // for the first scene. It then takes the tray's first column, beside the scenes' cards
   replace(box,
           state.scenes.length ? sceneTab(-1, state.always, "Always on", "") : null,
           state.scenes.map(function (scene, i) {
@@ -377,14 +375,14 @@ function renderScenes() {
           }),
           plus);
   box.classList.toggle("tray", state.scenes.length > 0);
-  // The cards are a tablist while there are scenes to choose between, the frame their panel
+  // The cards are a tablist while there are scenes to choose between, and the frame is their panel
   tabRoles(box, {role: "tablist", "aria-label": "Scenes"});
   tabRoles(document.getElementById("sceneBody"),
            {role: "tabpanel", "aria-labelledby": sceneTabId(state.at)});
   spanTray();
 
-  // The frame is what says these belong to the picked card, so it appears with the cards, in
-  // the picked card's colour. Its tab holds the scene's settings beside what the page says about it
+  // The frame shows the settings belong to the picked card, so it appears with the cards in the
+  // picked card's colour. Its tab holds the scene's settings beside what the page says about it
   var frame = document.getElementById("sceneBody");
   frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
   var tabRow = document.getElementById("sceneTabRow");
@@ -397,13 +395,12 @@ function renderScenes() {
   renderSceneAside();
 }
 
-// A scene's row of settings, its name, how it ends and whether it restarts
+// Draw the picked scene's row of settings, its name, how it ends and whether it restarts
 function renderSceneSettings() {
   var box = document.getElementById("sceneSettings");
   if (state.at < 0) {
-    // Check if Always on is shown with scenes for it to play under. It has no settings of its
-    // own, so its row says what it is for, which keeps the gallery where it was as the tabs are
-    // switched
+    // Check if Always on is shown with scenes for it to play under. Its row then says what it is
+    // for in place of settings, so the gallery stays put as the tabs are switched
     replace(box, state.scenes.length
       ? h("div", {className: "sceneset alwaysnote"},
           "Always on plays under every scene. A scene that uses the same lights, screen or " +
@@ -415,6 +412,7 @@ function renderSceneSettings() {
   replace(box, h("div", {className: "sceneset"},
                  sceneNameField(scene),
                  sceneEnds(scene),
+                 // A waiting scene has no time and no scene after
                  scene.waits ? null : sceneSeconds(scene),
                  scene.waits || state.scenes.length === 1 ? null : sceneThen(scene),
                  sceneRestart(scene)));

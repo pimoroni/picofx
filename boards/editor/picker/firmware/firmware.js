@@ -15,9 +15,9 @@ import {BOARD, VERSION} from "../looks.js";
 // A release whose notes have lines starting with the warning sign, or a GitHub warning alert, shows
 // them first, in amber, and turns the button amber too.
 //
-// Tiny FX and Tiny FX W share this page, and their builds place the FX drive differently, so the
-// wrong one empties it. The firmware writes catalogue.js beside the page, the wireless build's own
-// version saying so, and the sheet offers the file for the build the catalogue names.
+// A board can have a wireless build that places the FX drive elsewhere, so flashing the other
+// build's file empties the drive. The firmware writes catalogue.js beside the page, saying which
+// build it is, and the sheet offers the file for the build the catalogue names.
 
 // Where the latest release is fetched from
 var FIRMWARE_LATEST = "https://api.github.com/repos/pimoroni/picofx/releases/latest";
@@ -30,8 +30,8 @@ var FIRMWARE_HOME = "https://github.com/pimoroni/picofx/";
 var FIRMWARE_RELEASES = FIRMWARE_HOME + "releases";
 
 // The localStorage key that holds GitHub's answer and when it came. Every picker opened from a
-// drive shares this browser's storage, so it holds the release as GitHub gave it, and each board
-// finds its own files in that
+// drive shares this browser's storage, so it holds the release as firmwareTrimmed() leaves it, and
+// each board picks its own files from that
 var FIRMWARE_STORE = "fx-picker-firmware-release";
 
 // How long a stored answer is used before GitHub is asked again
@@ -43,7 +43,7 @@ var FIRMWARE_SHOWN = VERSION;
 var FIRMWARE_RUNNING = FIRMWARE_SHOWN.split(" ")[0];
 var FIRMWARE_PREVIEW = / preview$/.test(FIRMWARE_SHOWN);
 
-// The warning sign, with the selector that asks for its colour form
+// The warning sign, with the variation selector that asks for its emoji form
 var FIRMWARE_SIGN = "\u26a0\ufe0f";
 
 // The status is idle, checking, done or failed, latest is the release as firmwareFrom() reads it,
@@ -301,7 +301,7 @@ function firmwareLink(text, url) {
   return h("a", {href: url, target: "_blank", rel: "noopener"}, text);
 }
 
-// A file's name and size, as the foot and a download's tip show it
+// A file's name and size, as the sheet's foot shows it
 function firmwareFileSays(file) {
   return file.name + ", " + (file.size / 1048576).toFixed(1) + " MB";
 }

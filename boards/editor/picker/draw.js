@@ -28,14 +28,13 @@ export var DRAW_AFTER = ["sceneTray", "strips", "setup", "wiring", "tabs", "scre
                          "floatBar", "readback", "discover", "firmware", "start"];
 
 // What a draw does between its before and after steps, by name, each filled in by the part that
-// draws it. Those named in DRAW_ORDER go in that order, which matters: the chosen stretch's panel
+// draws it. A draw runs only the names DRAW_ORDER holds, in its order. The chosen stretch's panel
 // points at its cell in the bars, so the bars are drawn before it
 export var drawParts = {};
 var DRAW_ORDER = ["clearPainters", "clearCardFaces", "clearKin", "galleries", "bars", "sides",
                   "chosen", "preview"];
 
-// The steps paintAll() takes, each lighting part of the page at the beat, the lamps before the
-// cards
+// The steps paintAll() takes, each lighting part of the page at the beat, in PAINT_ORDER's order
 export var paintSteps = [];
 export var PAINT_ORDER = ["lamps", "cards"];
 
@@ -67,10 +66,9 @@ export function draw() {
   if (drawHeld) return;
   // Any draw takes in what a load was waiting to show
   drawOwed = false;
-  // A draw empties and refills much of the page, and reads its layout part way through, and a
-  // browser may move the scroll to hold something in view while it is half drawn, seen in Chrome
-  // as a jump of the whole page when a tab was chosen. So the page ends a draw scrolled where it
-  // began. A scroll a page means, such as holding a pressed button still, is made after the draw
+  // A browser may scroll to keep something in view while a draw has the page half built, seen in
+  // Chrome as the whole page jumping when a tab was chosen. So a draw ends scrolled where it began,
+  // and a part that means to scroll, such as to hold a pressed button still, does so after the draw
   var across = window.scrollX;
   var down = window.scrollY;
   var focused = focusPlace();
@@ -87,8 +85,8 @@ export function draw() {
 // Nearly every press draws, which would otherwise leave the keyboard at the top of the page
 var FIELDS = "input, select, textarea, button, [role=button], [role=tab]";
 
-// What says which control an element is, whatever state it shows: its kind, its data- values and
-// its name, label or words
+// A string naming which control an element is, whatever state it shows, from its tag, role,
+// data- values and its name, label or words
 function identity(element) {
   var data = Array.prototype.filter.call(element.attributes, function (one) {
     return one.name.indexOf("data-") === 0 && one.name !== "data-focus";
@@ -99,10 +97,8 @@ function identity(element) {
 }
 
 // Where the focused field or control is, as {field, key, box, index, same, rank, caret}, or null
-// where none is. A draw makes most of them afresh, and a load that ends while someone types draws
-// too, as each of the drive's pictures does once read. One is found again by its data-focus, or
-// else in the nearest box with an id, by its identity() and how many before it share that, or by
-// its place among the box's fields where a press has changed what it says
+// where none is or it has neither a data-focus nor a box with an id. A draw makes most fields
+// afresh, and a load that ends while someone types draws too, as each of the drive's pictures does
 function focusPlace() {
   var field = document.activeElement;
   if (!field || field === document.body || !field.matches(FIELDS)) return null;
@@ -119,7 +115,7 @@ function focusPlace() {
       return identity(one) === place.same;
     }).length;
   }
-  // Only text fields have a caret, and asking another type for one throws
+  // Only text fields have a caret. Another type gives null for one, and some browsers throw
   try {
     if (typeof field.selectionStart === "number") place.caret = [field.selectionStart, field.selectionEnd];
   } catch (e) {
@@ -128,8 +124,10 @@ function focusPlace() {
   return place;
 }
 
-// Focus the field made where the focused one was, if the draw took that one away. A field still on
-// the page keeps or loses focus as it would have
+// Focus the field made where the focused one was, if the draw took that one away. It is found by
+// its data-focus, else in its box by its identity() and how many before it share that, or by its
+// place among the box's fields where a press has changed what it says. A field still on the page
+// keeps or loses focus as it would have without the draw
 function refocus(place) {
   if (!place || place.field.isConnected || document.activeElement !== document.body) return;
   var field = null;
@@ -152,7 +150,7 @@ function refocus(place) {
   }
 }
 
-// Light the page at the beat, the lamps before the cards
+// Light the page at the beat
 export function paintAll() {
   paintSteps.forEach(function (step) { step(); });
 }

@@ -14,13 +14,12 @@ import {
 import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../tabs.js";
 
 // ---- a Sound tab ----------------------------------------------------------------------------
-// One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
-// with whether it loops, its volume and silence on a line above them.
+// This part draws the Sound tab, where a scene chooses one WAV file from a row of tiles. Each
+// tile shows the sound's shape and how long it runs, and whether it loops, its volume and Silence
+// sit on a line above them.
 //
-// The drawing asks of its page the sounds on the drive, and each scene keeping its own sound.
-// The board takes one per scene, and the one in the always-on tab plays in any scene that
-// brings none of its own. Nothing about the sound is the board's, so setting up leaves it
-// standing back.
+// The board plays one sound per scene, and Always on's plays in any scene that brings none of its
+// own. Nothing about the sound is the board's, so the board's settings leave it alone.
 
 state.sound = null;
 state.soundLoop = false;
@@ -28,8 +27,8 @@ state.soundVolume = 100;
 state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
-// Whether the scene silences the speaker with `audio: none`, which only a scene needs, where
-// Always on has a sound to silence
+// Whether the scene silences Always on's sound with `audio: none`, which only a scene can, and
+// only where Always on has a sound
 state.soundOff = false;
 
 // The sound Always on plays in the scene being edited, where the scene has none of its own. It is
@@ -39,11 +38,10 @@ function soundUnder() {
   return state.always.body.sound || null;
 }
 
-// Whether the scene being edited can silence Always on's sound, there being one to silence
+// Whether the scene being edited can silence Always on's sound, which needs Always on to have one
 function canSilence() { return state.at >= 0 && !!state.always.body.sound; }
 
-// The sentence over the Sound tab, what the scene does with its sound or why there is none to
-// choose
+// The sentence over the Sound tab, saying what the scene's sound does or why there is none
 function soundSaid() {
   var under = soundUnder();
   return under
@@ -65,8 +63,8 @@ function soundSaid() {
       : "plays while this scene shows, resuming where it left off";
 }
 
-// How the sound plays, above the tiles where a screen keeps its settings. Loop is a toggle as the
-// screens' is, drawn here as well since not every page has the screens. Nothing writes no sound
+// How the sound plays, above the tiles where a screen keeps its settings. Loop looks like the
+// screens' toggle, built here so Always on's loop can show on and greyed. Nothing writes no sound
 // for the scene, so Always on's plays through where it has one, as Nothing does on the lights
 function soundHead() {
   // A scene playing Always on's sound shows Always on's loop, greyed
@@ -268,7 +266,7 @@ function readSound(bodies) {
   bodies.forEach(function (body) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
-      // A scene's silence is read as itself
+      // Check if the line is a scene's silence, which is read as itself
       if (parts && parts.selector === "audio" && one.text === "audio: none" && !body.sound &&
           !body.soundOff) {
         body.soundOff = true;
@@ -508,8 +506,8 @@ function soundTile(name) {
      h("small", {}, info && info.seconds ? info.seconds + "s" +
                                            (picked && state.soundLoop ? ", on repeat" : "")
                   : state.sounds.indexOf(name) < 0 ? "not on the drive" : null),
-     // An example keeps no bin here, as flashing the board's examples again brings it back.
-     // Where the board's examples can be discovered, discover/sound/discover_sound.js gives it one
+     // An example keeps no bin here, as flashing the board's examples again brings it back. A
+     // later part can give it one through soundTileSteps
      state.sounds.indexOf(name) >= 0 && !isExampleMedia(name) ? binButton(name, "wav") : null);
   soundTileSteps.forEach(function (step) { step(tile, name); });
   var hear = hearButton(name);
@@ -517,8 +515,7 @@ function soundTile(name) {
   return tile;
 }
 
-// What the parts after this one add to each sound's tile, each given the tile and its sound's
-// name
+// What later parts add to each sound's tile, each step given the tile and its sound's name
 export var soundTileSteps = [];
 
 // Draw the Sound tab. A sentence that only says what the scene does with its sound becomes the
@@ -529,8 +526,8 @@ function renderSound() {
   var explains = /^(one WAV|plays)/.test(says.textContent);
   var row = soundRow();
   if (explains) row.title = says.textContent.charAt(0).toUpperCase() + says.textContent.slice(1);
-  // With scenes, a sentence one tab shows and another does not keeps its place unseen, so the tab
-  // does not move between them
+  // With scenes, a sentence one scene shows and another does not keeps its place unseen, so the
+  // Sound tab does not move between scenes
   says.hidden = explains && !state.scenes.length;
   says.style.visibility = explains ? "hidden" : "";
   replace(document.getElementById("sound"), soundHead(), row);
@@ -545,7 +542,7 @@ tabSwatches.soundPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
   var under = soundUnder();
-  // The scene's Silence is the flat line its card shows
+  // Check if the scene is silent, which shows as the thin band on its Silence card
   if (state.soundOff) {
     swatch.appendChild(soundOutline(silentBars()));
     swatch.title = "silence";
@@ -557,7 +554,7 @@ tabSwatches.soundPanel = function (swatch) {
     swatch.title = under ? "Always on's " + nameShown(under) : "nothing";
     return;
   }
-  // Always on's sound is drawn faded, as its looks are on the lamps
+  // Check if the sound is Always on's, which wears the dashed frame its looks wear on the lamps
   if (under) {
     swatch.appendChild(soundOutline(info.bars));
     swatch.classList.add("under");

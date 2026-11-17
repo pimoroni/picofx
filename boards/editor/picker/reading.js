@@ -1,8 +1,7 @@
 import {CHANNELS, OUTPUTS} from "./outputs.js";
 
 // ---- reading an entry ---------------------------------------------------------------------------
-// An entry of the file taken apart: its lights, its effect and settings, and the board line's
-// tokens. What the page does with them is the read-back part's.
+// An entry of the file taken apart into its lights, effect and settings, as is the board line.
 
 // Where a quote does not hide it, the first colon, which divides an entry's lights from its effect
 export function unquotedColon(line) {
@@ -20,7 +19,7 @@ export function unquotedColon(line) {
   return -1;
 }
 
-// A board line's settings, divided at spaces a quote does not hold
+// Words divided at spaces a quote does not hold, as a board line's settings or an entry's
 export function boardTokens(text) {
   var tokens = [];
   var word = "";
@@ -57,10 +56,7 @@ export function argsRead(value) {
   return parts;
 }
 
-// ---- the parts' own lines out of the kept lines -----------------------------------------------
-// Each kept line is tried as a setting of the part it names, and read only where that part's own
-// writer then gives back exactly the line. So a setting read wrongly leaves the line kept, never
-// changed. A read line's comments are written above it again while it says the same
+// ---- an entry's parts ---------------------------------------------------------------------------
 
 // An entry's lights and their settings before the colon, and its effect and settings after it
 export function entryParts(text) {
@@ -87,11 +83,8 @@ export function unquoted(value) {
   return value && /^(["']).*\1$/.test(value) ? value.slice(1, -1) : value;
 }
 
-// ---- the lights -------------------------------------------------------------------------------
-// A line, or the lines a look writes together, is read as a stretch where some look, its sliders
-// solved back from the line, writes exactly those lines again for exactly those lights. The
-// sliders are solved as the figures drawer solves a typed figure, and a value past a slider's
-// end is kept exactly as the line gives it
+// ---- the lights a selector names --------------------------------------------------------------
+// A selector's items as the lamps and places they name, as autofx reads them.
 
 // The lamps of a run a line's selector names, in the order it names them, or null
 export function lampsNamed(run, selector) {
@@ -132,11 +125,10 @@ export function lampsNamed(run, selector) {
   return lamps;
 }
 
-// Each item of a selector as the places it names on this board, in its order, as autofx reads
-// it, or null for an item naming none. An item names an output by name, or a range of one name's
-// numbers, whole or with a channel or .* for its three, a range counting down counting the
-// channels down too. A mono output is its one light. An item's prefix carries on to a bare
-// number after it
+// The places each item of a selector names on this board, in order and as autofx reads it, or
+// null for an item naming none. An item is an output's name or a range of one prefix's numbers,
+// each whole, as one channel or as .* for all three, and a mono output is its one light. A range
+// counting down counts the channels down too, and a prefix carries on to a bare number after it
 export function itemsNamed(selector) {
   var prefix = null;
   return selector.toLowerCase().split(",").map(function (text) {

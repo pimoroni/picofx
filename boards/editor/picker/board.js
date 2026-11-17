@@ -10,9 +10,9 @@ import {apply, capture, carried, slotAt, state, store} from "./scenes.js";
 import {stripLengthTail} from "./strips.js";
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
-// The new lamps are carried what the output played, both ways, broken out into three mono
-// lamps or three put back as one colour lamp. The wiring change gives them a stretch of
-// their own, starting dark, and this fills it where the look plays on them
+// When an output is broken out into three mono lamps, or three are put back as one colour lamp,
+// the wiring change gives the new lamps a stretch of their own, starting dark. changeWiring()
+// fills it with what the output played, where the look can play on them
 
 // The stretch an output's lamps played. Put back from three that differ, it is the one
 // most of them played, and the first channel's where all three differ
@@ -24,7 +24,7 @@ function playedBy(out) {
                                         section: run.sections[sectionAt(run, at)]});
     });
   });
-  // A channel can be dragged apart from its two, so they are counted in channel order
+  // A channel can be dragged from the other two, so sorting by channel lets the first win a tie
   lamps.sort(function (a, b) { return a.channel - b.channel; });
   var counted = [];
   lamps.forEach(function (one) {
@@ -41,9 +41,7 @@ function playedBy(out) {
 // lamps, and on mono lamps the nearest is brightness travelling
 var STAND_INS = {"Rainbow": "Wave"};
 
-// What each output was carried from where a stand-in took its place, so putting the
-// output back gives the look it had. Held by output, not on the stretch, since every
-// settle makes the stretches afresh, and captured with the scene
+// What each output was carried from, as scenes.js keeps it
 function carriedFrom() { return carried; }
 
 // The stand-in a stretch is playing, and what for, where it is one
@@ -99,9 +97,8 @@ function changeWiring(change, toColour) {
 }
 
 // ---- the board, the same in every scene ------------------------------------------------
-// How the board is built is the same in every scene, which outputs have an adapter
-// fitted, how long each strip is, and which screen is plugged into each port. The pages
-// built on this one differ only in where those are shown and when they can be changed.
+// How the board is built is the same in every scene, such as which outputs have an adapter
+// fitted, how long each strip is and which panel is plugged into each screen port.
 
 // What the screens parts lend the parts every board takes, filled in by screens/ where the board
 // has screens. Without them no drive file is a picture or drawing, and no panel is drawn
@@ -111,21 +108,21 @@ export var screenHooks = {mediaNamed: function () { return null; }, panelPreview
 // check against. Without it, whether the latest release brings a version is unknown
 export var firmwareHooks = {covers: function () { return null; }};
 
-// Which panel is plugged into each screen port, or none. Only the panel's size is the board's
+// The screen ports the board describes
 export var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
-// The catalogue is the board's own, so a board that finds it has no screen ports offers none
+// Keep only the ports the catalogue lists, so a board whose catalogue has none offers none
 SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
   return CATALOGUE.screen_ports.indexOf(port.id) >= 0;
 });
 // The sizes a panel can be, as the firmware takes them. The catalogue's hub is not a panel size
 export var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
   .filter(function (inches) { return inches !== "hub"; });
+// The panel size plugged into each screen port, by port id, or "" for none
 export var screensFitted = {};
 SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
-// Breaking an output out, or putting it back, is done to every scene in turn, each carrying
-// its own looks across. A scene's steps to undo end there, since they are about lamps that
-// have since moved. Putting the output back is the way to undo it
+// Make a wiring change to every scene in turn, and carry each scene's looks across to the new
+// lamps. Every scene's undo steps are cleared, since they are about lamps that have since moved
 function acrossScenes(change) {
   return function (out) {
     store();
@@ -157,18 +154,17 @@ function acrossScenes(change) {
 export var breakOutInScenes = acrossScenes(changeWiring(breakOutWiring, false));
 export var rejoinInScenes = acrossScenes(changeWiring(rejoinWiring, true));
 
-// Where a lamp sits is the build's as well. Moving one keeps every scene's looks on the
-// lamps they were on, the way breaking out does, so a stretch the move takes apart
-// becomes two playing the same
+// Where a lamp sits is the same in every scene too. Moving one keeps every scene's looks on the
+// lamps they were on, so a stretch the move takes apart becomes two playing the same
 export var moveLampInScenes = acrossScenes(function (move) {
   acrossWiring(function () { placeLamp(move); });
 });
 
-// The wiring put back as the board comes, every output that breaks out rejoined and every lamp in
-// the order the board wires them. Each scene keeps its looks on the lamps they were on, and
-// neighbouring stretches left playing the same, as moves and splits leave them, become one
 var rejoinOne = changeWiring(rejoinWiring, true);
 
+// Put the wiring back as the board comes, with every output rejoined and every lamp in the order
+// the board wires them. Each scene keeps its looks on the lamps they were on, and neighbouring
+// stretches that moves and splits left playing the same become one
 export var resetWiringInScenes = acrossScenes(function () {
   breakingOutputs().forEach(rejoinOne);
   acrossWiring(function () { setLayout(wiring, plainOrder()); });
@@ -195,8 +191,7 @@ export function wiringChanged(astray) {
   return astray.length > 0 || breakingOutputs().some(function (out) { return wiring[out].broken; });
 }
 
-// Whether a lamp can be dragged to where it sits just now. Where a lamp sits is changed with
-// the wiring, so only where that can be
+// Whether a lamp can be moved just now, which is only while the wiring view is open
 export function lampsMovable() { return canEdit("outPanel"); }
 
 // The colour outputs that break out, by place
@@ -217,8 +212,7 @@ export function brokenSaid() {
     return breaking.length === 1 ? outputSaid(breaking[0]) + " is one colour light"
                                  : "every output is one colour light";
   }
-  // Three or more in a row close up into a range, as the file writes them, so the box is
-  // never much longer than it is with nothing broken out and the setup hint keeps its room
+  // Three or more in a row close up into a range, as the file writes them, to keep the words short
   var numbers = broken.filter(function (out) { return OUTPUTS[out].number !== null; })
     .map(function (out) { return OUTPUTS[out].number; });
   var parts = [];
@@ -236,9 +230,9 @@ export function brokenSaid() {
 }
 
 // ---- what the file says about the board -------------------------------------------------
-// The parts below add their own steps to the board line, what each readies before it is
-// written and what each makes of the line written so far. The after steps go in the order
-// stated, which is the order their words are written in
+// Later parts add their own steps to the board line, what each readies before it is written and
+// what each makes of the line written so far. The after steps go in the order BOARD_LINE_AFTER
+// states, which is the order their words are written in
 
 export var boardLineSteps = {before: [], after: []};
 export var BOARD_LINE_AFTER = ["sensor", "hub", "boardSettings", "readback"];
@@ -249,7 +243,7 @@ export function boardLine() {
   SCREEN_PORTS.forEach(function (port) {
     if (screensFitted[port.id]) tokens.push(port.id + "=" + screensFitted[port.id]);
   });
-  // A strip's length brings its connector up, so it is given only where some scene plays on it
+  // A strip's length has the board set up its connector, so it goes only where a scene plays on it
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
   }));
@@ -267,9 +261,9 @@ export function boardLine() {
 
 // ---- what is not fitted, in a comment of the page's own ---------------------------------
 // The board line names a strip or screen only where a scene plays on it, so one removed writes
-// the same file as one fitted and left unused. Where something the board fits
-// by default has been taken off, the page lists it by the name its tab or box shows in a comment
-// of its own, which autofx passes over, and reads it back so a reload does not fit it again
+// the same file as one fitted and left unused. The page lists what the board fits by default but
+// has been taken off in a comment of its own, by the name its tab or box shows. autofx passes over
+// the comment, and the page reads it back so a reload does not fit it again
 
 export var NOT_FITTED = "# Not fitted: ";
 

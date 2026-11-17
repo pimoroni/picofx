@@ -8,8 +8,7 @@ import {BOARD_SETTING_SAYS, boardIcon} from "./setup.js";
 // ---- the board's own settings -----------------------------------------------------------------
 // Three settings belong to the board and to no section. They are whether a save plays without an
 // eject, which reload=manual turns off, whether the drive stays hidden at start (drive=manual),
-// and a program run in place of the effects (program= and args=). They are the board's, so no
-// scene keeps them. The pages built on this one each place them differently, using what is here.
+// and a program run in place of the effects (program= and args=). No scene keeps them.
 
 // Saving without an eject starts on
 export var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
@@ -24,8 +23,7 @@ export function setPrograms(list) {
   PROGRAMS = list;
 }
 
-// Lookups for programs the page shows that the drive does not hold, each given a path and
-// returning its program or null
+// Lookups, each from a path to its program or null, for programs shown that the drive does not hold
 export var programsElsewhere = [];
 
 // The program at a path, or null where neither the drive nor a lookup holds one there
@@ -36,8 +34,8 @@ export function programNamed(path) {
 }
 
 // A program's arguments as the file takes them, each one quoted where a space or a colon would
-// otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. A
-// program given only what it would take anyway is given nothing, so its line stays short
+// otherwise divide it, and an empty one left out. A pipe divides them and a double quote encloses
+// one, so neither is carried. A program given only its defaults is given none, so its line is short
 export function argsWritten(path) {
   var program = programNamed(path);
   if (program && program.args && program.args.length && program.args.every(function (argument, at) {
@@ -89,9 +87,9 @@ var ARGUMENT_CHOICES = {
   }
 };
 
-// The picked program's arguments, as a box for each it names. A screen size is chosen from those
-// the firmware knows and a rotation from the four. A program that names none but reads sys.argv
-// gets plain boxes to add and take away
+// Make the picked program's argument boxes, one for each it names. A screen size is chosen from
+// those the firmware knows and a rotation from its choices. A program that names none but reads
+// sys.argv gets plain boxes to add and take away
 export function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
@@ -127,7 +125,7 @@ export function argsFor(path, locked) {
       },
       onchange: function () { draw(); }
     });
-    // Check if the argument was added by hand, so it can be taken away again and the rest move up
+    // An argument added by hand has a button to take it away again, and the rest move up
     return h("label", {}, argument.name, field, named ? null : h("button", {
       type: "button", className: "progless", title: "Remove this argument", disabled: !!locked,
       onclick: function () {
@@ -146,14 +144,13 @@ export function argsFor(path, locked) {
 }
 
 // ---- the effects, while a program runs --------------------------------------------------------
-// The board runs a program in their place, so they stand back with a note saying what runs
-// instead. They are kept, and run again if the program is missing or stops
+// The board runs a program in their place, so they stand back with a note saying what runs instead
 
 function programNote() {
   var note = document.getElementById("programNote");
   if (!note) {
     note = h("div", {id: "programNote", className: "programnote"});
-    // Above the gallery, or above what a page has stacked it in
+    // Above the gallery
     (document.getElementById("looksStack") || document.getElementById("looks")).before(note);
   }
   note.hidden = !boardSet.program;
@@ -176,7 +173,7 @@ addStep(drawSteps.after, DRAW_AFTER, "boardSettings", function () {
 // with none chosen, and the file says program= only once one is
 export var onProgramPage = false;
 
-// Open or close the program tab
+// Set whether the program tab is open
 export function setProgramPage(on) {
   onProgramPage = on;
 }

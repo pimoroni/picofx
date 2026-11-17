@@ -14,10 +14,9 @@ import {allBodies, apply, slotAt, state, store} from "./scenes.js";
 // output's three channels are the only thing that breaks out.
 
 // The board's strips. A strip's order is the one it takes its colours in, empty for the board's
-// own. It is there as the board describes it until added or removed while the board is edited,
-// and one the description says takes other strips takes their terminals. A strip given a
-// brightness by the description takes that after its length in place of an order, and the
-// description's brightness is the board's own
+// own. It is there as the board describes it until added or removed while the board is edited, and
+// one the description says takes other strips takes their connectors. A strip the description gives
+// a brightness takes that after its length in place of an order, and that brightness is its default
 export var STRIPS = BOARD.strips.map(function (strip) {
   var brightness = strip.brightness === undefined ? null : strip.brightness;
   return {id: strip.name, name: strip.name, label: strip.label, leds: strip.leds, order: "",
@@ -46,7 +45,7 @@ export function stripNamed(name) {
   return runs.filter(function (run) { return run.strip && run.name === lower; })[0] || null;
 }
 
-// The strip's entry, which a fresh run is made from, and the run itself, given the same values
+// Give a strip's entry in STRIPS and its run the same values
 export function stripSet(run, values) {
   var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
   Object.keys(values).forEach(function (key) {
@@ -78,8 +77,7 @@ export var GAP_MOST = 4.8;
 export var BEADS_JOIN_AT = 6.4;
 
 // ---- how many lights are on one ------------------------------------------------------------
-// The chip the drawing keeps its count in. A strip's length is a fact about the
-// board, so it is the same in every scene and changing it here changes it in all of them
+// What a strip's chip offers. Its length is a fact about the board, the same in every scene
 
 // A strip's length as the chip takes it. One LED is a strip autofx accepts
 export var STRIP_FEWEST = 1;
@@ -90,13 +88,13 @@ export var STRIP_MOST = 300;
 export var STRIP_ORDERS = [["", "GRB (most strips)"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
-// The brightnesses a strip with one of its own can be given, as the file writes them after its
-// length. The board's own is written as nothing
+// The brightnesses a strip with one of its own can be given, which the file writes after its
+// length as a percentage. The board's own is written as nothing
 export var STRIP_BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
 export function stripPercent(brightness) { return Math.round(brightness * 100) + "%"; }
 
-// The same as words, where the chip cannot be changed
+// A strip's colour order or brightness as words, where the chip cannot be changed
 export function stripChipShown(run) {
   return run.made === null ? (run.order || "grb").toUpperCase()
                            : stripPercent(run.brightness) + " brightness";
@@ -124,15 +122,13 @@ export function readStripTail(run, tail) {
 }
 
 // ---- zooming a strip's bar --------------------------------------------------------------------
-// A strip's bar is found by the strip's own id
 
 // The most lights a strip can have and not be zoomed, which the zoom buttons are hidden at
 export var ZOOMS_OVER = 12;
 
-// ---- joining them to the page below -----------------------------------------------------
+// ---- joining them to the page -----------------------------------------------------------
 
-// Each strip has a panel after the outputs', in the board's order, and its board box takes the
-// strip's own colour
+// Each strip has a panel after the outputs', in the board's order, and a board box in its colour
 document.getElementById("outPanel").after(...BOARD.strips.map(function (strip) {
   var id = strip.name;
   return h("details", {className: "panel strip", id: id + "Panel", open: true},
@@ -146,20 +142,18 @@ document.head.appendChild(h("style", {}, BOARD.strips.map(function (strip) {
   return ".boardchip." + strip.name + "{background:" + strip.colour + "}\n";
 }).join("")));
 
-// The strips are runs of the page below from here on. Each scene keeps its own cutting of
-// them in its body, which captures every run
+// The strips are runs from here on, so each scene keeps its own cutting of them, as of every run
 runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
 // ---- drawing the page -------------------------------------------------------------------
 
-// How a strip is drawn, filled in by the parts that draw it: leds(where, run) its LEDs and their
-// facts, bar(where, run) its bar, and fit() every strip's bar to the width it has
+// How a strip is drawn, filled in by the parts that draw it. leds(where, run) draws its LEDs and
+// their facts, bar(where, run) its bar, and fit() fits every bar to the width it has
 export var stripDrawing = {leds: function () {}, bar: function () {}, fit: function () {}};
 
 addStep(drawSteps.after, DRAW_AFTER, "strips", function () {
-  // The outputs' settings are for the stretch being worked on, which while a strip is picked is
-  // under that strip instead
+  // Clear the outputs' settings while a strip is picked, for the tabs step to fill afresh
   if (active.strip) document.getElementById("outChosen").textContent = "";
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     // A strip made too short to zoom has no zoom buttons, so it is not left zoomed in
@@ -180,11 +174,7 @@ addStep(drawSteps.after, DRAW_AFTER, "strips", function () {
 });
 
 // ---- what a stretch is drawn in wherever it is shown in small -------------------------------
-// The colours it plays, never only the colour of its look's card. They are read from the
-// lines the stretch writes, so they cannot disagree with the file. One colour is drawn
-// whole, several across the stretch's width, and a look that writes none, as Rainbow does,
-// in its card's colours. A mono stretch is drawn in the warm white its lamps give. The bars
-// under the lamps and the Repeat tool's chips all ask here
+// A mono stretch is drawn in this warm white, the colour its lamps give
 export var MONO_WASH = "#f3c98b";
 
 // The looks the board opens playing start in their own colours too
@@ -195,9 +185,8 @@ export var MONO_WASH = "#f3c98b";
   });
 });
 
-// The last custom colour of each stretch and its own brightness, by its run and first lamp,
-// kept while a swatch is chosen so custom comes back to both, as a screen's background does.
-// It is kept here, since the stretches are made afresh on every draw
+// The last custom colour and brightness of each stretch, by its run and first lamp, kept while a
+// swatch is chosen so custom comes back to both. Settling remakes the stretches, so it lives here
 export var customColours = {};
 
 // Party flashes its three sets a third of a beat apart, and the phases it was given, 0, 0.33
@@ -215,10 +204,8 @@ export var customColours = {};
 }(lookNamed("Party")));
 
 // ---- a signal's states, drawn ----------------------------------------------------------------
-// Each timing is named by the state it holds, drawn as the signal shows it, as a head of three
-// lamps, red, amber and green top to bottom, with those lit in their colour, and for a
-// crossing the two figures beside it, the red one standing and the green one walking. Its
-// slider takes the state's colour. The word stays beside the drawing
+// Each timing is named by its state and drawn as the signal shows it, a head of red, amber and
+// green lamps top to bottom, with a crossing's two figures beside it. The word stays beside it
 export var SIGNAL_INK = {red: "#e8392c", amber: "#f5a623", green: "#20b35c", dark: "#3b3f44"};
 
 // The lamps each state lights, 1 for lit, 0 for dark and "f" for flashing
@@ -236,9 +223,8 @@ export var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a8
                    flashing_interval: "#a86600"};
 
 // ---- an icon for each setting ------------------------------------------------------------------
-// Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
-// have theirs, so a panel reads at a glance. A signal's states keep their coloured
-// drawings, since colour is what they are about. The word stays, and the icon only hints
+// Each slider's name has a small line drawing before it, in the name's own grey, so a panel reads
+// at a glance. A signal's states keep their coloured drawings. The word stays beside each icon
 export var SETTING_ICONS = {
   "Brightness": "<circle cx='8' cy='8' r='2.8'/><path d='M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8" +
                 "M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3'/>",
@@ -263,13 +249,13 @@ export var SETTING_ICONS = {
              "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
 };
 
-// Whether a strip is there, on the run and on the entry a fresh run is made from
+// Set whether a strip is there, on its run and on its entry in STRIPS
 export function stripThere(run, there) { stripSet(run, {there: there}); }
 
 function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
 
 // Why a strip cannot be fitted just now, or nothing where it can. A strip taking other strips'
-// terminals cannot be fitted beside them, nor they beside it
+// connectors cannot be fitted beside them, nor they beside it
 export function stripBlockedBy(run) {
   if (run.there) return "";
   var fitted = runs.filter(function (one) {
@@ -287,7 +273,7 @@ export function stripBlockedBy(run) {
                   ". Remove it to fit a strip here." : "";
 }
 
-// Taking a strip out clears what it plays in every scene, the lines kept from a file
+// Take a strip off the board, clearing what it plays in every scene, the lines kept from a file
 // included, which leaves its length unwritten and its connector off
 export function dropStrip(run) {
   forgetKeptFor(run);
@@ -314,8 +300,8 @@ function stripOfToken(token) {
   return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
 }
 
-// A strip removed takes with it every scene's kept lines that play on it, and its length
-// as written, or they would keep its connector on
+// Forget the kept lines in every scene that play on a strip, and its length as written, which
+// would otherwise keep its connector on
 function forgetKeptFor(run) {
   function elsewhere(one) {
     var parts = entryParts(one.text);

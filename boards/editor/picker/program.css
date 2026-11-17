@@ -12,8 +12,8 @@ canvas.progthumb {
   background: var(--dark);
 }
 
-/* The chosen program, or the space it will take, the same size either way so choosing one moves
-   nothing on the page. What the board runs is said along its top */
+/* The chosen program, or the space it will take. The picture's place is one size either way, and
+   what the board runs is said along its top */
 .proghero {
   display: flex;
   flex-direction: column;
@@ -281,9 +281,9 @@ header h1 + .headswitch {
     color: var(--dim);
     padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
 
-    /* The chosen tab and the chosen scene carry one mark, a band painted in the background from the
-       outer edge under a top border made clear, running the width of the top. Every tab keeps the
-       same border, so nothing in a tab moves when it is chosen */
+    /* The chosen tab is marked as the chosen scene is, by a 3px band painted from the border's
+       outer edge under a transparent top border. Every tab keeps the same border, so nothing in a
+       tab moves when it is chosen */
     &.on {
       color: var(--ink);
       border-top-color: transparent;
@@ -308,8 +308,8 @@ header h1 + .headswitch {
   }
 }
 
-/* The row is always the header's whole width, so it never fits beside the title and rejoins its
-   line on a wide window, and its padding narrows the tabs to the column */
+/* The row takes the header's whole width, so it wraps under the title until header.oneline puts
+   it on the title's line. Its padding narrows the tabs to the page's column */
 .headswitch.headsplit {
   order: 10;
   flex: 1 0 100%;
@@ -326,8 +326,7 @@ header h1 + .headswitch {
   }
 }
 
-/* A narrow window shrinks the other header covers, but these tabs keep their size, so they are
-   one height at every width */
+/* A narrow window keeps these tabs their size, so they are one height at every width */
 @media (max-width: 1180px) {
   header .headswitch.headsplit {
     margin: 0 0 -1px;
@@ -378,8 +377,8 @@ header.oneline {
   align-items: flex-end;
 
   /* The buttons keep the header's own top padding above and below them, and the tabs run from the
-     buttons' top edge to the header's foot, so the tabs' height follows from the buttons'. Both
-     figures are measured and set by the page, --headgap below the buttons and --tabheight */
+     buttons' top edge to the header's foot, so the tabs' height follows from the buttons'. The
+     page measures and sets --headgap below the buttons, --buttonheight and --tabheight */
   h1 {
     flex: 1 1 0;
     margin: 0 0 var(--headgap, .8rem);
@@ -410,15 +409,14 @@ header .headswitch.headsplit .cover {
   padding-top: 0;
   padding-bottom: 0;
 
-  /* The cover fills the tab, with a picture the tab's height less an inset at a screen's
-     shape and a label a size up. A program's name sits beside its label, so the label
-     never moves when one is picked */
+  /* A picture the tab's height less an inset, at a screen's shape */
   .coverface {
     height: calc(var(--tabheight, 3.1rem) - .6rem);
     width: calc((var(--tabheight, 3.1rem) - .6rem) * 4 / 3);
   }
 }
 
+/* A program's name sits beside its label, so the label never moves when one is picked */
 .headswitch.headsplit .cover > span {
   display: flex;
   align-items: baseline;
@@ -437,19 +435,19 @@ header .headswitch.headsplit .cover {
   overflow: hidden;
   text-overflow: ellipsis;
 
-  /* On a phone a tab is its name, the program chosen being shown on its page */
+  /* On a phone a tab shows only its name, since the chosen program is shown on its page */
   @media (max-width: 40rem) {
     display: none;
   }
 }
 
-/* The way into scenes, at the end of the effects tab while there are none, the row it had above
-   the gallery gone */
+/* With no scenes yet, the way into them sits at the end of the effects tab and the scene tabs' row
+   above the gallery is hidden */
 body.scenesintab #tabs {
   display: none;
 }
 
-/* With nothing above it the gallery comes up under the tabs, the kind tabs' empty row taken out */
+/* The empty kind tabs' row is hidden, so the gallery comes up under the tabs with nothing above */
 body.scenesintab #looks > .tabs.sides:empty {
   display: none;
 }
@@ -460,7 +458,7 @@ body.scenesintab #looks > .tabs.sides:empty {
   flex: none;
   opacity: 1;
 
-  /* On a phone it is its + alone, its words kept for a screen reader and its tooltip */
+  /* On a phone it shows only its +. Its words stay for a screen reader and in its tooltip */
   @media (max-width: 40rem) {
     gap: 0;
     padding: var(--space-3);

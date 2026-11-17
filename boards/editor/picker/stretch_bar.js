@@ -10,6 +10,8 @@ import {
 import {stretchUnder} from "./scenes.js";
 import {BEADS_JOIN_AT, BEAD_MOST, GAP_MOST, MONO_WASH, ZOOMS_OVER, stripDrawing} from "./strips.js";
 
+// Each run's bar of stretches with its cuts, and a strip's beads, zoom and split tools.
+
 // ---- the bar, one cell per stretch, cut between them --------------------------------------
 
 // What a stretch's cell is washed in, the colours it plays
@@ -57,21 +59,19 @@ function paneOnto(run, shows, start, end, wide) {
   }}) : null);
 }
 
-// The note under a cell's "Nothing" saying what shows through from Always on, or null where the
-// stretch shows nothing at all
+// The note under a cell's "Nothing" saying what shows through from Always on, or null for none
 function beneath(under) {
   return under ? h("span", {className: "beneath"}, under.note) : null;
 }
 
-// What a stretch's cell says, its look and its width, with what shows through it where it plays
-// nothing
+// A stretch's cell's words, its look and width, and what shows through where it plays nothing
 export function cellSays(look, wide, under) {
   return h("span", {className: "says"}, (look ? look.name : "Nothing") + " ",
            h("em", {}, wide), beneath(under));
 }
 
 // Whether a run's lamps sit inside its stretches' cards. The outputs' do, in the wiring view too,
-// so setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+// so setting up the wiring never moves them. A strip's cards hold beads on a wire instead
 export function carded(run) {
   return !run.strip;
 }
@@ -91,7 +91,7 @@ export function cutPoint(run, after, wide, from) {
 
 export function zoomOf(run) { return run.zoom || 1; }
 
-// The picked stretch cut into a number of stretches as near equal as its lamps allow
+// Cut the picked stretch into ways= stretches as near equal as its lamps allow
 function splitSection(run, ways) {
   var section = run.sections[run.picked];
   if (!section || ways < 2 || widthOf(section) < ways) return;
@@ -108,8 +108,7 @@ function splitSection(run, ways) {
   run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
   draw();
 }
-// A stretch's beads, each kept in beads by its LED's place on the strip so it can be lit as the
-// strip plays
+// A stretch's beads, each kept in beads[] at its LED's place on the strip to be lit as it plays
 function stripBeads(run, section, beads) {
   var rooms = [];
   for (var n = section.from; n <= section.to; n++) {
@@ -126,7 +125,7 @@ function wireEnd(which) {
 }
 
 // Draw a strip's beads for the room each LED has, and run its wire between the two ends. Every
-// card's beads take the size of the narrowest card's, so all of a strip's LEDs match
+// bead takes the size the narrowest LED's room allows, so all of a strip's LEDs match
 function fitBeads(bar, beads) {
   if (!beads.length || !bar.offsetWidth) return;
   var room = Infinity;
@@ -138,13 +137,11 @@ function fitBeads(bar, beads) {
   var apart = (room - BEADS_JOIN_AT) / (BEAD_MOST + GAP_MOST - BEADS_JOIN_AT);
   apart = Math.max(0, Math.min(1, apart));
   var size = Math.min(BEAD_MOST, room - GAP_MOST * apart);
-  // A bead keeps its full height whatever its width. The wire and the ends are drawn in
-  // proportion to that height, as the strip was drawn before
+  // A bead keeps its full height whatever its width, and the wire and ends are in proportion to it
   var wire = BEAD_MOST * 0.16;
   bar.style.setProperty("--apart", apart);
   bar.style.setProperty("--gap", (GAP_MOST * apart) + "px");
-  // A gap under a pixel is drawn whole, and filled more the more it has closed. Once closed, the
-  // beads meet edge to edge
+  // A gap under a pixel is drawn whole, filled more as it closes, until beads meet edge to edge
   bar.style.setProperty("--fill", 1 - Math.min(1, GAP_MOST * apart));
   bar.style.setProperty("--gapdrawn", apart > 0 ? "max(var(--gap), 1px)" : "0px");
   bar.style.setProperty("--bead", size + "px");
@@ -185,8 +182,7 @@ function renderStripBar(where, run) {
   replace(box, scroller);
   scroller.scrollLeft = kept;
   scroller.onscroll = function () { run.scrolled = scroller.scrollLeft; };
-  // The beads are drawn for the room the bar has, which a hidden tab shown or a page resized
-  // changes without a draw
+  // The beads are drawn for the room the bar has, which a resized page changes without a draw
   fitBeads(bar, beads);
   if (window.ResizeObserver) new ResizeObserver(function () { fitBeads(bar, beads); }).observe(bar);
   painters.push({run: run, paint: function (all) {
@@ -198,14 +194,11 @@ function renderStripBar(where, run) {
     });
   }});
 
-  // Rolling the wheel over the bar zooms into the light under the pointer, keeping it
-  // where it is on the screen. The buttons do the same in steps, which is what says the
-  // zooming is there at all
+  // Rolling the wheel over the bar zooms in or out about the light under the pointer, keeping it
+  // where it is on the screen. The zoom buttons are what show that zooming is there at all
   scroller.onwheel = function (e) {
     if (run.count <= ZOOMS_OVER) return;
     e.preventDefault();
-    // The wheel holds the light under the pointer, and the buttons hold the middle of what
-    // is on screen, since a button press has no place on the run to hold onto
     var box2 = scroller.getBoundingClientRect();
     var at = (scroller.scrollLeft + (e.clientX - box2.left)) / bar.offsetWidth;
     zoomTo(run, zoomOf(run) * (e.deltaY < 0 ? 1.25 : 0.8), at, e.clientX - box2.left);
@@ -216,11 +209,10 @@ function renderStripBar(where, run) {
 function stripCard(run, section, at, beads) {
   var wide = widthOf(section);
   var rooms = stripBeads(run, section, beads);
-  // Under its LEDs, a stretch is washed in a colour of its look and named
   var look = lookNamed(section.look);
   var under = look ? null : stretchUnder(run, section);
   var cuts = [];
-  // Where this stretch could be cut, one click to a place between two lights
+  // Where this stretch can be cut, one place between each two lights
   for (var n = section.from; n < section.to; n++) cuts.push(cutPoint(run, n, wide, section.from));
   return h("button", {
     className: "sec" + (isPicked(run, at) ? " picked" : "") +
@@ -233,15 +225,14 @@ function stripCard(run, section, at, beads) {
      h("span", {className: "cuts"}, cuts));
 }
 
-// The cut a stretch shares with the next, dragged to move it or clicked to take it out, which
-// joins the two either side
+// The cut a stretch shares with the next, dragged to move it or taken out to join the two stretches
 function stripEdge(run, at, where) {
   var edge = h("div", {
     className: "edge", title: "drag to move this cut, or click to remove it",
     onmousedown: function (e) {
       e.preventDefault();
-      // The bar is rebuilt on every move, so what is held onto is where it lives and
-      // not the bar itself, which would be a node that has already been thrown away
+      // The bar is rebuilt on every move, so what is held onto is where the bar lives and not the
+      // bar itself, which would be a node already thrown away
       setHolding({run: run, which: at, where: where, had: run.sections.length});
       edge.classList.add("holding");
     }
@@ -264,8 +255,8 @@ export function middleOfView(run) {
   return (scroller.scrollLeft + scroller.clientWidth / 2) / bar.offsetWidth;
 }
 
-// Zooming keeps whatever was under the pointer under the pointer, which is the only way a
-// zoom on a long run is any use, as otherwise the thing being aimed at runs away
+// Zoom a run's bar to want=, holding the place at= across the bar at from= pixels into the view,
+// or at its middle without from=, so the thing being aimed at does not run away
 export function zoomTo(run, want, at, from) {
   // Held to three places, and to exactly 1 near it, since the buttons step by 1.6 each way and
   // coming back out leaves 1.0000000000000002, a bar a hair wider than its box that scrolls
@@ -295,11 +286,10 @@ function divide(run, ways) {
 
 // ---- splitting a strip's chosen stretch ------------------------------------------------------
 // The chosen stretch's panel splits it into a number of parts or into lengths of a number of
-// lights, in the screens' button style. It is one outlined group read as a sentence, its words
-// first, then its number, then the buttons that act, so the number is never apart from them.
+// lights. It is one outlined group read as a sentence, its words first, then its number, then the
+// buttons that act, so the number is never apart from them.
 
-// The picked stretch cut every so many lights from its start, a shorter one last where they
-// do not divide it evenly
+// Cut the picked stretch every each= lights from its start, with a shorter last one if uneven
 function divideLengths(run, each) {
   var section = run.sections[run.picked];
   if (!section || each < 1 || each >= widthOf(section)) return;
@@ -375,10 +365,9 @@ function toolAct(words, off, act, title) {
                       "data-act": act}, words);
 }
 
-// A cut's label, which lights it falls between, is centred on the cut, so near either end of a
-// bar it would overhang the bar. Though hidden until pointed at, it still takes its room, and
-// would make an unzoomed bar scroll. A label within its own width of an end is turned inward,
-// and a bar at its whole width does not scroll at all
+// Fit every bar to its scroller. A cut's label is centred on the cut and takes its room while
+// hidden, so near either end it would overhang and make an unzoomed bar scroll. A label within
+// 40px of an end is turned inward, and only a zoomed bar scrolls
 function fitBars() {
   document.querySelectorAll(".scroller").forEach(function (scroller) {
     var bar = scroller.querySelector(".bar");

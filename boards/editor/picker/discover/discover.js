@@ -67,7 +67,7 @@ async function discoverTrouble(e) {
 export function discoverSay(kind, text, warn) {
   var notice = discover[kind].notice = [text, warn];
   banner(text, warn);
-  // One saying a download went well gives the line back after a while, and a failure stays
+  // Check if the notice is a failure, which stays. A success gives the line back after a while
   if (warn) return;
   setTimeout(function () {
     if (discover[kind].notice !== notice) return;
@@ -99,10 +99,10 @@ var discover = {
 var discoverPrograms = {};
 export var discoverDrawings = {};
 export var discoverSounds = {};
-// What each kind of example other than a program brings, by kind, filled in by discover/screens/
-// and discover/sound/ where the board has the feature. onDrive says whether the drive holds the
-// example, and face draws its card. A drawing also has said, its description read from its
-// source, and copy, which makes the user's own copy
+// What each kind of example other than a program brings, by kind, filled in by the parts for each
+// kind where the board has them. onDrive says whether the drive holds the example, and face draws
+// its card. A drawing also has said, its description read from its source, and copy, which makes
+// the user's own copy
 export var discoverKinds = {};
 // Each missing example's thumbnail, and a second screen's where it has one, as object URLs, by path
 export var discoverThumbs = {};
@@ -199,8 +199,8 @@ async function discoverIndex() {
 
 // Check one tab's examples against the drive, then fetch what the missing ones need to be shown.
 //
-// With quiet, after a check has been done, only the drive is read again, against the index already
-// fetched. What the last check found stays shown while it reads, and its progress is in refreshing
+// Where quiet= is set after a check has been done, only the drive is read again, against the index
+// already fetched. What that check found stays shown meanwhile, and refreshing holds the progress
 async function discoverCheck(kind, quiet) {
   var check = discover[kind];
   if (check.status === "checking" || check.refreshing || !drive.dirHandle) return;
@@ -271,8 +271,8 @@ function discoverStateOf(entry) {
   }) ? "current" : "update";
 }
 
-// Fetch each missing example's source and thumbnail, four at a time, so it can be listed. With
-// same, which says the index is the one the last check read, one it listed is kept as it was
+// Fetch what each missing example needs to be listed, four at a time. Where same= says the index
+// is the one the last check read, an example that check listed is kept as it was
 async function discoverFetchMissing(kind, offered, same) {
   var missing = offered.filter(function (entry) { return discover.states[entry.path] === "missing"; });
   var listed = {};
@@ -352,8 +352,8 @@ function discoverPicturesOf(path) {
   return discoverThumbs[path] ? [discoverThumbs[path]].concat(discoverSecondThumbs[path] || []) : [];
 }
 
-// How many seconds a WAV file plays, from its first bytes and its whole size, as the Sound tab
-// reads a sound on the drive, or 0 where its header does not say
+// How many seconds a WAV file plays, from its first bytes and its whole size, or 0 where its header
+// does not say. The Sound tab reads a sound on the drive the same way
 function discoverWavSeconds(head, size) {
   var view = new DataView(head);
   if (view.byteLength < 12 || view.getUint32(0) !== 0x52494646 || view.getUint32(8) !== 0x57415645)
@@ -434,7 +434,7 @@ async function discoverRemove(path) {
 // Download an example, or its update, writing only the files that differ from the index's, and
 // deleting those left where it used to be kept. A program downloaded new is chosen, as a tapped
 // card is. Returns false where it failed, the path of the user's changed copy where one was kept,
-// else true. With quiet, one of several, only a failure is said and nothing is chosen
+// else true. With quiet=, for one of several, only a failure is said and nothing is chosen
 async function discoverDownload(path, quiet) {
   var entry = discoverEntry(path);
   if (!entry || discover.busy[path] || discover.newer[path]) return false;
@@ -447,8 +447,8 @@ async function discoverDownload(path, quiet) {
   var was = own.at;
   var kept = null;
   try {
-    // The user's changes are kept as their own copy, as Customise makes one. A picture or sound
-    // has no Customise, so a changed one is replaced
+    // Check if the user changed the example's own file. A program or drawing then keeps the change
+    // as a copy, as Customise makes one. A picture or sound has no Customise, so it is replaced
     if (own.state === "changed" && (entry.kind === "program" || entry.kind === "drawing"))
       kept = entry.kind === "program" ? await copyProgram(was)
                                       : "drawings/" + await discoverKinds.drawing.copy(was);
@@ -487,8 +487,8 @@ async function discoverDownload(path, quiet) {
 }
 
 // List a downloaded example as the drive's own. A program is read from the source just written,
-// without reading every program again, and a drawing by reading the drive until the gallery has
-// it. A program moved from where it was kept takes its place, chosen where that was
+// without reading every program again. Any other kind is found by reading the drive again, up to
+// 20 times. A program moved from where it was kept takes its place, and is chosen where that was
 async function discoverListed(entry, written, fresh, was) {
   var path = entry.path;
   if (entry.kind === "program") {
@@ -530,7 +530,7 @@ async function discoverListed(entry, written, fresh, was) {
   }
 }
 
-// Download every update of one kind in turn, counting them in, and stopping at one that fails
+// Download every update of one kind in turn, showing the count, and stop at one that fails
 async function discoverUpdateAll(kind) {
   var paths = discoverUpdates(kind);
   var kept = [];
@@ -622,8 +622,8 @@ function discoverBar(kind) {
   return h("div", {className: "discoverbar"}, discoverDivider("Examples"), discoverPanel(kind));
 }
 
-// Put a tab's examples line where its examples start, after the user's own group, which always
-// heads a tab's groups, or at the end where no example is listed
+// Put a tab's examples line where its examples start. That is after the user's own group, which
+// always comes first, or at the end where no example is listed
 export function discoverPlaceBar(box, kind) {
   var bar = discoverBar(kind);
   var heads = box.querySelectorAll(".foldhead");
@@ -739,13 +739,13 @@ function discoverOffers(kind) {
     return [path, held.drawing.title, held.drawing.description || "",
             held.drawing.section || OTHER_EXAMPLES.drawings, "drawing"];
   }).sort(function (a, b) {
-    // Numbers in names counted, so name 2 comes before name 10, as the program tab sorts them
+    // Compare numbers in names as numbers, so name 2 comes before name 10, as the program tab does
     return a[1].localeCompare(b[1], undefined, {numeric: true});
   });
 }
 
-// A rule with words in it, "Examples" in its middle where a tab's examples start. With minor, it
-// has a kind's name at its left where the Screens tab's drawings or pictures start within them
+// A rule with words in it, "Examples" in its middle where a tab's examples start. With minor= it
+// has a kind's name at its left, where the Screens tab's drawings or pictures start within them
 export function discoverDivider(words, minor) {
   return h("div", {className: "discoverdivide" + (minor ? " minor" : "")}, h("span", {}, words));
 }
@@ -822,8 +822,8 @@ function discoverChoose(path, e, toggle, shown) {
   draw();
 }
 
-// Download every chosen example in turn, choosing none of them on the program tab, unless only one
-// was chosen, and stopping at one that fails
+// Download every chosen example in turn, stopping at one that fails. A program downloaded alone is
+// chosen on the program tab, and none of several is
 async function discoverDownloadChosen(kind) {
   var paths = discoverChosen.slice();
   if (paths.length === 1) {
@@ -862,14 +862,13 @@ function discoverRenderBrowser() {
   var check = discover[kind];
   var asked = discoverAsked(kind);
   var every = check.status === "done" ? discoverOffers(kind) : [];
-  // Programs are shown by what is to hand, as the program tab shows them, its chips repeated here
-  // and changing both
+  // Programs are filtered by what is to hand with the program tab's own chips, repeated here
   var offers = kind === "program" ? every.filter(function (offer) {
     return passesFilter(offer[0]);
   }) : every;
   var chips = kind === "program" ? discoverChips(every) : null;
   var sections = discoverSections(kind, offers).filter(Boolean);
-  // Both kinds offered, the filter groups the sections by kind, each group led by the whole kind
+  // Where both kinds are offered, the filter has a group for each, which starts with the whole kind
   var kinds = kind === "program" ? [] : ["drawing", "picture"].filter(function (one) {
     return sections.some(function (section) { return discoverSectionKind(offers, section) === one; });
   });
@@ -934,7 +933,7 @@ function discoverRenderBrowser() {
   var listed = discoverSections(kind, offers).filter(function (section) {
     return discoverShows(offers, section);
   });
-  // Drawings and pictures both shown each start under a rule naming them, as the Screens tab does
+  // Drawings and pictures shown together each start under a rule naming them, as on the Screens tab
   var named = kind !== "program" && listed.some(function (section) {
     return discoverSectionKind(offers, section) === "picture";
   }) && listed.some(function (section) {
@@ -1005,9 +1004,9 @@ function discoverRenderBrowser() {
   scroll.scrollTop = scrolled;
 }
 
-// A program as its tab shows it, its thumbnail, or both screens' side by side, with what it uses
-// along the thumbnail's foot, over its name, less its tab's buttons. What it does follows its
-// name, since here it is being chosen unseen
+// A program as its tab shows it, less the tab's buttons. Its thumbnail, or both screens' side by
+// side, carries what it uses along its foot, and its name is under it. What it does follows its
+// name, since here it is chosen unseen
 function discoverProgramFace(path) {
   // The tab's card draws a program's pictures from PICTURES, which holds only the drive's, so the
   // missing program's are lent to it while it is made
@@ -1026,7 +1025,7 @@ function discoverProgramFace(path) {
 }
 
 // An example as a card in the gallery, looking as it does in its own tab, its box ticked while it
-// is chosen. shown is every card's path in the order shown, which a Shift press counts a run along
+// is chosen. shown= is every card's path in the order shown, which a Shift press counts a run along
 function discoverOfferCard(offer, shown) {
   var path = offer[0];
   var chosen = discoverChosen.indexOf(path) >= 0;
@@ -1116,10 +1115,10 @@ export function discoverPill(cardPath) {
 // A program the gallery offers is known by its path, as the drive's are, for its card and its uses
 programsElsewhere.push(function (path) { return discoverPrograms[path] || null; });
 
-// An example program on the drive can be deleted, as it can be downloaded again, and carries its
-// mark, Update or the firmware it needs. A card the gallery makes is for a program not on the drive
+// An example program on the drive has a bin, as it can be downloaded again, and its Discover mark
 programCardSteps.push(function (card, path) {
   var own = PROGRAMS.filter(function (one) { return one.path === path; })[0];
+  // Check if the program is on the drive. A card the gallery makes is for one that is not
   if (!own) return;
   if (discover.busy[discoverTarget(path)]) card.classList.add("discoverbusy");
   if (own.example && drive.dirHandle) discoverBinBeside(card, discoverBin(path, "program"));
@@ -1240,7 +1239,7 @@ async function discoverDelete(path, kind) {
   draw();
 }
 
-// The copy tile sits in the bin's place on an example, which has none, so it moves beside the bin
+// Add a bin to an example's card, moving its copy tile out of the bin's place to beside it
 export function discoverBinBeside(card, bin) {
   var copy = card.querySelector(".copytile");
   if (copy) copy.classList.remove("alone");

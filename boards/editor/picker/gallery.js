@@ -20,7 +20,8 @@ import {carded, cellSays, cutPoint, washOf} from "./stretch_bar.js";
 import {bringForward, crossing, moveLamp, showKin} from "./wiring.js";
 
 // ---- the look gallery ---------------------------------------------------------------------------
-// The cards of the looks the chosen stretch can play, in their groups, each lit as it plays.
+// The cards of the looks the chosen stretch can play, in their groups and each lit as it plays,
+// and the outputs' bars of stretches and their lamps.
 
 function lookCard(isMono, look, on) {
   var cells = [];
@@ -66,11 +67,10 @@ function paintCards() {
 }
 addStep(paintSteps, PAINT_ORDER, "cards", paintCards);
 
-// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
-// stretch can play
+// Draw the cards for whatever stretch was last picked, a shelf of what that stretch can play
 function renderGalleries() {
-  // A kind the board has none of cannot be worked on, so the set goes back to the one it
-  // has. Without this the cards would be for lights that are not there
+  // Check if the board has none of the kind shown but some of the other, and show that, or the
+  // cards would be for lights that are not there
   if (!haveKind(showing) && haveKind(!showing)) setShowing(!showing);
 
   var run = galleryRun(showing);
@@ -104,7 +104,7 @@ drawParts.galleries = renderGalleries;
 
 // ---- the lamps, lit and put in place -------------------------------------------------------
 
-// Light each lamp's face as it plays, faces[at] being the face of the run's lamp at `at`. A lamp
+// Light each lamp's face as it plays, where faces[at] is the face of the run's lamp at `at`. A lamp
 // playing nothing of its own is marked unset, which its holder shows
 function paintFaces(faces, all) {
   faces.forEach(function (face, at) {
@@ -118,9 +118,9 @@ function paintFaces(faces, all) {
   });
 }
 
-// A lamp is dragged to where it sits on the build. A colour output is one lamp so it
-// moves whole, and a broken-out one moves a channel at a time, since its three LEDs are
-// three separate things once the adapter is on
+// Make a lamp a tile dragged to where it sits on the build. A colour output is one lamp so it
+// moves whole, and a broken-out one moves a channel at a time, since its three LEDs are three
+// separate things once the adapter is on
 function takesPlace(node, lamp) {
   var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
   node.draggable = true;
@@ -134,8 +134,7 @@ function takesPlace(node, lamp) {
     setCarryingLamp(null);
     draw();
   });
-  // Put down on a lamp's right half, the carried one goes after it, which is the only way
-  // to reach the far end of the run
+  // Put down on a lamp's right half, the carried one goes after it, the only way to reach the end
   function after(event) {
     var box = node.getBoundingClientRect();
     return event.clientX > box.left + box.width / 2;
@@ -190,8 +189,8 @@ function groupGallery() {
   groups = groups.filter(function (group) { return group.looks.length; });
 
   flat.replaceWith(h("div", {className: "groupedlooks"}, groups.map(function (group, at) {
-    // Each heading folds its group, all starting open. Nothing sits beside the first heading
-    // and not in it, so it is never folded away
+    // Each heading folds its group, and every group starts open. Nothing sits beside the first
+    // heading and not in it, so it is never folded away
     var key = "looks:" + group.name;
     var open = groupOpen([key, "", [], false]);
     var fold = foldHead(group.name, group.says, open, function () {
@@ -230,15 +229,14 @@ function renderBar(where, run) {
   if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
 }
 
-// A stretch of the outputs as a card, its lamps where carded, over its look's wash and named,
-// with its places to cut
+// A stretch of the outputs as a card, with its lamps where carded, its look's wash, name and cuts
 function barCell(run, section, at, faces) {
   var first = run.lamps[section.from];
   var lamps = carded(run) ? cardLamps(run, section, faces) : null;
   var look = lookNamed(section.look);
   var under = look ? null : stretchUnder(run, section);
   var cuts = [];
-  // Where this stretch can be cut, one place between two lamps
+  // Where this stretch can be cut, one place between each two lights
   for (var i = section.from; i < section.to; i++) {
     cuts.push(cutPoint(run, i, widthOf(section), section.from));
   }
@@ -258,7 +256,7 @@ function barCell(run, section, at, faces) {
      h("span", {className: "cuts"}, cuts));
 }
 
-// The cut a stretch shares with the next, dragged to move it or clicked to take it out
+// The cut a stretch shares with the next, dragged to move it or taken out to join the two stretches
 function barEdge(run, at, where) {
   var edge = h("div", {
     className: "edge", title: "drag to move this cut, or click \u00d7 to remove it",
@@ -267,8 +265,8 @@ function barEdge(run, at, where) {
       remember(run);
       // The stretch being resized is the one being worked on, whichever side it is on
       pick(run, at);
-      // The bar is rebuilt on every move, so what is held onto is where the bar lives
-      // and not the bar itself, which would be a node already thrown away
+      // The bar is rebuilt on every move, so what is held onto is where the bar lives and not the
+      // bar itself, which would be a node already thrown away
       setHolding({run: run, which: at, where: where, had: run.sections.length});
       edge.classList.add("holding");
     }

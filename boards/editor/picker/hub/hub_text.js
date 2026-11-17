@@ -35,7 +35,7 @@ function offHubEntries(body) {
 
 // ---- reading the file back --------------------------------------------------------------------
 
-// Hub positions as a file names them, hubA-C,E, or null where the item is not one
+// Hub positions as a file names them, such as hubA-C,E, or null where the selector is not one
 function hubPlacesNamed(selector) {
   var match = selector.match(/^hub([a-f](?:-[a-f])?(?:,[a-f](?:-[a-f])?)*)$/i);
   if (!match) return null;

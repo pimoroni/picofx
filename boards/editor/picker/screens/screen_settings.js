@@ -24,11 +24,15 @@ import {
 } from "./screens.js";
 
 // ---- a screen's settings ------------------------------------------------------------------------
-// The chosen screen's settings, its orientation, placement, background, drawing and playback,
-// each kept in the scene.
+// This part draws the settings under a screen's module, each kept in the scene. Under the module
+// is what it shows, then four sections that fold, which are orientation, placement, background,
+// and last playback or a drawing's own section. The last is there only for a moving picture or a
+// drawing, so the three above it never move. A setting with a few choices is a row of buttons,
+// and one that is on or off is a toggle. The module drawing shows each placing setting as the
+// board would draw it, and a gif plays at its own timings.
 
-// A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
-// last looked at says whether it is newly chosen, and a scene coming round brings its own turn
+// A picture newly chosen on a screen starts as chosenAfresh() says. What the screen showed when
+// last looked at says whether it is newly chosen, and applying a scene sets it to what it shows
 export function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 screenParts.turnForChosen = turnForChosen;
 
@@ -38,8 +42,8 @@ screenHooks.panelPreview = panelPreview;
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
-// Each screen keeps one look object for good, a scene's values copied into it, so a control
-// drawn before a scene is re-applied still changes the look that is written
+// Each screen keeps one look object for good, and a scene's values are copied into it, so a
+// control drawn before a scene is re-applied still changes the look that is written
 var lookHomes = {};
 SCREENS.forEach(function (letter) { lookHomes["screen" + letter] = state.screens[letter].look; });
 
@@ -60,8 +64,8 @@ addStep(bodyParts, BODY_ORDER, "screenSettings", {
 
 
 // ---- the settings, drawn ----------------------------------------------------------------------
-// Each section folds, saying its values beside its name while closed. Orientation and playback
-// start open, placement and background folded, since a picture made for its screen needs neither
+// Each section folds, saying its values beside its name while closed. Placement and background
+// start folded, since a picture made for its screen needs neither, and the rest start open
 
 var foldOpen = {};
 var FOLDS_START_OPEN = {Orientation: true, Placement: false, Background: false, Playback: true,
@@ -85,8 +89,8 @@ function named(words) {
   return h("span", {className: "snamed"}, words);
 }
 
-// One choice of several, as a row of buttons grouped under label= for a screen reader. options
-// are [value, label html, refused]
+// One choice of several, as a row of buttons grouped under label= for a screen reader. Each of
+// options= is [value, label html, refused]
 function segment(options, chosen, choose, title, label) {
   return h("span", {className: "sseg", title: title || null, role: "group",
                     "aria-label": label}, options.map(function (option) {
@@ -134,8 +138,8 @@ function rotationMark(turn) {
          "fill='currentColor'/></g></svg>";
 }
 
-// A turn goes with the picture showing, remembered for it on this screen, and can be set with
-// none showing, for the next one put there
+// Set the turn, and remember it for the picture showing on this screen. A turn set with nothing
+// showing is kept for the next picture put there
 function setTurn(held, turn) {
   held.turn = turn;
   if (held.shows && held.shows !== "keep") held.turns[held.shows] = turn;
@@ -181,7 +185,7 @@ function placementFold(key, held, size) {
       }
     });
   }));
-  // Typing a figure places the picture by hand, the other side kept where it was
+  // Typing a figure places the picture by hand, and keeps the other side where it was
   function typed(axis) {
     return function (value) {
       var other = axis === "x" ? "y" : "x";
@@ -195,8 +199,7 @@ function placementFold(key, held, size) {
   x.title = "Pixels from the left. Leave empty to centre";
   y.title = "Pixels from the top. Leave empty to centre";
   x.className = y.className = "sxy";
-  // Tiling is set for each side, so a picture can be spread across and left alone down. Both
-  // sides share one line, each named by its arrow, and the choices are in words
+  // Tiling is set for each side, so a picture can be spread across and left alone down
   function tiling(down) {
     var side = down ? "tileDown" : "tile";
     var seg = segment([["off", "Off"], ["repeat", "Repeat"], ["mirror", "Mirror"]],
@@ -226,9 +229,9 @@ function placementFold(key, held, size) {
 var groundCustom = {};
 
 // The colour round a picture, chosen from the looks' swatches in one row across the section.
-// Black is first, since every screen starts there, and the custom ring is last with the chosen
-// colour in its middle. Then comes a brightness of its own, apart from the backlight. A typed hex
-// is taken as written, and its brightness is read from it
+// Black is first, since every screen starts there, and the custom ring comes at the end with the
+// last custom colour in its middle. Then comes a brightness of its own, apart from the backlight.
+// A typed hex is taken as written, and its brightness is read from it
 function backgroundFold(key, held) {
   var look = held.look;
   var names = ["black"].concat(SWATCHES);
@@ -237,8 +240,8 @@ function backgroundFold(key, held) {
     return hexOf(WORDS[name]) === hexOf(parts.full);
   })[0];
   var open = groundCustom[key] || !chosen;
-  // A colour that is no swatch's is the custom one, and the ring keeps showing it while a
-  // swatch is chosen, so custom comes back to it
+  // Check if the custom field is open. Its colour is kept, so the ring shows it while a swatch is
+  // chosen and custom comes back to it
   if (open) look.customBg = look.bg;
   var row = h("div", {className: "sswatches", role: "group", "aria-label": "Background"},
     names.map(function (name) {
@@ -266,7 +269,7 @@ function backgroundFold(key, held) {
       }
     }, h("b", {}, "custom")));
 
-  // How bright the background is, black having none to set
+  // How bright the background is. Black has no brightness to set
   var figure = h("span", {className: "lightfigure"}, Math.round(parts.value * 100) + "%");
   var slider = h("input", {
     type: "range", name: "backgroundLevel", min: 0, max: 100, step: 5,
@@ -287,8 +290,8 @@ function backgroundFold(key, held) {
                        open ? customGround(look, parts) : null, bright));
 }
 
-// The custom colour's field to pick a hue and saturation from, with its hex to type beside the
-// colour itself at its brightness, as large as the room beside the field
+// The custom colour's field to pick a hue and saturation from. Beside it are the hex to type and
+// the colour at its brightness, as large as the room allows
 function customGround(look, parts) {
   var place = takeApart(parts.full);
   var at = h("div", {className: "at", style: {left: place.hue / 360 * 100 + "%",
@@ -373,9 +376,8 @@ function drawingFold(key, held) {
             : look.pace === "interval" ? "frame every " + look.every + " s" : "every frame",
               look.canvas === "set" ? look.canvasW + " \u00d7 " + look.canvasH
             : look.canvas === "half" ? "half size" : "whole screen"];
-  // A drawing drawn in styles of its own offers them, a row for each of its Styles: lines stacked
-  // beside the one label, a line's first being the one it takes unchosen. A style is the file's own
-  // text, so it is escaped for the button's label
+  // A drawing drawn in styles of its own offers them, a row for each of its Styles: lines beside
+  // the one label. A style is the file's own text, so it is escaped for the button's label
   var media = held.shows ? mediaNamed(held.shows) : null;
   var drawing = media && media.drawing;
   var chosen = drawing ? styleChoices(drawing, look.style) : [];
@@ -405,7 +407,7 @@ function madeForLine(held) {
   if (!media || !media.drawing) return null;
   var turns = drawingTurns(media.drawing);
   var turnWrong = !!turns && turns.length > 1 && turns.indexOf(Number(held.turn || 0)) < 0;
-  // Doubled is right only on the half-size canvas, and full resolution only on the whole screen
+  // Doubled is right only on the half-size canvas, and full resolution on any but the half-size
   var doubled = drawingDoubled(media.drawing);
   var doubleWrong = doubled === true ? !(held.look.double && held.look.canvas === "half")
                   : doubled === false ? held.look.double || held.look.canvas === "half" : false;
@@ -431,9 +433,9 @@ function madeForLine(held) {
 }
 
 // A line suggesting half size or pairing where both screens show a drawing and are not paired,
-// unless both are pixel doubled at half size, with a button setting both to that, or null. Two
-// larger canvases do not fit the fast memory together, so one draws more slowly. A drawing whose
-// Defaults: line asks for full resolution is made for it, so no line is shown
+// with a button setting both to pixel doubling at half size, or null. Two larger canvases do not
+// fit the fast memory together, so one draws more slowly. No line is shown where both are already
+// at half size, or where a drawing's Defaults: line asks for full resolution
 function halfSizeLine() {
   if (SCREENS.length < 2 || state.hub.on || screensPaired()) return null;
   var both = SCREENS.slice(0, 2).map(function (letter) { return state.screens[letter]; });
@@ -441,7 +443,7 @@ function halfSizeLine() {
     var media = held.there && held.shows ? mediaNamed(held.shows) : null;
     return !!media && !!media.drawing && drawingDoubled(media.drawing) !== false;
   });
-  // Is either not doubled at half size? Doubling and half size are judged together, as madeForLine() does
+  // Is either not doubled at half size? The two are judged together, as madeForLine() does
   var larger = both.some(function (held) { return !(held.look.double && held.look.canvas === "half"); });
   if (!drawings || !larger) return null;
   var use = h("button", {
@@ -460,9 +462,9 @@ function halfSizeLine() {
   return line;
 }
 
-// A drawing's tile can copy it to the user's own drawings folder, to change in an editor, where it
-// takes the original's place on any screen or hub position showing it in this scene. An example is
-// customised, and one of the user's own duplicated
+// A drawing's tile can copy it to the user's own drawings folder, to change in an editor. The copy
+// takes the original's place on any screen or hub position showing it in this scene. An example
+// is customised, and one of the user's own duplicated
 export function drawingCopyTile(name) {
   return copyTile(isExampleMedia(name), nameShown(name), "drawings", async function () {
     try {
@@ -473,7 +475,7 @@ export function drawingCopyTile(name) {
       }));
       held.forEach(function (one) {
         if (one.shows !== name) return;
-        // The copy keeps the turn the original was given, so it shows as the original did
+        // Check if the original was turned, which the copy keeps so it shows as the original did
         if (one.turns && name in one.turns) one.turns[copy] = one.turns[name];
         one.shows = copy;
         if ("lastShows" in one) one.lastShows = copy;
@@ -510,7 +512,7 @@ function playbackFold(key, held, media) {
   // A folder whose names say no delay has nothing to play at its own pace
   var noneSaved = media.kind === "folder" && !media.named;
   var fromWhere = media.kind === "folder" ? "from names" : "from file";
-  // Between fps and interval the figure is turned over, so the pace stays the same
+  // Between fps and interval the figure becomes its reciprocal, so the pace stays the same
   var speed = segment([["fps", "fps"], ["interval", "interval"], ["saved", fromWhere, noneSaved]],
                       look.pace, function (value) {
                         var flips = (value === "fps" && look.pace === "interval") ||
@@ -522,7 +524,7 @@ function playbackFold(key, held, media) {
                       (media.kind === "folder" ? "written in each picture's file name" : "saved in the file"),
                       "Speed");
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
-    // Nothing, zero or less is no pace, so the figure there stays
+    // Check if the figure is a pace. Nothing, zero or less is none, so the figure there stays
     if (Number(value) > 0) look.every = Number(value);
   }, look.pace === "interval" ? 0.05 : 1, look.pace === "interval" ? "Seconds per frame"
                                                                     : "Frames per second");
@@ -584,7 +586,7 @@ function showingNothing(held, letter) {
 function showingPicture(picture, held, letter) {
   var media = mediaNamed(picture);
   var art = mediaArt(picture);
-  // A drawing is drawn, not shown, on a canvas
+  // Check if it is a drawing, which says the canvas it draws on in place of its size
   if (media && media.kind === "drawing") {
     var size = state.hub.on ? state.hub.sizes[letter] : state.screens[letter].size;
     // A pair draws once, on the canvas its larger screen sizes
@@ -644,11 +646,10 @@ export function chosenAfresh(held) {
 }
 
 // ---- the pictures, whole ------------------------------------------------------------------------
-// Each picture is drawn whole in its tile, never cropped. The tiles keep the row's fixed width,
-// and a picture wider than its tile is scaled down to that width in a tile as tall as its shape
-// needs. A narrower one is drawn at its true size, never scaled up, in a square tile at least, so
-// a small picture looks as small as it is. The rows line up at the bottom, which keeps the pick
-// rows in line. The name, a still's type and the size show over the picture on hover
+// Each picture is drawn whole in its tile, never cropped. A picture wider than its tile is scaled
+// down to the tile's width, and a narrower one is drawn at its true size in a tile at least
+// square, so a small picture looks as small as it is. The name, a still's type and the size show
+// over the picture on hover
 addStep(assetSteps, ASSET_ORDER, "screenSettings", function () {
   document.getElementById("assets").classList.add("wholeassets");
   document.querySelectorAll("#assets .asset").forEach(function (cell) {
@@ -656,11 +657,11 @@ addStep(assetSteps, ASSET_ORDER, "screenSettings", function () {
     var art = media && mediaArt(media.name);
     var face = cell.querySelector(".face");
     var img = face && face.querySelector("img");
-    // A drawing's description is its tooltip, as a program's is, since it is too long for its tile
+    // Check if a drawing has a description. It is too long for its tile, so it is the tooltip
     if (media && media.kind === "drawing" && media.drawing.description) {
       cell.title = media.drawing.description;
     }
-    // A drawing with no thumbnail shows its icon or initial on its colour, square, named on hover
+    // Check if it is a drawing with no thumbnail, which shows its icon or initial on its colour
     if (media && media.kind === "drawing" && !media.thumbHandle && face) {
       var drawing = media.drawing;
       face.className = "face drawingface";
@@ -689,8 +690,7 @@ addStep(assetSteps, ASSET_ORDER, "screenSettings", function () {
     // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
               : dot > 0 ? file.slice(0, dot) : file;
-    // A drawing shown by its thumbnail is named as its opening string says, since the thumbnail's
-    // size is not the canvas it draws on
+    // Check if it is a drawing, named by its title since its thumbnail's size is not its canvas
     if (label && media.kind === "drawing") {
       replace(label, h("b", {}, media.drawing.title));
     } else if (label) {

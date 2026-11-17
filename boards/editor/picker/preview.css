@@ -1,4 +1,4 @@
-/* It is the screens' toggle, its rules repeated for the pages that have no screens */
+/* The direction toggle, a .stoggle drawn in the accent colour while on */
 .chosen .direction {
   margin-left: auto;
   border: 1.5px solid var(--line);

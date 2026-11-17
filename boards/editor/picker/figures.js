@@ -2,12 +2,8 @@ import {sectionLines} from "./lines.js";
 
 // ---- the looks in groups ------------------------------------------------------------------
 // The gallery grouped by how the lights play together, each group a row of at most five, the
-// width a row of cards has. The showiest come first. The travelling looks lead, with Rainbow
-// among them as what the board opens playing, then the ready-made ones, each a base look
-// specialised or several of them together, then the plainest and the most specialised. The cards
-// are the flat gallery's own, moved into their groups with everything they do, so a look no group
-// names still shows, in a group of its own at the end. Nothing is no look of any group, so it is
-// a card made small at the end of the first heading, where there is always room for it.
+// width a row of cards has. The showiest come first. The travelling looks lead, then the ready-made
+// ones, each a base look specialised or several together, then the plainest and most specialised.
 
 export var LOOK_GROUPS = [
   {name: "Along the lights", says: "travelling from one end to the other",
@@ -21,16 +17,14 @@ export var LOOK_GROUPS = [
 ];
 
 // ---- the figure beside each slider --------------------------------------------------------
-// Each slider can show beside it the value the file writes, with its unit, in a box that takes
-// one typed in. A value typed within the slider's reach moves the slider to it. Typed past an
-// end, the slider sits at that end and the value is kept as typed, so the file writes exactly it.
-// The figures are in a drawer at the right of the sliders, shut until opened, one for the
-// whole panel, and a viewer's page remembers which way they left it.
+// Each slider can show the value the file writes beside it, with its unit, in a box that takes
+// one typed in. A value typed past an end leaves the slider at that end, and the file writes the
+// value as typed. The figures sit in a drawer at the right of the sliders, one for the whole
+// panel, which stays shut until opened and is remembered between visits.
 //
-// Every figure rises as its slider goes right, as the setting does. So a speed set as an
-// interval between steps is shown as how many times a second, and a signal's as how fast it
-// runs against a real one. A slider moving several settings shows the first of its keys it
-// changes, and the rest follow it. A wave's speed is shown without its sign, since Reverse
+// Every figure rises as its slider goes right. So a speed set as an interval between steps is
+// shown as how many times a second. A slider moving several settings shows the first of its keys
+// it changes, and the rest follow it. A wave's speed is shown without its sign, since Reverse
 // says which way it runs.
 
 document.body.classList.add("figures");
@@ -44,7 +38,7 @@ var FIGURE_KEYS = {
 // A real signal's green interval, which a signal's speed is shown against
 var SIGNAL_GREEN = {"Traffic light": 12, "Pelican crossing": 20};
 
-// How a setting's value is shown, the figure rising as the slider does, and taken back
+// How a setting's value is shown so it rises as the slider does, and how a typed one is read
 export function figureWay(key, look) {
   var times = {unit: "/s", show: function (v) { return 1 / v; },
                take: function (f) { return 1 / f; }};
@@ -77,7 +71,7 @@ try {
   // Shut where the page may not keep anything
 }
 
-// Open or shut the drawer
+// Set whether the drawer is open, for the next draw
 export function setFiguresOpen(open) {
   figuresOpen = open;
 }
@@ -113,8 +107,8 @@ export function figureSaid(value) {
   return String(Math.round(value * 100) / 100);
 }
 
-// The slider's place that writes nearest a value, looked for along its whole reach. Past its
-// reach the slider sits at the nearer end, not at the first place that rounds to it
+// The slider's place that writes nearest a value, looked for along its whole reach. A value no
+// place writes exactly leaves the slider at the nearer end, and the caller keeps it as typed
 export function placeFor(run, section, look, slider, key, value) {
   var best = 0, nearest = Infinity;
   for (var step = 0; step <= 200; step++) {

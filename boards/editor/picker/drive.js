@@ -4,10 +4,12 @@ import {BOARD} from "./looks.js";
 import {state} from "./scenes.js";
 
 // ---- the drive, and what the board says back ----------------------------------------------------
-// Saving to the drive and reading back errors.txt, remembering the drive and waiting on the
-// board. Opening a drive takes its handles, and the read-back part reads its effects.txt into the
-// page. It works in Chrome and Edge only, where a page can be handed a folder to write to.
+// This part opens the FX drive and remembers it, and reads errors.txt and waits on the board
+// after a save. Opening a drive takes its handles, and later parts read what they need from it.
+// It works in Chrome and Edge only, where a page can be handed a folder to write to.
 
+// How long a save waits after the write before it reads the board. The board holds its light for
+// 500ms after the last write, then runs one pass of half-steps, which is 920ms for seven lights
 export var SAVING_TAIL_MS = 920;
 
 function rememberDrive(handle) {
@@ -145,9 +147,9 @@ export async function waitForBoard(before, nothingYet) {
   return before;
 }
 
-// Wait for the drive to go and come back, as it does while the board restarts. Whether it came back.
-// The wait for it to go is the one a save gives the board, and once gone it has as long to return
-// as waitForBoard() gives it
+// Wait for the drive to go and come back, as it does while the board restarts, and return
+// whether it came back. The wait for it to go is the one a save gives the board, and once gone it
+// has as long to return as waitForBoard() gives it
 export async function waitForReturn() {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var wentAway = false;
@@ -163,7 +165,8 @@ export async function waitForReturn() {
   return false;
 }
 
-// nothing= says the save plays nothing, as a file with no entries does
+// Say in the banner what the board reported after a save. also= follows the words where nothing
+// went wrong, and nothing= says the save plays nothing, as a file with no entries does
 export function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot " +
@@ -212,7 +215,7 @@ export function overwriteQuestion() {
   return "The file on the board has changed since it was opened here. Overwrite those changes?";
 }
 
-// What the parts below read off a drive once it is open, each awaited in the order stated
+// What later parts read off a drive once it is open, each awaited in the order CONNECT_ORDER states
 export var connectSteps = [];
 export var CONNECT_ORDER = ["driveFiles", "drivePrograms", "readback", "firmware"];
 
@@ -234,8 +237,8 @@ export async function connect(fresh) {
   // The wait on the board reads the drive through the page's state
   state.dirHandle = dir;
   document.getElementById("check").disabled = false;
-  // Once a drive is open, the drive button goes quiet and narrower and its tip names the drive.
-  // The save button takes the colour as the next thing to do
+  // Once a drive is open, the drive button loses its colour and narrows, and its tip names the
+  // drive. The save button takes the colour as the next thing to do
   var openButton = document.getElementById("open");
   openButton.className = "";
   openButton.textContent = "Change drive";

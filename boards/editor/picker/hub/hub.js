@@ -11,17 +11,18 @@ import {ASSET_ORDER, HEAD_AFTER, assetSteps, screensHeadSteps} from "../screens/
 import {tabSwatches} from "../tabs.js";
 
 // ---- a Screen Hub in the Screens tab ----------------------------------------------------------
-// A hub takes both connectors. One carries the screens' SPI and the other gives its five pins
-// up as chip selects, so one hub reaches six panels, lettered A to F as on the hub itself.
+// A hub takes both connectors. One carries the screens' SPI, and its chip select drives position
+// A as it would a single screen. The other gives its five pins up as chip selects for B to F, so
+// one hub reaches six panels, lettered as on the hub itself.
 // The hub is drawn for its SPI on A and its selects on B, but nothing stops it being wired
 // the other way round. Whether the board has two screens or a hub, which way the hub is wired,
 // and which panel is at each position are the board's, set while editing the board. What each
 // position shows, and which way up, is the scene's, as it is for a screen.
 //
-// Positions of one size showing the same picture are sent it once, together, so a wall of one
-// picture plays as fast as a single screen. Anything else goes to each position in turn, so
-// the tab says when moving pictures will slow for it. The positions share one backlight, which
-// the board lights for them all.
+// Positions of one size showing the same picture the same way are sent it once, together, so a
+// wall of one picture plays as fast as a single screen. Anything else goes to each position one
+// after another, so the tab says when moving pictures will slow for it. The positions share one
+// backlight, which the board lights for them all.
 //
 // The file names a position by the hub's own letter, as outputs are named by number, such as hubB,
 // or hubA-C,E for several, with the hub and its panels declared on the board line.
@@ -33,7 +34,7 @@ state.hub = {on: false, port: "A", sizes: {}, was: {}};
 state.places = {};
 HUB_PLACES.forEach(function (place) {
   state.hub.sizes[place] = "2.8";
-  // off= is a scene turning the position off with `none`, as a screen's is
+  // off= is whether the scene turns the position off with `none`, as a screen's is
   state.places[place] = {shows: null, turn: 0, pingpong: false, hold: "", fps: 5,
                          turns: {}, lastShows: null, off: false, pictureTurn: 0};
 });
@@ -41,17 +42,17 @@ HUB_PLACES.forEach(function (place) {
 // The position whose settings are shown under the hub
 export var placePicked = "A";
 
-// Show a position's settings under the hub
+// Choose the position whose settings are shown under the hub
 export function pickPlace(place) {
   placePicked = place;
 }
 
-// What the hub parts after this one lend to it, filled in as they load: placeGroups(body),
-// breakingUp(places) and sendTargets() from the groups, hubEntry(group), offHubEntries(body),
-// readBoard() and read(bodies) from the text, and renderHead() and hubSwitch() from the view
+// What the hub parts after this one lend to it, filled in as they load. The groups lend
+// placeGroups(body), breakingUp(places) and sendTargets(), the text hubEntry(group),
+// offHubEntries(body), readBoard() and read(bodies), and the view renderHead() and hubSwitch()
 export var hubParts = {};
 
-// Whether a position has a panel to show on, its size being "" where it has none
+// Whether a position has a panel to show on, which takes a hub and a size other than ""
 export function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
 export function placesThere() { return HUB_PLACES.filter(placeThere); }
@@ -66,8 +67,9 @@ export function asScreen(place) {
 
 // What the board shows on a position the scene being edited shows nothing on. The result holds
 // always=, Always on's settings for the position, which plays on there even where the scene
-// takes another position of its group, or off=, every other scene that shows there where Always
-// on does not. It is null where nothing shows, and on the Always on tab
+// takes another position of its group. Otherwise it holds off=, the other scenes that show there
+// or turn it off. It is null where nothing shows, where this scene shows something there or turns
+// it off, and on the Always on tab
 export function placeUnder(place) {
   var mine = state.places[place];
   if (state.at < 0 || !state.hub.on || mine.shows || mine.off) return null;
@@ -87,8 +89,8 @@ export function asAlwaysScreen(place, held) {
           look: Object.assign({}, held.look, {backlight: state.always.body.hubLight})};
 }
 
-// The connector's own colour, A blue and B purple, which the hub takes from the one its
-// screens come through
+// The class for the connector's own colour, a for A's blue and b for B's purple, which the hub
+// takes from the connector its screens come through
 export function hubInk() { return state.hub.port === "A" ? "a" : "b"; }
 
 // A picture newly chosen on a position starts as chosenAfresh says
@@ -194,7 +196,7 @@ addStep(screensHeadSteps.after, HEAD_AFTER, "hub", function () {
   replace(document.getElementById("hubFacts"), hubParts.hubSwitch());
 });
 
-// A picture's own row of positions, each tapped to show it there or tapped again to take it off
+// Each picture's tile in the hub's colour where a position shows it
 addStep(assetSteps, ASSET_ORDER, "hub", function () {
   var box = document.getElementById("assets");
   box.classList.toggle("hubbed", state.hub.on);
@@ -295,7 +297,7 @@ tabSwatches.screensPanel = function (swatch) {
     var under = placeThere(place) ? placeUnder(place) : null;
     var shown = held.shows || (under && under.always ? under.always.shows : null);
     var art = placeThere(place) && shown ? mediaArt(shown) : null;
-    // A picture with no thumbnail yet is a white tile, its position showing something
+    // A picture with no thumbnail yet is a white tile, since its position does show something
     var marked = !placeThere(place) ? "absent" : held.off ? "off" : art ? ""
                : shown ? "blank" : under && under.off ? "dark" : "nothing";
     return h("span", {

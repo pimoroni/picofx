@@ -20,11 +20,7 @@
   color: var(--dim);
 }
 
-/* One colour picker for a stretch's colour and a screen's background. One row of swatches spans
-   the section, each as wide as "magenta" and no wider, spread to keep both ends flush and named
-   under them once the section has room. Custom comes last as a rainbow ring whose middle is the
-   custom colour, or Nothing's stripes until there is one. The field sits under the row, with the
-   hex beside it over the colour itself */
+/* The colour picker under a stretch's settings, styled in page.css under choosing a colour */
 .chosen .colourpick {
   margin-top: var(--space-4);
 

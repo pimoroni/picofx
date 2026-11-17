@@ -27,13 +27,12 @@ export function forwardTargetFor(run, section) {
                       label: "nothing", playing: []};
   var mine = [];
   for (var i = section.from; i <= section.to; i++) mine.push(run.lamps[i]);
-  // What a stretch plays on, in build order, which a look sharing its lamps out between
-  // sets of its own, as Party does, deals from. A colour stretch's are its outputs, and a mono
-  // stretch's are its lamps, which are channels, so it names each set itself
   var target = {kind: first.colour && widthOf(section) === 1 ? "single" : "outputs",
                 name: "out", colour: first.colour, selector: nameThese(mine),
                 count: widthOf(section), playing: [],
                 label: first.colour ? colourOutputsSaid() : "the mono lights"};
+  // The lights a look deals between sets of its own, as Party does, in the order the lamps sit.
+  // Check if they are a colour stretch's outputs, or else a mono stretch's lamps it names itself
   if (first.colour) {
     target.playing = mine.map(function (lamp) { return lamp.out + 1; });
     target.nameSet = outputsNamed;
@@ -66,16 +65,14 @@ var SET_LOOKS = ["Party"];
 // Base effects written in one fixed colour, which take a colour beside their own settings
 var FIXED_COLOUR_LOOKS = ["Wave", "Blink", "Marquee", "Scanner", "Chase"];
 
-// Whether a look is given its colour here. Solid takes one already, the looks whose second
-// slider steps a table of tones take one instead of that slider, and the fixed colour
-// ones take one as well
+// Whether a look takes a chosen colour. Solid takes one already, the looks whose second slider
+// steps a table of tones take one in its place, and so do the fixed colour looks
 export function takesColour(look) {
   if (!look || SET_LOOKS.indexOf(look.name) >= 0) return false;
   return look.solid || look.mood === "Colour" || FIXED_COLOUR_LOOKS.indexOf(look.name) >= 0;
 }
 
-// Each colour a stretch's lines name, in the order they name them, once each. A blink through
-// several colours names them all
+// Each colour a stretch's lines name, once each in order. A blink lists every colour it steps to
 export function coloursWritten(look, section, run) {
   var colours = blinkList(run, section);
   if (colours) return colours.map(function (hex) { return rgbInk(hexRgb(hex)); });
@@ -92,10 +89,8 @@ export function coloursWritten(look, section, run) {
   return found;
 }
 
-// ---- the colour a look starts with -------------------------------------------------------------
-// A look given a stretch starts in its own colour, the one its tone setting gives at the
-// stretch's setting, and not whatever colour the stretch was left holding. Solid has no tone
-// setting, so it starts in SOLID_COLOUR
+// The colour a look starts in on a stretch, the one its tone setting gives at the stretch's
+// setting, not whatever colour the stretch was left holding
 export function ownColourFor(look, target, pace, mood, colour) {
   var lines = target.count === 1 && look.alone
     ? look.alone(target, pace, mood, colour)
@@ -111,21 +106,19 @@ function ownColour(look, run, section) {
                       section.colour);
 }
 
-// The lamps a signal is built from, which a strip's stretch is cut into blocks of
+// The lamps a signal has, which is how many blocks stripLines() cuts a strip's stretch into
 var SIGNAL_LAMPS = {"Traffic light": 3, "Pelican crossing": 5};
 
-// The lines a look writes, a banked look on a run or a strip dealing its banks out along it
+// The lines a look writes, where a banked look on a strip or its preview deals its banks along it
 function bankedLines(look, target, pace, mood, colour) {
   if (!(target.kind === "run" || target.strip) || !isBanked(look) || target.count === 1)
     return lookLines(look, target, pace, mood, colour);
   return stripLines(look, target, pace, mood);
 }
 
-// On a strip, Emergency deals out the stretch's lights as it does outputs. A signal takes a
-// set number of lamps, five for a crossing and three for a traffic light, so the stretch is
-// cut into that many blocks, the longer ones first, and one entry is written per place
-// within a block. Its lights, one from each block, take the signal's parts in order, and a
-// block too short for a place drops off the end
+// On a strip, Emergency deals out the stretch's lights as it does outputs. A signal cuts the
+// stretch into SIGNAL_LAMPS blocks, the longer ones first, and writes one entry per place in a
+// block. The entry's lights take the signal's parts in order, and a block too short drops off
 function stripLines(look, target, pace, mood) {
   function dealt(playing) {
     return Object.assign({}, target, {kind: "outputs", playing: playing});
@@ -149,8 +142,7 @@ function stripLines(look, target, pace, mood) {
   return lines;
 }
 
-// A card carries a painter's palette where its look takes a colour, and the stretch being
-// worked on can be given one
+// Make the painter's palette mark a card carries where its look takes a colour
 export function paletteMark() {
   return h("svg:svg", {
     viewBox: "0 0 16 16", class: "tint palette",
@@ -162,6 +154,7 @@ export function paletteMark() {
   });
 }
 
+// Start a stretch given a look in that look's own colour, or SOLID_COLOUR for toneless Solid
 export function startColour(run, section, look) {
   if (!takesColour(look)) return;
   var own = look.solid ? SOLID_COLOUR : ownColour(look, run, section);
@@ -228,15 +221,13 @@ export function linesFor(look, target, pace, mood, colour) {
     lines = bankedLines(look, target, pace, mood, colour);
   }
 
-  // The colour it was given. Solid already writes it. The looks whose slider steps tones
-  // write a tone, so the colour they wrote is replaced with the chosen one, as a word where it
-  // is a swatch and as hex from the field
+  // Check if the look takes a chosen colour, written over its own as a word for a swatch or as hex
   if (takesColour(look) && target.colour && colour) {
     var said = wordFor(colour) || colour.replace("#", "").toLowerCase();
     lines = lines.map(function (line) { return line.replace(/colour=[^\s:]+/, "colour=" + said); });
   }
 
-  // A wave is written with its speed below zero, so it goes forward as every look does
+  // Write a wave's speed below zero, for the reason WAVES gives
   lines = lines.map(function (line) {
     var effect = (line.split(":")[1] || "").trim().split(/\s+/)[0];
     if (WAVES.indexOf(effect) < 0) return line;
@@ -274,10 +265,9 @@ export function linesFor(look, target, pace, mood, colour) {
 var TRAVELLING = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence", "sweep",
                   "binary_counter", "pelican_crossing", "traffic_light", "clock"];
 
-// picofx's wave effects move their pattern toward the start of the lights they are given as
-// time runs, where a sweep, a counter and the signals begin at the start and go on from it.
-// So that a stretch goes forward the same way whatever its look, the waves are written
-// with their speed below zero, which the manual allows, and Reverse counts the lights down
+// picofx's wave effects move their pattern toward the start of the lights they are given, where
+// a sweep, a counter and the signals begin at the start and go on from it. The waves are written
+// with their speed below zero, which the manual allows, so a stretch goes forward whatever its look
 var WAVES = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence"];
 
 // Whether reversing this stretch would change what it plays, judged from its lines as written
@@ -313,7 +303,7 @@ function nameBackwards(lamps) {
   var items = [];
   var at = 0;
   while (at < lamps.length) {
-    // Two or more whole mono outputs counting down, since one alone as .* would run r, g, b
+    // Two or more whole broken-out outputs counting down, since one alone as .* would run r, g, b
     var outputs = wholeOutputsDown(lamps, at);
     if (outputs >= 2) {
       items.push(rangeItem(lamps[at].out, lamps[at].out - outputs + 1, "*"));
@@ -358,8 +348,8 @@ export function targetFor(run, section) {
 
 // ---- what heads a stretch's settings ------------------------------------------------------------
 // The look's name, since the panel is its settings, then where it plays in words, such as
-// outputs 1 to 7, LEDs 11 to 20 of the left strip or output 3's red and green. The file's
-// selector is the file view's to show, and whether the lights are colour or mono the tab's
+// outputs 1 to 7, LEDs 11 to 20 of the left strip or output 3's red and green. The file view
+// shows the file's selector, and the tab shows whether the lights are colour or mono
 
 // A list said as English does, such as "one, two and three"
 export function spoken(items) {
@@ -388,7 +378,7 @@ function numbersSaid(numbers) {
   return spoken(said);
 }
 
-// A reversed stretch is said in the order it plays, from its far end, as the file writes it
+// Where a stretch plays, in words. A reversed one is said from its far end, as the file writes it
 export function wherePlays(run, section, reversed) {
   var lamps = run.lamps.slice(section.from, section.to + 1);
   if (reversed) lamps.reverse();

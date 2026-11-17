@@ -198,12 +198,13 @@
   white-space: nowrap;
 }
 
-/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
-   the bin and copy tile shown there */
+/* An example being downloaded, faded until it is done */
 .discoverbusy {
   opacity: .6;
 }
 
+/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
+   the bin and copy tile shown there */
 .discoverpill {
   position: absolute;
   top: 4px;

@@ -3,9 +3,9 @@ import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "./draw.js";
 
 // ---- how the board takes a save, on the save button ----------------------------------------------
-// Whether a save plays without an eject, and whether the drive stays hidden at start, are about
-// saving, so they are set where the drive is saved to, in a menu on a small arrow joined to the
-// save button
+// This part draws the save button's menu, which sets whether a save plays without an eject and
+// whether the drive stays hidden at start. Both are about saving, so they sit on a small arrow
+// joined to the save button
 
 var saveMenu = document.getElementById("saveMenu");
 var saveArrow = document.getElementById("saveArrow");
@@ -44,7 +44,7 @@ export function closeSaveMenu() {
   showSaveMenu(false);
 }
 
-// Opened under its own arrow, its right edge at the arrow's, wherever the header has put it
+// Open the menu under its arrow with its right edge at the arrow's, wherever the header has put it
 saveArrow.onclick = function () {
   showSaveMenu(saveMenu.hidden);
   if (saveMenu.hidden) return;

@@ -159,7 +159,8 @@
   }
 }
 
-/* The colour picker's own rules are under choosing a colour, shared with a stretch's colour */
+/* The background's brightness slider, under its colours. The colour picker's rules are in page.css
+   under choosing a colour, shared with a stretch's colour */
 .groundbright {
   display: flex;
   align-items: center;
@@ -178,6 +179,8 @@
   }
 }
 
+/* Where the sections have the room, as the hub's strip has, placement and playback are two
+   equal halves with a line between */
 @container (min-width: 40rem) {
   .ssplit {
     display: grid;

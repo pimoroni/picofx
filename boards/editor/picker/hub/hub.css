@@ -6,6 +6,8 @@
   color: #fff;
 }
 
+/* The hub is one box across both connectors, in the colour of the one its screens come through,
+   with its six positions in a row under its band */
 .hubbox {
   grid-column: 1/-1;
   --hub: #1f6feb;

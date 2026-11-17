@@ -7,8 +7,8 @@ import {chosenTab, holdTabsPlace, showChosen} from "./tabs.js";
 import {currentText} from "./writing.js";
 
 // ---- the page, started ---------------------------------------------------------------------------
-// Every part is in place, so the always-on tab takes what they hold and the page is drawn once,
-// then the lights are set going, or held on one frame where motion is turned down
+// Every part is in place, so Always on takes what they hold and the page is drawn once. Then the
+// lights are set going, or held on one frame where reduced motion is asked for
 
 // Last of the draw's steps, once every part has drawn
 addStep(drawSteps.after, DRAW_AFTER, "start", holdTabsPlace);

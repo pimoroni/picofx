@@ -10,8 +10,8 @@ import {
 } from "./screens.js";
 
 // ---- what the file says about the screens -------------------------------------------------------
-// A screen's entry in a scene, written out and read back, and the words for its placement,
-// background and playback.
+// This part writes a screen's entry in a scene and reads it back, and gives the words for its
+// placement, background and playback.
 
 // What a screen's entry says in a scene, its look or the line kept as the file had it. A hub
 // writes its positions' entries in place of the screens', and a pair writes one entry for both
@@ -29,7 +29,7 @@ function screenEntry(letter, body) {
   return lookEntry(SCREEN_NAMES[letter], playing, look, look.backlight, screen.size);
 }
 
-// The line that turns a screen or hub positions off in a scene, showing black at the backlight given
+// The line turning a screen or hub positions off in a scene, black at the backlight given
 export function offEntry(selector, backlight) {
   return selector + (backlight < 1 ? " backlight=" + Math.round(backlight * 100) + "%" : "") +
          ": none";
@@ -46,7 +46,7 @@ export function screenPlaying(parts, body, letter) {
   playing.pingpong = false;
   playing.hold = "";
   playing.off = false;
-  // none turns the screen off, taking only a backlight
+  // Check if it is `none`, which turns the screen off and takes only a backlight
   if (parts.effect === "none") {
     var known = Object.keys(parts.left).every(function (key) { return key === "backlight"; }) &&
                 !Object.keys(parts.right).length;
@@ -100,15 +100,15 @@ export function screenPlaying(parts, body, letter) {
     } else if (key === "style") look.style = value;
     else understood = false;
   });
-  // A drawing doubled with no size given has the half-size canvas the board gives it
+  // Check if a doubled drawing gives no size, so it has the half-size canvas the board gives it
   if (parts.effect === "drawing" && look.double && look.canvas !== "set") look.canvas = "half";
   return understood ? playing : null;
 }
 
 // Try each kept line of each body as a screen, moving those that write back exactly
 function readScreens(bodies) {
-  // A file listing what was taken off has the screens it names off and the others fitted. A line
-  // read for a screen below fits it again
+  // Check if the file lists what is not fitted. The screens it names are then taken out and the
+  // others fitted, and a line read for a screen below fits it again
   if (notFittedRead) {
     SCREENS.forEach(function (letter) {
       state.screens[letter].there = !saidNotFitted(screenShown(letter));
@@ -162,8 +162,8 @@ export var BG_NAMES = {};
 
 // ---- where a picture sits ---------------------------------------------------------------------
 // The nine places are calculated from the picture's size against the panel's, turned and doubled
-// as it is drawn, and written as the pixels the file takes. A picture of another size put in the
-// same file later sits where those pixels say, not at the edge chosen
+// as it is drawn, and written as the pixels the file takes. A picture of another size saved under
+// the same name later sits where those pixels say, not at the edge chosen
 
 export var ANCHOR_NAMES = ["top left", "top", "top right", "left", "centred", "right", "bottom left",
                     "bottom", "bottom right"];
@@ -188,21 +188,21 @@ export function placingTokens(turn, look, light, where) {
   return tokens;
 }
 
-// What playback allows, as the players do. A hold needs somewhere to turn around, which a loop
-// or ping pong gives. Two holds need both, one for each end. First as last needs an end to play
-// the first frame at, which a forward loop does not have
+// What playback allows, as the players do. A hold needs an end to wait at, which a loop or ping
+// pong gives. Two holds need both, one for each end. First as last needs an end to play the first
+// frame at, which a forward loop does not have
 export function holdAllowed(playing, look) { return look.loop || playing.pingpong; }
 export function secondHoldAllowed(playing, look) { return look.loop && playing.pingpong; }
 export function firstAsLastAllowed(playing, look) { return playing.pingpong || !look.loop; }
 
-// The settings after the file, for how a moving picture is paced, looped and held, leaving out
-// whatever playback would refuse
+// The settings after the file, for how a moving picture is paced, looped and held, or a drawing's
+// pace, canvas and style. Whatever playback would refuse is left out
 export function playingTokens(playing, look, kind, size) {
   if (kind === "image") return [];
   var tokens = [];
   if (look.pace === "fps") tokens.push("fps=" + look.every);
   if (look.pace === "interval") tokens.push("interval=" + look.every);
-  // A drawing takes a pace and its canvas's size, and nothing of a picture's loop. The board's
+  // Check if it is a drawing, which takes a pace and its canvas's size but no loop. The board's
   // own canvas is the screen's, halved by pixel double, so only another size is written
   if (kind === "drawing") {
     var canvas = canvasPixels(look, size, playing.turn);
@@ -288,7 +288,7 @@ export function playbackSaid(held, look) {
   return said.join(", ");
 }
 
-// ---- what the file says ------------------------------------------------------------------------
+// ---- a pair's entry ----------------------------------------------------------------------------
 
 // Each setting before the colon as a pair writes it, in the order placingTokens() gives them,
 // with what a screen that leaves it out has
@@ -307,8 +307,8 @@ export function picturesMatch(first, second) {
          playingTokens(second, second.look || freshLook(), kind, null).join(" ");
 }
 
-// Whether a scene's screens are written as a pair, either paired by hand and showing a picture of
-// the page's, or showing the same picture played the same way
+// Whether a scene's screens are written as a pair, either paired by hand and showing a picture
+// rather than a line kept from the file, or showing the same picture played the same way
 function pairWritten(body) {
   if (SCREENS.length < 2 || state.hub.on) return false;
   if (!state.screens[SCREENS[0]].there || !state.screens[SCREENS[1]].there) return false;
@@ -358,7 +358,7 @@ function pairEntry(body) {
     .concat(playingTokens(playing, look, kind, size)).join(" ");
 }
 
-// ---- reading the file back ---------------------------------------------------------------------
+// ---- reading a pair back -----------------------------------------------------------------------
 
 // Try each kept line naming both screens as a pair, moving those a pair writes back exactly
 export function readPairedScreens(bodies) {
@@ -436,7 +436,7 @@ export function readPairedScreens(bodies) {
     });
   });
 
-  // A pair read fits both screens at their sizes, which the page writes itself from here
+  // Check if a pair was read, which fits both screens at sizes the page writes itself from here
   if (readOn) {
     SCREENS.forEach(function (letter) {
       var token = sizes[letter].token;

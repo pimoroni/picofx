@@ -34,8 +34,8 @@
   font-weight: 600;
 }
 
-/* A line the board named, marked in the file where the page still writes it as the board read
-   it, the board's words after it */
+/* A line the board reported, marked while the page still writes it as the board read it. The
+   board's words follow it */
 .file .s-problem {
   background: var(--warn-bg);
   box-shadow: 0 0 0 2px var(--warn-bg);

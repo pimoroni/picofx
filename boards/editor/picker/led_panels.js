@@ -32,8 +32,7 @@ export function renderChosen(where, run) {
 }
 
 // Make the chosen stretch's panel point up at its stretch in the bar above. The panel is pointed
-// again whenever its size changes, which is also when a hidden tab is shown, and when a long
-// strip's bar scrolls under it
+// again whenever its size changes and when a long strip's bar scrolls under it
 function pointFrom(where, run) {
   var box = document.getElementById(where);
   var panel = box && box.querySelector(".chosen");
@@ -87,12 +86,12 @@ function renderChosenPanel(where, run) {
                                      slider("mood")])
          : null));
 
-  // A slider's id is its focus key, the label beside it naming it by that
+  // Make a slider for the setting key=. Its id is its focus key, so the label beside it names it
   function slider(key) {
     var range = h("input", {
       type: "range", min: 0, max: 1, step: 0.01, value: section[key], "data-focus": where + "-" + key,
       id: where + "-" + key, name: key,
-      // Through the run, as a page that makes the stretches afresh leaves this one behind
+      // Through the run, since settling makes the run's stretches afresh and leaves this one behind
       oninput: function () {
         run.sections[run.picked][key] = Number(range.value);
         drawParts.preview();
@@ -103,16 +102,14 @@ function renderChosenPanel(where, run) {
 }
 
 // Size the two sides, each as wide as the lamps it holds, so the divide between them moves as
-// outputs are broken out and put back and every lamp has the same room. The sides carry no names,
-// so breaking an output out never adds or takes away a row above the cards. The lamps' labels,
-// the board's box and the board's edge already say which lights are which
+// outputs are broken out and put back, and every lamp has the same room. The sides carry no names,
+// so breaking an output out never adds or takes away a row above the cards
 function renderSides() {
   [{run: outs, side: "sideA"}, {run: mono, side: "sideB"}].forEach(function (set) {
     var box = document.getElementById(set.side);
     var count = set.run.lamps.length;
-    // A side with nothing on it is not there at all. An output comes back from the arrow
-    // on one of its channels, so nothing is reached by keeping an empty column open, and
-    // the side that holds every lamp gets the whole width
+    // A side with no lamps is hidden, and the other takes the whole width. An output comes back
+    // from the arrow on one of its channels, so an empty side has nothing to offer
     box.style.display = count ? "" : "none";
     box.style.flex = count + " 1 0";
     box.className = "side";
@@ -120,5 +117,4 @@ function renderSides() {
 }
 drawParts.sides = renderSides;
 // Both sides are in the one panel, so one stretch's settings serve whichever was last worked on
-// rather than a set under each
 drawParts.chosen = function () { renderChosen("outChosen", active); };

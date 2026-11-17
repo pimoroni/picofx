@@ -2,14 +2,14 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Generated from editor/*.html and the autofx tables by tools/build_editor.py.
-# Edit those and rebuild; edits here are lost.
+# Generated from the picker's parts, the shared text editor and the autofx tables by
+# tools/build_editor.py. Edit those and rebuild, since edits here are lost.
 #
 # Each page is its length, its first and last characters, and the whole page as a zlib
 # stream. The ends let a mount see the drive already holds a page without inflating it.
 
 # A shelled page also carries the opening and closing of a page that inflates itself in the
-# browser, its length and ends being that page's as the drive holds it.
+# browser. Its length and ends are that page's, as the drive holds it.
 
 
 PICKER = (133310, '<!doctype html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>Plasma 2350 Picker</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 31.181 31.181\'%3E%3Crect fill=\'%23fff\' width=\'31.181\' height=\'31.181\' rx=\'4.252\' ry=\'4.252\'/%3E%3Cpath d=\'M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v', 't.getElementById("packed").textContent);\n  var bytes = new Uint8Array(text.length);\n  for (var i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);\n  var page = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));\n  new Response(page).text().then(function (html) {\n    document.open();\n    document.write(html);\n    document.close();\n  }, function (e) { said.textContent = "This page could not be opened: " + e; });\n})();\n</script>\n</body>\n</html>\n<!-- content 6f614cf8bf7770d6 -->\n', (

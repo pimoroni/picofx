@@ -456,8 +456,6 @@ button.round {
   }
 }
 
-/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
-   without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
    and closes up on a narrow panel to leave the lights their room */
@@ -465,6 +463,8 @@ button.round {
   container-type: inline-size;
 }
 
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
+   without moving a lamp */
 .cardlamp {
   flex: 1 1 0;
   min-width: 0;
@@ -858,11 +858,9 @@ footer {
     margin-left: auto;
   }
 
-  /* Sided, the two tabs sit over the sides they are for and on the edge of the cards they
-     change, so which lights a tab means is read from where it is and what it changes from
-     what it is joined to */
-  /* Inset by more than the box's corner radius, so its rounded corners stay whole either
-     side of the tab rather than being squared off by it */
+  /* Sided, the two tabs sit over the sides they are for and on the edge of the cards they change,
+     so which lights a tab means is read from where it is. Each is inset by more than the box's
+     corner radius, so the box's rounded corners stay whole either side of it */
   &.sides {
     justify-content: space-between;
     gap: 0;
@@ -1168,6 +1166,11 @@ footer {
 }
 
 /* ---- choosing a colour ---- */
+/* One colour picker for a stretch's colour and a screen's background. One row of swatches spans
+   the section, each as wide as "magenta" and no wider, spread to keep both ends flush and named
+   under them once the section has room. Custom comes last as a rainbow ring whose middle is the
+   custom colour, or Nothing's stripes until there is one. The field sits under the row, with the
+   hex beside it over the colour itself */
 .playing {
   display: flex;
   align-items: center;
@@ -1484,7 +1487,7 @@ body.figures .chosen .tuning {
   --hub: var(--accent);
 }
 
-/* No tab row over the gallery on the pages built on the tabs page, and no gap left for one */
+/* No empty tab row over the gallery, and no gap left for one */
 body[data-pageway] #looks > .tabs:empty {
   display: none;
 }
@@ -2169,9 +2172,7 @@ body.programpage #programNote {
   cursor: pointer;
 }
 
-/* The covers in the header, in place of the page's strapline, small enough to keep the header
-   its height. Where the header grows too narrow for them they take a slim line of their own
-   under it, each half its width */
+/* With the page's tabs in the header, its strapline is hidden */
 body[data-pageway^=head] header .says {
   display: none;
 }
@@ -2422,7 +2423,7 @@ html {
 
 /* Under the Screens and Sound tabs' names, where the others have their swatch, a word on
    what they hold. It takes no width of its own, so a tab stays its name's width whatever it
-   says, the longest running a few pixels into the gap before the preview */
+   says. The longest runs a few pixels into the gap before the preview */
 .ledtab .tabunder {
   display: block;
   font: var(--text-xs)/.55rem var(--font);
@@ -2438,7 +2439,7 @@ html {
   gap: var(--space-3);
 }
 
-/* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
+/* The Sensor tab leaves the row short of room, so only the lights' stripes narrow, never past the
    names above them */
 #ledTabs:has([data-panel=sensorPanel]) {
   gap: var(--space-6);

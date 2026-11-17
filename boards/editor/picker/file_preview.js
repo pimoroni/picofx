@@ -7,7 +7,9 @@ import {
 import {BOARD} from "./looks.js";
 import {NOTHING_PLAYING, currentText} from "./writing.js";
 
-// ---- the file, painted -----------------------------------------------------------------------
+// ---- the file, painted, and saving it --------------------------------------------------------
+// This part shows the file as the page writes it, saves it to the drive and checks the board's
+// answer, marking the lines errors.txt names.
 
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -15,8 +17,8 @@ function escapeHtml(text) {
 
 function paintLine(line) {
   var plain = escapeHtml(line);
-  // A scene heading carries a colon, which would read as the one dividing a channel from its
-  // effect, so headings are taken first
+  // A scene heading carries a colon, which would read as the one dividing an entry's outputs from
+  // its effect, so headings are taken first
   if (line.charAt(0) === "[") return "<span class='s-scene'>" + plain + "</span>";
   if (/^\s*#/.test(line)) return "<span class='s-comment'>" + plain + "</span>";
   var at = line.indexOf(":");
@@ -44,8 +46,8 @@ function paintLine(line) {
   return head + "<span class='s-colon'>:</span>" + tail;
 }
 
-// The board's answer as this page shows it: what errors.txt said, and the file it was about,
-// so a line is marked only while the page still writes it the same
+// The board's answer, what errors.txt said and the file it was about. A line is marked only while
+// the page still writes it as the board read it
 var answered = {said: null, about: null};
 
 // errors.txt read into the lines it names. autofx begins each problem "line N:", and anything
@@ -65,7 +67,7 @@ function problemsIn(said) {
   return found;
 }
 
-// Takes the board's answer and the file it read, then marks the lines it named
+// Take the board's answer and the file it read, then mark the lines it named
 function takeAnswer(said, about) {
   answered = {said: said || null, about: about};
   renderPreview();
@@ -135,7 +137,7 @@ document.getElementById("save").onclick = async function () {
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
-    // Check if the board is running a program, which keeps it busy, so neither an eject nor a
+    // Check if the board is running a program. A program keeps it busy, so neither an eject nor a
     // press of Boot reaches it
     if (/\bprogram=/.test(onBoard)) {
       // Check if the file it started with lets a save restart it, as it does unless it says
@@ -202,7 +204,7 @@ document.getElementById("save").onclick = async function () {
   }
 };
 
-// The answer and the file it is about are read together, as the board has finished with both
+// Read the answer and the file it is about together, after a moment for the board to finish
 document.getElementById("check").onclick = async function () {
   banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });
@@ -224,7 +226,7 @@ document.getElementById("check").onclick = async function () {
 
 document.getElementById("open").onclick = function () { openDrive(false); };
 
-// Check if the page has changed since the save the banner reports on
+// Clear the banner once the page changes from the save it reports on
 addStep(drawSteps.after, DRAW_AFTER, "filePreview", function () {
   if (reportedSave !== null && currentText() !== reportedSave) banner("");
 });

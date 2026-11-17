@@ -1,6 +1,3 @@
-/* The Sensor tab has no swatch, its name and what is fitted under it saying all there is. The
-   remote sits in the middle of the section with its buttons' rows down either side, each row
-   centred on its leader's height and the same width, so each side reads as one column */
 .ledtab[data-panel=sensorPanel] .sensorswatch {
   display: none;
 }
@@ -25,6 +22,8 @@
   }
 }
 
+/* The remote sits in the middle of the section with its buttons' rows down either side, each row
+   centred on its leader's height and the same width, so each side reads as one column */
 .remotediagram {
   display: grid;
   grid-template-columns: 1fr var(--middle) 1fr;

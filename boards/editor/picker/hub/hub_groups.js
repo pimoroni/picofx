@@ -14,17 +14,17 @@ import {
 } from "../screens/screens.js";
 
 // ---- the hub's positions in groups -----------------------------------------------------------
-// With a look beside every picture, two positions showing the same picture could differ in a
-// setting no drawing makes plain, and so be sent apart. So positions are put in groups, and a
-// group is set as one, with one picture, one turn and one look sent once to all of it. A group is
-// the scene's, as what it shows is, so each scene can group the hub its own way.
+// This part puts the hub's positions in groups, each set as one, with one picture, one turn and
+// one look sent once to all of it. With a look beside every picture, two positions showing the
+// same picture could differ in a setting no preview makes plain, and so be sent apart. A group
+// is the scene's, as what it shows is, so each scene can group the hub its own way.
 //
 // Groups are numbered 1 to 3, since six positions hold at most three groups of two or more, and
 // each has its colour. Under every position are the three numbers and which group it is in.
 // Pressing a number puts the position in that group, taking what the group shows, and pressing
 // it again leaves the position on its own, keeping what it shows. Pressing a position picks its
-// group for the strip, and a picture goes to a group or a position on its own, never to one
-// member of a group. A group holds one panel size only, since the two sizes are sent apart.
+// group for the settings below, and a picture goes to a group or a position on its own, never to
+// one member of a group. A group holds one panel size only, since the two sizes are sent apart.
 
 var GROUP_NUMBERS = ["1", "2", "3"];
 var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
@@ -45,7 +45,7 @@ function membersOfGroup(number) {
   return placesThere().filter(function (place) { return groupOf(place) === number; });
 }
 
-// What a picture or the strip is sent to, each group with a member in number order and then each
+// What a picture or Off is sent to, each group with a member in number order and then each
 // position on its own in the hub's order
 function sendTargets() {
   var targets = GROUP_NUMBERS.filter(function (number) {
@@ -107,8 +107,9 @@ function sizeFits(place, number) {
   return !others.length || state.hub.sizes[others[0]] === state.hub.sizes[place];
 }
 
-// Joining takes what the group shows, and leaving keeps what it shows. A group showing nothing
-// takes what the joining position shows instead, so joining never loses a picture
+// Put a position in a group, or take it out where it is in it. Joining takes what the group
+// shows, and leaving keeps what it shows. A group showing nothing takes what the joining position
+// shows instead, so joining never loses a picture
 function joinOrLeave(place, number) {
   if (groupOf(place) === number) {
     state.places[place].group = place;
@@ -121,8 +122,8 @@ function joinOrLeave(place, number) {
   pickPlace(others.length && (groupShows || !state.places[place].shows) ? others[0] : place);
 }
 
-// What the picked position was given goes to the rest of its group before anything is drawn
-// or written. Only the picked position's settings are shown, so it is the one changed
+// Give the rest of the picked position's group what it was given, before anything is drawn or
+// written. Only the picked position's settings are shown, so it is the one changed
 function settleGroups() {
   // A position of another size than its group's first leaves it for its own
   placesThere().forEach(function (place) {
@@ -160,7 +161,7 @@ function splitsOverAlways(places) {
   return !!always && places.some(function (place) { return always[place] && always[place].shows; });
 }
 
-// The positions of numbered groups among those given that splitsOverAlways() breaks up
+// The positions among those given whose numbered group splitsOverAlways() says would split
 function breakingUp(places) {
   return places.filter(function (place) {
     return inNumberedGroup(place) && splitsOverAlways(membersOf(place));
@@ -222,8 +223,8 @@ addStep(assetSteps, ASSET_ORDER, "hubGroups", function () {
 
 // ---- the hub's light ---------------------------------------------------------------------------
 
-// The hub's one backlight is a row of its own across the top of the box, over all six
-// positions and apart from whatever group is being set, since it lights every screen
+// Name what each position shows, and put the hub's one backlight in a row across the top of the
+// box. The light is apart from whatever group is being set, since it lights every screen
 hubHeadSteps.push(function () {
   var body = document.querySelector("#screensHead .hubbox .body");
   if (!body) return;
@@ -263,7 +264,7 @@ hubHeadSteps.push(function () {
   var pace = document.querySelector("#screensHead .hubpace");
   var strip = document.querySelector("#screensHead .hubsettings");
   if (pace && strip) strip.parentNode.insertBefore(pace, strip);
-  // What is being set wears the colour of the group it is for, a position on its own the hub's
+  // Check if a numbered group is being set, so the settings take its colour in place of the hub's
   if (strip && placeThere(placePicked) && inNumberedGroup(placePicked))
     strip.style.setProperty("--hub", GROUP_INKS[groupOf(placePicked)]);
   var picked = placeThere(placePicked) ? membersOf(placePicked) : [];
@@ -386,8 +387,8 @@ export function plainness(send) {
 
 // What a position plays, as a key. Positions with the same key are one entry, and one stream.
 // Panels of different sizes are sent apart, so the size is part of it. They are one send where
-// the file would say the same for them, so a setting a picture does not take, such as a still's
-// pace, or one the page only remembers, such as the last custom colour, never splits them.
+// the file would say the same for them, so a setting the file leaves out, such as a still's pace
+// or the last custom colour, never splits them.
 //
 // One entry plays one drawing on every position it names, where entries of their own each run
 // it afresh, so a drawing joins others only in a numbered group

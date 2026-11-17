@@ -8,8 +8,8 @@ import {apply, bodyParts, sceneAfter, sceneRestarts, slotAt, state, store} from 
 // The line a file with no entries ends in, so the board has nothing to play
 export var NOTHING_PLAYING = "# Nothing is playing yet.";
 
-// The lamps' lines are written from the runs as they stand, so each scene's body is applied in
-// turn, which keeps one writer for all of them
+// A body's entries. The lamps' lines are written from the runs as they stand, so the body is
+// applied first, which keeps one writer for every scene
 function entriesOf(body) {
   apply(body);
   var lines = lampLines().filter(function (line) { return line.trim(); });
@@ -20,13 +20,13 @@ function entriesOf(body) {
 // A scene's heading. One read from a file with no time waits, and is written back without one.
 // A heading read from a file is written back as it was while the scene still says the same
 function sceneHeading(scene) {
-  // A scene after other than the next in order is named after "then", which comes last, as the
-  // rest of the heading after it is the name
+  // Where the scene that follows is not the next in order, name it after "then". That goes last,
+  // since the rest of the heading after it is read as the name
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
   var named = after && after !== inOrder ? after.name.trim() || "Scene" : null;
   var read = scene.read;
-  // A scene after that the file names but no scene is called keeps its heading as written
+  // A file's "then" naming no scene keeps the heading as written, while the scene has none
   var sameAfter = read && (read.after === named || (read.after && !scene.then &&
     !state.scenes.some(function (other) { return other.name === read.after; })));
   if (read && read.written && scene.name === read.name && sceneRestarts(scene) === read.restart &&
@@ -34,7 +34,7 @@ function sceneHeading(scene) {
                                           : !scene.waits && scene.seconds === read.seconds)) {
     return read.written;
   }
-  // A scene going back to itself is written with restart, which the board needs to change anything
+  // Restart is written wherever sceneRestarts() says, which a scene going back to itself needs
   var settings = (scene.waits ? [] : [scene.seconds + "s"])
     .concat(sceneRestarts(scene) ? ["restart"] : [])
     .concat(named !== null ? ["then " + named] : []);

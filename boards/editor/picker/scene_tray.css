@@ -82,9 +82,9 @@
   }
 }
 
-/* A scene card's icons row, as tall as an icon even where it has none, and its last row, how it
-   ends at the left and its remote number at the right, as tall as a number, so every card's rows
-   line up */
+/* A scene card's icon row keeps an icon's height where it has none, and its last row keeps a
+   number's height, so every card's rows line up. The last row holds how the scene ends and its
+   remote number */
 .tab .cardparts {
   display: flex;
   align-items: center;

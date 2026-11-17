@@ -1,11 +1,10 @@
 import {drawParts} from "./draw.js";
 import {BOARD, rangify} from "./looks.js";
 
-// ---- the board's outputs, inside the sections system ------------------------------------
+// ---- the board's outputs and their wiring -----------------------------------------------
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
 // those three apart, the output is either one colour lamp or three mono ones, and a board is
-// a mix. A mono output is one light, always on the mono side. Everything below is the section
-// model over a run of lamps, and its only new idea is that the wiring decides the run's length.
+// a mix. A mono output is one light, always on the mono side.
 
 export var OUTS = BOARD.outputs.length;
 export var CHANNELS = ["r", "g", "b"];
@@ -25,7 +24,7 @@ export var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
 document.getElementById("sides").classList.toggle("monofirst", MONO_FIRST);
 document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
 
-// The corner cut into a broken-out lamp, saying which of an output's three drives it
+// The colours of the corner cut into a broken-out lamp, which say which channel drives it
 export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 
 // Every lamp on the page, by the output it belongs to, so pointing at one reaches the
@@ -38,15 +37,14 @@ function clearKin() {
 }
 drawParts.clearKin = clearKin;
 
-// A colour output is one lamp or three, and nothing between, as the adapter brings all three
-// channels out or it is not fitted. Two channels playing the same thing are two lamps in
-// one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
+// Whether each output is broken out, by place. A colour output is one lamp or three, since the
+// adapter brings all three channels out or is not fitted, and a mono output is always broken out.
+// Two channels playing the same thing are two lamps in one stretch
 export var wiring = [];
 for (var n = 0; n < OUTS; n++) wiring.push({broken: OUTPUTS[n].mono});
 
-// Where each lamp sits, which is the one thing about a board only its owner knows. It
-// is a lamp and not an output that is placed, since an output's three channels reach three
-// separate LEDs through the adapter, and those can be anywhere in a build
+// Where each lamp sits in the owner's build, in order. A lamp is placed, not an output, since a
+// broken-out output's three channels reach LEDs that can be anywhere in a build
 export var order = [];
 
 // Set the wiring and where each lamp sits, which change together
@@ -201,7 +199,7 @@ export function colourOutputsSaid() {
   return colour.length === 1 ? outputSaid(colour[0]) : "the colour lights";
 }
 
-// A lamp put down beside another, before it or after it, taking that place in the build
+// Move a lamp to sit beside another, before or after it as move.after says
 export function placeLamp(move) {
   var moved = order.splice(placeOf(move.from), 1)[0];
   order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);

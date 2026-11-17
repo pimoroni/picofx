@@ -9,8 +9,8 @@ import {state} from "./scenes.js";
 // ---- the bar along the top ----------------------------------------------------------------------
 // Once the header has scrolled out of view a slim bar takes its place along the top, holding the
 // page's name, the drive, save and check buttons, the latest thing the page said and where the
-// page is. The buttons themselves move into it and back, each leaving a stand-in of its size in
-// the header, so their state stays one and nothing in the header moves
+// page is. The buttons themselves move into it and back, and a stand-in of each one's size holds
+// its place in the header, so each button keeps its state and nothing in the header moves
 
 // The header's parts the bar takes, in the order the bar shows them
 var FLOAT_MOVED = ["open", "save", "saveArrow", "check", "saveMenu"];
@@ -23,7 +23,7 @@ var floatSaidTimer = null;
 // How long a plain note stays in the bar. A warning stays until the next
 var FLOAT_SAID_MS = 8000;
 
-// The whole of what the page said, details and all, is the banner's at the top of the page
+// What the page said, cut short here. A click scrolls to the banner, which holds all of it
 var floatSaid = h("span", {className: "floatsaid",
                            onclick: function () { window.scrollTo({top: 0, behavior: "smooth"}); }});
 var floatWhere = h("span", {className: "floatwhere"});

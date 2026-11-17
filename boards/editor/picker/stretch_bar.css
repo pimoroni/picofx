@@ -192,13 +192,10 @@
   justify-content: center;
 }
 
-/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom.
-   It takes its own room less the gap, so beads join exactly where the gap closes. Its corners and
-   edge close up with the gap, so the joined strip is square and even.
-   A gap under a pixel is drawn as a whole pixel, which a browser draws evenly, and is filled
-   with the beads' own colour, which deepens as --fill rises from 0 to 1 while the gap closes. The
-   fill is the bead drawn again half a gap and half a pixel to either side, in its colour as
-   painted, overlapping its neighbours so no seam is left where they meet */
+/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom,
+   and its corners close up with the gap so joined beads make a square, even strip. A gap under a
+   pixel is drawn as a whole one filled with the beads' colour, deepening as --fill rises to 1. The
+   fill is the bead drawn again half a gap and half a pixel to either side, so no seam is left */
 .stripbeads b {
   --filled: color-mix(in srgb, currentColor calc(var(--fill) * 100%), transparent);
   display: block;

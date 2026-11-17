@@ -17,8 +17,8 @@ import {BOARD_SETTING_SAYS, boardButton, boardIcon, removeButton} from "../setup
 // ---- the Screens tab ----------------------------------------------------------------------------
 // Each screen's preview in the scene on show, and the gallery of the drive's pictures and drawings.
 
-// A screen's preview. One the scene shows nothing on shows Always on's picture faded where the board
-// plays it there, in Always on's own settings
+// A screen's preview. One the scene shows nothing on shows Always on's picture in the striped
+// frame, where the board plays it there in Always on's own settings
 function previewInScene(screen, letter) {
   var under = screen.shows ? null : screenUnder(letter);
   if (!under || !under.always) return panelPreview(screen);
@@ -30,8 +30,7 @@ function previewInScene(screen, letter) {
   return drawing;
 }
 
-// The gallery's pictures by group: the user's own, then the example drawings' groups and the
-// example pictures'
+// The gallery's groups, the user's own first and then the example drawings' and pictures'
 function mediaGroups() {
   var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
     return !isExampleMedia(media.name);
@@ -43,8 +42,8 @@ function mediaGroups() {
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
 
-// The small Off card, black, whose buttons turn a screen off in this scene. A hub gives it its
-// positions' buttons in place of these
+// The small Off card, black, whose buttons turn a screen off in this scene. A hub gives it
+// buttons for its groups and positions in place of these
 function offCard() {
   // With no screen fitted there is nothing to turn off, and the card keeps its place unseen
   var fitted = (state.hub && state.hub.on) ||
@@ -97,10 +96,9 @@ function assetTile(media) {
          "aria-pressed": String(!!lit), disabled: !state.screens[letter].there,
          style: {opacity: state.screens[letter].there ? null : ".3"},
          onclick: function () {
-           // Tapping the lit one again takes the picture off this scene's screen, falling back
-           // to what the file said where there is something to go back to. The screen then shows
-           // what Always on shows there, or goes dark where another scene uses it. A pair's
-           // second screen shows what its first does, so either button changes the first
+           // Tapping the lit one again takes the picture off this scene's screen, back to what the
+           // file said where there is something to go back to. A pair's second screen shows what
+           // its first does, so either button changes the first
            var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
            screen.shows = screen.shows !== name ? name
                         : screen.kept ? "keep" : null;
@@ -109,8 +107,7 @@ function assetTile(media) {
          }
        }, screenButton(letter));
      })),
-     // An example keeps no bin here, as flashing the board's examples again brings it back. Where
-     // the board's examples can be discovered, discover/screens/discover_screens.js gives it one
+     // An example keeps no bin here, since flashing the board's examples again brings it back
      isExampleMedia(name) ? null : binButton(name, media.kind),
      media.kind === "drawing" && state.fileHandle ? drawingCopyTile(name) : null);
 }
@@ -123,7 +120,7 @@ function renderAssets() {
       : state.media.length
         ? "one set of pictures, each shown on A, B or both"
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
-  // Grouped once the drive is open, the user's own always heading the gallery
+  // Grouped once the drive is open, and the user's own group always heads the gallery
   var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
   // In a scene, Off is a card made small at the end of the first heading, as Nothing is in the
@@ -158,8 +155,7 @@ function renderScreensTab() {
 }
 screenParts.renderTab = renderScreensTab;
 
-// A box for each screen port. A screen's box has the backlight across its top, what it shows
-// straight under the module, and its look's sections under that
+// Draw a box for each screen port
 function renderScreenBoxes() {
   replace(document.getElementById("screensHead"), SCREENS.map(screenBox));
 }
@@ -182,7 +178,7 @@ function takeScreenOff(letter) {
 // beside the size where there is one
 function screenBox(letter) {
   var screen = state.screens[letter];
-  // A screen not fitted offers to be added, which shows nothing until a scene chooses something
+  // Check if the screen is not fitted, so it offers to be added and shows nothing at first
   if (!screen.there) {
     var add = boardButton("add this screen");
     add.onclick = function () {
@@ -197,7 +193,7 @@ function screenBox(letter) {
              h("div", {className: "body adding"}, add));
   }
 
-  // The sizes a panel can be, the catalogue's hub being no panel size
+  // The sizes a panel can be, leaving out the catalogue's hub, which is no panel size
   var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
     .filter(function (inches) { return inches !== "hub"; });
   var size = h("select", {
@@ -235,12 +231,10 @@ function screenBox(letter) {
 
   return h("div", {className: "screen-box " + letter.toLowerCase()},
            h("h3", {title: ""}, screenShown(letter), bandFact(size),
-             // Taking the screen out is the only way to have none, as a screen showing nothing
-             // would say the same thing twice
+             // Taking the screen out is the only way to have none, so the size list has no "none"
              removeButton("screen", function () { takeScreenOff(letter); })),
            body,
-           // What the file already says for this screen, where the picker did not write it and
-           // no picture can stand for it. It is a line of its own under the settings
+           // A line the file had for this screen that the picker did not write or match
            screen.kept ? h("button", {
              className: "keep" + (screen.shows === "keep" ? " picked" : ""), title: screen.kept,
              "aria-pressed": String(screen.shows === "keep"),

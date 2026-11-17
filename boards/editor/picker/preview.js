@@ -11,10 +11,9 @@ import {MIDDLING, remember, runs} from "./runs.js";
 import {lampUnder} from "./scenes.js";
 
 // ---- the lamps, lit by the line the look writes ---------------------------------------
-// A card can say what a look is made of, but only a lamp actually running it can say what it
-// looks like. A lamp here plays the entry its look would write, read back and run through
-// the same shapes picofx uses, so the page cannot show one thing and save another. A lamp
-// whose entry names an effect this page cannot play is drawn as playing nothing.
+// A lamp here plays the entry its look would write, read back and run through the same shapes
+// picofx uses, so the page cannot show one thing and save another. A lamp whose entry names an
+// effect this page cannot play is drawn as playing nothing.
 
 // The colour words an entry may use, as the page draws them. These are the words autofx
 // names, drawn a little softer than their constants so a screen full of them is not glaring
@@ -84,9 +83,7 @@ function parseEntry(line, count) {
 }
 
 // ---- the effects, at the settings the entry carries ------------------------------------
-// Each is picofx's own shape at the same settings. The board steps its cycle in whole
-// milliseconds and wraps at a thousand, which the page does not reproduce. An effect slow
-// enough that a frame adds nothing stands still there and drifts on here.
+// Each is picofx's own shape at the same settings.
 
 var TAU = Math.PI * 2;
 
@@ -149,7 +146,7 @@ var EFFECTS = {
     return flashing(offsetOf(t, s) + pos / num(s.length, 1), s);
   },
 
-  // A light sweeping the run and bouncing back, one pass out and one back to a cycle
+  // A light sweeping the run and bouncing back, crossing it once a cycle as picofx's sweep does
   sweep: function (t, s, pos) {
     var swing = (t * num(s.speed, 1)) % 2;
     var head = (swing < 1 ? swing : 2 - swing) * (num(s.length, 1) - 1);
@@ -206,7 +203,7 @@ var EFFECTS = {
 EFFECTS.flicker_each = EFFECTS.flicker;
 EFFECTS.random_each = EFFECTS.random;
 
-// Flash's window and its count of flashes within it, shared by the two that use it
+// Flash's window and its count of flashes within it
 function flashing(at, s) {
   var offset = at % 1;
   var window = num(s.window, 1);
@@ -214,13 +211,13 @@ function flashing(at, s) {
   return ((offset * num(s.flashes, 1)) / window) % 1 < num(s.duty, 0.5) ? 1 : 0;
 }
 
-// The phases a crossing steps through, and how long each lasts. A real crossing is long
-// enough that a page showing it truthfully would look broken, so the whole sequence is
-// shown in SEQUENCE seconds with its phases kept in proportion. Only the drawing is
-// hurried, and the entry keeps the intervals the sliders set
+// The seconds the preview shows a signal's whole sequence in, with its phases in proportion. A
+// real signal's would look broken on a page. The entry still writes the intervals the sliders set
 var SEQUENCE = 8;
-var FLASHING_CYCLE = 0.25;   // the amber and the figure, which flash at their real rate
+var FLASHING_CYCLE = 0.25;   // the amber and the figure, which flash at picofx's own rate
 
+// Whether the lamp at pos is lit at time t, as the signal steps through its states. Each state is
+// a pattern and its seconds, and the state at index `flashes` flashes its lit lamps
 function phasing(t, pos, states, flashes) {
   var whole = states.reduce(function (sum, one) { return sum + one[1]; }, 0);
   var at = (t / SEQUENCE) % 1 * whole;
@@ -278,10 +275,9 @@ var COLOURED = {
 };
 
 // ---- the curve a channel follows --------------------------------------------------------
-// fade= crosses at a steady rate and ease= settles in as a bulb does, both of them the
-// seconds a change takes to arrive. What they leave behind is the trail under anything
-// travelling a run. A split fade or ease, written rise|fall, goes up at its rise and comes
-// down at its fall, and a single number sets both
+// fade= crosses at a steady rate and ease= settles in as a bulb does. Each is the seconds a change
+// takes to arrive, and what they leave behind is the trail under anything travelling a run. A
+// split fade or ease, written rise|fall, rises and falls at those, and a single number sets both
 
 function curved(sim, given, channel) {
   function parts(value) {
@@ -310,9 +306,9 @@ function curved(sim, given, channel) {
 // Whether a strip's stretches are being played, so the looks take the strip's form
 var previewingStrip = false;
 
-// The target a look writes for, built from what the lamp knows. Colour is always asked
-// for, so an entry naming one says what to draw the lamp in, and a caller showing mono lamps
-// draws it its own way. The preview plays a stretch as that many lamps of its own
+// The target a look writes for when the preview plays a stretch as count lamps of its own. Colour
+// is always asked for, so an entry naming one says what to draw the lamp in, and a caller
+// showing mono lamps draws it its own way
 function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
@@ -323,8 +319,7 @@ function lampTarget(count) {
   return target;
 }
 
-// What a look's entries light at slot, which lamp this is counted from zero, of count playing.
-// The effects part plays a stretch through this as the board will
+// What a look's entries light at slot=, the lamp counted from zero, of count= playing
 function lookLit(look, holder, t, slot, count, sim) {
   if (!look || !look.entries) return null;
   var lines;
@@ -452,7 +447,7 @@ function sectionLit(look, holder, t, slot, count, sim) {
 // starts in, kept here by look
 var cardSettings = {};
 
-// What a look lights, a card's middling settings made its own
+// What a look lights, with a card's middling settings made the look's own
 function cardLit(look, holder, t, slot, count, sim) {
   if (holder === MIDDLING && look && look.solid) {
     // Drawn in the swatch's value, since the word it writes would take the lamps' softer shade
@@ -500,8 +495,8 @@ export function livePlay(look, holder, t, slot, count, sim) {
   });
 }
 
-// A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are.
-// Its icon has a light at the end the stretch starts from and an arrow the way it runs
+// A toggle in the style of toggle() in looks.js. Its icon has a light at the end the stretch
+// starts from and an arrow the way it runs
 export function directionToggle(run, section) {
   var look = lookNamed(section.look);
   var moves = runsAWay(look, forwardTargetFor(run, section), section);
@@ -515,7 +510,7 @@ export function directionToggle(run, section) {
                            : widthOf(section) < 2 ? "One light has no direction"
                            : look.name + " looks the same from either end")
          : section.reversed ? "Travels from the far end" : "Travels from the near end",
-    // Through the run, as a page that makes the stretches afresh leaves this one behind
+    // Through the run, since every settle makes the stretches afresh and leaves this one stale
     onclick: function () {
       remember(run);
       var live = run.sections[run.picked];
