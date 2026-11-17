@@ -1,5 +1,6 @@
+import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "./draw.js";
-import {escapeHtml, renderPreview} from "./file_preview.js";
+import {renderPreview} from "./file_preview.js";
 import {BOARD, lookNamed, toggle} from "./looks.js";
 import {featureIcon} from "./program.js";
 import {runs} from "./runs.js";
@@ -84,12 +85,8 @@ export var PART_DRAWINGS = {};
 
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = PART_DRAWINGS[key];
-  return icon;
+  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+                       html: PART_DRAWINGS[key]});
 }
 
 // The parts of the board a slot's body sets itself, each as [icon, name]. A body's parts add
@@ -137,86 +134,35 @@ function alwaysSays(body) {
 function sceneTab(which, slot, name, says) {
   var here = state.at === which;
   var body = here ? capture() : slot.body;
-  var tab = document.createElement("button");
-  tab.className = "tab" + (here ? " on" : "") + (which < 0 ? " always" : "");
-  tab.draggable = which >= 0;
-  // The scene's colour is its tab's band and tint, and the selected tab is ringed as the page
-  // rings anything chosen
   var scene = which < 0 ? null : slot;
-  tab.style.setProperty("--scene", sceneColour(scene));
-  if (which >= 0) {
-    tab.style.setProperty("--band", sceneBand(scene));
-    if (sceneIsPale(scene)) tab.classList.add("pale");
-  }
   if (which < 0) says = alwaysSays(body);
 
-  // A scene's card is three rows, its name, what it sets, and how it ends beside its remote
-  // number. Always on's is its name, what it is for and what it plays, then what it sets
-  var title = document.createElement("b");
-  // The name is cut short where it is long, and the whole of it is in the card's tip
-  var named = document.createElement("span");
-  named.className = "cardname";
-  named.textContent = name;
-  title.appendChild(named);
-  tab.title = name;
-  // A scene's card is moved by dragging it, which a grip at the end of its name says
-  if (which >= 0) {
-    title.insertAdjacentHTML("beforeend", "<svg class='grip' viewBox='0 0 8 12' aria-hidden='true'>" +
-      "<circle cx='2' cy='2' r='1.1'/><circle cx='6' cy='2' r='1.1'/><circle cx='2' cy='6' r='1.1'/>" +
-      "<circle cx='6' cy='6' r='1.1'/><circle cx='2' cy='10' r='1.1'/><circle cx='6' cy='10' r='1.1'/>" +
-      "</svg>");
-    title.lastChild.insertAdjacentHTML("afterbegin", "<title>Drag to move this scene</title>");
-  }
-  tab.appendChild(title);
   // An icon for each part the scene sets itself, in a shade of its colour
-  var icons = document.createElement("span");
-  icons.className = "partsset";
-  icons.style.color = sceneShade(scene);
-  partsSet(body, which < 0).forEach(function (part) {
-    var icon = partIcon(part[0]);
-    icon.insertAdjacentHTML("afterbegin", "<title>" + escapeHtml(part[1]) + "</title>");
-    icons.appendChild(icon);
-  });
+  var parts = h("span", {className: "cardparts"},
+                h("span", {className: "partsset", style: {color: sceneShade(scene)}},
+                  partsSet(body, which < 0).map(function (part) {
+                    var icon = partIcon(part[0]);
+                    icon.prepend(h("svg:title", {}, part[1]));
+                    return icon;
+                  })));
+  var under = h("small", {className: "says"}, says || null);
 
-  var parts = document.createElement("span");
-  parts.className = "cardparts";
-  parts.appendChild(icons);
-  var under = document.createElement("small");
-  under.className = "says";
-  under.textContent = says;
-
-  if (which < 0) {
-    var role = document.createElement("small");
-    role.className = "role";
-    role.textContent = "Plays under every scene";
-    tab.appendChild(role);
-    if (says) tab.appendChild(under);
-    tab.appendChild(parts);
-  } else {
-    tab.appendChild(parts);
-    var turn = document.createElement("span");
-    turn.className = "cardturn";
-    turn.appendChild(under);
-    // Each of the remote's number buttons that goes to the scene, drawn as the remote draws it
-    var numbers = sceneHooks.numbers(scene);
-    if (numbers.length) {
-      var badges = document.createElement("span");
-      badges.className = "irbadges";
-      numbers.forEach(function (number) {
-        var badge = document.createElement("span");
-        badge.className = "irbadge" + (number ? "" : " zero");
-        badge.textContent = String(number);
-        badge.title = "Press " + number + " on the remote for this scene";
-        // The white button's ring is drawn in a light grey, which shows on a card
-        if (number) badge.style.setProperty("--ring", number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]);
-        badges.appendChild(badge);
-      });
-      turn.appendChild(badges);
-    }
-    tab.appendChild(turn);
-  }
-
-  tab.onclick = function () { if (state.at !== which) switchTo(which); };
+  // A scene's card is three rows, its name, what it sets, and how it ends beside its remote
+  // number. Always on's is its name, what it is for and what it plays, then what it sets.
+  // The name is cut short where it is long, and the whole of it is in the card's tip
+  var tab = h("button", {
+    className: "tab" + (here ? " on" : "") + (which < 0 ? " always" : "") +
+               (scene && sceneIsPale(scene) ? " pale" : ""),
+    // The scene's colour is its tab's band and tint, and the selected tab is ringed as the page
+    // rings anything chosen
+    style: {"--scene": sceneColour(scene), "--band": scene ? sceneBand(scene) : null},
+    title: name,
+    onclick: function () { if (state.at !== which) switchTo(which); }
+  }, h("b", {}, h("span", {className: "cardname"}, name), which >= 0 ? grip() : null),
+     which < 0 ? [h("small", {className: "role"}, "Plays under every scene"), says ? under : null,
+                  parts]
+               : [parts, h("span", {className: "cardturn"}, under, remoteBadges(scene))]);
+  tab.draggable = which >= 0;
 
   if (which >= 0) {
     tab.ondragstart = function (e) {
@@ -249,122 +195,126 @@ function sceneTab(which, slot, name, says) {
   return tab;
 }
 
+// The grip at the end of a scene card's name, which says the card is moved by dragging it
+function grip() {
+  return h("svg:svg", {class: "grip", viewBox: "0 0 8 12", "aria-hidden": "true",
+                       html: "<title>Drag to move this scene</title>" +
+                             "<circle cx='2' cy='2' r='1.1'/><circle cx='6' cy='2' r='1.1'/>" +
+                             "<circle cx='2' cy='6' r='1.1'/><circle cx='6' cy='6' r='1.1'/>" +
+                             "<circle cx='2' cy='10' r='1.1'/><circle cx='6' cy='10' r='1.1'/>"});
+}
+
+// Each of the remote's number buttons that goes to a scene, drawn as the remote draws it, or null
+// where none does
+function remoteBadges(scene) {
+  var numbers = sceneHooks.numbers(scene);
+  if (!numbers.length) return null;
+  return h("span", {className: "irbadges"}, numbers.map(function (number) {
+    // The white button's ring is drawn in a light grey, which shows on a card
+    return h("span", {
+      className: "irbadge" + (number ? "" : " zero"),
+      title: "Press " + number + " on the remote for this scene",
+      style: {"--ring": !number ? null : number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]}
+    }, String(number));
+  }));
+}
+
 var carriedTab = null;
 
-// A scene's row of settings, its time and whether it starts afresh. The scene row part
-// restyles it and speaks for the always-on tab
-function renderSceneRow() {
-  var box = document.getElementById("sceneSettings");
-  box.textContent = "";
-  if (state.at < 0) return;
-  var scene = state.scenes[state.at];
-
-  var row = document.createElement("div");
-  row.className = "sceneset";
-
-  var name = document.createElement("input");
-  name.type = "text";
-  name.value = scene.name;
-  name.title = "Scene name";
-  name.dataset.focus = "scene-name";
+// The field for a scene's name, marked where the name breaks a rule
+function sceneNameField(scene) {
   // The last name left in the field that broke no rule, which the scene goes back to if it is
   // left with one that does. It is kept with the scene, as a draw makes the field afresh while it
   // is being typed in, and a name half typed is not taken for it
   if (scene.goodName === undefined && !sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
+  var field = h("input", {
+    type: "text", value: scene.name, title: "Scene name", "data-focus": "scene-name",
+    oninput: function () {
+      // The brackets and the colon are the heading's own punctuation
+      scene.name = field.value.replace(/[\[\]:]/g, "");
+      if (field.value !== scene.name) field.value = scene.name;
+      marked();
+      renderScenes();
+      renderPreview();
+    },
+    onchange: function () {
+      scene.name = scene.name.trim();
+      if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
+      else if (scene.goodName) scene.name = scene.goodName;
+      draw();
+    }
+  });
   function marked() {
     var problem = sceneNameProblem(scene, scene.name);
-    name.classList.toggle("invalid", !!problem);
-    name.title = problem || "Scene name";
+    field.classList.toggle("invalid", !!problem);
+    field.title = problem || "Scene name";
   }
-  name.oninput = function () {
-    // The brackets and the colon are the heading's own punctuation
-    scene.name = name.value.replace(/[\[\]:]/g, "");
-    if (name.value !== scene.name) name.value = scene.name;
-    marked();
-    renderScenes();
-    renderPreview();
-  };
-  name.onchange = function () {
-    scene.name = scene.name.trim();
-    if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
-    else if (scene.goodName) scene.name = scene.goodName;
-    draw();
-  };
   marked();
-  row.appendChild(name);
+  return field;
+}
 
-  // How the scene ends. A waiting scene has no time and no scene after
-  var lone = state.scenes.length === 1;
-  var ends = document.createElement("select");
-  ends.className = "sceneends";
-  [["shows", "shows for"], ["waits", "waits"]].forEach(function (way) {
-    var option = document.createElement("option");
-    option.value = way[0];
-    option.textContent = way[1];
-    ends.appendChild(option);
-  });
-  ends.value = scene.waits ? "waits" : "shows";
-  ends.onchange = function () {
-    scene.waits = ends.value === "waits";
-    draw();
-  };
-  row.appendChild(ends);
+// How a scene ends, shown for a time or waiting. A waiting scene has no time and no scene after
+function sceneEnds(scene) {
+  var ends = h("select", {
+    className: "sceneends",
+    onchange: function () {
+      scene.waits = ends.value === "waits";
+      draw();
+    }
+  }, h("option", {value: "shows", selected: !scene.waits}, "shows for"),
+     h("option", {value: "waits", selected: scene.waits}, "waits"));
+  return ends;
+}
 
-  if (!scene.waits) {
-    var seconds = document.createElement("input");
-    seconds.type = "number";
-    seconds.min = 1;
-    seconds.value = scene.seconds;
-    seconds.dataset.focus = "scene-seconds";
-    seconds.onchange = function () {
+// A scene's time, the seconds it shows for and what follows them
+function sceneSeconds(scene) {
+  var seconds = h("input", {
+    type: "number", min: 1, value: scene.seconds, "data-focus": "scene-seconds",
+    onchange: function () {
       scene.seconds = Math.max(1, Number(seconds.value) || 1);
       draw();
-    };
-    row.appendChild(seconds);
+    }
+  });
+  return [seconds, h("span", {className: "sunit"},
+                     state.scenes.length === 1 ? "s, then itself" : "s, then")];
+}
 
-    var unit = document.createElement("span");
-    unit.className = "sunit";
-    unit.textContent = lone ? "s, then itself" : "s, then";
-    row.appendChild(unit);
-  }
-
-  // The scene after, the next in order unless another is chosen, which can be this one again
-  if (!scene.waits && !lone) {
-    var then = document.createElement("select");
-    then.className = "scenethen";
-    var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
-    var first = document.createElement("option");
-    first.value = "";
-    first.textContent = "the next scene";
-    then.appendChild(first);
-    state.scenes.forEach(function (other) {
-      if (other === inOrder) return;
-      var option = document.createElement("option");
-      option.value = sceneMark(other);
-      option.textContent = other === scene ? "itself" : other.name;
-      then.appendChild(option);
-    });
-    then.value = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder
-               ? scene.then : "";
-    then.title = "The scene after this one, the next in order unless another is chosen";
-    then.onchange = function () {
+// The scene after, the next in order unless another is chosen, which can be this one again
+function sceneThen(scene) {
+  var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
+  var chosen = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder
+             ? scene.then : "";
+  var then = h("select", {
+    className: "scenethen",
+    title: "The scene after this one, the next in order unless another is chosen",
+    onchange: function () {
       scene.then = then.value || null;
       draw();
-    };
-    row.appendChild(then);
-  }
+    }
+  }, h("option", {value: "", selected: chosen === ""}, "the next scene"),
+     state.scenes.filter(function (other) { return other !== inOrder; }).map(function (other) {
+       var mark = sceneMark(other);
+       return h("option", {value: mark, selected: chosen === mark},
+                other === scene ? "itself" : other.name);
+     }));
+  return then;
+}
 
-  var again = document.createElement("label");
-  var tick = document.createElement("input");
-  tick.type = "checkbox";
-  tick.checked = sceneRestarts(scene);
-  tick.onchange = function () { scene.restart = tick.checked; draw(); };
-  again.appendChild(tick);
-  again.appendChild(document.createTextNode("restart each time"));
-  again.title = "Restart this scene's effects each time it plays";
-  row.appendChild(again);
-
-  box.appendChild(row);
+// Whether the scene's effects begin again each time it comes round, a toggle with its icon as the
+// screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of theirs
+// is the file's. A scene going back to itself always restarts, so its toggle is held on. A scene
+// that never shows again starts once, so its toggle is greyed
+function sceneRestart(scene) {
+  var loops = sceneLoops(scene);
+  var once = !sceneShowsAgain(scene);
+  var restart = toggle("&#8630;", "Restart", sceneRestarts(scene),
+                       function (on) { scene.restart = on; },
+                       loops ? "A scene that goes back to itself always restarts"
+                       : once ? "This scene shows only once, so it has nothing to restart"
+                       : "Restart this scene's effects each time it plays, instead of " +
+                         "resuming where they left off", once);
+  restart.disabled = loops || once;
+  return restart;
 }
 
 window.addEventListener("resize", spanTray);
@@ -376,28 +326,24 @@ addStep(drawSteps.after, DRAW_AFTER, "sceneTray", function () {
 
 function renderScenes() {
   var box = document.getElementById("tabs");
-  box.textContent = "";
+  var plus = h("button", {
+    className: "plus",
+    title: state.scenes.length ? "Add another scene" : "Split into scenes that play one after another",
+    onclick: addScene
+  }, h("svg:svg", {width: "11", height: "11", viewBox: "0 0 11 11",
+                   html: "<path d='M5.5 1 L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' " +
+                         "stroke-width='1.8' stroke-linecap='round'/>"}),
+     state.scenes.length ? "another scene" : "split into scenes");
 
   // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make
-  if (state.scenes.length) {
-    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
-    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
-    state.scenes.forEach(function (scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
-    });
-  }
-
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" +
-                   (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play one after another";
-  plus.onclick = addScene;
-  box.appendChild(plus);
+  // says nothing, so it is not drawn until there is a choice to make. Always on is the tray
+  // the scenes' cards sit in, its own card the tray's first column
+  replace(box,
+          state.scenes.length ? sceneTab(-1, state.always, "Always on", "") : null,
+          state.scenes.map(function (scene, i) {
+            return sceneTab(i, scene, scene.name, sceneTurn(scene));
+          }),
+          plus);
   box.classList.toggle("tray", state.scenes.length > 0);
   spanTray();
 
@@ -415,38 +361,25 @@ function renderScenes() {
   renderSceneAside();
 }
 
-// ---- a scene's own settings, in the screens' style ---------------------------------------
-// Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
-// the screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of
-// theirs is the file's.
-
+// A scene's row of settings, its name, how it ends and whether it restarts
 function renderSceneSettings() {
-  renderSceneRow();
-  // Check if Always on is shown with scenes for it to play under. It has no settings of its own,
-  // so its row says what it is for, which keeps the gallery where it was as the tabs are switched
-  if (state.at < 0 && state.scenes.length) {
-    var note = document.createElement("div");
-    note.className = "sceneset alwaysnote";
-    note.textContent = "Always on plays under every scene. A scene that uses the " +
-                       "same lights, screen or sound overrides it while showing.";
-    document.getElementById("sceneSettings").appendChild(note);
+  var box = document.getElementById("sceneSettings");
+  if (state.at < 0) {
+    // Check if Always on is shown with scenes for it to play under. It has no settings of its
+    // own, so its row says what it is for, which keeps the gallery where it was as the tabs are
+    // switched
+    replace(box, state.scenes.length
+      ? h("div", {className: "sceneset alwaysnote"},
+          "Always on plays under every scene. A scene that uses the same lights, screen or " +
+          "sound overrides it while showing.")
+      : null);
     return;
   }
-  var row = document.querySelector("#sceneSettings .sceneset");
-  if (!row || state.at < 0) return;
   var scene = state.scenes[state.at];
-  var ticked = row.querySelector("label");
-  if (!ticked) return;
-  // A scene going back to itself always restarts, so its toggle is held on. A scene that never
-  // shows again starts once, so its toggle is greyed
-  var loops = sceneLoops(scene);
-  var once = !sceneShowsAgain(scene);
-  var restart = toggle("&#8630;", "Restart", sceneRestarts(scene),
-                       function (on) { scene.restart = on; },
-                       loops ? "A scene that goes back to itself always restarts"
-                       : once ? "This scene shows only once, so it has nothing to restart"
-                       : "Restart this scene's effects each time it plays, instead of " +
-                         "resuming where they left off", once);
-  restart.disabled = loops || once;
-  row.replaceChild(restart, ticked);
+  replace(box, h("div", {className: "sceneset"},
+                 sceneNameField(scene),
+                 sceneEnds(scene),
+                 scene.waits ? null : sceneSeconds(scene),
+                 scene.waits || state.scenes.length === 1 ? null : sceneThen(scene),
+                 sceneRestart(scene)));
 }

@@ -11944,75 +11944,75 @@ function discoverBinBeside(card, bin) {
 
 // boards/editor/picker/float_bar.js
 var FLOAT_MOVED = ["open", "save", "saveArrow", "check", "saveMenu"];
-var floatBar = null;
 var floatShown = false;
 var floatSaidTimer = null;
 var FLOAT_SAID_MS = 8e3;
-(function() {
-  floatBar = document.createElement("div");
-  floatBar.className = "floatbar";
-  floatBar.setAttribute("aria-hidden", "true");
-  var left = document.createElement("span");
-  left.className = "floatleft";
-  var name = document.createElement("span");
-  name.className = "floatname";
-  name.textContent = document.querySelector("header h1").firstChild.textContent.trim();
-  var said = document.createElement("span");
-  said.className = "floatsaid";
-  said.onclick = function() {
+var floatSaid = h("span", {
+  className: "floatsaid",
+  onclick: function() {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  left.appendChild(name);
-  left.appendChild(said);
-  var where = document.createElement("span");
-  where.className = "floatwhere";
-  var buttons = document.createElement("span");
-  buttons.className = "floatbuttons";
-  floatBar.appendChild(left);
-  floatBar.appendChild(where);
-  floatBar.appendChild(buttons);
-  document.body.appendChild(floatBar);
-  new IntersectionObserver(function(seen) {
-    floatHeader(!seen[seen.length - 1].isIntersecting);
-  }).observe(document.querySelector("header"));
-})();
+  }
+});
+var floatWhere = h("span", { className: "floatwhere" });
+var floatButtons = h("span", { className: "floatbuttons" });
+var floatBar = h(
+  "div",
+  { className: "floatbar", "aria-hidden": "true", inert: true },
+  h(
+    "span",
+    { className: "floatleft" },
+    h(
+      "span",
+      { className: "floatname" },
+      document.querySelector("header h1").firstChild.textContent.trim()
+    ),
+    floatSaid
+  ),
+  floatWhere,
+  floatButtons
+);
+document.body.appendChild(floatBar);
+new IntersectionObserver(function(seen) {
+  floatHeader(!seen[seen.length - 1].isIntersecting);
+}).observe(document.querySelector("header"));
 function floatHeader(away) {
   if (away === floatShown) return;
   floatShown = away;
-  var buttons = floatBar.querySelector(".floatbuttons");
   closeSaveMenu();
   FLOAT_MOVED.forEach(function(id) {
     var one = document.getElementById(id);
     if (away) {
-      var stand = document.createElement("span");
-      stand.className = "floatstand";
-      stand.dataset.standsFor = id;
       var box = one.getBoundingClientRect();
-      stand.style.width = box.width + "px";
-      stand.style.height = box.height + "px";
-      one.parentNode.replaceChild(stand, one);
-      buttons.appendChild(one);
+      one.replaceWith(h("span", {
+        className: "floatstand",
+        "data-stands-for": id,
+        style: { width: box.width + "px", height: box.height + "px" }
+      }));
+      floatButtons.appendChild(one);
     } else {
-      var held = document.querySelector("[data-stands-for='" + id + "']");
-      held.parentNode.replaceChild(one, held);
+      document.querySelector("[data-stands-for='" + id + "']").replaceWith(one);
     }
   });
   floatBar.classList.toggle("shown", away);
   floatBar.setAttribute("aria-hidden", away ? "false" : "true");
+  floatBar.inert = !away;
 }
 addStep(drawSteps.after, DRAW_AFTER, "floatBar", function() {
   var shown = onProgramPage ? boardSet.program ? programTitle(boardSet.program) : "" : !state.scenes.length ? "" : state.at < 0 ? "Always on" : state.scenes[state.at].name;
-  floatBar.querySelector(".floatwhere").innerHTML = "<b>" + (onProgramPage ? "Programs" : "Effects") + "</b>" + (shown ? "<small>" + escapeHtml(shown) + "</small>" : "");
+  replace(
+    floatWhere,
+    h("b", {}, onProgramPage ? "Programs" : "Effects"),
+    shown ? h("small", {}, shown) : null
+  );
 });
 bannerSteps.push(function(text, warn) {
-  var said = floatBar.querySelector(".floatsaid");
   clearTimeout(floatSaidTimer);
-  said.textContent = text || "";
-  said.title = text ? "Show at the top of the page" : "";
-  said.className = "floatsaid" + (warn === "hold" ? " hold" : warn ? " warn" : "");
+  floatSaid.textContent = text || "";
+  floatSaid.title = text ? "Show at the top of the page" : "";
+  floatSaid.className = "floatsaid" + (warn === "hold" ? " hold" : warn ? " warn" : "");
   if (text && !warn) {
     floatSaidTimer = setTimeout(function() {
-      said.textContent = "";
+      floatSaid.textContent = "";
     }, FLOAT_SAID_MS);
   }
 });
@@ -12388,12 +12388,12 @@ var PART_FEATURES = {
 var PART_DRAWINGS = {};
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = PART_DRAWINGS[key];
-  return icon;
+  return h("svg:svg", {
+    viewBox: "0 0 24 24",
+    class: "featureicon",
+    "aria-hidden": "true",
+    html: PART_DRAWINGS[key]
+  });
 }
 function partsSet(body, always) {
   var parts = [];
@@ -12442,72 +12442,42 @@ function alwaysSays(body) {
 function sceneTab(which, slot, name, says) {
   var here = state.at === which;
   var body = here ? capture() : slot.body;
-  var tab = document.createElement("button");
-  tab.className = "tab" + (here ? " on" : "") + (which < 0 ? " always" : "");
-  tab.draggable = which >= 0;
   var scene = which < 0 ? null : slot;
-  tab.style.setProperty("--scene", sceneColour(scene));
-  if (which >= 0) {
-    tab.style.setProperty("--band", sceneBand(scene));
-    if (sceneIsPale(scene)) tab.classList.add("pale");
-  }
   if (which < 0) says = alwaysSays(body);
-  var title = document.createElement("b");
-  var named = document.createElement("span");
-  named.className = "cardname";
-  named.textContent = name;
-  title.appendChild(named);
-  tab.title = name;
-  if (which >= 0) {
-    title.insertAdjacentHTML("beforeend", "<svg class='grip' viewBox='0 0 8 12' aria-hidden='true'><circle cx='2' cy='2' r='1.1'/><circle cx='6' cy='2' r='1.1'/><circle cx='2' cy='6' r='1.1'/><circle cx='6' cy='6' r='1.1'/><circle cx='2' cy='10' r='1.1'/><circle cx='6' cy='10' r='1.1'/></svg>");
-    title.lastChild.insertAdjacentHTML("afterbegin", "<title>Drag to move this scene</title>");
-  }
-  tab.appendChild(title);
-  var icons = document.createElement("span");
-  icons.className = "partsset";
-  icons.style.color = sceneShade(scene);
-  partsSet(body, which < 0).forEach(function(part) {
-    var icon = partIcon(part[0]);
-    icon.insertAdjacentHTML("afterbegin", "<title>" + escapeHtml(part[1]) + "</title>");
-    icons.appendChild(icon);
-  });
-  var parts = document.createElement("span");
-  parts.className = "cardparts";
-  parts.appendChild(icons);
-  var under = document.createElement("small");
-  under.className = "says";
-  under.textContent = says;
-  if (which < 0) {
-    var role = document.createElement("small");
-    role.className = "role";
-    role.textContent = "Plays under every scene";
-    tab.appendChild(role);
-    if (says) tab.appendChild(under);
-    tab.appendChild(parts);
-  } else {
-    tab.appendChild(parts);
-    var turn = document.createElement("span");
-    turn.className = "cardturn";
-    turn.appendChild(under);
-    var numbers = sceneHooks.numbers(scene);
-    if (numbers.length) {
-      var badges = document.createElement("span");
-      badges.className = "irbadges";
-      numbers.forEach(function(number) {
-        var badge = document.createElement("span");
-        badge.className = "irbadge" + (number ? "" : " zero");
-        badge.textContent = String(number);
-        badge.title = "Press " + number + " on the remote for this scene";
-        if (number) badge.style.setProperty("--ring", number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]);
-        badges.appendChild(badge);
-      });
-      turn.appendChild(badges);
-    }
-    tab.appendChild(turn);
-  }
-  tab.onclick = function() {
-    if (state.at !== which) switchTo(which);
-  };
+  var parts = h(
+    "span",
+    { className: "cardparts" },
+    h(
+      "span",
+      { className: "partsset", style: { color: sceneShade(scene) } },
+      partsSet(body, which < 0).map(function(part) {
+        var icon = partIcon(part[0]);
+        icon.prepend(h("svg:title", {}, part[1]));
+        return icon;
+      })
+    )
+  );
+  var under = h("small", { className: "says" }, says || null);
+  var tab = h(
+    "button",
+    {
+      className: "tab" + (here ? " on" : "") + (which < 0 ? " always" : "") + (scene && sceneIsPale(scene) ? " pale" : ""),
+      // The scene's colour is its tab's band and tint, and the selected tab is ringed as the page
+      // rings anything chosen
+      style: { "--scene": sceneColour(scene), "--band": scene ? sceneBand(scene) : null },
+      title: name,
+      onclick: function() {
+        if (state.at !== which) switchTo(which);
+      }
+    },
+    h("b", {}, h("span", { className: "cardname" }, name), which >= 0 ? grip() : null),
+    which < 0 ? [
+      h("small", { className: "role" }, "Plays under every scene"),
+      says ? under : null,
+      parts
+    ] : [parts, h("span", { className: "cardturn" }, under, remoteBadges(scene))]
+  );
+  tab.draggable = which >= 0;
   if (which >= 0) {
     tab.ondragstart = function(e) {
       carriedTab = which;
@@ -12541,107 +12511,129 @@ function sceneTab(which, slot, name, says) {
   }
   return tab;
 }
+function grip() {
+  return h("svg:svg", {
+    class: "grip",
+    viewBox: "0 0 8 12",
+    "aria-hidden": "true",
+    html: "<title>Drag to move this scene</title><circle cx='2' cy='2' r='1.1'/><circle cx='6' cy='2' r='1.1'/><circle cx='2' cy='6' r='1.1'/><circle cx='6' cy='6' r='1.1'/><circle cx='2' cy='10' r='1.1'/><circle cx='6' cy='10' r='1.1'/>"
+  });
+}
+function remoteBadges(scene) {
+  var numbers = sceneHooks.numbers(scene);
+  if (!numbers.length) return null;
+  return h("span", { className: "irbadges" }, numbers.map(function(number) {
+    return h("span", {
+      className: "irbadge" + (number ? "" : " zero"),
+      title: "Press " + number + " on the remote for this scene",
+      style: { "--ring": !number ? null : number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1] }
+    }, String(number));
+  }));
+}
 var carriedTab = null;
-function renderSceneRow() {
-  var box = document.getElementById("sceneSettings");
-  box.textContent = "";
-  if (state.at < 0) return;
-  var scene = state.scenes[state.at];
-  var row = document.createElement("div");
-  row.className = "sceneset";
-  var name = document.createElement("input");
-  name.type = "text";
-  name.value = scene.name;
-  name.title = "Scene name";
-  name.dataset.focus = "scene-name";
+function sceneNameField(scene) {
   if (scene.goodName === void 0 && !sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
+  var field = h("input", {
+    type: "text",
+    value: scene.name,
+    title: "Scene name",
+    "data-focus": "scene-name",
+    oninput: function() {
+      scene.name = field.value.replace(/[\[\]:]/g, "");
+      if (field.value !== scene.name) field.value = scene.name;
+      marked();
+      renderScenes();
+      renderPreview();
+    },
+    onchange: function() {
+      scene.name = scene.name.trim();
+      if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
+      else if (scene.goodName) scene.name = scene.goodName;
+      draw();
+    }
+  });
   function marked() {
     var problem = sceneNameProblem(scene, scene.name);
-    name.classList.toggle("invalid", !!problem);
-    name.title = problem || "Scene name";
+    field.classList.toggle("invalid", !!problem);
+    field.title = problem || "Scene name";
   }
-  name.oninput = function() {
-    scene.name = name.value.replace(/[\[\]:]/g, "");
-    if (name.value !== scene.name) name.value = scene.name;
-    marked();
-    renderScenes();
-    renderPreview();
-  };
-  name.onchange = function() {
-    scene.name = scene.name.trim();
-    if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
-    else if (scene.goodName) scene.name = scene.goodName;
-    draw();
-  };
   marked();
-  row.appendChild(name);
-  var lone = state.scenes.length === 1;
-  var ends = document.createElement("select");
-  ends.className = "sceneends";
-  [["shows", "shows for"], ["waits", "waits"]].forEach(function(way) {
-    var option = document.createElement("option");
-    option.value = way[0];
-    option.textContent = way[1];
-    ends.appendChild(option);
-  });
-  ends.value = scene.waits ? "waits" : "shows";
-  ends.onchange = function() {
-    scene.waits = ends.value === "waits";
-    draw();
-  };
-  row.appendChild(ends);
-  if (!scene.waits) {
-    var seconds = document.createElement("input");
-    seconds.type = "number";
-    seconds.min = 1;
-    seconds.value = scene.seconds;
-    seconds.dataset.focus = "scene-seconds";
-    seconds.onchange = function() {
+  return field;
+}
+function sceneEnds(scene) {
+  var ends = h(
+    "select",
+    {
+      className: "sceneends",
+      onchange: function() {
+        scene.waits = ends.value === "waits";
+        draw();
+      }
+    },
+    h("option", { value: "shows", selected: !scene.waits }, "shows for"),
+    h("option", { value: "waits", selected: scene.waits }, "waits")
+  );
+  return ends;
+}
+function sceneSeconds(scene) {
+  var seconds = h("input", {
+    type: "number",
+    min: 1,
+    value: scene.seconds,
+    "data-focus": "scene-seconds",
+    onchange: function() {
       scene.seconds = Math.max(1, Number(seconds.value) || 1);
       draw();
-    };
-    row.appendChild(seconds);
-    var unit = document.createElement("span");
-    unit.className = "sunit";
-    unit.textContent = lone ? "s, then itself" : "s, then";
-    row.appendChild(unit);
-  }
-  if (!scene.waits && !lone) {
-    var then = document.createElement("select");
-    then.className = "scenethen";
-    var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
-    var first = document.createElement("option");
-    first.value = "";
-    first.textContent = "the next scene";
-    then.appendChild(first);
-    state.scenes.forEach(function(other) {
-      if (other === inOrder) return;
-      var option = document.createElement("option");
-      option.value = sceneMark(other);
-      option.textContent = other === scene ? "itself" : other.name;
-      then.appendChild(option);
-    });
-    then.value = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder ? scene.then : "";
-    then.title = "The scene after this one, the next in order unless another is chosen";
-    then.onchange = function() {
-      scene.then = then.value || null;
-      draw();
-    };
-    row.appendChild(then);
-  }
-  var again = document.createElement("label");
-  var tick = document.createElement("input");
-  tick.type = "checkbox";
-  tick.checked = sceneRestarts(scene);
-  tick.onchange = function() {
-    scene.restart = tick.checked;
-    draw();
-  };
-  again.appendChild(tick);
-  again.appendChild(document.createTextNode("restart each time"));
-  again.title = "Restart this scene's effects each time it plays";
-  row.appendChild(again);
-  box.appendChild(row);
+    }
+  });
+  return [seconds, h(
+    "span",
+    { className: "sunit" },
+    state.scenes.length === 1 ? "s, then itself" : "s, then"
+  )];
+}
+function sceneThen(scene) {
+  var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
+  var chosen = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder ? scene.then : "";
+  var then = h(
+    "select",
+    {
+      className: "scenethen",
+      title: "The scene after this one, the next in order unless another is chosen",
+      onchange: function() {
+        scene.then = then.value || null;
+        draw();
+      }
+    },
+    h("option", { value: "", selected: chosen === "" }, "the next scene"),
+    state.scenes.filter(function(other) {
+      return other !== inOrder;
+    }).map(function(other) {
+      var mark = sceneMark(other);
+      return h(
+        "option",
+        { value: mark, selected: chosen === mark },
+        other === scene ? "itself" : other.name
+      );
+    })
+  );
+  return then;
+}
+function sceneRestart(scene) {
+  var loops = sceneLoops(scene);
+  var once = !sceneShowsAgain(scene);
+  var restart = toggle(
+    "&#8630;",
+    "Restart",
+    sceneRestarts(scene),
+    function(on) {
+      scene.restart = on;
+    },
+    loops ? "A scene that goes back to itself always restarts" : once ? "This scene shows only once, so it has nothing to restart" : "Restart this scene's effects each time it plays, instead of resuming where they left off",
+    once
+  );
+  restart.disabled = loops || once;
+  return restart;
 }
 window.addEventListener("resize", spanTray);
 addStep(drawSteps.after, DRAW_AFTER, "sceneTray", function() {
@@ -12650,19 +12642,29 @@ addStep(drawSteps.after, DRAW_AFTER, "sceneTray", function() {
 });
 function renderScenes() {
   var box = document.getElementById("tabs");
-  box.textContent = "";
-  if (state.scenes.length) {
-    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
-    state.scenes.forEach(function(scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
-    });
-  }
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>" + (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene" : "Split into scenes that play one after another";
-  plus.onclick = addScene;
-  box.appendChild(plus);
+  var plus = h(
+    "button",
+    {
+      className: "plus",
+      title: state.scenes.length ? "Add another scene" : "Split into scenes that play one after another",
+      onclick: addScene
+    },
+    h("svg:svg", {
+      width: "11",
+      height: "11",
+      viewBox: "0 0 11 11",
+      html: "<path d='M5.5 1 L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/>"
+    }),
+    state.scenes.length ? "another scene" : "split into scenes"
+  );
+  replace(
+    box,
+    state.scenes.length ? sceneTab(-1, state.always, "Always on", "") : null,
+    state.scenes.map(function(scene, i) {
+      return sceneTab(i, scene, scene.name, sceneTurn(scene));
+    }),
+    plus
+  );
   box.classList.toggle("tray", state.scenes.length > 0);
   spanTray();
   var frame = document.getElementById("sceneBody");
@@ -12677,33 +12679,25 @@ function renderScenes() {
   renderSceneAside();
 }
 function renderSceneSettings() {
-  renderSceneRow();
-  if (state.at < 0 && state.scenes.length) {
-    var note = document.createElement("div");
-    note.className = "sceneset alwaysnote";
-    note.textContent = "Always on plays under every scene. A scene that uses the same lights, screen or sound overrides it while showing.";
-    document.getElementById("sceneSettings").appendChild(note);
+  var box = document.getElementById("sceneSettings");
+  if (state.at < 0) {
+    replace(box, state.scenes.length ? h(
+      "div",
+      { className: "sceneset alwaysnote" },
+      "Always on plays under every scene. A scene that uses the same lights, screen or sound overrides it while showing."
+    ) : null);
     return;
   }
-  var row = document.querySelector("#sceneSettings .sceneset");
-  if (!row || state.at < 0) return;
   var scene = state.scenes[state.at];
-  var ticked = row.querySelector("label");
-  if (!ticked) return;
-  var loops = sceneLoops(scene);
-  var once = !sceneShowsAgain(scene);
-  var restart = toggle(
-    "&#8630;",
-    "Restart",
-    sceneRestarts(scene),
-    function(on) {
-      scene.restart = on;
-    },
-    loops ? "A scene that goes back to itself always restarts" : once ? "This scene shows only once, so it has nothing to restart" : "Restart this scene's effects each time it plays, instead of resuming where they left off",
-    once
-  );
-  restart.disabled = loops || once;
-  row.replaceChild(restart, ticked);
+  replace(box, h(
+    "div",
+    { className: "sceneset" },
+    sceneNameField(scene),
+    sceneEnds(scene),
+    scene.waits ? null : sceneSeconds(scene),
+    scene.waits || state.scenes.length === 1 ? null : sceneThen(scene),
+    sceneRestart(scene)
+  ));
 }
 
 // boards/editor/picker/sensor/sensor_art.js
