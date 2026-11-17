@@ -1,0 +1,130 @@
+/* A screen showing Always on's picture in a scene, in the striped and dashed frame its lamps wear */
+.holder.under{border:1px dashed var(--dashed);border-radius:var(--radius);
+ background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 6px,var(--line) 6px,var(--line) 12px)}
+.asset.onA{border-color:var(--strip)}
+.asset.onB{border-color:var(--screenB)}
+.asset.onAB{border-color:var(--accent)}
+.screens-head{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);
+ margin-bottom:var(--space-6)}
+/* The pair toggle under each screen's panel, made as a hub position's group numbers are, and in
+   both screens' colours while on */
+.pairplace{display:flex;flex-direction:column;align-items:center;gap:var(--space-1)}
+.groupseg button.pairon{background:linear-gradient(90deg,var(--strip),var(--screenB))}
+.screen-box .body.adding{justify-content:center;padding:var(--space-7) var(--space-6)}
+.screen-box .settings{width:100%;display:grid;grid-template-columns:1fr 1fr;
+ gap:var(--space-3) var(--space-5);align-items:center}
+.screen-box .settings .showing{margin:0}
+.holder{flex-shrink:0;line-height:0}
+.twopanels .holder{zoom:.6}
+.screenssays{margin:0 0 var(--space-5)}
+.place .holder{zoom:.55}
+/* Every screen setting. What is showing sits under the module, then sections that fold, each a
+   row of named choices drawn as buttons, and toggles for anything on or off */
+.screen-box .settings.looksettings,.hubsettings .looksettings{display:flex;flex-direction:column;
+ align-items:stretch;width:100%}
+.sshowing{width:100%;text-align:center;font-size:var(--text-m);color:var(--dim);
+ margin:calc(-1 * var(--space-2)) 0 var(--space-1)}
+.sshowing b{color:var(--ink)}
+.sshowing small{display:block;font-size:var(--text-xs)}
+.sfold{border-top:1px solid var(--line);padding:var(--space-4) 0 var(--space-4);margin:0}
+.sfold>summary{list-style:none;display:flex;align-items:baseline;gap:var(--space-4);cursor:pointer;
+ font-size:var(--text-m);font-weight:600;color:var(--ink)}
+.sfold>summary::-webkit-details-marker{display:none}
+/* The fold's mark is a boxed plus, a minus while open */
+.sfold>summary::before{content:"";width:.9rem;height:.9rem;border-radius:var(--radius-xs);
+ flex:0 0 auto;
+ box-sizing:border-box;border:1.5px solid var(--dim);align-self:center;
+ background:linear-gradient(var(--ink),var(--ink)) center/.45rem 1.5px no-repeat,
+ linear-gradient(var(--ink),var(--ink)) center/1.5px .45rem no-repeat}
+.sfold[open]>summary::before{background:linear-gradient(var(--ink),var(--ink)) center/.45rem 1.5px no-repeat}
+.sfold>summary small{font-weight:400;color:var(--dim);font-size:var(--text-s)}
+.sfold[open]>summary small.closedonly{display:none}
+.sline{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3) var(--space-4);
+ margin-top:var(--space-4)}
+.snamed{font-size:var(--text-m);color:var(--dim);margin-right:var(--space-1)}
+/* A drawing's style choices, a row each, stacked beside the one label */
+.sstylerows{display:inline-flex;flex-direction:column;align-items:flex-start;gap:var(--space-3)}
+/* A drawing set otherwise than it is made for, warned of as a save's problems are */
+.sline.smadefor{background:var(--warn-bg);border-radius:var(--radius);
+ padding:var(--space-3) var(--space-4)}
+.smadefor .snamed{color:var(--warn);font-weight:600}
+.looksettings input[type=number]{font:inherit;font-size:var(--text-m);width:3.6rem;
+ padding:var(--space-2) var(--space-3);
+ border:1px solid var(--line);border-radius:var(--radius-s)}
+.sseg{display:inline-flex;border:1.5px solid var(--line);border-radius:var(--radius);
+ overflow:hidden}
+.sseg button{border:0;border-right:1px solid var(--line);border-radius:0;background:var(--panel);
+ padding:var(--space-2) var(--space-4);font:600 var(--text-s) var(--font);color:var(--ink);
+ display:flex;
+ align-items:center;gap:var(--space-3);cursor:pointer}
+.sseg button:last-child{border-right:0}
+.sseg button.on{background:var(--hub,var(--strip));color:#fff}
+.sseg button:disabled{opacity:.4;cursor:default}
+.sseg svg{display:block}
+.sanchor{display:inline-grid;grid-template-columns:repeat(3,1rem);gap:2px;
+ margin-right:var(--space-3)}
+.sanchor button{width:1rem;height:1rem;padding:0;border:0;border-radius:var(--radius-xs);
+ background:var(--line);
+ cursor:pointer}
+.sanchor button:hover{background:var(--line-strong)}
+.sanchor button.on{background:var(--hub,var(--strip))}
+.shold{display:inline-flex;align-items:center;gap:var(--space-3)}
+.shold.off{opacity:.4}
+.shold input{width:3.2rem}
+/* The colour picker's own rules are under choosing a colour, shared with a stretch's colour */
+.groundbright{display:flex;align-items:center;gap:var(--space-4);font-size:var(--text-m);
+ color:var(--dim);
+ margin-top:var(--space-4)}
+.groundbright input[type=range]{flex:1;accent-color:var(--ink)}
+.groundbright input:disabled{opacity:.35}
+/* In a screen's band only the size is the board's, the chip beside it. Taking a screen out is
+   editing the board, so its cross shows only then, and the backlight, being the scene's, stands
+   back with the rest while the board is edited */
+.screen-box h3 .bandfact{display:inline-flex;align-items:center;gap:var(--space-3);
+ margin-left:var(--space-3)}
+.screen-box h3 .bandfact select.inband{margin-left:0}
+body.setupall .lightrow{opacity:.35;pointer-events:none}
+.sshowing.empty{color:var(--dim)}
+/* Where the sections have the room, as the hub's strip has, placement and playback are two
+   equal halves with a line between */
+.looksettings{container-type:inline-size}
+@container (min-width:40rem){
+ .ssplit{display:grid;grid-template-columns:1fr 1fr;column-gap:var(--space-6);align-items:start}
+ .ssplit>:last-child{border-left:1px solid var(--line);padding-left:var(--space-6);
+ align-self:stretch}
+}
+/* The speed stays on one line, its figure narrower and its buttons and words a little tighter */
+.sline.speedline{flex-wrap:nowrap;gap:var(--space-3)}
+.speedline .sseg button{padding:var(--space-2) var(--space-3)}
+.looksettings .speedline input[type=number]{width:2.9rem;padding:var(--space-2) var(--space-2)}
+.speedline .sunit{font-size:var(--text-xs);white-space:nowrap}
+/* Wide enough to say "centre" beside the spinner */
+.looksettings input.sxy{width:4.9rem}
+/* The hub's backlight lights all six, so it is a row across the box above the positions, apart
+   from the group being set below them */
+.lightrow{width:100%;display:flex;align-items:center;
+ padding:var(--space-1) var(--space-2) var(--space-4);
+ border-bottom:1px solid var(--line)}
+.lightrow .opt{display:flex;align-items:center;gap:var(--space-4);font-size:var(--text-m);
+ color:var(--dim);
+ flex:1}
+.lightrow .lightopt input[type=range]{flex:1;width:auto}
+.asset .face.wholeface{height:auto}
+.asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
+ image-rendering:pixelated}
+.asset .face.wholeface .label{white-space:normal;line-height:1.3}
+.asset .face.wholeface .label b{font-weight:600}
+/* A drawing's tile shows its icon, asked for in its flat text form so it is white as the initial
+   is, or its initial, on its colour with its name along the foot */
+.asset .face.drawingface{flex-direction:column;justify-content:center}
+.drawingicon{font-size:var(--text-display);line-height:1;color:#fff;font-variant-emoji:text;
+ margin-bottom:var(--space-6)}
+.drawingletter{font:800 var(--text-display)/1 system-ui;color:#fff;margin-bottom:var(--space-6)}
+.drawingtitle{position:absolute;left:0;right:0;bottom:0;color:#fff;font:700 var(--text-m) system-ui;
+ padding:var(--space-3) var(--space-4);text-shadow:0 1px 3px rgba(0,0,0,.6);
+ background:linear-gradient(to top,rgba(0,0,0,.5),transparent)}
+.asset .face.drawingface .label{white-space:normal;line-height:1.3;z-index:3}
+/* One tile size for two screens and the hub alike, wide enough for a hub's pick row at its
+   longest, six positions on their own and all */
+.assets.wholeassets,.assets.wholeassets.hubbed{
+ grid-template-columns:repeat(auto-fill,minmax(7.5rem,1fr))}

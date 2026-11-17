@@ -1,0 +1,72 @@
+.sound.quiet svg{opacity:.6}
+
+/* Two screens or a Screen Hub is a board fact, always shown and changed while editing the
+   board. The hub is one box across both connectors, in the colour of the one its screens come
+   through, with its six positions in a row under its band */
+.hubswitch{display:inline-flex;align-items:stretch;border-radius:var(--radius);overflow:hidden;
+ background:var(--panel);box-shadow:inset 0 0 0 1.5px var(--screenA);
+ font:600 var(--text-m) var(--font)}
+/* The chip leads the first choice, so it wears that choice's fill when it is the one made */
+.hublead{display:flex;align-items:center;padding:0 var(--space-1) 0 var(--space-4)}
+.hublead .boardicon{color:var(--screenA)}
+.hublead.on{background:var(--screenA)}
+.hublead.on .boardicon{color:#fff}
+.hubswitch button{border:0;border-radius:0;background:transparent;color:var(--screenA);
+ font:inherit;line-height:1.3;padding:var(--space-3) var(--space-4);cursor:pointer}
+.hubswitch button.on{background:var(--screenA);color:#fff}
+.hubswitch:not(.locked) button:not(.on):hover{background:rgba(31,111,235,.1)}
+/* Locked, the choice made reads as a fact, a filled chip like the other tabs' boxes, and the
+   other is only a grey mention with no outline of its own to press */
+.hubswitch.locked{box-shadow:inset 0 0 0 1px var(--line)}
+.hubswitch.locked button{cursor:default;color:var(--dim);opacity:.7}
+.hubswitch.locked button.on{color:#fff;opacity:1}
+.hubswitch.locked .hublead:not(.on) .boardicon{color:var(--dim);opacity:.7}
+.hubbox{grid-column:1/-1;--hub:#1f6feb;--hubwash:rgba(31,111,235,.06)}
+.hubbox.b{--hub:#a44ad0;--hubwash:rgba(164,74,208,.06)}
+.hubbox h3 .hubcount{font-weight:400;opacity:.85;margin-left:var(--space-3)}
+/* The letter sits in the position's corner, as on the silk, and its panel size in the middle */
+.placetop{display:flex;align-items:center;justify-content:center;min-height:1.5rem;
+ width:100%}
+.placename{position:absolute;top:.35rem;left:.5rem;font-size:var(--text-m);line-height:1.3rem;
+ color:var(--hub)}
+.placesize{font-size:var(--text-xs);padding:var(--space-1) var(--space-1);
+ border-radius:var(--radius-s)}
+.placetop .placechip{color:var(--hub);margin-right:var(--space-2)}
+.placesize:disabled{opacity:.75;color:var(--ink);background:transparent;border-color:transparent;
+ appearance:none;-webkit-appearance:none;padding:var(--space-1) 0}
+.placesays{font-size:var(--text-xs);color:var(--dim);max-width:100%;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.placenone{display:flex;align-items:center;justify-content:center;width:100%;
+ aspect-ratio:1;border-radius:var(--radius-s);font-size:var(--text-xs);color:var(--dim);
+ background:var(--cross) transparent;outline:1px dashed var(--dashed);outline-offset:-1px}
+.placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
+ border:0;border-radius:var(--radius-s);background:var(--hub);color:#fff;font-size:var(--text-l);
+ line-height:1}
+.placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:var(--radius);
+ background:var(--panel);color:var(--hub);font:600 var(--text-s) var(--font);
+ padding:var(--space-1) var(--space-4)}
+.hubsettings{width:100%;display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-5);
+ align-items:center;
+ min-height:2rem}
+.hubsettings .showing{margin:0}
+.hubsettings .opt{display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-m);
+ color:var(--dim);
+ cursor:pointer}
+.hubsettings .opt input[type=number]{font:inherit;font-size:var(--text-m);width:4rem;
+ padding:var(--space-2) var(--space-3);border:1px solid var(--line);border-radius:var(--radius-s)}
+.hubpace{margin:0;width:100%;font-size:var(--text-m);color:var(--dim);min-height:1.1rem}
+body.setupall .hubsettings{opacity:.35;pointer-events:none}
+.hubsettings .sshowing{text-align:left;margin:0 0 var(--space-2)}
+/* A group's members are outlined in its colour, and the picked group is filled with a tint of it.
+   Under every position are the three group numbers, the one it is in lit in its colour */
+.place.grouped{border-color:var(--group)}
+/* How fast the hub plays, in a box of its own under the positions */
+.hubbox .hubpace:not(.quiet){margin:var(--space-1) 0 var(--space-2);
+ padding:var(--space-4) var(--space-5);border-radius:var(--radius);
+ border-left:3px solid var(--hub);background:color-mix(in srgb,var(--hub) 7%,transparent);
+ color:var(--ink);font-size:var(--text-m)}
+.assets.hubbed .asset.hubb .pick button.lit{background:var(--screenB)}
+.ledtab[data-panel=screensPanel] .accswatch.hubswatch{display:grid;
+ grid-template-columns:repeat(3,1rem);grid-auto-rows:1rem;gap:var(--space-1);height:2.15rem}
+.ledtab[data-panel=screensPanel] .hubswatch .screencell{width:1rem;height:1rem;
+ border-radius:var(--radius-xs)}
