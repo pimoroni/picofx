@@ -22,9 +22,10 @@ EXAMPLES_MOUNT_POINT = "/examples"
 
 VOLUME_LABEL = "FX"
 
-# How much of a shipped document is compared. A shorter one is read to the end, and a
-# longer one is met at both ends
+# A shipped text no longer than this is compared whole, and a longer one only at its ends
 __READ_TO_END = 4096
+
+# How many characters of each end of a longer text are compared
 __EDGE = 512
 
 # FAT attribute bits, per VfsFat.chmod.
@@ -46,7 +47,6 @@ __MAC_BIN = ".Trashes"
 # asks Spotlight not to index the drive, which it otherwise does after a save
 __MAC_MARKERS = (".metadata_never_index", __MAC_LOG_FOLDER + "/no_log", __MAC_BIN)
 
-# What the board told mount() it has, for the remount when the computer hands the drive back
 __screens = True
 __wireless = False
 __sound = True
@@ -60,13 +60,11 @@ def __ends(text):
 
 
 def __holds(path, size, head, tail):
-    # Whether the file is size long, starting with head and ending with tail. Size first, so
-    # a missing or half-written file answers without a read. A long document is met at both
-    # ends, since reading the manual to the end took 424ms per mount on a Mighty FX against
-    # 40ms for its ends, and every mount and button press would pay it. A page that changed
-    # only in its middle at the same length would pass, so the build tools end every page
-    # with a hash of its content. Every document is ASCII, enforced by the build tools, so its
-    # length in characters is in bytes
+    # Whether the file is `size` bytes long, starting with `head` and ending with `tail`. Size
+    # first, so a missing or half-written file answers without a read. Only a long document's
+    # ends are read, which keeps every mount quick, and each page ends with a hash of its
+    # content, so a change anywhere reaches the tail. Every document is ASCII, so its length
+    # in characters is its size in bytes
     try:
         if os.stat(path)[6] != size:
             return False
@@ -94,8 +92,8 @@ def unhealed():
 
 def __heal(fs, name, document):
     # Put a shipped file back on the drive, unless it is already there. The document is its
-    # text, or a packed page from fx_editor or fx_manual, which opens with its length and
-    # its two ends, those of the page as written to the drive
+    # text, or a packed page from fx_editor or fx_manual, whose first three items are the
+    # length and two ends of the page as the drive holds it
     path = MOUNT_POINT + "/" + name
     if isinstance(document, str):
         size, head, tail = __ends(document)
@@ -269,12 +267,10 @@ def mount(screens=True, wireless=False, sound=True):
     A missing effects.txt is restored, and a shipped document that differs from the text
     the board carries is rewritten.
 
-    `screens` is False for a board found to have no screen ports, which is then given
-    the catalogue without them where its pages carry one, and no pictures or drawings
-    folder. `wireless` is True for a board with a wireless module, which is given an
-    empty secrets.py for its WiFi credentials, and the wireless build's catalogue where
-    its pages carry one. `sound` is False for a board that cannot play sound, which is
-    given no sounds folder.
+    `screens` is False for a board found to have no screen ports, and `sound` False for one
+    that cannot play sound, and each goes without the folders for those files. `wireless` is
+    True for a board with a wireless module, which is given an empty secrets.py for its WiFi
+    credentials. pages() chooses the catalogue from `screens` and `wireless`.
     """
     global __screens, __wireless, __sound
     __screens, __wireless, __sound = screens, wireless, sound
@@ -413,7 +409,7 @@ def __restore_secrets():
 
 def __make_folders(screens, sound):
     # Make the folders the user's own files go in where the drive has none, so it shows where
-    # each belongs, only for parts the board has. One already there is left as it is
+    # each kind belongs. A board without screens or sound goes without their folders
     folders = ["programs"]
     if screens:
         folders += ["pictures", "drawings"]
@@ -423,7 +419,7 @@ def __make_folders(screens, sound):
         try:
             os.mkdir(MOUNT_POINT + "/" + folder)
         except OSError:
-            # Already there, or a full drive, where the picker makes it as a file is added
+            # Already there, or a full drive
             pass
 
 

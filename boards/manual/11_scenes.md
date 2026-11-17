@@ -34,12 +34,12 @@ __ONE_OUTPUT__: none
 
 <!-- if screens -->
 Screens behave the same way. A screen the scene does not name shows its
-always-on picture, even where the always-on entry names both screens, as
-`screenA,B`, and the scene takes only one. Where there is none, the picture
-stays but the backlight turns off while another scene plays, and comes back
-when its own scene returns.
-`none` turns a screen off for a scene, showing black, or its `background`
-colour, at the backlight set before the colon:
+always-on picture. This holds even where the always-on entry names both screens,
+as `screenA,B`, and the scene takes only one. A screen with no always-on entry
+keeps its picture, but its backlight turns off while another scene plays and
+comes back when its own scene returns.
+`none` shows only the screen's `background` colour, black unless set, at the
+backlight set before the colon. With `backlight=0%` the screen is off:
 
 ```entry
 [Night: 10m]
@@ -76,9 +76,9 @@ all, and `restart` goes before it:
 ```
 
 A scene can also go back to itself, to begin its effects again each time its
-time is up. That needs `restart`, as does a file's only scene when it has a
-time, since otherwise nothing changes when the time is up, and `errors.txt`
-says so:
+time is up. That needs `restart`, or nothing changes when the time is up. A
+file's only scene needs it too when it has a time. `errors.txt` reports either
+one without it:
 
 ```entry
 [Storm: 30s restart then Storm]
@@ -86,7 +86,8 @@ says so:
 
 The board entry goes before any scene heading. A scene with no time, such as
 `[Welcome]`, waits, and the board stays on it. Put one last to play the scenes
-before it once and then hold, such as an opening effect after the board starts.
+before it once and then stay on it, such as an opening sequence that settles
+into a steady look.
 A scene that no other scene goes on to never shows, and `errors.txt` says so.
 Every reload, whether from a save, an eject or a press of **Boot**, starts again
 from the first scene.

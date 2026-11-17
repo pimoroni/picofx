@@ -25,7 +25,7 @@
   "SCREEN_NAMING": "A screen on either SP/CE connector is named `screenA` or `screenB`",
   "SCREEN": "screenA",
   "SOUND_THROUGH": "its onboard amplifier",
-  "DRIVE_SIZE": "nearly 13MB",
+  "DRIVE_SIZE": "12.5MB",
   "COPIED_FILES": "pictures",
   "EXAMPLE_PROGRAM": "examples/programs/effects/colour/rainbow_wave.py",
   "EXAMPLES_URL": "https://github.com/pimoroni/picofx/tree/main/examples/mighty_fx",

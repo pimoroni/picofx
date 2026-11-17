@@ -1,4 +1,4 @@
-<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild; edits here are lost. -->
+<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild, since edits here are lost. -->
 
 # Tiny FX
 
@@ -115,8 +115,8 @@ beside it undo and redo.
 
 ### Board: Setting up your hardware
 
-Each tab holds the settings for its own hardware, such as the order your lights
-are wired in. Look out for the chip icon, which the picker puts on every board
+Each tab holds the settings for its own hardware, such as how your lights are
+wired or how many LEDs a strip has. Look out for the chip icon, which the picker puts on every board
 setting. These settings describe your hardware, so they're shared by every
 scene.
 
@@ -164,9 +164,10 @@ pages: *Effects, Programs
 scenes: Always on, *Scene 1 10s
 ```
 
-Each scene takes the colour of its place, matching the number buttons on the
-Aye Arr Remote, so the first scene is red like button 1 and the tenth takes the
-rainbow of button 0. A scene you move takes the colour of its new place.
+Each scene takes the colour of its place, and a scene you move takes the colour
+of its new place.
+The colours match the Aye Arr Remote's number buttons, so the first scene is red
+like button 1 and the tenth takes the rainbow of button 0.
 
 Everything below the tray sits in a frame of the chosen scene's colour, with the
 scene's settings on a tab at its top left: its name, whether it "shows for" a
@@ -259,7 +260,7 @@ drive doesn't have, and update the ones it does have. The computer needs to be
 online for this.
 
 Each tab that lists examples has a Discover button under its **Examples**
-heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+heading. Pressing one, such as [[Discover more example programs]] on **Programs**,
 shows the examples this drive doesn't have. Click a card to choose it, or tick
 the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
 **Programs**, the **With** buttons in the gallery hide examples that need
@@ -395,9 +396,9 @@ driven separately, as three mono lights named alongside the others:
 | `rgb.*` | all three channels, in the order red, green, blue |
 | `out1-6,rgb.*` | all nine mono lights |
 
-Order matters for effects that travel: they move through the outputs in the
-order you write them, so list them in the order they appear in your build,
-which need not be number order.
+Effects that travel move through the outputs in the order you write them.
+List them in the order they sit in your build, even where that is not number
+order.
 
 ### Setting an output
 
@@ -483,7 +484,7 @@ These bring their own colour, so they work only for the RGB output.
 ### Effects that travel
 
 Effects ending in `_wave`, `_sequence` and `_counter`, and `sweep`, travel
-across the outputs you name. The others do the same thing on each one.
+across the outputs you name. Most of the others do the same thing on each one.
 
 Effects ending in `_each` treat each output separately: `flicker_each` dips
 each one at its own moments, like flames, and `random_each` gives each its own
@@ -493,11 +494,11 @@ brightness. `flicker` and `random` affect them all together, like a single light
 out1-6: flicker_each dimness=0.6
 ```
 
-`traffic_light` and `pelican_crossing` use their outputs in the order given
-below. With fewer, they light only the first ones. Naming more is an error,
-reported in `errors.txt`.
-
 ### Traffic lights and crossings
+
+`traffic_light` and `pelican_crossing` use their outputs in the order listed
+here. With fewer, they light only the first ones. Naming more is an error,
+reported in `errors.txt`.
 
 `traffic_light` needs three outputs, lit red, amber and green in that order.
 It switches instantly, so add `ease` to look like a real signal's lamps:
@@ -524,9 +525,8 @@ out1-3: pelican_crossing
 ### Sweep
 
 `sweep` is a light that travels across the outputs and turns back at each end,
-like a scanner. `extent` sets how far its glow reaches either side, in outputs,
-and `speed` counts one crossing as one cycle, as the other travelling effects count
-one pass. `hold` pauses at each end, in seconds, giving the trail time to fade
+like a scanner. `extent` sets how far its glow reaches either side, in outputs.
+`speed` counts one crossing as one cycle. `hold` pauses at each end, in seconds, giving the trail time to fade
 before the light returns:
 
 ```entry
@@ -539,8 +539,8 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in sequence separated by `|`. A comma
-instead would give each output its own colour. Without a colour it blinks red:
+`rgb_blink` blinks one colour, or several in sequence separated by `|`. Without a
+colour it blinks red:
 
 ```entry
 rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -556,8 +556,8 @@ The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
 `step` are whole numbers, and a negative `step` counts down.
 
-`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written as
-0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
+`red`, `green` and `blue` run from 0 to 255, and `extent` is a number of
+outputs. The rest run from 0 to 1, written as 0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
 `hue` also takes degrees, such as 180deg, as a colour picker shows them.
 
 **If you write Python**, you can add your own effect to this list and use it like
@@ -667,9 +667,9 @@ all, and `restart` goes before it:
 ```
 
 A scene can also go back to itself, to begin its effects again each time its
-time is up. That needs `restart`, as does a file's only scene when it has a
-time, since otherwise nothing changes when the time is up, and `errors.txt`
-says so:
+time is up. That needs `restart`, or nothing changes when the time is up. A
+file's only scene needs it too when it has a time. `errors.txt` reports either
+one without it:
 
 ```entry
 [Storm: 30s restart then Storm]
@@ -677,7 +677,8 @@ says so:
 
 The board entry goes before any scene heading. A scene with no time, such as
 `[Welcome]`, waits, and the board stays on it. Put one last to play the scenes
-before it once and then hold, such as an opening effect after the board starts.
+before it once and then stay on it, such as an opening sequence that settles
+into a steady look.
 A scene that no other scene goes on to never shows, and `errors.txt` says so.
 Every reload, whether from a save, an eject or a press of **Boot**, starts again
 from the first scene.
@@ -756,7 +757,7 @@ explains.
 Saving `effects.txt` is all it takes: the board detects the save, briefly takes
 the drive back, and plays the new effects, just as a single press of **Boot**
 would. Only saving `effects.txt` triggers this, so copying sounds onto
-the drive never interrupts anything. With `reload=manual`, a save waits for an
+the drive does not reload the effects. With `reload=manual`, a save waits for an
 eject or a press of **Boot** instead.
 
 ### Running your own program
@@ -798,6 +799,8 @@ program, starting at `sys.argv[1]`. Thonny passes none when you run the file
 from there, so give each one a default and the file works either way:
 
 ```python
+import sys
+
 args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"
 ```
@@ -837,10 +840,11 @@ A value after `=` in `Args` is the program's default, so the box starts with it,
 and `args=` is left out while every argument keeps its default. An argument
 named `Screen size` offers the sizes the firmware knows, and one named
 `Rotation` offers 0, 90, 180 and 270, or the values it lists, such as `Rotation
-= 90 or 270`, the first being the default. The picture always shows the program
-at its defaults.
+= 90 or 270`. The first is the default. The picture always shows the program at
+its defaults.
 
-To change an example, choose it and press **Customise**. The picker copies it
+To change an example, choose it and press the copy button in the corner of its
+card. The picker copies it
 and its pictures into `programs`, under a new name if that one is taken, and
 chooses the copy. Open the copy from the drive in Thonny or another editor, then
 press **Save to board** to run it.

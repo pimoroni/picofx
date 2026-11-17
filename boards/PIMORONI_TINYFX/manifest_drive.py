@@ -1,8 +1,9 @@
 include("manifest.py")
 
-# The FX drive: the module every board carrying one shares, and this board's own pages,
-# manual and defaults
+# The FX drive's module, shared by every board carrying one
 freeze("../fx_libs/")
+
+# This board's own FX drive pages, manual and defaults
 freeze("./fx_libs/")
 
 # autofx is frozen on this board. Its heap is the chip's SRAM alone, and

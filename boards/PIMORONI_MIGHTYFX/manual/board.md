@@ -50,7 +50,7 @@ an output into three mono lights, or join them back into one colour light.
 rejoins every output. Press the chip again when you're done.
 
 On **Left strip** and **Right strip**, set how many LEDs each strip has and its
-colour order, which needs changing if red shows as another colour. [[remove]]
+colour order. Change the order if red shows as another colour. [[remove]]
 takes off a strip you haven't fitted, and [[add this strip]] puts it back.
 
 ```picker

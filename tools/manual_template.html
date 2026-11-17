@@ -19,8 +19,8 @@
   --code-ink: #1d4f5c;
   --entry: #0a7f78;
 
-  /* Three roles, matching the shape at the top of the manual: what is being
-     driven, what drives it, and the values given to either. The editor uses the same colours */
+  /* What is being driven, what drives it and the values given to either, as the shape in
+     Writing an entry names them. The editor uses the same colours */
   --target: #1f6feb;
   --effect: #0a7f78;
   --value: #a8500a;
@@ -80,16 +80,14 @@ footer nav a:hover { border-color: var(--accent); color: var(--accent); }
   padding: 1.5rem 1.4rem 4rem;
   display: grid;
   gap: 2.5rem;
-  /* A plain 1fr grows to fit its widest table or example, so minmax(0, ...) keeps them scrolling
-     in their own boxes */
+  /* minmax(0, ...) keeps a wide table or example scrolling in its own box, not widening the page */
   grid-template-columns: minmax(0, 1fr);
 }
 
 @media (min-width: 62rem) {
   .page { grid-template-columns: 17rem minmax(0, 1fr); }
-  /* The sidebar stretches to the row so the box inside it has somewhere to travel;
-     a sticky element in a start-aligned grid item cannot move at all. It sits below the
-     header, which is sticky too. */
+  /* The list sticks within its sidebar, which stretches to the row so the list has somewhere to
+     travel. It sits below the header, which is sticky too */
   .contents {
     position: sticky;
     top: 4.6rem;

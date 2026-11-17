@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """Checks that each example's Args line agrees with the arguments the example reads.
 
-An example reads an argument as NAME = DEFAULT if not sys.argv[N:] else sys.argv[N], with an
-int() or float() round it where it is a number, and the picker offers it as the Nth entry of
-the Args line in its opening string, written "Name = default", or "Name = default or other" for a
-choice, the default first. The two are kept apart, so this fails where an example reads sys.argv
-any other way, where an argument it reads has no entry, and where an entry's default is not the
-one the example falls back on.
+An example reads its Nth argument as NAME = DEFAULT if not sys.argv[N:] else sys.argv[N], inside
+int() or float() for a number, and the picker offers the Nth entry of its Args line, "Name =
+default" or "Name = default or other". This fails where an example reads sys.argv any other way,
+reads an argument Args does not name, or falls back on a default its entry does not give.
 
     python3 tools/check_example_args.py examples
 """

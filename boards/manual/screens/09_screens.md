@@ -90,9 +90,8 @@ screenA rotation=90 screenB rotation=270 mirror=true: drawing file=creature_eyes
 ```
 
 A drawing is drawn once for both screens, at the size of the larger, and the
-smaller screen shows it placed by its own settings. In a scene, the entry belongs to that scene like any other, so another
-scene can show something different on each screen. On the picker's Screens
-tab, Paired writes this entry, Screen B showing what Screen A shows. The picker
+smaller screen shows it placed by its own settings. On the picker's Screens tab,
+[[Paired]] writes this entry, so Screen B shows what Screen A shows. The picker
 also writes it for the same picture or slideshow on both screens, played the
 same way.
 <!-- end -->
@@ -115,7 +114,8 @@ __SCREEN__: sequence folder=photos interval=30
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
-the picker adds pictures, then directly on the drive.
+the picker adds pictures, then directly on the drive, then on the board itself.
+The name can include folders.
 
 <!-- if examples -->
 The example pictures are in the `examples/pictures` folder. To use one in an
@@ -148,16 +148,13 @@ __SCREEN__: gif file="wave.gif" ping_pong=yes hold=1
 __SCREEN__: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 ```
 
-The board looks for a file on this drive first, then on the board itself, and
-the name can include folders.
-
 <!-- board screen_notes -->
 
 ### Drawing from code
 
 **This section is for Python writers.** A screen can play a drawing instead of
 a picture: a Python file with one function in it, drawn alongside everything
-else in this file, so the lights keep their effects,
+else in `effects.txt`, so the lights keep their effects,
 <!-- if two_screens -->
 the other screen keeps its pictures,
 <!-- end -->
@@ -187,7 +184,7 @@ def draw():
 ```
 
 `draw` is called for each frame, and the screen shows whatever it has drawn
-when it returns. It can use three names the board provides. `canvas` is the
+when it returns. It can use these names the board provides. `canvas` is the
 image to draw on, the size of the screen and kept between frames. `ticks` is
 the milliseconds since the drawing started, so `ticks / 1000` is the time in
 seconds, and `ticks_delta` is the milliseconds since the last frame. `fps` or
@@ -210,9 +207,9 @@ setting. A small canvas draws faster and is placed like a small picture, so
 
 `style` passes a word to the drawing, which finds it as `style`, or `None`
 where the entry sets none. A drawing drawn in several styles lists them in a
-`Styles` line of its opening string, such as `Styles: cat, owl, goat`, the
-first being the one it takes where none is set, and the picker offers them as
-a choice. A drawing with more than one choice to make gives a `Styles` line
+`Styles` line of its opening string, such as `Styles: cat, owl, goat`, and the
+picker offers them as a choice. The first is the one used where none is set. A
+drawing with more than one choice to make gives a `Styles` line
 for each, and the entry joins its choices with a dash, such as
 `style=ember-bare`.
 
@@ -265,9 +262,9 @@ chosen from its name.
 A `Defaults` line gives the screen settings the drawing is made for, written as
 a program's `Args` line is, such as `Defaults: Rotation = 90 or 270, Pixel
 double = true`. One rotation is where the drawing starts, and a list is the
-only rotations it suits, the first being where it starts. When the drawing is
+only rotations it suits. The first is where it starts. When the drawing is
 chosen, the picker turns the screen that way unless the drawing has been turned
 on that screen before, and doubles its pixels on a half-size canvas only where
 the line asks. `Pixel double = false` marks a drawing that needs the screen's
-full resolution. While the drawing is turned or doubled otherwise than the line
-says it suits, its Drawing settings say so, with a button to set it back.
+full resolution. If you turn or double the drawing in a way the line does not
+list, its Drawing settings say so and offer a button to set it back.

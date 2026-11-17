@@ -40,9 +40,10 @@ freeze("../fx_libs/")
 # This board's own FX drive pages, manual and defaults
 freeze("./fx_libs/")
 
-# autofx and the screen library are frozen, since this board's heap is the chip's SRAM
-# alone and compiling either from /lib at import would take most of it
+# autofx is frozen, since this board's heap is the chip's SRAM alone and compiling it
+# from /lib at import would take most of it
 freeze("../visible_libs/", "autofx")
 
-# The screen library, from the spidisplay repository cloned beside this one
+# The screen library, frozen for the same reason, from the spidisplay repository cloned
+# beside this one
 freeze("$(BOARD_DIR)/../../../spidisplay/src")

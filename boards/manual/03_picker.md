@@ -58,8 +58,8 @@ strip.
 
 ### Board: Setting up your hardware
 
-Each tab holds the settings for its own hardware, such as the order your lights
-are wired in. Look out for the chip icon, which the picker puts on every board
+Each tab holds the settings for its own hardware, such as how your lights are
+wired or how many LEDs a strip has. Look out for the chip icon, which the picker puts on every board
 setting. These settings describe your hardware, so they're shared by every
 scene.
 
@@ -90,8 +90,8 @@ button to delete it from the drive.
 With two screens, each picture has an [[A]] and a [[B]] button, one for each
 screen. To show the same thing on both, press [[Paired]] on either screen. Screen
 B then shows whatever Screen A shows, in step and at the same speed, while each
-screen keeps its own rotation and position. This matters most for a drawing,
-which then runs once for both screens, so both show the same random choices.
+screen keeps its own rotation and position. This matters most for a drawing. It
+runs once for both screens, and both show the same random choices.
 Press [[Paired]] again to set them apart. Each scene can pair the screens or not.
 <!-- end -->
 <!-- if hub -->
@@ -153,9 +153,12 @@ pages: *Effects, Programs
 scenes: Always on, *Scene 1 10s
 ```
 
-Each scene takes the colour of its place, matching the number buttons on the
-Aye Arr Remote, so the first scene is red like button 1 and the tenth takes the
-rainbow of button 0. A scene you move takes the colour of its new place.
+Each scene takes the colour of its place, and a scene you move takes the colour
+of its new place.
+<!-- if sensor -->
+The colours match the Aye Arr Remote's number buttons, so the first scene is red
+like button 1 and the tenth takes the rainbow of button 0.
+<!-- end -->
 
 Everything below the tray sits in a frame of the chosen scene's colour, with the
 scene's settings on a tab at its top left: its name, whether it "shows for" a
@@ -261,7 +264,7 @@ drive doesn't have, and update the ones it does have. The computer needs to be
 online for this.
 
 Each tab that lists examples has a Discover button under its **Examples**
-heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+heading. Pressing one, such as [[Discover more example programs]] on **Programs**,
 shows the examples this drive doesn't have. Click a card to choose it, or tick
 the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
 **Programs**, the **With** buttons in the gallery hide examples that need

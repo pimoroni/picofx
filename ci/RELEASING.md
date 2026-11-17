@@ -7,8 +7,8 @@ and one download for the board. This page lists what a release needs for that to
 How the picker decides, in brief:
 
 - It checks only after "Open FX drive" is pressed, by asking
-  `https://api.github.com/repos/pimoroni/picofx/releases/latest`. A browser keeps the answer for
-  24 hours, and an answer with no file for the board is not kept.
+  `https://api.github.com/repos/pimoroni/picofx/releases/latest`. The picker keeps the answer in
+  the browser for 24 hours, and does not keep an answer with no file for the board.
 - It compares the release's tag with the version built into the picker, which is the board's
   firmware version. A build made between releases shows "X preview" and counts as older than
   release X.
@@ -101,8 +101,8 @@ Give its `fx_board.json` a `release` entry:
 `bootloader_drive` is the name of the drive the board shows in BOOTSEL mode, `RPI-RP2` on an
 RP2040 and `RP2350` on an RP2350. `reset_button` is the reset button's name in the update
 steps, written as the picker writes BOOT as "Boot": `RST` where the board prints RST, and `Reset`
-where it prints RESET. The board's `manual.json` gives the same name as its `RESET_BUTTON` term. `tools/build_editor.py` includes the updater only for a board
-with a `release` entry.
+where it prints RESET. The board's `manual.json` gives the same name as its `RESET_BUTTON` term.
+`tools/build_editor.py` includes the updater only for a board with a `release` entry.
 
 A board whose wireless build is a separate firmware sharing the same pages, as Tiny FX W does,
 lists that build under `wireless_files` and its plain build under `files`. The two builds place

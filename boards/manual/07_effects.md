@@ -41,7 +41,7 @@ __COLOUR_EFFECTS_NOTE__
 ### Effects that travel
 
 Effects ending in `_wave`, `_sequence` and `_counter`, and `sweep`, travel
-across the __OUTPUTS__ you name. The others do the same thing on each one.
+across the __OUTPUTS__ you name. Most of the others do the same thing on each one.
 
 Effects ending in `_each` treat each __OUTPUT__ separately: `flicker_each` dips
 each one at its own moments, like flames, and `random_each` gives each its own
@@ -51,11 +51,11 @@ brightness. `flicker` and `random` affect them all together, like a single light
 __FLAME_OUTPUTS__: flicker_each dimness=0.6
 ```
 
-`traffic_light` and `pelican_crossing` use their __OUTPUTS__ in the order given
-below. With fewer, they light only the first ones. Naming more is an error,
-reported in `errors.txt`.
-
 ### Traffic lights and crossings
+
+`traffic_light` and `pelican_crossing` use their __OUTPUTS__ in the order listed
+here. With fewer, they light only the first ones. Naming more is an error,
+reported in `errors.txt`.
 
 `traffic_light` needs three __OUTPUTS__, lit red, amber and green in that order.
 It switches instantly, so add `ease` to look like a real signal's lamps:
@@ -82,9 +82,8 @@ __THREE_OUTPUTS__: pelican_crossing
 ### Sweep
 
 `sweep` is a light that travels across the __OUTPUTS__ and turns back at each end,
-like a scanner. `extent` sets how far its glow reaches either side, in __OUTPUTS__,
-and `speed` counts one crossing as one cycle, as the other travelling effects count
-one pass. `hold` pauses at each end, in seconds, giving the trail time to fade
+like a scanner. `extent` sets how far its glow reaches either side, in __OUTPUTS__.
+`speed` counts one crossing as one cycle. `hold` pauses at each end, in seconds, giving the trail time to fade
 before the light returns:
 
 ```entry
@@ -97,8 +96,8 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in sequence separated by `|`. A comma
-instead would give each __OUTPUT__ its own colour. Without a colour it blinks red:
+`rgb_blink` blinks one colour, or several in sequence separated by `|`. Without a
+colour it blinks red:
 
 ```entry
 __COLOUR_OUTPUT__: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -114,8 +113,8 @@ The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
 `step` are whole numbers, and a negative `step` counts down.
 
-`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written as
-0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
+`red`, `green` and `blue` run from 0 to 255, and `extent` is a number of
+__OUTPUTS__. The rest run from 0 to 1, written as 0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
 `hue` also takes degrees, such as 180deg, as a colour picker shows them.
 
 **If you write Python**, you can add your own effect to this list and use it like

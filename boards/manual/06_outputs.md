@@ -3,9 +3,9 @@
 <!-- board naming_outputs -->
 
 <!-- if outputs -->
-Order matters for effects that travel: they move through the outputs in the
-order you write them, so list them in the order they appear in your build,
-which need not be number order.
+Effects that travel move through the __OUTPUTS__ in the order you write them.
+List them in the order they sit in your build, even where that is not number
+order.
 <!-- end -->
 
 ### Setting an __OUTPUT__

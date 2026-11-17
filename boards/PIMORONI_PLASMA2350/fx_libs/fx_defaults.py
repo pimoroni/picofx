@@ -35,8 +35,8 @@ autofx.run(PlasmaFX, volume=fx_drive)
 '''
 
 # Exactly what the picker writes for its Rainbow look on the board's LED, so a fresh
-# board's file opens in the picker as that look. Change it with the picker's own output,
-# or the picker reads it as a file written by hand
+# board's file opens in the picker as that look. Replace it only with the picker's own
+# output, or the picker reads it as a file written by hand
 EFFECTS = """\
 # Written by the FX picker. Everything here can be edited by hand;
 # MANUAL.html on this drive explains every line.
@@ -64,8 +64,9 @@ When something is wrong, the board's LED flashes:
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
   blue, twice         something saved could not be read, or a drawing failed.
-                      "Check board" in the picker shows what. For a drawing it
-                      says so once "Boot" is pressed or this drive is ejected
+                      "Check board" in the picker, or errors.txt on this drive,
+                      says what. For a drawing it says so once "Boot" is pressed
+                      or this drive is ejected
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 

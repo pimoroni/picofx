@@ -1,10 +1,9 @@
 """Draws the pictures of the picker that the manual shows, from a ```picker fence in its parts.
 
-A picture is built from simplified copies of the picker's own parts, so it costs a few hundred
-bytes where a screenshot would cost tens of thousands, and the manual template holds the styles
-that make it look like the picker. Each line of the fence draws one part, in the order given,
-and the function drawing that part describes what its line holds. A * before an item marks it
-as the one the picture shows selected.
+A picture is built from simplified copies of the picker's own parts, so it costs far less than
+a screenshot, and manual_mockups.css holds the styles that match the picker's. Each line of the
+fence draws one part, in the order given, and the function drawing that part describes what its
+line holds. A * before an item marks it as the one the picture shows selected.
 
     ```picker
     tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
@@ -14,8 +13,8 @@ as the one the picture shows selected.
     cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee
     ```
 
-The pictures are not interactive and never run the picker, so a change to the picker's look
-needs the matching change here and in the template.
+The pictures are not interactive and never run the picker, so a change to the picker's
+appearance needs the matching change here and in manual_mockups.css.
 """
 
 import html
@@ -105,10 +104,9 @@ NAMED_COLOURS = [("red", "#ff0000"), ("orange", "#ff7a00"), ("yellow", "#ffee00"
 # How the picker draws a light or a strip's LED playing nothing
 UNLIT_LIGHT = "#2a2d30"
 
-# How many LEDs a strip has where the picker draws them as beads apart at full size across the
-# manual's width, and from how many they have closed up into one continuous strip. Between the
-# two, the beads close up in a straight line
+# The most LEDs a strip can have and still be drawn as beads apart at full size across the manual's width
 BEADS_APART_UP_TO = 30
+# The fewest LEDs drawn as one continuous strip. Between the two, the beads close up in a straight line
 BEADS_JOIN_FROM = 120
 
 # How many lights a tab's picture shows, a cell for each as the picker draws them
@@ -130,9 +128,8 @@ THUMB_TINTS = ["#1f6feb", "#a347d1", "#c2570f", "#0a7f78", "#b8324a", "#6b7f1a"]
 
 HATCH = "hatch"
 
-# The wiring picture's layout in rem, from manual_mockups.css, which places the ends of its wires.
-# A picture has no layout to measure, so the wires are drawn for the manual's full width, where
-# the runs are 43.5rem wide, and scale with the picture at any other
+# The wiring picture's layout in rem, copied from manual_mockups.css. The wires are drawn for the
+# runs' width at the manual's full width, and scale with the picture at any other
 WIRE_WIDTH = 43.5
 RUN_GAP = 1
 CARD_BORDER = 0.125
@@ -143,7 +140,7 @@ PLUG_TOP = 7.47
 
 
 def selected_items(text):
-    """The comma-separated items in a line, each with whether a * marks it selected."""
+    """List the comma-separated items in a line, each with whether a * marks it selected."""
     items = []
     for item in text.split(","):
         item = item.strip()
@@ -161,14 +158,14 @@ def colour_parts(colour):
 
 
 def as_mono(colour):
-    """A colour as a mono light shows it, a warm white at the colour's brightness."""
+    """Convert a colour to how a mono light shows it, a warm white at the colour's brightness."""
     red, green, blue = colour_parts(colour)
     level = (0.3 * red + 0.59 * green + 0.11 * blue) / 255
     return hex_colour(off + (full - off) * level for off, full in zip(MONO_OFF, MONO_FULL))
 
 
 def look_colours(name, count, mono):
-    """A look's colours blended across count lights, or None for each light it leaves unlit."""
+    """Blend a look's colours across count lights, giving None for each light it leaves unlit."""
     stops = LOOK_COLOURS.get(name)
     if not stops:
         return [None] * count
@@ -185,26 +182,30 @@ def look_colours(name, count, mono):
 
 
 def gradient(colours):
-    """A left-to-right blend of colours, the one colour given twice where there is only one."""
+    """Blend colours from left to right, giving a lone colour twice."""
     return "linear-gradient(90deg, {})".format(", ".join(colours if len(colours) > 1 else colours * 2))
 
 
 def thumb_tint(name):
-    """A stand-in for a thumbnail, a dark wash tinted by the name."""
+    """Stand in for a thumbnail with a dark wash tinted by the name."""
     tint = THUMB_TINTS[sum(name.encode()) % len(THUMB_TINTS)]
     return "background:linear-gradient(150deg, {}, #191b1d 85%)".format(tint)
 
 
 def card_lamp(colour, label):
-    """One light in a stretch's card, its face lit in colour, or on the picker's hatched tile where
-    colour is None for a light playing nothing."""
+    """
+    Draw one light in a stretch's card with its face lit in colour, or on the picker's hatched
+    tile where colour is None for a light playing nothing.
+    """
     return '<span class="cardlamp{}"><i style="background:{}"></i><b>{}</b></span>'.format(
         "" if colour else " unset", colour or UNLIT_LIGHT, html.escape(label))
 
 
 def strip_beads(colours, apart):
-    """A strip stretch's LEDs as beads on a wire, each lit in its colour or unlit where None, and
-    closed up by apart, 1 for beads apart at full size and 0 for one continuous strip."""
+    """
+    Draw a strip stretch's LEDs as beads on a wire, each lit in its colour or unlit where None.
+    `apart=` closes them up, 1 for beads apart at full size and 0 for one continuous strip.
+    """
     beads = "".join('<i><b style="background:{}"></b></i>'.format(colour or UNLIT_LIGHT)
                     for colour in colours)
     return '<span class="stripbeads{}" style="--apart:{:.2f}">{}</span>'.format(
@@ -212,14 +213,18 @@ def strip_beads(colours, apart):
 
 
 def beads_apart(count):
-    """How far a strip of count LEDs is from one continuous strip, as the picker draws one that
-    long across the manual's width, 1 for beads apart at full size and 0 for joined."""
+    """
+    Calculate how far a strip of count LEDs is from one continuous strip, as the picker draws one
+    that long across the manual's width, 1 for beads apart at full size and 0 for joined.
+    """
     return max(0.0, min(1.0, (BEADS_JOIN_FROM - count) / (BEADS_JOIN_FROM - BEADS_APART_UP_TO)))
 
 
 def head_steps(stretches, strip, standing_back):
-    """The steps at the right of a run's chip row, a strip's zoom then Undo, Redo and Join all,
-    greyed while there is one stretch, all standing back in the outputs' wiring view."""
+    """
+    Draw the steps at the right of a run's chip row, a strip's zoom then Undo, Redo and Join all.
+    Join all is greyed while there is one stretch, and the steps stand back in the outputs' wiring view.
+    """
     zoom = ('<span class="round">&#8722;</span><span class="dim">100%</span>'
             '<span class="round">+</span>') if strip else ""
     return ('<span class="headsteps{}">{}<span class="round">{}</span><span class="round">{}</span>'
@@ -229,8 +234,10 @@ def head_steps(stretches, strip, standing_back):
 
 
 def mockup_header(text):
-    """The picker's header, written as its title, "Mighty FX Picker". A status after a bar,
-    "Mighty FX Picker | Saved.", shows the drive as open, as the header then draws it."""
+    """
+    Draw the picker's header, written as its title, "Mighty FX Picker". A status after a bar,
+    "Mighty FX Picker | Saved.", shows the drive as open, as the header then draws it.
+    """
     title, _, status = text.partition("|")
     if status:
         buttons = ('<span class="button">Change drive</span><span class="button primary">Save to '
@@ -246,15 +253,17 @@ def mockup_header(text):
 
 
 def mockup_save_menu():
-    """The menu under the arrow beside Save to board, with its first setting ticked."""
+    """Draw the menu under the arrow beside Save to board, with its first setting ticked."""
     return ('<div class="savemenu"><span><i class="tick on"></i>Play saves without an eject'
             '</span><span><i class="tick"></i>Keep the drive hidden at start</span></div>')
 
 
 def mockup_pages(text, scenes):
-    """The two large tabs, written as "*Effects, Programs". A program after an equals sign,
+    """
+    Draw the two large tabs, written as "*Effects, Programs". A program after an equals sign,
     "Programs=Flip dot sign", is the one chosen. The Effects tab carries the button that adds
-    scenes until the picture shows scenes."""
+    scenes until the picture shows scenes.
+    """
     pages = []
     for item, selected in selected_items(text):
         name, _, chosen = item.partition("=")
@@ -270,14 +279,14 @@ def mockup_pages(text, scenes):
 
 
 def tab_preview(name, preview):
-    """The small picture under a tab's name of what that part of the board plays."""
+    """Draw the small picture under a tab's name of what the tab plays."""
     if name == "Screens":
         sizes = preview.split()
         return ('<span class="tabsays">{}</span><span class="tabscreens">{}</span>'.format(
             html.escape(", ".join(sizes)), "<i></i>" * max(len(sizes), 1)))
     if name == "Sound":
         return '<span class="tabsays">nothing</span><span class="tabsound {}"></span>'.format(HATCH)
-    # The Sensor tab names what is fitted, with no picture
+    # Check if this is the Sensor tab, which names what is fitted with no picture
     if name == "Sensor":
         return '<span class="tabsays">{}</span>'.format(html.escape(preview or "none"))
     mono = preview.startswith("mono ")
@@ -290,9 +299,11 @@ def tab_preview(name, preview):
 
 
 def mockup_tabs(text):
-    """The row of tabs under Effects, written as "*Outputs=Rainbow, Left strip, Screens=2.8"
+    """
+    Draw the row of tabs under Effects, written as "*Outputs=Rainbow, Left strip, Screens=2.8"
     1.54", Sound". A look after an equals sign is what that tab's lights play, "mono Wave" on
-    mono lights, and a ~ greys a tab out."""
+    mono lights, and a ~ greys a tab out.
+    """
     tabs = []
     for item, selected in selected_items(text):
         greyed = item.startswith("~")
@@ -304,7 +315,7 @@ def mockup_tabs(text):
     return '<div class="tabrow">{}</div>'.format("".join(tabs))
 
 
-# Each scene's colour, the Aye Arr Remote's number button in its place, as the picker gives them
+# Each scene's colour as the picker gives them, matching the Aye Arr Remote's button for its number
 SCENE_COLOURS = ("#ed1c24", "#00a651", "#2e3192", "#00aeef", "#ec008c", "#fff200", "#fbad5d",
                  "#d9d6d0", "#84c1ff")
 
@@ -318,9 +329,11 @@ GRIP_ICON = ('<svg class="grip" viewBox="0 0 8 12" aria-hidden="true"><circle cx
 
 
 def mockup_scenes(text):
-    """The scenes, written as "Always on, *Scene 1 10s", a scene without a time waiting. They are
-    drawn as the picker's tray, Always on's card its first column and each scene a card in its
-    colour, and under them the folder tab holding the selected one's own settings."""
+    """
+    Draw the scenes, written as "Always on, *Scene 1 10s", where a scene without a time waits.
+    They are drawn as the picker's tray, with Always on's card in the first column and a card for
+    each scene in its colour. Under them is the folder tab holding the selected one's own settings.
+    """
     items = list(selected_items(text))
     scenes = [(item, selected) for item, selected in items if item != "Always on"]
     always_picked = any(selected for item, selected in items if item == "Always on")
@@ -373,18 +386,19 @@ ORDERS_SHOWN = {"GRB": "GRB (most strips)"}
 
 
 def strip_chip(count, order):
-    """A strip's chip as the picker draws it, its number of LEDs and its colour order to change,
-    then its remove button."""
+    """Draw a strip's chip with its number of LEDs and its colour order to change, then its remove button."""
     return ('<span class="badge strip">{}<b>Strip</b><span class="field">{}</span> LEDs '
             '<span class="field">{} &#9662;</span><span class="remove">remove</span></span>').format(
                 CHIP_ICON, html.escape(count), html.escape(ORDERS_SHOWN.get(order, order)))
 
 
 def mockup_badge(text, kind, steps):
-    """The board setting label at the top of a tab, written as its name and what it says, then
+    """
+    Draw the board setting label at the top of a tab, written as its name and what it says, then
     any hint after a bar, "Wiring, every output is one colour light | Drag each light ...". A
     strip's is written "Strip, 66 LEDs, GRB" and drawn as its chip. A strip's count of
-    stretches follows its label, and steps go at the right of the row."""
+    stretches follows its label, and steps go at the right of the row.
+    """
     label, _, hint = text.partition("|")
     name, _, note = label.partition(",")
     said = '<span class="hint">{}</span>'.format(html.escape(hint.strip())) if hint else ""
@@ -397,13 +411,14 @@ def mockup_badge(text, kind, steps):
 
 
 def mockup_run(kind, label, text, labels=None, pointed=False):
-    """One run of lights as the picker shows it, a card for each stretch holding its lights over a
-    band of what it plays, written as "Rainbow 4, *Solid 3".
+    """
+    Draw one run of lights as the picker shows it, a card for each stretch holding its lights over
+    a band of what it plays, written as "Rainbow 4, *Solid 3".
 
     A light is numbered along the run unless label names every light in it, or labels names
     each light in turn. A strip's LEDs are beads on a wire, from a lead block before the first card
     to a ring after the last. The selected stretch carries the notch of the settings under it
-    where pointed is set.
+    where `pointed=` is set.
     """
     items = []
     for item, selected in selected_items(text):
@@ -440,13 +455,12 @@ def mockup_run(kind, label, text, labels=None, pointed=False):
 
 
 def mockup_settings(text, pointing, split):
-    """The selected stretch's settings, written as its look, where it plays, then each setting
+    """
+    Draw the selected stretch's settings, written as its look, where it plays, then each setting
     and where its slider sits out of 100, "Rainbow, on outputs 1 to 7, Brightness 100, Speed 45".
     A colour, "colour yellow", draws the row of colours with that one chosen.
 
-    The settings are drawn in the picked stretch's colour where pointing is set, its card drawing
-    the notch over their top edge. A strip's stretch has Split into beside Reverse where split is
-    set.
+    `pointing=` draws them under the picked stretch's notch, and `split=` adds Split into beside Reverse.
     """
     parts = [part.strip() for part in text.split(",")]
     look, where, settings = parts[0], parts[1], parts[2:]
@@ -478,13 +492,15 @@ def mockup_settings(text, pointing, split):
 
 
 def mockup_cards(text, mono, group):
-    """A row of gallery cards under its group's heading, the first group carrying Nothing, as
-    the picker shows them. Cards are drawn in a mono light's colours where mono is set."""
+    """
+    Draw a row of gallery cards under its group's heading, with Nothing in the first group, as
+    the picker shows them. Cards are drawn in a mono light's colours where `mono=` is set.
+    """
     items = selected_items(text)
     head = ""
     if group:
-        # Nothing is the small card at the end of the first group's heading, not a card of its own
         nothing = ""
+        # Check if this is the first group, whose heading ends with Nothing as a small card
         if group == "Along the lights":
             chosen = any(name == "Nothing" and selected for name, selected in items)
             nothing = '<span class="nothingcard{}"><i class="{}"></i>Nothing</span>'.format(
@@ -506,9 +522,11 @@ def mockup_cards(text, mono, group):
 
 
 def wire_lines(counts):
-    """The wires from each connector to the light it feeds, as the picker draws them, faint curves
+    """
+    Draw the wires from each connector to the light it feeds, as the picker draws them, faint curves
     leaving the connector straight up and meeting the light straight down. Each run takes its
-    share of the width by its count of lights."""
+    share of the width by its count of lights.
+    """
     room = WIRE_WIDTH - RUN_GAP * (len(counts) - 1)
     lamps = []
     left = 0
@@ -529,11 +547,12 @@ def wire_lines(counts):
 
 
 def mockup_wiring(text, look):
-    """The lights while the board is set up, a tile each in a stretch's card, over the board's
-    edge with its connectors and a wire from each connector to its light, written as their labels
-    with a bar between the two sides, "1, 2, 3, 4, 5, 6 | RGB". The first side is mono where look
-    starts "mono ", and look colours the lights as the picker would show it playing. The board's
-    edge says the lights are in wiring order, so Reset wiring is greyed."""
+    """
+    Draw the lights while the board is set up, written as their labels with a bar between the two
+    sides, "1, 2, 3, 4, 5, 6 | RGB". Each light is a tile in a stretch's card over the board's
+    edge, with a wire to its connector. `look=` gives what the lights play, and "mono " before it
+    makes the first side mono.
+    """
     sides = []
     connectors = []
     counts = []
@@ -556,8 +575,7 @@ def mockup_wiring(text, look):
 
 
 def mockup_strip_setup(text):
-    """A strip's chip, written as its number of LEDs, and the strip's LEDs under it in one
-    stretch playing nothing."""
+    """Draw the chip for a strip of the given number of LEDs, over its LEDs in one stretch playing nothing."""
     count = int(text.strip())
     run = mockup_run("strip", "", "Nothing {}".format(count))
     return ('<div class="badgerow">{}<span class="hint">Cut into 1 stretch</span>{}</div>'
@@ -566,8 +584,7 @@ def mockup_strip_setup(text):
 
 
 def mockup_screen_mode(text):
-    """The choice between a screen on each connector and a Screen Hub across both, written as
-    "hub" where the hub is chosen."""
+    """Draw the choice between a screen on each connector and a Screen Hub, written "hub" for the hub."""
     hub = text.strip() == "hub"
     return ('<div class="segment"><span class="{}">{}A screen on each connector</span>'
             '<span class="{}">A Screen Hub across both</span></div>').format(
@@ -575,7 +592,7 @@ def mockup_screen_mode(text):
 
 
 def places_said(places):
-    """Hub positions as the picker names them, a run of three or more letters as "A-C"."""
+    """Name hub positions as the picker does, a run of neighbours as a range, such as "A-C,E"."""
     runs = []
     for place in places:
         if runs and ord(place) == ord(runs[-1][-1]) + 1:
@@ -586,8 +603,10 @@ def places_said(places):
 
 
 def hub_places(text):
-    """The hub's positions in order, each written as its letter, then the picture it shows and
-    its group after an equals sign, "A=skyline.png 1", as (letter, picture, group)."""
+    """
+    Read the hub's positions in order, each written as its letter, then the picture it shows and
+    its group after an equals sign, "A=skyline.png 1", as (letter, picture, group).
+    """
     places = []
     for item in text.split(","):
         letter, _, shows = item.strip().partition("=")
@@ -597,8 +616,10 @@ def hub_places(text):
 
 
 def mockup_hub(text, places):
-    """The Screen Hub's box, written as how its cables are plugged in, "SPI on A, Selects on B",
-    with its positions under one shared backlight and a note on how fast a group plays."""
+    """
+    Draw the Screen Hub's box, written as how its cables are plugged in, "SPI on A, Selects on B",
+    with its positions under one shared backlight and a note on how fast a group plays.
+    """
     cells = []
     for letter, picture, group in places:
         members = [other for other, _, theirs in places if group and theirs == group]
@@ -624,16 +645,24 @@ def mockup_hub(text, places):
                      '</span>'.format(" grouped" if group else "", ink, letter, CHIP_ICON, display,
                                       html.escape(picture or "nothing"), numbers, said))
 
+    # The picker reads a PNG or JPEG as a still picture, and a GIF or a drawing as an animation
+    still_endings = (".png", ".jpg", ".jpeg")
+    animating = any(picture and not picture.lower().endswith(still_endings) for _, picture, _ in places)
     notes = ""
     for number in GROUP_INKS:
         members = [letter for letter, _, group in places if group == number]
         pictures = {picture for letter, picture, group in places if group == number}
         if members and pictures and "" not in pictures:
-            moving = next(iter(pictures)).endswith(".gif")
-            notes += '<div class="hubnote"><b>{}</b> {}</div>'.format(
-                places_said(members),
-                "play the same animation together, as fast as a single screen." if moving
-                else "show a still picture, sent once, so nothing slows down.")
+            moving = not next(iter(pictures)).lower().endswith(still_endings)
+            if moving and len(members) == 1:
+                said = "plays its animation at full speed."
+            elif moving:
+                said = (("both" if len(members) == 2 else "all")
+                        + " play the same animation together, as fast as a single screen.")
+            else:
+                said = (("shows" if len(members) == 1 else "show") + " a still picture, sent once"
+                        + (", with no cost to the others." if animating else ", so nothing slows down."))
+            notes += '<div class="hubnote"><b>{}</b> {}</div>'.format(places_said(members), said)
 
     return ('<div class="screens"><span class="screen hub"><span class="screenhead"><b>Screen Hub'
             '</b><span class="field">{}{} &#9662;</span><span class="small">{} of {} fitted</span>'
@@ -644,16 +673,20 @@ def mockup_hub(text, places):
 
 
 def hub_targets(places):
-    """What a picture can be sent to on a hub, each group by its number then each position on
-    its own, as the buttons under a picture show them."""
+    """
+    List what a picture can be sent to on a hub, each group by its number then each position on
+    its own, as the buttons under a picture show them.
+    """
     groups = [number for number in GROUP_INKS if any(group == number for _, _, group in places)]
     return groups + [letter for letter, _, group in places if not group]
 
 
 def mockup_screen(letter, text, paired):
-    """One screen as the Screens tab draws it, written as its size then the picture it shows,
-    "2.8 inch, skyline.png". A screen with a partner carries the Paired button, drawn pressed
-    where paired is "on"."""
+    """
+    Draw one screen as the Screens tab draws it, written as its size then the picture it shows,
+    "2.8 inch, skyline.png". A screen with a partner carries the Paired button, drawn pressed where
+    `paired=` is "on".
+    """
     size, _, shown = text.partition(",")
     size = size.strip()
     shown = shown.strip()
@@ -685,9 +718,11 @@ def mockup_screen(letter, text, paired):
 
 
 def mockup_pictures(text, letters, targets):
-    """The pictures on the drive, each written with what shows it after an equals sign,
+    """
+    Draw the pictures on the drive, each written with what shows it after an equals sign,
     "skyline.png=A", and a bar of buttons under each. The buttons are one for each screen, or
-    on a hub one for each of targets and then all."""
+    on a hub one for each of targets and then all.
+    """
     tiles = []
     for item in text.split(","):
         name, _, showing = item.strip().partition("=")
@@ -713,9 +748,11 @@ def mockup_pictures(text, letters, targets):
 
 
 def mockup_sounds(text, looping):
-    """The sounds on the drive, written as their names with Nothing among them, the selected one
-    marked with a *. Loop and Nothing sit on one line above the sounds, as the picker has them
-    before there are scenes, and Silence is read as Nothing."""
+    """
+    Draw the sounds on the drive, written as their names with Nothing among them and the selected
+    one marked with a *. Loop and Nothing sit on one line above the sounds, as the picker has them
+    before there are scenes, and Silence is read as Nothing.
+    """
     cards = []
     nothing = False
     for name, selected in selected_items(text):
@@ -741,8 +778,7 @@ def mockup_sounds(text, looping):
 
 
 def mockup_note(text):
-    """The note at the top of the Programs tab, written as the chosen program's file, or left
-    empty when none is chosen."""
+    """Draw the note at the top of the Programs tab, written as the chosen program's file or left empty."""
     program = text.strip()
     if program:
         said = ("The board runs {} instead of the effects. The effects are kept, and play if the "
@@ -756,8 +792,7 @@ def mockup_note(text):
 
 
 def mockup_hero(text):
-    """The chosen program's preview, written as its name, what it does and its file, separated
-    by bars."""
+    """Draw the chosen program's preview, written as its name, what it does and its file, between bars."""
     name, does, path = (part.strip() for part in text.split("|"))
     return ('<div class="proghero"><span class="herothumb" style="{}"></span><span><b>{}</b>'
             '<span>{}</span><span class="dim small">{}</span></span></div>').format(
@@ -765,16 +800,17 @@ def mockup_hero(text):
 
 
 def mockup_with(text):
-    """The hardware buttons that filter the programs, all turned on, then all and none."""
+    """Draw the chips that filter the programs by what they use, all turned on, then all and none."""
     return '<div class="filters"><span class="dim">With:</span>{}<u>all</u><u>none</u></div>'.format(
         "".join('<span class="chip">{}</span>'.format(html.escape(name.strip()))
                 for name in text.split(",")))
 
 
 def mockup_programs(heading, text):
-    """One group of programs under its heading, written with the words beside the heading
-    after a bar, "Retro displays | mechanical, glowing and segment displays", and the chosen
-    program marked with a *."""
+    """
+    Draw one group of programs under its heading, written with the words beside the heading after a
+    bar, "Retro displays | mechanical, glowing and segment displays", and the chosen one marked *.
+    """
     name, _, says = heading.partition("|")
     cards = "".join('<span class="progcard{}"><span class="face" style="{}"></span>'
                     '<span class="name">{}</span></span>'.format(
@@ -786,7 +822,8 @@ def mockup_programs(heading, text):
 
 
 def picker_mockup(body):
-    """A picture of part of the picker, from the lines of a ```picker fence.
+    """
+    Draw a picture of part of the picker, from the lines of a ```picker fence.
 
     Runs of lights on consecutive lines sit side by side, as do screens. A line whose key the
     picture has no part for stops the build, naming the key.
