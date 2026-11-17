@@ -46,7 +46,7 @@ COLOUR = "red"                      # The display's colour, a name from LEDS
 
 # Is COLOUR one of them?
 if COLOUR not in LEDS:
-    raise ValueError(f"'{COLOUR}' is not one of the colours! Set COLOUR to {', '.join(LEDS)}")
+    raise ValueError(f"'{COLOUR}' is not one of the colours! Set COLOUR to one of {', '.join(LEDS)}")
 LED, PLAQUE_RGB = LEDS[COLOUR]
 
 

@@ -8,9 +8,9 @@ Fade four LEDs on a SP/CE port's data lines with PWM, and report which output ch
 that costs.
 
 Wire four LEDs, each with a series resistor, from SP/CE A's DC, MOSI, SCK and CS lines to
-ground. Every one of those lines shares its PWM channel with an LED channel of an output,
-so declaring the port SPCE.GPIO_PWM hands the channels to the port and leaves the outputs'
-shared channels dark. Declared SPCE.GPIO, the same PWM would take them with no warning.
+ground. DC, CS and SCK share their PWM channels with output 7's LEDs, so declaring the port
+SPCE.GPIO_PWM hands those channels to the port and leaves output 7 dark. Declared
+SPCE.GPIO, the same PWM would take them with no warning.
 
 Press "Boot" to exit the program.
 """

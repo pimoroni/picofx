@@ -9,7 +9,7 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WHITE, YELLOW
 from picofx.mono import PulseFX, StaticFX
 
 """
-Program a route into a two-wheeled robot with the IR remote and watch it drive.
+Program a route into a two-wheeled robot with a Pimoroni Aye Arr Remote and watch it drive.
 
 A route is a list of movements, each a direction and how many cycles to hold it for. It
 is entered on the remote a movement at a time, as a direction then the digits of a number.
@@ -19,16 +19,16 @@ The outputs pulse red while a route is taken down, and flash on every press. Whi
 movement's length is lit dim, a bright light travels it a cycle at a time, and passed cycles hold
 a shade between. A longer movement pages across the outputs, and each movement takes the next colour.
 
-An IR Stick should be connected to the Sensor port,
-and a continuous rotation servo to each of the L and R connectors.
+An IR Stick should be connected to the Sensor port on Mighty FX, and a continuous rotation servo
+to each of the L and R connectors.
 
 Actions:
-- RECORD Button = Start or stop taking a route down
-- PLAY_PAUSE Button = Drive the route, or stop driving it
+- RECORD Button [Press] = Start or stop taking a route down
+- PLAY Button [Press] = Drive the route, or stop driving it
 - While taking a route down:
-    - UP, DOWN, LEFT, RIGHT, OK Buttons = Choose the movement
-    - (0)-(9) Buttons = How many cycles to hold it for
-    - RETURN Button = Undo the last digit, movement, or whole entry
+    - UP, DOWN, LEFT, RIGHT, OK Buttons [Press] = Choose the movement
+    - (0)-(9) Buttons [Press] = How many cycles to hold it for
+    - RETURN Button [Press] = Undo the last digit, movement, or whole entry
 
 Press "Boot" to exit the program.
 

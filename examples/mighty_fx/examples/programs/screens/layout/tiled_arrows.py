@@ -7,7 +7,7 @@ from screens import SCREEN_TYPES, Tile
 """
 Fill the screen with a tile mirrored on every other copy to make its edges line up.
 
-The tile is a wedge, dark on one side and bright on the other with an arrow across it, so a
+The tile shades from dark on one side to bright on the other, with an arrow across it, so a
 plain repeat puts bright hard against dark at every seam.
 
 tile= takes a value per axis. Tile.MIRROR across the panel turns each sideways seam into a
@@ -20,12 +20,12 @@ Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants
-TILE = 40                        # The wedge is square, and this is its side
-HOLD = 66                        # Frames each mode is held for, about three seconds
+TILE = 40                        # The tile is square, and this is its side
+HOLD = 66                        # Frames each mode is held for
 INSET = 8                        # How far the arrow sits inside the tile
-DARK = color.rgb(16, 16, 40)     # The wedge's shaded side
+DARK = color.rgb(16, 16, 40)     # The tile's shaded side
 LIGHT = color.rgb(214, 84, 60)   # And its lit one
-MARK = color.rgb(255, 240, 130)  # The arrow, which points the way the wedge brightens
+MARK = color.rgb(255, 240, 130)  # The arrow, which points the way the tile brightens
 ANTIALIAS = image.X4             # Affordable, the tile being drawn once before the loop starts
 
 # Plain across, then mirrored across, so the same source is seen both ways
@@ -41,7 +41,7 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# One wedge, which the driver repeats to fill the panel
+# One tile, which the driver repeats to fill the panel
 wedge = screen.canvas(TILE, TILE)
 wedge.antialias = ANTIALIAS
 print(f"a {TILE}x{TILE} wedge filling {screen.canvas_size[0]}x{screen.canvas_size[1]}")
@@ -51,7 +51,7 @@ for x in range(TILE):
     wedge.pen = color.mix(DARK, LIGHT, round(x * 255 / (TILE - 1)))
     wedge.shape(shape.rectangle(x, 0, 1, TILE))
 
-# An arrow pointing the way the wedge brightens, so a reflected copy is plain to see
+# An arrow pointing the way the tile brightens, so a reflected copy is plain to see
 wedge.pen = MARK
 wedge.shape(shape.custom([vec2(INSET, INSET),
                           vec2(INSET, TILE - INSET),

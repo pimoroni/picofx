@@ -7,7 +7,7 @@ from picofx.mono import TrafficLightFX
 Play a traffic light sequence on three of Mighty FX's colours.
 
 The three lights go on output one's red, green and blue, each wired to a lamp that brings
-its own colour. colour/traffic_light.py has the board supply the colours instead.
+its own colour. colour/traffic_light.py has the player supply the colours instead.
 
 The lights ease on and off like the filament lamps of a real signal. The easing is set on the
 player, so it works the same for any effect.

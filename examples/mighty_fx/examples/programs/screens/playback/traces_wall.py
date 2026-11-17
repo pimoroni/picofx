@@ -22,12 +22,12 @@ Args: Rotation = 90 or 270
 
 # Constants
 FRAMES = "/examples/pictures/traces"  # The folder of frames, shared with the scroll example
-FPS = 10                            # The rate to play at, a folder of images declaring none
+FPS = 10                            # The rate to play at, as these file names declare no delays
 
 # How far the screens are turned, 90 or 270 for landscape frames, or what the effects file passes in args
 ROTATION = 90 if not sys.argv[1:] else int(sys.argv[1])
 
-# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
+# Create a MightyFX object driving a Screen Hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
 # Build a screen on every hub port and keep those that answer, as a hub need not be full
@@ -56,7 +56,7 @@ except OSError:
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The panels refresh faster than the animation changes, so only send a new frame
+        # Check if the player has moved on, as the panels refresh faster than the animation changes
         if player.has_advanced():
             wall.update(player.image)
 

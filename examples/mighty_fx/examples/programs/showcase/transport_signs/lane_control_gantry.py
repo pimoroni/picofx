@@ -11,8 +11,8 @@ A signal is a square RGB lamp matrix with a lamp in each corner. The aspect is d
 the matrix's resolution and scaled up so each pixel fills one lamp, under a baked mask. The
 corner lamps flash over it for a closed lane.
 
-A panel on the hub is a lane. A group streams an aspect once to every lane showing it, so
-a four lane gantry is one or two writes.
+A panel on the hub is a lane. A group streams an aspect once to every lane showing it, so a
+setting costs one write for each different aspect it shows.
 
 Press "Boot" to exit the program.
 
@@ -176,7 +176,7 @@ SPEEDS = {aspect[1] for setting in GANTRY for aspect in setting
 
 
 def number_scale():
-    """The largest whole step whose digits fit inside the ring, the fit taken at the lettering box's corner."""
+    """Find the largest whole step whose digits fit inside the ring, the fit taken at the lettering box's corner."""
     if not SPEEDS:
         return 1
 
@@ -305,8 +305,8 @@ def lamp_stroke(from_x, from_y, to_x, to_y, weight, across, carry=(0, 0)):
     Light a stroke of whole lamps between two lamps, square on or at 45 degrees, a row at a time.
 
     A 45 degree vector stroke lights an even count of lamps, which cannot centre on a middle lamp.
-    weight is the count across a square stroke, across the count along a row at 45 degrees, and
-    carry moves each end outwards where positive.
+    weight= is the count across a square stroke, across= the count along a row at 45 degrees, and
+    carry= moves each end outwards where positive.
     """
     starts, ends = carry
     if from_x == to_x:

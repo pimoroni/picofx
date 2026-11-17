@@ -9,7 +9,8 @@ from picovector import color, font, image
 """
 Write each built-in vector font's name in that font at several sizes.
 
-A vector face is drawn from outlines, so text() sizes it. A pixel face is fixed (pixel_fonts.py).
+A vector face is drawn from outlines, so text() sizes it. A pixel face only scales in whole
+steps (pixel_fonts.py).
 
 A face is loaded from its file with font.load, so ROM is not the only place one can live. A
 face beside an example, or on the drive, loads exactly the same way.
@@ -67,7 +68,7 @@ try:
     for index, (name, face) in enumerate(faces):
         down = index * BAND + BAND_PAD
 
-        # Rule a line above every band but the first
+        # Check if this band follows another, which takes a rule above it
         if index:
             canvas.pen = RULE
             canvas.rectangle(0, round(index * BAND), canvas.width, 1)

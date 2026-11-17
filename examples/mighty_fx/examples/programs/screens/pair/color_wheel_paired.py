@@ -25,7 +25,7 @@ ROTATION_SPEED = 2
 LINE_THICKNESS = 2
 
 # Which screen is on both ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair needs both panels the same size
+# or what the effects file passes in args, the size first. Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
@@ -34,12 +34,9 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # A pair holds its two panels to one refresh rate and keeps their scans together, so a
-# frame reaches both without a tear band walking across either. Working out how takes a
-# few seconds when the pair is created, and it goes on correcting as the program runs.
-#
-# Both panels convert inside a single frame's time, which is what the deeper reserve
-# buys, and a pair drawing at full size refuses without it. color_wheel_unpaired.py draws
-# the same wheel without a pair, for comparison.
+# frame reaches both without a tear band. It calibrates for a few seconds when created.
+# Two full-size heap images need the deeper reserve, which converts ahead of the frame so
+# neither panel tears. color_wheel_unpaired.py draws the same wheel without a pair.
 pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
                   ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 

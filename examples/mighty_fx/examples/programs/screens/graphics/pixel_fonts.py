@@ -8,7 +8,8 @@ from picovector import color, font, image, rect
 """
 Scroll a line of text in each built-in pixel font from smallest to largest.
 
-A pixel font draws only at its designed size. dir(font) names every face and font.<name> loads one.
+A pixel font draws at whole multiples of its designed size, set by font_size=. dir(font) names
+every face and font.<name> loads one.
 
 Press "Boot" to exit the program.
 
@@ -41,7 +42,7 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 # Create a canvas to draw to
 canvas = screen.canvas()
 
-# Every font in ROM, ordered by height and then name
+# Every pixel font in ROM, ordered by height and then name
 fonts = sorted(((name, getattr(font, name)) for name in dir(font)),
                key=lambda pair: (pair[1].height, pair[0]))
 
@@ -57,7 +58,7 @@ resting = Roller()              # When the list may move again, so each end gets
 print(f"{len(fonts)} faces, {fonts[0][1].height}px to {fonts[-1][1].height}px,"
       f" {content_height}px of list on a {canvas.height}px panel")
 
-# A box magnifies a copy of the panel's top left, as a pixel face cannot be drawn larger. An image
+# A box magnifies a copy of the panel's top left, so each face's own pixels can be seen. An image
 # cannot be blitted over itself, hence the copy
 TAG = f"top left corner at x{LOUPE_ZOOM}"
 

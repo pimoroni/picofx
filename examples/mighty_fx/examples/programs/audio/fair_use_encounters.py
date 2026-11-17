@@ -9,7 +9,7 @@ from picofx.colour import BLACK, BLUE, CYAN, GREEN, RED, YELLOW
 Play an evocative musical melody with accompanying lights on Mighty FX.
 Any resemblance to music you might have heard elsewhere is purely coincidental.
 
-Every output shows a colour, so each tone lights one output in a colour of its own.
+Each tone lights one output in a colour of its own.
 
 Press "Boot" to exit the program.
 

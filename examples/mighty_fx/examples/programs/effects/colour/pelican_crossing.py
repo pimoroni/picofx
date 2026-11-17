@@ -7,17 +7,18 @@ from picofx.mono import PelicanCrossingFX
 Play a pelican crossing on five of Mighty FX's RGB outputs.
 
 The first three are the traffic lights and the next two the pedestrian's stop and walk
-figures. A pelican flashes its amber and walking figure where an ordinary signal shows red
-and amber, telling drivers to go if the crossing is clear and pedestrians not to start.
+figures. Where an ordinary signal shows red and amber, a pelican flashes its amber and
+walking figure, telling drivers to go if the crossing is clear and pedestrians not to start.
 
 PelicanCrossingFX brings no colour of its own, so the player gives each output its lamp's
-colour. It runs on its own clock, so there is no button to press.
+colour. It comes round on its own clock, so there is no button to press. The lights ease on
+and off, which is how the filament lamps in a real crossing behave.
 
 Press "Boot" to exit the program.
 """
 
 # Constants
-RED = (255, 0, 0)                       # The three a UK traffic light shows
+RED = (255, 0, 0)                       # A UK traffic light's red
 AMBER = (255, 120, 0)                   # Nearer orange than yellow
 GREEN = (0, 210, 140)                   # A blue-green rather than a pure one
 
@@ -39,7 +40,7 @@ pelican = PelicanCrossingFX(green_interval=20,      # The time (in seconds) traf
 player.curves = ease(0.3)
 
 
-# The colour each output draws its lamp in, the figures taking the traffic lights' red and green
+# The colour each output draws its lamp in. The figures take the traffic lights' red and green
 player.colours = [RED, AMBER, GREEN, RED, GREEN]
 
 

@@ -6,8 +6,8 @@ from picofx.mono import BlinkWaveFX
 """
 Play a wave of blinks across every colour of Mighty FX's outputs.
 
-Half the colours are lit at once, so as the wave passes, each output runs red, yellow,
-white, then cyan, blue and dark.
+Half the colours are lit at once, so as the wave passes, each output runs blue, cyan,
+white, then yellow, red and dark.
 
 Press "Boot" to exit the program.
 """
@@ -19,12 +19,12 @@ player = MonoPlayer(mighty.monos)   # Create a new effect player to control each
 
 # Create a BlinkWaveFX effect
 wave = BlinkWaveFX(speed=1.0,                   # The speed to blink at, with 1.0 being 1 second
-                   length=len(mighty.monos),    # The length of the wave before positions repeat. Usually the number of outputs (21)
+                   length=len(mighty.monos),    # The length of the wave before positions repeat. Usually the number of colours (21)
                    phase=0.0,                   # How far through the blink to start the effect (from 0.0 to 1.0)
                    duty=0.5)                    # How long the blink is on for (from 0.0 to 1.0)
 
 
-# Set up the wave effect to play. Each one has a different position
+# Set up the wave effect to play. Each colour has a different position
 # along the wave, with the value being related to the effect's length
 player.effects = [wave(position) for position in range(len(mighty.monos))]
 

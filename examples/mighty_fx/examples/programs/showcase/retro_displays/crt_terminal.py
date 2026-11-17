@@ -22,7 +22,7 @@ Args: Screen size = 2.8, Rotation = 90
 
 # Constants for drawing
 TINT = color.rgb(51, 255, 51)   # The phosphor, P1 green, or rgb(255, 187, 0) for amber
-TERM_FONT = font.ark            # The character ROM. The narrowest ROM face with a lowercase
+TERM_FONT = font.ark            # The character ROM. A narrow ROM face with a lowercase
 CELL_SCALE = 1                  # How large the character ROM is drawn, in whole steps. 2 gives a bolder
                                 # 20x10 page with unmistakable scanlines, but the session's listing then wraps
 LEADING = 4                     # Blank rows between one line of characters and the next
@@ -198,7 +198,7 @@ CELL_AT = {letter: index * CELL_W for index, letter in enumerate(CHARSET)}
 print(f"{COLUMNS} columns by {ROWS} rows, in cells of {CELL_W}x{CELL_H} on a pitch of {PITCH}")
 print(f"{len(CHARSET)} characters baked, {glyphs.width}x{glyphs.height}")
 
-# Two rects moved and never made, so a page of cells allocates nothing a frame
+# Two rects moved and never made, so blitting a page of cells builds no rects
 source = rect(0, 0, CELL_W, CELL_H)
 target = rect(0, 0, CELL_W, CELL_H)
 

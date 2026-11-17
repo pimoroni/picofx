@@ -10,9 +10,9 @@ an environment sensor on Qw/ST.
 
 Plug a BME280 breakout into the Qw/ST connector, which the board sets up as mighty.i2c.
 
-The bar fills from blue at the cold end through purple to red at the warm one, its top
-output lit part way so the bar moves smoothly. Hold the sensor between your fingers to watch
-it climb. Pressure and humidity are printed too.
+The top output of the bar is lit as far into its step as the reading has gone, so the bar
+moves smoothly. The hue runs from blue at the bottom through purple to red at the top.
+Hold the sensor between your fingers to watch it climb. Pressure and humidity are printed too.
 
 Press "Boot" to exit the program.
 
@@ -36,7 +36,7 @@ try:
 except RuntimeError:
     raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 
-# The sensor reports its reset values until it has measured and reading again does not
+# The sensor reports its reset values until it has measured, and reading again does not
 # hurry it, so one read starts it and the wait lets that measurement finish
 bme.read()
 time.sleep(SETTLE)

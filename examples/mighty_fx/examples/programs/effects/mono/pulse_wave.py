@@ -6,8 +6,8 @@ from picofx.mono import PulseWaveFX
 """
 Play a wave of pulses across every colour of Mighty FX's outputs.
 
-Each output's red, green and blue fade up in turn as the wave passes, so it runs red,
-yellow, white, cyan, then blue. No colour effect is involved.
+Each output's blue, green and red fade up in turn as the wave passes, so it runs blue,
+cyan, white, yellow, then red.
 
 Press "Boot" to exit the program.
 """
@@ -19,11 +19,11 @@ player = MonoPlayer(mighty.monos)   # Create a new effect player to control each
 
 # Create a PulseWaveFX effect
 wave = PulseWaveFX(speed=1.0,                   # The speed to pulse at, with 1.0 being 1 second
-                   length=len(mighty.monos),    # The length of the wave before positions repeat. Usually the number of outputs (21)
+                   length=len(mighty.monos),    # The length of the wave before positions repeat. Usually the number of colours (21)
                    phase=0.0)                   # How far through the pulse to start the effect (from 0.0 to 1.0)
 
 
-# Set up the wave effect to play. Each one has a different position
+# Set up the wave effect to play. Each colour has a different position
 # along the wave, with the value being related to the effect's length
 player.effects = [wave(position) for position in range(len(mighty.monos))]
 

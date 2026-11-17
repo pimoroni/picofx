@@ -6,8 +6,8 @@ from picofx.mono import RandomFX
 """
 Play a randomly changing brightness on every colour of Mighty FX's outputs.
 
-Each one picks its own brightness, and an output's three are picked independently, so
-every output twinkles through random colours without a colour effect being involved.
+Each colour picks its own brightness, so every output twinkles through random colours
+without a colour effect being involved.
 
 Press "Boot" to exit the program.
 """

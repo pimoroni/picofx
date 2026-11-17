@@ -6,11 +6,8 @@ from picovector import color, image, shape, vec2
 """
 Flash runway chevrons on alternating sets of screens across a Screen Hub.
 
-subset() names some of a group's panels, and is bound once here and reused. Writing a
-subset keeps the whole group's refresh rates held together, where writing a member's own
-screen would not. Every panel in a bank shows the same chevrons, so a bank is one write
-however many panels it holds. That only works because the picture repeats per panel, where
-one spanning the wall would need each panel's own slice, and a write each.
+subset() names some of a group's panels, and is bound once here and reused. Every panel in
+a bank shows the same chevrons, so a bank is one write however many panels it holds.
 
 Press "Boot" to exit the program.
 
@@ -33,7 +30,7 @@ SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
+# Create a MightyFX object driving a Screen Hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
 # Build a screen on every hub port and keep those that answer, as a hub need not be full
@@ -98,6 +95,6 @@ try:
         # Wait out the flash, keeping every panel measured so the next writes go out promptly
         wall.idle(int(FLASH * 1000))
 
-# Turn off the panels and all the outputs
+# Stop any running effects and turn off all the outputs
 finally:
     mighty.shutdown()

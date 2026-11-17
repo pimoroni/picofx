@@ -9,8 +9,8 @@ from picovector import color, image, rect, shape, vec2
 """
 Draw a glowing portal with arms spiralling into a dark opening and specks of light
 falling in. Each arm dims to black before the opening, so it seems to fall away without
-end. SCHEME chooses its colours, violet, ember, ice or emerald, and STONES = True sets it
-into a stone wall.
+end. SCHEME chooses its colours, violet, ember, ice or emerald, and STONES = False leaves it
+on black.
 
 RIM_WIDTH and RIM_HEIGHT size the portal to a cutout in front of the panel, and by default it is as
 large as fits. Each frame dims the opening a little before drawing, so the motes leave fading streaks.
@@ -66,7 +66,7 @@ SCHEMES = {
 
 # Is SCHEME one of them?
 if SCHEME not in SCHEMES:
-    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to {', '.join(SCHEMES)}")
+    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to one of {', '.join(SCHEMES)}")
 EDGE, PART_WAY, BRIGHTEST, DEEP, RIM_RGB, GLOW_RGB = SCHEMES[SCHEME]
 
 # From the rim in, an arm's colours dim towards the opening's dark, and a mote's pale to white and go out there
@@ -141,7 +141,7 @@ for length in range(LENGTHS):
                         color.rgb(*rgb), CORE_W * (1 - 0.6 * narrowing)))
 
 # A mote's pen at each of 51 steps out from the opening, made once and not for every streak. A mote at the
-# rim starts four fifths along its colours, already lit pink, so it shows against the arms' violet
+# rim starts a fifth of the way into its colours, already paler than the arms' rim colour, so it shows against them
 MOTE_PENS = [color.rgb(*colour_at(MOTE_COLOURS, 0.8 * step / 50)) for step in range(51)]
 
 # The direction of each point round the rim, calculated once

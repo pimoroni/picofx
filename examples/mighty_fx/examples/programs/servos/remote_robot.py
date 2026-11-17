@@ -45,8 +45,8 @@ mighty.servo_l.enable()
 mighty.servo_r.enable()
 
 
-# The lights are played so the indicators can blink, a level of zero putting one out.
-# The player gives each its colour, the effects giving only a brightness
+# The lights are played so the indicators can blink, and a level of zero puts one out.
+# The effects give only a brightness, so the player gives each light its colour
 player = ColourPlayer(mighty.outputs)
 player.effects = [StaticFX(), StaticFX(), BlinkFX(speed=BLINK_SPEED), BlinkFX(speed=BLINK_SPEED)]
 player.colours = [RED, WHITE, AMBER, AMBER]
@@ -80,7 +80,7 @@ def drive(speed):
     mighty.servo_r.value(-speed)
 
 
-# Function to spin on the spot, both wheels turning the same way
+# Function to spin on the spot, with both wheels turning the same way
 def spin(speed):
     print("Spin right" if speed > 0 else "Spin left")
     if speed > 0:

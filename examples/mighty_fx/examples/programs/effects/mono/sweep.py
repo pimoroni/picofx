@@ -18,12 +18,11 @@ player = MonoPlayer(mighty.monos)   # Create a new effect player to control each
 
 # Create and set up a sweep effect to play
 sweep = SweepFX(speed=0.5,                      # The speed to sweep at, with 1.0 being one crossing a second
-                length=len(mighty.monos),       # How many outputs the light crosses, usually all of them (21)
-                extent=2.0)                     # How far the light reaches from itself, in outputs
+                length=len(mighty.monos),       # How many colours the light crosses, usually all of them (21)
+                extent=2.0)                     # How far the light reaches from itself, in colours
 
 
-# Set up the sweep effect to play. Each one has a different position
-# for the light to be measured against as it passes
+# Set up the sweep effect to play, each colour at its own position for the light to pass
 player.effects = [sweep(position) for position in range(len(mighty.monos))]
 
 

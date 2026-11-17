@@ -46,7 +46,7 @@ GRID = color.rgb(17, 68, 102)                       # The graticule's lines, a s
 FRAME = color.rgb(17, 17, 17)                       # The dark edge the face sits in
 CASE = color.rgb(221, 204, 187)                     # The case round the tube
 
-# Sizes, in panel pixels
+# The graticule and the beam
 DIVISIONS = (10, 8)                                 # Graticule squares across and down on a panel on its side, swapped upright
 DIVISION = 28                                       # Panel pixels a square
 TICKS = 4                                           # Ticks a square along the middle lines, which must divide into DIVISION
@@ -218,7 +218,7 @@ def draw(seconds):
 
     if SENSOR:
         trace(sensed())
-    # Whether the demonstration is on the wave or the figure, cutting between them as a real scope switches to XY
+    # Check if the demonstration is on the wave or the figure, cutting between them as a real scope switches to XY
     elif seconds < WAVE_SECONDS:
         trace(wave(seconds))
     else:

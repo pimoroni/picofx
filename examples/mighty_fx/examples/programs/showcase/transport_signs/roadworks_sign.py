@@ -70,7 +70,7 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# The lamp grid the bands are drawn on, one pixel to a lamp
+# The lamp grid the message is drawn on, one pixel to a lamp
 COLUMNS = WIDTH // LAMP
 ROWS = HEIGHT // LAMP
 
@@ -105,7 +105,7 @@ LETTERING_TOP = LETTERING_ROWS[0]
 # What the face leaves right of a character, so a narrow one centres in its module from its advance
 BEARING = max(int(lamps.measure_text(letter, font_size=1)[0]) for letter in ALPHABET) - CELL_W
 
-# The beacons sit on the face above and below the bands, so their diameter is kept clear at each end
+# The beacons sit on the face above and below the modules, so their diameter is kept clear at each end
 MARGIN = (BEACON_R * 2 + LAMP - 1) // LAMP
 PITCH_W = CELL_W + BEZEL
 PITCH_H = CELL_H + LINE_BEZEL
@@ -154,7 +154,7 @@ def bake_module():
 
 def bake_mask():
     """
-    Bake the sign's face, clear to begin with, the modules laid a row at a time, then its margins filled.
+    Bake the sign's face, the modules laid a row at a time, then its margins filled.
 
     It starts clear, as a transparent pen cannot clear an opaque background back.
     """
@@ -187,7 +187,7 @@ def bake_mask():
 
 mask = bake_mask()
 
-# Every rect the frame needs, built once so a frame allocates nothing
+# Every rect the frame needs, built once
 SCALE_FROM = rect(0, 0, COLUMNS, ROWS)
 SCALE_TO = rect(0, 0, COLUMNS * LAMP, ROWS * LAMP)
 

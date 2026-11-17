@@ -7,10 +7,12 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 """
 Drift a different patterned carpet across each of two screens.
 
-A pair takes every placement setting once per screen, so one call sends two images and an
-offset each. The hexagons drift on the diagonal and the blocks sideways.
+A pair takes each placement setting once for both screens, or once per screen, so one call
+sends two images and an offset each and shares one tile setting. The hexagons drift on the
+diagonal and the blocks sideways.
 
-Each tile is about a ninth of the full-panel image it replaces, and the drift is only the offset.
+The two tiles together are about a ninth of the two full-panel images they replace on 2.8"
+panels, and the drift is only the offset.
 
 Press "Boot" to exit the program.
 
@@ -47,8 +49,7 @@ BLOCK_W = round(BLOCK_H * 1.7320508)
 BLOCK_DEPTH = BLOCK_H * 2
 
 # Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair wants two of the same size, each
-# panel holding its own picture
+# or what the effects file passes in args, the size first. Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]

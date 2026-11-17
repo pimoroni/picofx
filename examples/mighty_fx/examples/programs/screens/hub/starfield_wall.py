@@ -26,7 +26,7 @@ STAR_LIMIT = 5
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
+# Create a MightyFX object driving a Screen Hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
 # Build a screen on every hub port and keep those that answer, as a hub need not be full

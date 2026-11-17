@@ -55,7 +55,7 @@ SCHEMES = {
 
 # Is SCHEME one of them?
 if SCHEME not in SCHEMES:
-    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to {', '.join(SCHEME_NAMES)}")
+    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to one of {', '.join(SCHEME_NAMES)}")
 
 # Is SPEED one of them?
 if SPEED not in SPEEDS:

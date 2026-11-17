@@ -152,7 +152,7 @@ for row, arc in enumerate(facing):
     below = int(brightness // 17) * 17
     for x in range(DRUM_W):
         level = below + 17 if (DITHER[row % 4 * 4 + x % 4] + 0.5) / 16 < (brightness - below) / 17 else below
-        # Whether the pixel falls below the face's own level
+        # Check if the pixel falls below the face's own level
         if level < FACE[0]:
             # Laid over with just enough black to bring the face down to it
             shade.pen = color.black.with_alpha(round(255 * (1 - level / FACE[0])))

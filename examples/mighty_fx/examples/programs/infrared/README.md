@@ -3,10 +3,10 @@
 These are micropython examples for controlling Mighty FX from a Pimoroni Aye Arr Remote, with an IR Stick connected to its sensor connector.
 
 - [Colour Examples](#colour-examples)
-  - [Control RGB Direct](#control-rgb-direct)
-  - [Control RGB FX](#control-rgb-fx)
-  - [Control HSV Direct](#control-hsv-direct)
-  - [Control HSV FX](#control-hsv-fx)
+  - [Control RGB (Direct)](#control-rgb-direct)
+  - [Control RGB (FX)](#control-rgb-fx)
+  - [Control HSV (Direct)](#control-hsv-direct)
+  - [Control HSV (FX)](#control-hsv-fx)
   - [Control Rainbow](#control-rainbow)
   - [Control Rainbow Wave](#control-rainbow-wave)
 - [Mono Examples](#mono-examples)
@@ -17,22 +17,22 @@ These are micropython examples for controlling Mighty FX from a Pimoroni Aye Arr
 
 ## Colour Examples
 
-### Control RGB Direct
+### Control RGB (Direct)
 [colour/control_rgb_direct.py](colour/control_rgb_direct.py)
 
 Set the colour of Mighty FX's seven RGB outputs using the number buttons on the Pimoroni Aye Arr Remote. This version interacts with the outputs directly.
 
-### Control RGB FX
+### Control RGB (FX)
 [colour/control_rgb_fx.py](colour/control_rgb_fx.py)
 
 Set the colour of Mighty FX's seven RGB outputs using the number buttons on the Pimoroni Aye Arr Remote. This version uses the effects system to interact with them. One effect drives every output, so they change together.
 
-### Control HSV Direct
+### Control HSV (Direct)
 [colour/control_hsv_direct.py](colour/control_hsv_direct.py)
 
 Set the colour of Mighty FX's seven RGB outputs using the number buttons on the Pimoroni Aye Arr Remote, and change their hue, saturation, and value using the directional buttons. This version interacts with the outputs directly.
 
-### Control HSV FX
+### Control HSV (FX)
 [colour/control_hsv_fx.py](colour/control_hsv_fx.py)
 
 Set the colour of Mighty FX's seven RGB outputs using the number buttons on the Pimoroni Aye Arr Remote, and change their hue, saturation, and value using the directional buttons. This version uses the effects system to interact with them. One effect drives every output, so they change together.
@@ -50,7 +50,7 @@ Play a rainbow that travels along Mighty FX's outputs, controllable by the direc
 
 ## Mono Examples
 
-These play mono effects, which give a brightness rather than a colour, so each output draws its effect in the colour it was given.
+These play mono effects, which give a brightness rather than a colour, so each output draws its effect in a colour the player gives it, white unless the example sets one.
 
 ### Control Channels
 [mono/control_channels.py](mono/control_channels.py)

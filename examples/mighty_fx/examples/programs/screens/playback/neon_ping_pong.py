@@ -7,10 +7,10 @@ from screens import SCREEN_TYPES
 Play a folder of picture frames forwards then backwards.
 
 A GIF carries its frames and their delays in one file, and caps itself at 256 colours. A
-folder of images has neither limit and no delays either, so the player is told a rate, and
-frames are ordered by the numbers in their names rather than by the text.
+folder of images has neither limit, and these file names declare no delays, so the player is
+told a rate. Frames are ordered by the numbers in their names rather than by the text.
 
-ping_pong plays them forward then back, so three files give six steps. hold dwells at each turn.
+ping_pong plays them forward then back, so three files give four steps. hold dwells at each turn.
 
 Every frame decodes when the player is made. Truecolour takes four times an indexed frame's memory.
 
@@ -23,7 +23,7 @@ Args: Screen size = 2.8, Rotation = 90 or 270
 
 # Constants
 FRAMES = "/examples/pictures/rosie"   # The folder of frames
-FPS = 8                          # The rate to play at, a folder of images declaring none
+FPS = 8                          # The rate to play at, as these file names declare no delays
 HOLD = 0.4                       # Seconds to dwell where it turns around, at each end
 
 # Which screen is on the port, "2.8" or "1.54", and how far it is turned, 90 or 270 for landscape
@@ -48,7 +48,7 @@ print(f"{player.frames} frames, played back and forth at {FPS}fps")
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The screen refreshes faster than the animation changes, so only send a new frame
+        # Check if the player has moved on, as the screen refreshes faster than the animation changes
         if player.has_advanced():
             screen.update(player.image)
 

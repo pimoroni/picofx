@@ -1,6 +1,6 @@
 # Mighty FX Micropython Screen Examples <!-- omit in toc -->
 
-These are micropython examples for the screens Mighty FX can drive from its SP/CE ports, one panel at a time, as a pair, or across a hub.
+These are micropython examples for the screens Mighty FX can drive from its SP/CE ports, one panel at a time, as a pair, or across a Screen Hub.
 
 - [Single Screen Examples](#single-screen-examples)
   - [Detect Screens](#detect-screens)
@@ -35,7 +35,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Colour Wheel (Unpaired)](#colour-wheel-unpaired)
   - [Colour Wheel (Facing)](#colour-wheel-facing)
   - [Drifting Carpets](#drifting-carpets)
-  - [Test Cards Paired](#test-cards-paired)
+  - [Test Cards (Paired)](#test-cards-paired)
 - [Screen Hub Examples](#screen-hub-examples)
   - [Detect Hub](#detect-hub)
   - [Chevron Banks](#chevron-banks)
@@ -270,7 +270,7 @@ Show the eight ways a picture can be rotated and mirrored on a screen.
 
 [layout/pixel_doubled.py](layout/pixel_doubled.py)
 
-Fill the screen by doubling every pixel of a picture half its width and height.
+Fill the screen by doubling every pixel of a picture at half the screen's width and height.
 
 <br clear="left">
 
@@ -351,9 +351,9 @@ Drift a different patterned carpet across each of two screens.
 <br clear="left">
 
 
-### Test Cards Paired
-<img src="pair/test_cards_paired.png" align="left" alt="Test Cards Paired">
-<img src="pair/test_cards_paired-2.png" align="left" alt="Test Cards Paired, second screen">
+### Test Cards (Paired)
+<img src="pair/test_cards_paired.png" align="left" alt="Test Cards (Paired)">
+<img src="pair/test_cards_paired-2.png" align="left" alt="Test Cards (Paired), second screen">
 
 [pair/test_cards_paired.py](pair/test_cards_paired.py)
 

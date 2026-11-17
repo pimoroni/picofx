@@ -44,7 +44,7 @@ canvas.shape(shape.circle(centre_x, centre_y, reach))
 canvas.pen = color.black
 canvas.shape(shape.circle(centre_x, centre_y, reach - RING_THICKNESS))
 
-# Show the frame first, as the backlight stays dark until a frame reaches the glass
+# Show the frame first, so the backlight has a ring to light
 screen.update(canvas)
 
 # Variables to keep track of the fade

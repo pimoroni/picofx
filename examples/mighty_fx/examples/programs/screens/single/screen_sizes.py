@@ -6,12 +6,8 @@ from picovector import color, font, image, shape
 Build both screen types explicitly, one on each SP/CE port, and let each panel say which it is.
 
 A panel cannot be asked its size, so the class tells the board. The wrong one still starts,
-with the picture the wrong size for the glass.
-
-Every other screen example looks its class up from a size. This is the plain form, and shows
-each class carries its own refresh rate.
-
-Each panel draws its measured diagonal, since a screen's size is its diagonal.
+with the picture the wrong size for the glass. Most screen examples look their class up from
+a size, and this plain form shows each class carries its own refresh rate.
 
 Press "Boot" to exit the program.
 """
