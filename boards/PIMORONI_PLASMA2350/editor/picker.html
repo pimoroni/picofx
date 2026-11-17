@@ -3885,7 +3885,7 @@ body.nolooks #looks {
 
 /* In the box of the section they are for, the looks are hidden with it, every section keeping
    its place so the tabs' place stays as tall as the tallest */
-body.looksbelow #looks {
+#looks {
   margin: var(--space-6) 0 0;
 }
 /* A live swatch is a small copy of the section's lamps. Its cells run into one another with no
@@ -11088,12 +11088,11 @@ function showChosen() {
     node.classList.add("tabbed");
   });
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
-  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+  if (chosenTakesLooks()) {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }
 function holdTabsPlace() {
-  if (!document.body.classList.contains("looksbelow")) return;
   var stack = document.getElementById("tabStack");
   var looks = document.getElementById("looks");
   var holder = looks.parentNode;
@@ -11194,10 +11193,7 @@ document.getElementById("outPanel").before(
 LED_PANELS.forEach(function(panel) {
   sectionStack.appendChild(document.getElementById(panel));
 });
-if (!/[?&]above\b/.test(location.search)) {
-  document.body.classList.add("looksbelow");
-  document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-}
+document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
 var firstFitted;
 
 // boards/editor/picker/tab_swatches.js

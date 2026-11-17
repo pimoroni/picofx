@@ -11,8 +11,7 @@ import {STRIPS, stripBlockedBy} from "./strips.js";
 // The outputs and each strip as tabs, one section shown at a time, so the one being worked on
 // is never a scroll away. Choosing a tab makes it the one worked on, and the gallery goes in
 // its box, as the screens' pictures and the programs sit under what they are for. Each tab
-// says in a small swatch what its section plays. ?above on the page's address keeps the
-// gallery above the tabs.
+// says in a small swatch what its section plays.
 //
 // The tabs sit in the scene's body and not with the scene tabs, and are drawn as a row of
 // names with a line under the chosen one, so they read as parts of one board and not as
@@ -87,7 +86,7 @@ export function showChosen() {
   // pointer, where the section shown is one they mean nothing for
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
   // Under the sections, the looks go in the box of the one they are for, as a screen's pictures do
-  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+  if (chosenTakesLooks()) {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }
@@ -96,7 +95,6 @@ export function showChosen() {
 // box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
 // It runs after every part has drawn, when the boxes are at their full height
 export function holdTabsPlace() {
-  if (!document.body.classList.contains("looksbelow")) return;
   var stack = document.getElementById("tabStack");
   var looks = document.getElementById("looks");
   // What the looks add to a box, measured as the box with them less the box without, as the
@@ -202,8 +200,5 @@ document.getElementById("outPanel").before(h("div", {className: "ledtabs", id: "
                                            sectionStack);
 LED_PANELS.forEach(function (panel) { sectionStack.appendChild(document.getElementById(panel)); });
 
-// The looks go in the box of the chosen section, unless the page's address asks for them above
-if (!/[?&]above\b/.test(location.search)) {
-  document.body.classList.add("looksbelow");
-  document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-}
+// The looks go in the box of the chosen section
+document.getElementById(chosenTab).appendChild(document.getElementById("looks"));

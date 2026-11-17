@@ -74,6 +74,6 @@ body.nolooks #looks {
 
 /* In the box of the section they are for, the looks are hidden with it, every section keeping
    its place so the tabs' place stays as tall as the tallest */
-body.looksbelow #looks {
+#looks {
   margin: var(--space-6) 0 0;
 }
