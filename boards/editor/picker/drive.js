@@ -144,7 +144,26 @@ export async function waitForBoard(before, nothingYet) {
   return before;
 }
 
-export function sayWhatHappened(said, also) {
+// Wait for the drive to go and come back, as it does while the board restarts. Whether it came back.
+// The wait for it to go is the one a save gives the board, and once gone it has as long to return
+// as waitForBoard() gives it
+export async function waitForReturn() {
+  var deadline = Date.now() + BOARD_WAIT_MS;
+  var wentAway = false;
+  while (Date.now() < deadline) {
+    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
+    if (await driveAnswers()) {
+      if (wentAway) return true;
+    } else if (!wentAway) {
+      wentAway = true;
+      deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
+    }
+  }
+  return false;
+}
+
+// nothing= says the save plays nothing, as a file with no entries does
+export function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot " +
            "once to play the save. If the lights have already changed, the " +
@@ -153,7 +172,8 @@ export function sayWhatHappened(said, also) {
   else if (said)
     banner("The board reported problems:", true, said);
   else
-    banner("Playing on the board. No problems reported." + (also || ""));
+    banner((nothing ? "Nothing is playing on the board." : "Playing on the board.") +
+           " No problems reported." + (also || ""));
 }
 
 export async function openDrive(fresh) {
@@ -178,7 +198,9 @@ function openFresh() { openDrive(true); }
 export var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 
-export var drive = {dirHandle: null, fileHandle: null};
+// The drive's handles, and the page's text as it was last read from or saved to the drive, which
+// says whether the page holds changes not yet saved
+export var drive = {dirHandle: null, fileHandle: null, text: null};
 
 // The localStorage key holding the file this page last wrote or read
 export var WROTE_KEY = "fx-picker-wrote";

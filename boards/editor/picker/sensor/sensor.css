@@ -5,6 +5,10 @@
 /* As tall as while editing, when it holds the choice of what is fitted, so the remote below stays
    put as the board is edited, as a strip's box does */
 #sensorFacts .chip{box-sizing:border-box;min-height:37px}
+/* The sensor's add button is centred over its row, as a strip's and a screen's are in their boxes,
+   and takes no height from it, so the row stays as tall as the fitted chip */
+#sensorFacts{position:relative}
+#sensorFacts .sensoradd{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .remotediagram{display:grid;grid-template-columns:1fr var(--middle) 1fr;margin-top:var(--space-4)}
 .remoteside{position:relative}
 .remoterow{position:absolute;display:flex;align-items:center;justify-content:space-between;

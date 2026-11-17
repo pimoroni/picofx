@@ -64,6 +64,7 @@ FEATURES = {
     "sound": lambda board: bool(board["sound"]),
     "sensor": lambda board: bool(board.get("sensor")),
     "examples": lambda board: bool(board["examples"]),
+    "discover": lambda board: bool(board.get("examples_index")),
 }
 
 # A control on the picker's page, written [[Save to board]] and drawn as the picker's button

@@ -58,12 +58,14 @@ strip.
 
 ### Board: Setting up your hardware
 
-Press [[Edit board]] to tell the picker about your hardware. Everything else
-fades while you're there, and [[Done]] takes you back.
+Each tab holds the settings for its own hardware, such as the order your lights
+are wired in. Look out for the chip icon, which the picker puts on every board
+setting. These settings describe your hardware, so they're shared by every
+scene.
 
-Look out for the chip icon on [[Edit board]]. The picker marks every board
-setting with it, such as the order your lights are wired in. These settings
-describe your hardware, so they're shared by every scene.
+A part that isn't fitted has a button with the chip to add it, and a fitted part
+has [[remove]] to take it off again. Once you have scenes, the picker asks before
+removing anything, as every scene loses what it played there.
 
 <!-- board picker_board -->
 <!-- if screens -->
@@ -97,12 +99,12 @@ Press [[Paired]] again to set them apart. Each scene can pair the screens or not
 ### Screens: Using a Screen Hub
 
 A Screen Hub plugs into both screen connectors and drives up to six screens, at
-the positions A to F printed on the hub. To set one up, press [[Edit board]], open
-**Screens** and choose **A Screen Hub across both**. Then pick which connector
-carries the hub's SPI and which its Selects, as labelled on the hub, and set the
-size of the screen at each position.
+the positions A to F printed on the hub. To set one up, open **Screens** and
+choose **A Screen Hub across both**. Then pick which connector carries the hub's
+SPI and which its Selects, as labelled on the hub, and set the size of the screen
+at each position. [[add a panel]] fills a position left empty.
 
-Back on **Screens**, the positions sit side by side under one shared backlight.
+The positions sit side by side under one shared backlight.
 Each picture has a button for every position, or for every group once you've
 made some, and [[all]] shows it everywhere.
 
@@ -200,9 +202,9 @@ the "On the drive" heading quietens it while the scene shows.
 
 ### Sensor: Changing scenes with a remote or motion
 
-Press [[Edit board]] and choose what's on the sensor connector, an Aye Arr
-Remote through an IR Receiver Stick, or a PIR Stick. That's the only board
-setting for it. The **Sensor** tab then shows the remote with a row for each
+On **Sensor**, press [[add a sensor]] and choose what's on the sensor connector,
+an Aye Arr Remote through an IR Receiver Stick, or a PIR Stick. That's the only
+board setting for it. The **Sensor** tab then shows the remote with a row for each
 button, or the Stick with a row for when motion starts and one for when it
 stops.
 
@@ -250,6 +252,32 @@ the effects. [Your program in the picker](#your-program-in-the-picker) explains
 how your own programs appear there.
 
 <!-- board picker_programs_picture -->
+<!-- if discover -->
+
+### Examples: Downloading more
+
+The board's examples are also kept online. You can download any example the
+drive doesn't have, and update the ones it does have. The computer needs to be
+online for this.
+
+Each tab that lists examples has a Discover button under its **Examples**
+heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+shows the examples this drive doesn't have. Click a card to choose it, or tick
+the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
+**Programs**, the **With** buttons in the gallery hide examples that need
+hardware you don't have.
+
+Under the Discover button, [[Check for updates]] looks for newer versions of the
+examples on the drive. [[Update all]] downloads every one it finds. To update a
+single example, press **Update** in the corner of its card. A card marked
+**Needs** and a version number needs newer firmware than the board has. Press
+[[Update available]] beside the version at the top of the page to get it.
+
+Examples on the drive have a delete button just like your own files. You can
+download a deleted example again later.
+
+<!-- board discover_kept -->
+<!-- end -->
 
 ### Saving: Sending to the board
 

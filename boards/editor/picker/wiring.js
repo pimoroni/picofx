@@ -51,9 +51,13 @@ export function crossing(out, colour) {
 // Add the run's controls at the right of its header row, the box naming its wiring or its strip.
 // A long strip zooms first, then come the steps back and on, then Join all as a quick reset
 export function headSteps(row, run) {
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
+  var join = null;
+  // Check if the run can be cut at all, since one light is always one stretch
+  if (run.lamps.length > 1) {
+    join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                      "merge into one stretch, keeping the selected stretch's look");
+    join.onclick = function () { joinAll(run); };
+  }
   // Zooming is only any use where there are more lights than a panel can show. The
   // buttons hold the middle of the view, since a press has no place on the run to hold
   var zooms = run.strip && run.count > ZOOMS_OVER;
@@ -118,8 +122,8 @@ export function bringForward(keys, on) {
   });
 }
 
-// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
-// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// Lay the connectors over the chosen stretch's settings, which stand back in the wiring view, so
+// opening and closing it moves nothing below them. The connectors cover the whole
 // of the settings, and the panel only grows by what they need beyond that room
 function overlapBelow(box) {
   var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -

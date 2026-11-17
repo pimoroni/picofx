@@ -55,8 +55,8 @@ tabs: *Outputs=mono Wave, Sound, Sensor
 ```
 
 Under **Effects** you'll find **Outputs** for the lights, **Sound** for the
-speaker and **Sensor** for the sensor connector. Each tab shows a small preview of what it's playing, and [[Edit board]]
-sits at the end of the row.
+speaker and **Sensor** for the sensor connector. Each tab shows a small preview
+of what it's playing.
 
 ### Lights: Choosing a look
 
@@ -115,24 +115,27 @@ beside it undo and redo.
 
 ### Board: Setting up your hardware
 
-Press [[Edit board]] to tell the picker about your hardware. Everything else
-fades while you're there, and [[Done]] takes you back.
+Each tab holds the settings for its own hardware, such as the order your lights
+are wired in. Look out for the chip icon, which the picker puts on every board
+setting. These settings describe your hardware, so they're shared by every
+scene.
 
-Look out for the chip icon on [[Edit board]]. The picker marks every board
-setting with it, such as the order your lights are wired in. These settings
-describe your hardware, so they're shared by every scene.
+A part that isn't fitted has a button with the chip to add it, and a fitted part
+has [[remove]] to take it off again. Once you have scenes, the picker asks before
+removing anything, as every scene loses what it played there.
 
 ```picker
-tabs editing: *Outputs=mono Wave, Sound, Sensor
+tabs: *Outputs=mono Wave, Sound, Sensor
 badge: Wiring, the RGB output is one colour light | Drag lights to match your build. The arrow on the RGB output splits or rejoins it.
 wiring mono Wave: 1, 2, 3, 4, 5, 6 | RGB
 ```
 
-Drag each light to match where it sits in your build, so a look that travels
-moves the right way. The arrow on the RGB output moves it across to the mono side
-as three mono lights, or brings them back as one colour light. [[Reset wiring]],
-under the connectors, puts every light back in wiring order and rejoins the RGB
-output.
+Press the **Wiring** chip on **Outputs**, then drag each light to match where it
+sits in your build, so a look that travels moves the right way. The arrow on the
+RGB output moves it across to the mono side as three mono lights, or brings them
+back as one colour light. [[Reset wiring]], under the connectors, puts every light
+back in wiring order and rejoins the RGB output. Press the chip again when you're
+done.
 
 ### Sound: Choosing a sound
 
@@ -200,9 +203,9 @@ the "On the drive" heading quietens it while the scene shows.
 
 ### Sensor: Changing scenes with a remote or motion
 
-Press [[Edit board]] and choose what's on the sensor connector, an Aye Arr
-Remote through an IR Receiver Stick, or a PIR Stick. That's the only board
-setting for it. The **Sensor** tab then shows the remote with a row for each
+On **Sensor**, press [[add a sensor]] and choose what's on the sensor connector,
+an Aye Arr Remote through an IR Receiver Stick, or a PIR Stick. That's the only
+board setting for it. The **Sensor** tab then shows the remote with a row for each
 button, or the Stick with a row for when motion starts and one for when it
 stops.
 
@@ -248,6 +251,31 @@ note: ship_thrusters.py
 with: remote, Qw/ST, speaker
 programs Model lighting | thrusters, beacons and lit postcards: Rescue vehicle, *Ship thrusters, Space tales
 ```
+
+### Examples: Downloading more
+
+The board's examples are also kept online. You can download any example the
+drive doesn't have, and update the ones it does have. The computer needs to be
+online for this.
+
+Each tab that lists examples has a Discover button under its **Examples**
+heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+shows the examples this drive doesn't have. Click a card to choose it, or tick
+the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
+**Programs**, the **With** buttons in the gallery hide examples that need
+hardware you don't have.
+
+Under the Discover button, [[Check for updates]] looks for newer versions of the
+examples on the drive. [[Update all]] downloads every one it finds. To update a
+single example, press **Update** in the corner of its card. A card marked
+**Needs** and a version number needs newer firmware than the board has. Press
+[[Update available]] beside the version at the top of the page to get it.
+
+Examples on the drive have a delete button just like your own files. You can
+download a deleted example again later.
+
+If you've changed an example program, the picker keeps your version as a copy of
+your own before it updates. A changed sound is replaced.
 
 ### Saving: Sending to the board
 
@@ -877,6 +905,10 @@ one. The RGB output shows the colour:
 
 A setting with an invalid value is ignored and noted in `errors.txt`,
 and the effect uses its default instead.
+
+If the FX drive doesn't appear on your computer, double-press **Boot** to show
+it. This can happen on a Mac that was locked when the board was plugged in or
+restarted. The Mac ejects the drive, and it stays hidden after you log in.
 
 A drive that cannot be repaired can be returned to how it shipped by
 installing the board's `-full` firmware from the

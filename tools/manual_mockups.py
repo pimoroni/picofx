@@ -29,7 +29,7 @@ CHIP_ICON = ('<svg class="chipicon" viewBox="0 0 14 14" width="13" height="13" a
              'stroke-width="1.3" stroke-linecap="round"/></svg>')
 
 # The buttons the picker draws with the chip
-CHIP_BUTTONS = ("Edit board", "Done")
+CHIP_BUTTONS = ("add this strip", "add this screen", "add a panel", "add a sensor")
 
 # The palette the picker marks a card with when its look takes a colour
 PALETTE_ICON = ('<svg class="palette" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" '
@@ -130,6 +130,17 @@ THUMB_TINTS = ["#1f6feb", "#a347d1", "#c2570f", "#0a7f78", "#b8324a", "#6b7f1a"]
 
 HATCH = "hatch"
 
+# The wiring picture's layout in rem, from manual_mockups.css, which places the ends of its wires.
+# A picture has no layout to measure, so the wires are drawn for the manual's full width, where
+# the runs are 43.5rem wide, and scale with the picture at any other
+WIRE_WIDTH = 43.5
+RUN_GAP = 1
+CARD_BORDER = 0.125
+BOARD_SIDE = 0.6
+PLUG_WIDTH = 2.2
+LAMP_FOOT = 3.71
+PLUG_TOP = 7.47
+
 
 def selected_items(text):
     """The comma-separated items in a line, each with whether a * marks it selected."""
@@ -208,7 +219,7 @@ def beads_apart(count):
 
 def head_steps(stretches, strip, standing_back):
     """The steps at the right of a run's chip row, a strip's zoom then Undo, Redo and Join all,
-    greyed while there is one stretch, all standing back while the board is set up."""
+    greyed while there is one stretch, all standing back in the outputs' wiring view."""
     zoom = ('<span class="round">&#8722;</span><span class="dim">100%</span>'
             '<span class="round">+</span>') if strip else ""
     return ('<span class="headsteps{}">{}<span class="round">{}</span><span class="round">{}</span>'
@@ -265,7 +276,7 @@ def tab_preview(name, preview):
         return ('<span class="tabsays">{}</span><span class="tabscreens">{}</span>'.format(
             html.escape(", ".join(sizes)), "<i></i>" * max(len(sizes), 1)))
     if name == "Sound":
-        return '<span class="tabsays">silence</span><span class="tabsound {}"></span>'.format(HATCH)
+        return '<span class="tabsays">nothing</span><span class="tabsound {}"></span>'.format(HATCH)
     # The Sensor tab names what is fitted, with no picture
     if name == "Sensor":
         return '<span class="tabsays">{}</span>'.format(html.escape(preview or "none"))
@@ -278,11 +289,10 @@ def tab_preview(name, preview):
         "".join('<i style="background:{}"></i>'.format(colour) for colour in colours))
 
 
-def mockup_tabs(text, editing):
+def mockup_tabs(text):
     """The row of tabs under Effects, written as "*Outputs=Rainbow, Left strip, Screens=2.8"
     1.54", Sound". A look after an equals sign is what that tab's lights play, "mono Wave" on
-    mono lights, and a ~ greys a tab out. The row ends in Edit board, or in Done while the
-    board is being set up."""
+    mono lights, and a ~ greys a tab out."""
     tabs = []
     for item, selected in selected_items(text):
         greyed = item.startswith("~")
@@ -291,9 +301,7 @@ def mockup_tabs(text, editing):
         tabs.append('<span class="tab{}{}{}"><span class="tabname">{}</span>{}</span>'.format(
             " picked" if selected else "", " greyed" if greyed else "", boxed,
             html.escape(name.replace('"', "")), tab_preview(name, preview)))
-    end = '<span class="button{}">{}{}</span>'.format(
-        " done" if editing else "", CHIP_ICON, "Done" if editing else "Edit board")
-    return '<div class="tabrow{}">{}{}</div>'.format(" editing" if editing else "", "".join(tabs), end)
+    return '<div class="tabrow">{}</div>'.format("".join(tabs))
 
 
 # Each scene's colour, the Aye Arr Remote's number button in its place, as the picker gives them
@@ -360,13 +368,30 @@ def mockup_scenes(text):
         " picked" if always_picked else "", always, "".join(cards), tab)
 
 
+# A strip's colour order as its choice names it, where the choice says more than the order
+ORDERS_SHOWN = {"GRB": "GRB (most strips)"}
+
+
+def strip_chip(count, order):
+    """A strip's chip as the picker draws it, its number of LEDs and its colour order to change,
+    then its remove button."""
+    return ('<span class="badge strip">{}<b>Strip</b><span class="field">{}</span> LEDs '
+            '<span class="field">{} &#9662;</span><span class="remove">remove</span></span>').format(
+                CHIP_ICON, html.escape(count), html.escape(ORDERS_SHOWN.get(order, order)))
+
+
 def mockup_badge(text, kind, steps):
     """The board setting label at the top of a tab, written as its name and what it says, then
     any hint after a bar, "Wiring, every output is one colour light | Drag each light ...". A
-    strip's count of stretches follows its label, and steps go at the right of the row."""
+    strip's is written "Strip, 66 LEDs, GRB" and drawn as its chip. A strip's count of
+    stretches follows its label, and steps go at the right of the row."""
     label, _, hint = text.partition("|")
     name, _, note = label.partition(",")
     said = '<span class="hint">{}</span>'.format(html.escape(hint.strip())) if hint else ""
+    if kind == "strip":
+        count, _, order = note.partition(",")
+        return '<div class="badgerow">{}{}{}</div>'.format(
+            strip_chip(count.split()[0], order.strip()), said, steps)
     return '<div class="badgerow"><span class="badge {}">{}<b>{}</b> {}</span>{}{}</div>'.format(
         kind, CHIP_ICON, html.escape(name.strip()), html.escape(note.strip()), said, steps)
 
@@ -480,14 +505,38 @@ def mockup_cards(text, mono, group):
     return '{}<div class="gallery">{}</div>'.format(head, "".join(cards))
 
 
+def wire_lines(counts):
+    """The wires from each connector to the light it feeds, as the picker draws them, faint curves
+    leaving the connector straight up and meeting the light straight down. Each run takes its
+    share of the width by its count of lights."""
+    room = WIRE_WIDTH - RUN_GAP * (len(counts) - 1)
+    lamps = []
+    left = 0
+    for count in counts:
+        width = room * count / sum(counts)
+        inside = width - 2 * CARD_BORDER
+        lamps.extend(left + CARD_BORDER + (at + 0.5) * inside / count for at in range(count))
+        left += width + RUN_GAP
+    total = len(lamps)
+    step = (WIRE_WIDTH - 2 * BOARD_SIDE - PLUG_WIDTH) / max(total - 1, 1)
+    plugs = [BOARD_SIDE + PLUG_WIDTH / 2 + at * step for at in range(total)]
+    tall = PLUG_TOP - LAMP_FOOT
+    paths = "".join('<path d="M{0:.2f} {2:.2f}C{0:.2f} {3:.2f} {1:.2f} {3:.2f} {1:.2f} 0"/>'.format(
+        plug, lamp, tall, tall / 2) for plug, lamp in zip(plugs, lamps))
+    return ('<svg class="wirelines" viewBox="0 0 {} {:.2f}" preserveAspectRatio="none" '
+            'style="top:{}rem;height:{:.2f}rem" aria-hidden="true">{}</svg>').format(
+                WIRE_WIDTH, tall, LAMP_FOOT, tall, paths)
+
+
 def mockup_wiring(text, look):
     """The lights while the board is set up, a tile each in a stretch's card, over the board's
-    edge with its connectors, written as their labels with a bar between the two sides,
-    "1, 2, 3, 4, 5, 6 | RGB". The first side is mono where look starts "mono ", and look
-    colours the lights as the picker would show it playing. The board's edge says the lights are
-    in wiring order, so Reset wiring is greyed."""
+    edge with its connectors and a wire from each connector to its light, written as their labels
+    with a bar between the two sides, "1, 2, 3, 4, 5, 6 | RGB". The first side is mono where look
+    starts "mono ", and look colours the lights as the picker would show it playing. The board's
+    edge says the lights are in wiring order, so Reset wiring is greyed."""
     sides = []
     connectors = []
+    counts = []
     for at, group in enumerate(text.split("|")):
         labels = [label.strip() for label in group.split(",")]
         mono = look.startswith("mono ") and at == 0
@@ -496,23 +545,24 @@ def mockup_wiring(text, look):
         side = mockup_run("mono" if mono else "colour", "", played, labels)
         sides.append(side)
         connectors.extend(labels)
+        counts.append(len(labels))
     plugs = "".join('<span class="plug"><b>{}</b></span>'.format(html.escape(label))
                     for label in connectors)
-    return ('<div class="runs setup">{}</div><div class="wireboard"><div class="connectors">{}</div>'
-            '<div class="wirefoot"><span>All lights are in wiring order. Hover over a light or '
-            'connector to highlight its wire.</span><span class="wirereset off">Reset wiring</span>'
-            '</div></div>').format("".join(sides), plugs)
+    return ('<div class="wiring"><div class="runs setup">{}</div>{}<div class="wireboard">'
+            '<div class="connectors">{}</div><div class="wirefoot"><span>All lights are in wiring '
+            'order. Hover over a light or connector to highlight its wire.</span>'
+            '<span class="wirereset off">Reset wiring</span></div></div></div>').format(
+                "".join(sides), wire_lines(counts), plugs)
 
 
 def mockup_strip_setup(text):
-    """A strip's settings while the board is set up, written as its number of LEDs, and the
-    strip's LEDs under them in its one stretch, which stands back."""
+    """A strip's chip, written as its number of LEDs, and the strip's LEDs under it in one
+    stretch playing nothing."""
     count = int(text.strip())
     run = mockup_run("strip", "", "Nothing {}".format(count))
-    return ('<div class="badgerow"><span class="badge strip">{}<b>Strip</b><span class="field">{}'
-            '</span> LEDs <span class="field">GRB (most strips) &#9662;</span> &#215;</span>'
-            '<span class="hint back">Cut into 1 stretch</span>{}</div><div class="runs setup">{}</div>'
-            ).format(CHIP_ICON, count, head_steps(1, True, True), run)
+    return ('<div class="badgerow">{}<span class="hint">Cut into 1 stretch</span>{}</div>'
+            '<div class="runs">{}</div>').format(strip_chip(str(count), "GRB"),
+                                                 head_steps(1, True, False), run)
 
 
 def mockup_screen_mode(text):
@@ -569,6 +619,7 @@ def mockup_hub(text, places):
         cells.append('<span class="place{}"{}><span class="placehead"><b>{}</b><span>{}2.8"</span>'
                      '</span><span class="breakout small"><span class="holes"></span>{}'
                      '<span class="holes"></span></span><span class="dim small">{}</span>'
+                     '<span class="remove">remove</span>'
                      '<span class="segment small groups">{}</span><span class="groupsaid">{}</span>'
                      '</span>'.format(" grouped" if group else "", ink, letter, CHIP_ICON, display,
                                       html.escape(picture or "nothing"), numbers, said))
@@ -622,7 +673,8 @@ def mockup_screen(letter, text, paired):
     turns = "".join('<span class="{}">{}&#176;</span>'.format("on" if turn == 0 else "", turn)
                     for turn in (0, 90, 180, 270))
     return ('<span class="screen screen{}"><span class="screenhead"><b>{}</b><span class="field">'
-            '{}{} &#9662;</span></span><span class="backlight"><span class="dim">backlight</span>'
+            '{}{} &#9662;</span><span class="remove">remove</span></span>'
+            '<span class="backlight"><span class="dim">backlight</span>'
             '<span class="slider"><i style="width:100%"></i></span><span>100%</span></span>'
             '<span class="breakout"><span class="holes"></span><small>{}" LCD</small>{}'
             '<span class="holes"></span></span>{}<span class="showing">{}</span>'
@@ -749,12 +801,12 @@ def picker_mockup(body):
     pointing = "settings" in keys and any("*" in line for line in run_lines)
     strip = any(line.startswith("strip") for line in run_lines)
     stretches = sum(len(selected_items(line.partition(":")[2])) for line in run_lines)
-    # The chip row carries the run's steps, and a strip's count of its stretches. While the board
-    # is set up, its lights are drawn by the wiring line and the steps stand back
-    steps = head_steps(stretches, strip, "tabs" in keys) if run_lines or "wiring" in keys else ""
+    # The chip row carries the run's steps, and a strip's count of its stretches. In the outputs'
+    # wiring view, its lights are drawn by the wiring line and the steps stand back
+    steps = head_steps(stretches, strip, "wiring" in keys) if run_lines or "wiring" in keys else ""
     if strip:
-        steps = '<span class="hint{}">Cut into {} stretch{}</span>{}'.format(
-            " back" if "tabs" in keys else "", stretches, "" if stretches == 1 else "es", steps)
+        steps = '<span class="hint">Cut into {} stretch{}</span>{}'.format(
+            stretches, "" if stretches == 1 else "es", steps)
     letters = [line.partition(":")[0].split()[1] for line in body
                if line.startswith("screen ") and len(line.partition(":")[0].split()) > 1]
     # A hub's positions are given on their own line and drawn with the hub's box
@@ -790,7 +842,7 @@ def picker_mockup(body):
         elif kind == "scenes":
             parts.append(mockup_scenes(text))
         elif kind == "tabs":
-            parts.append(mockup_tabs(text, rest == ["editing"]))
+            parts.append(mockup_tabs(text))
         elif kind == "badge":
             parts.append(mockup_badge(text, " ".join(rest), steps))
         elif kind == "settings":

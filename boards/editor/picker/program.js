@@ -14,7 +14,7 @@ import {
 import {spoken} from "./lines.js";
 import {BOARD} from "./looks.js";
 import {state} from "./scenes.js";
-import {boardIcon} from "./setup.js";
+import {BOARD_SETTING_SAYS, boardIcon} from "./setup.js";
 import {tabSwatch} from "./tabs.js";
 
 // ---- the effects page, or a program page ------------------------------------------------------
@@ -649,7 +649,7 @@ function emptyPicture() {
 
 // The line along the preview's top, saying what the board runs, with the way to choose none
 function heroNote(path) {
-  return h("div", {className: "programnote"}, boardIcon(),
+  return h("div", {className: "programnote", title: BOARD_SETTING_SAYS}, boardIcon(),
            h("span", {}, path
              ? "The board runs " + path.split("/").pop() + " instead of the effects. The " +
                "effects are kept, and play if the program is missing or stops, with the reason " +

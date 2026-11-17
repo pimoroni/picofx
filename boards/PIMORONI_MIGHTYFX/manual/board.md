@@ -8,8 +8,7 @@ tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sens
 
 Under **Effects** you'll find a tab for each part of the board. **Outputs**,
 **Left strip** and **Right strip** are for the lights, followed by **Screens**,
-**Sound** and **Sensor**. Each tab shows a small preview of what it's playing, and [[Edit board]]
-sits at the end of the row.
+**Sound** and **Sensor**. Each tab shows a small preview of what it's playing.
 
 <!-- block picker_first_look -->
 
@@ -39,22 +38,23 @@ cards All together: *Solid, Colour cycle, Colour steps, Breathe, Blink
 <!-- block picker_board -->
 
 ```picker
-tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 badge: Wiring, every output is one colour light | Drag lights to match your build. Arrows split or rejoin an output's three lights.
 wiring Rainbow: 1, 2, 3, 4, 5, 6, 7
 ```
 
-On **Outputs**, drag each light to match where it sits in your build, so a look
-that travels moves the right way. The arrows split an output into three mono
-lights, or join them back into one colour light. [[Reset wiring]], under the
-connectors, puts every light back in wiring order and rejoins every output.
+On **Outputs**, press the **Wiring** chip, then drag each light to match where it
+sits in your build, so a look that travels moves the right way. The arrows split
+an output into three mono lights, or join them back into one colour light.
+[[Reset wiring]], under the connectors, puts every light back in wiring order and
+rejoins every output. Press the chip again when you're done.
 
 On **Left strip** and **Right strip**, set how many LEDs each strip has and its
-colour order, which needs changing if red shows as another colour. The cross
-removes a strip you haven't fitted.
+colour order, which needs changing if red shows as another colour. [[remove]]
+takes off a strip you haven't fitted, and [[add this strip]] puts it back.
 
 ```picker
-tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+tabs: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 stripsetup: 30
 ```
 
@@ -79,6 +79,11 @@ hero: Flip dot sign | Draw a flip-dot sign that spells its message by flipping o
 with: screen, 2 screens, hub, remote, servos
 programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
 ```
+
+<!-- block discover_kept -->
+
+If you've changed an example program or drawing, the picker keeps your version
+as a copy of your own before it updates. A changed picture or sound is replaced.
 
 <!-- block entry_examples -->
 

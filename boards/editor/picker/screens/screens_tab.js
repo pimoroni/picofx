@@ -5,7 +5,6 @@ import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia
 } from "../drive_files.js";
 import {OWN_GROUP, foldHead} from "../program.js";
-import {setupOn} from "../runs.js";
 import {allBodies, apply, frozen, slotAt, state, store} from "../scenes.js";
 import {mediaArt, panelPreview} from "./screen_art.js";
 import {drawingCopyTile, lightRow, lookSections, showingLine} from "./screen_settings.js";
@@ -13,7 +12,7 @@ import {
   SCREENS, SCREEN_NAMES, assetSteps, bandFact, screenButton, screenParts, screenShown, screenUnder,
   screensHeadSteps, screensPaired
 } from "./screens.js";
-import {boardIcon} from "../setup.js";
+import {BOARD_SETTING_SAYS, boardButton, boardIcon, removeButton} from "../setup.js";
 
 // ---- the Screens tab ----------------------------------------------------------------------------
 // Each screen's preview in the scene on show, and the gallery of the drive's pictures and drawings.
@@ -47,9 +46,12 @@ function mediaGroups() {
 // The small Off card, black, whose buttons turn a screen off in this scene. A hub gives it its
 // positions' buttons in place of these
 function offCard() {
+  // With no screen fitted there is nothing to turn off, and the card keeps its place unseen
+  var fitted = (state.hub && state.hub.on) ||
+               SCREENS.some(function (letter) { return state.screens[letter].there; });
   return h("div", {
     className: "card nothing small offasset", title: "Turn a screen off in this scene",
-    style: {visibility: state.at < 0 ? "hidden" : null}
+    style: {visibility: state.at < 0 || !fitted ? "hidden" : null}
   }, h("div", {className: "face"}, "Off"),
      h("div", {className: "pick"}, SCREENS.map(function (letter) {
        var screen = state.screens[letter];
@@ -160,23 +162,37 @@ function renderScreenBoxes() {
   replace(document.getElementById("screensHead"), SCREENS.map(screenBox));
 }
 
+// Take a screen off the board. Every scene's choice for it goes too, since nothing is left to
+// show them
+function takeScreenOff(letter) {
+  state.screens[letter].there = false;
+  store();
+  allBodies().forEach(function (held) {
+    held.screens[letter].shows = null;
+    held.screens[letter].kept = null;
+  });
+  apply(slotAt(state.at).body);
+  draw();
+}
+
 // A screen's box, its band naming it over its body, or the way to add it where it is not fitted.
 // Whether a screen is fitted and its size are the board's, so the band wears the board's chip,
 // beside the size where there is one
 function screenBox(letter) {
   var screen = state.screens[letter];
+  // A screen not fitted offers to be added, which shows nothing until a scene chooses something
   if (!screen.there) {
+    var add = boardButton("add this screen");
+    add.onclick = function () {
+      screen.there = true;
+      screen.shows = null;
+      screen.kept = null;
+      draw();
+    };
     return h("div", {className: "screen-box " + letter.toLowerCase()},
-             h("h3", {title: "Board setup, shared by every scene"}, boardIcon(), screenShown(letter)),
-             h("div", {className: "body adding"}, h("button", {
-               disabled: !setupOn,
-               onclick: function () {
-                 screen.there = true;
-                 screen.shows = null;
-                 screen.kept = null;
-                 draw();
-               }
-             }, "add this screen")));
+             h("h3", {title: BOARD_SETTING_SAYS}, boardIcon(), screenShown(letter),
+               h("small", {className: "bandnone"}, "not fitted")),
+             h("div", {className: "body adding"}, add));
   }
 
   // The sizes a panel can be, the catalogue's hub being no panel size
@@ -218,20 +234,7 @@ function screenBox(letter) {
            h("h3", {title: ""}, screenShown(letter), bandFact(size),
              // Taking the screen out is the only way to have none, as a screen showing nothing
              // would say the same thing twice
-             h("button", {
-               className: "drop", title: "Remove this screen from every scene", disabled: !setupOn,
-               onclick: function () {
-                 screen.there = false;
-                 // Every scene's choice for it goes too, since nothing is left to show them
-                 store();
-                 allBodies().forEach(function (held) {
-                   held.screens[letter].shows = null;
-                   held.screens[letter].kept = null;
-                 });
-                 apply(slotAt(state.at).body);
-                 draw();
-               }
-             }, "\u00d7")),
+             removeButton("screen", function () { takeScreenOff(letter); })),
            body,
            // What the file already says for this screen, where the picker did not write it and
            // no picture can stand for it. It is a line of its own under the settings

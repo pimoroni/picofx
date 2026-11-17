@@ -56,8 +56,7 @@ tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sens
 
 Under **Effects** you'll find a tab for each part of the board. **Outputs**,
 **Left strip** and **Right strip** are for the lights, followed by **Screens**,
-**Sound** and **Sensor**. Each tab shows a small preview of what it's playing, and [[Edit board]]
-sits at the end of the row.
+**Sound** and **Sensor**. Each tab shows a small preview of what it's playing.
 
 ### Lights: Choosing a look
 
@@ -119,30 +118,33 @@ strip.
 
 ### Board: Setting up your hardware
 
-Press [[Edit board]] to tell the picker about your hardware. Everything else
-fades while you're there, and [[Done]] takes you back.
+Each tab holds the settings for its own hardware, such as the order your lights
+are wired in. Look out for the chip icon, which the picker puts on every board
+setting. These settings describe your hardware, so they're shared by every
+scene.
 
-Look out for the chip icon on [[Edit board]]. The picker marks every board
-setting with it, such as the order your lights are wired in. These settings
-describe your hardware, so they're shared by every scene.
+A part that isn't fitted has a button with the chip to add it, and a fitted part
+has [[remove]] to take it off again. Once you have scenes, the picker asks before
+removing anything, as every scene loses what it played there.
 
 ```picker
-tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 badge: Wiring, every output is one colour light | Drag lights to match your build. Arrows split or rejoin an output's three lights.
 wiring Rainbow: 1, 2, 3, 4, 5, 6, 7
 ```
 
-On **Outputs**, drag each light to match where it sits in your build, so a look
-that travels moves the right way. The arrows split an output into three mono
-lights, or join them back into one colour light. [[Reset wiring]], under the
-connectors, puts every light back in wiring order and rejoins every output.
+On **Outputs**, press the **Wiring** chip, then drag each light to match where it
+sits in your build, so a look that travels moves the right way. The arrows split
+an output into three mono lights, or join them back into one colour light.
+[[Reset wiring]], under the connectors, puts every light back in wiring order and
+rejoins every output. Press the chip again when you're done.
 
 On **Left strip** and **Right strip**, set how many LEDs each strip has and its
-colour order, which needs changing if red shows as another colour. The cross
-removes a strip you haven't fitted.
+colour order, which needs changing if red shows as another colour. [[remove]]
+takes off a strip you haven't fitted, and [[add this strip]] puts it back.
 
 ```picker
-tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+tabs: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 stripsetup: 30
 ```
 
@@ -177,12 +179,12 @@ Press [[Paired]] again to set them apart. Each scene can pair the screens or not
 ### Screens: Using a Screen Hub
 
 A Screen Hub plugs into both screen connectors and drives up to six screens, at
-the positions A to F printed on the hub. To set one up, press [[Edit board]], open
-**Screens** and choose **A Screen Hub across both**. Then pick which connector
-carries the hub's SPI and which its Selects, as labelled on the hub, and set the
-size of the screen at each position.
+the positions A to F printed on the hub. To set one up, open **Screens** and
+choose **A Screen Hub across both**. Then pick which connector carries the hub's
+SPI and which its Selects, as labelled on the hub, and set the size of the screen
+at each position. [[add a panel]] fills a position left empty.
 
-Back on **Screens**, the positions sit side by side under one shared backlight.
+The positions sit side by side under one shared backlight.
 Each picture has a button for every position, or for every group once you've
 made some, and [[all]] shows it everywhere.
 
@@ -272,9 +274,9 @@ the "On the drive" heading quietens it while the scene shows.
 
 ### Sensor: Changing scenes with a remote or motion
 
-Press [[Edit board]] and choose what's on the sensor connector, an Aye Arr
-Remote through an IR Receiver Stick, or a PIR Stick. That's the only board
-setting for it. The **Sensor** tab then shows the remote with a row for each
+On **Sensor**, press [[add a sensor]] and choose what's on the sensor connector,
+an Aye Arr Remote through an IR Receiver Stick, or a PIR Stick. That's the only
+board setting for it. The **Sensor** tab then shows the remote with a row for each
 button, or the Stick with a row for when motion starts and one for when it
 stops.
 
@@ -321,6 +323,31 @@ hero: Flip dot sign | Draw a flip-dot sign that spells its message by flipping o
 with: screen, 2 screens, hub, remote, servos
 programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
 ```
+
+### Examples: Downloading more
+
+The board's examples are also kept online. You can download any example the
+drive doesn't have, and update the ones it does have. The computer needs to be
+online for this.
+
+Each tab that lists examples has a Discover button under its **Examples**
+heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+shows the examples this drive doesn't have. Click a card to choose it, or tick
+the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
+**Programs**, the **With** buttons in the gallery hide examples that need
+hardware you don't have.
+
+Under the Discover button, [[Check for updates]] looks for newer versions of the
+examples on the drive. [[Update all]] downloads every one it finds. To update a
+single example, press **Update** in the corner of its card. A card marked
+**Needs** and a version number needs newer firmware than the board has. Press
+[[Update available]] beside the version at the top of the page to get it.
+
+Examples on the drive have a delete button just like your own files. You can
+download a deleted example again later.
+
+If you've changed an example program or drawing, the picker keeps your version
+as a copy of your own before it updates. A changed picture or sound is replaced.
 
 ### Saving: Sending to the board
 
@@ -1283,6 +1310,10 @@ one. Every output shows the colour:
 
 A setting with an invalid value is ignored and noted in `errors.txt`,
 and the effect uses its default instead.
+
+If the FX drive doesn't appear on your computer, double-press **Boot** to show
+it. This can happen on a Mac that was locked when the board was plugged in or
+restarted. The Mac ejects the drive, and it stays hidden after you log in.
 
 A drive that cannot be repaired can be returned to how it shipped by
 installing the board's `-full` firmware from the

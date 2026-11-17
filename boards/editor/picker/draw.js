@@ -23,7 +23,8 @@ export var drawSteps = {before: [], after: []};
 export var DRAW_BEFORE = ["tabs", "screenShown", "screenTurns", "hubTurns", "hubGroups",
                           "screenPair", "program", "firmware"];
 export var DRAW_AFTER = ["sceneTray", "strips", "setup", "wiring", "tabs", "screens", "sound",
-                         "sensor", "tabSwatches", "hub", "boardSettings", "saveMenu", "program",
+                         "sensor", "tabSwatches", "hub", "filePreview", "boardSettings",
+                         "saveMenu", "program",
                          "floatBar", "readback", "discover", "firmware", "start"];
 
 // What a draw does between its before and after steps, by name, each filled in by the part that

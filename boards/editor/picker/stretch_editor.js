@@ -346,7 +346,8 @@ chosenSteps.push(function (where, run) {
   who.appendChild(h("span", {}, Array.from(who.childNodes)));
   who.classList.add("withway");
   if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
+  // One light has no direction
+  if (run.lamps.length > 1) who.appendChild(directionToggle(run, section));
 });
 
 // ---- blinking through several colours, on the chosen stretch ------------------------------------

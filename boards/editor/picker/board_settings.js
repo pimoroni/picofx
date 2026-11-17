@@ -3,7 +3,7 @@ import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "./draw.js";
 import {renderPreview} from "./file_preview.js";
 import {state} from "./scenes.js";
-import {boardIcon} from "./setup.js";
+import {BOARD_SETTING_SAYS, boardIcon} from "./setup.js";
 
 // ---- the board's own settings -----------------------------------------------------------------
 // Three settings belong to the board and to no section. They are whether a save plays without an
@@ -159,6 +159,7 @@ function programNote() {
   note.hidden = !boardSet.program;
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
+  note.title = BOARD_SETTING_SAYS;
   replace(note, boardIcon(),
           "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
                                                        : boardSet.program) +

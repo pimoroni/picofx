@@ -590,16 +590,19 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Colour cycle")) + 1, 0, {
 // ---- where the board is set up ----------------------------------------------------------
 // Every fact about the board stays beside what it is about, the wiring on the outputs, a
 // strip's length on the strip, a screen's type on the screen. Each reads as a box in its
-// section's own colour, and the whole board is set up at once in a setup mode.
+// section's own colour and is changed where it is shown, the outputs' wiring in a wiring view
+// of its own.
 
-// Whether the whole page is in its setup mode
+// Whether the outputs' wiring view is open
 export var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
 export var BOARD_CHIP_CLASSES = {outPanel: "outs"};
 
-// Whether the board facts in this panel can be changed just now
-export function canEdit(panel) { return setupOn; }
+// Whether the board facts in this panel can be changed just now. Every board setting is changed
+// where it is shown, and only the outputs' wiring waits for its own view, where lights are
+// dragged into place
+export function canEdit(panel) { return panel === "outPanel" ? setupOn : true; }
 
 // ---- selection waits while the board is set up ------------------------------------------------
 // A stretch is picked to give it a look, which setup does not do, so a tap there picks

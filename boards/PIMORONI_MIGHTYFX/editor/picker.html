@@ -165,9 +165,6 @@ main{width:100%;max-width:60rem;margin:var(--space-7) auto;padding:0 var(--space
  background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;
  padding:var(--space-1) var(--space-2)}
 .chip select option{color:var(--ink)}
-.chip .drop{background:transparent;border:0;color:#fff;font-size:var(--text-xl);line-height:1;
- padding:0 var(--space-1);opacity:.8}
-.chip .drop:hover{opacity:1}
 /* A strip not fitted keeps its chip where it was and the panel its height, and the offer to add
    it stands in the middle of the room the strip took */
 .panel.strip{position:relative}
@@ -175,7 +172,8 @@ main{width:100%;max-width:60rem;margin:var(--space-7) auto;padding:0 var(--space
    stays put as the board is edited */
 .panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
 .panel.stripout > :not(summary):not(.leds){visibility:hidden}
-.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
+/* Level with a screen's words when it is not fitted */
+.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:8rem;
  transform:translate(-50%,-50%)}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 /* A tab whose section cannot be used just now, which still opens to say why */
@@ -264,7 +262,7 @@ button.round svg{display:block}
 .bar.carded{margin-top:var(--space-5)}
 .bar.carded .sec{display:flex;flex-direction:column}
 .cardlamps{display:flex;padding:var(--space-4) 0 var(--space-3)}
-/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
    without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
@@ -386,7 +384,7 @@ footer .company{margin:var(--space-6) 0 0;padding-top:var(--space-5);
 
 
 
-/* ---- the lamps in Edit board ---- */
+/* ---- the lamps in the wiring view ---- */
 
 /* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
    stretches are the scene's, so only the lamps answer the pointer */
@@ -726,7 +724,11 @@ body.setupall .bar.carded .sec .cut{display:none}
    that its two lines fit the tab */
 .sceneset{min-height:2rem}
 .scenetab .sceneset{margin:0;flex-wrap:nowrap}
-.scenetab .sceneset input[type=text]{width:10rem}
+/* Where long scene names widen the scene after, only the name gives way, so no choice is cut
+   short and "s, then" stays on one line */
+.scenetab .sceneset > *{flex-shrink:0}
+.scenetab .sceneset .sunit{white-space:nowrap}
+.scenetab .sceneset input[type=text]{width:10rem;flex-shrink:1;min-width:6rem}
 /* How the scene ends and the scene after it, chosen in the inputs' style */
 .sceneset select{border:1px solid var(--line);border-radius:var(--radius);background:#fff;
  padding:var(--space-3) var(--space-3);font:inherit;color:var(--ink);min-width:0}
@@ -969,10 +971,16 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  border-radius:var(--radius-s);background:rgba(255,255,255,.15);color:#fff;font:inherit;
  font-size:var(--text-s);padding:var(--space-1) var(--space-2)}
 .screen-box h3 select.inband option{color:var(--ink)}
-.screen-box h3 .drop{margin-left:auto;background:transparent;border:0;color:#fff;
- font-size:var(--text-xl);
- line-height:1;padding:0 var(--space-2);opacity:.8}
-.screen-box h3 .drop:hover{opacity:1}
+/* A board setting's add button where the part is not fitted, and its remove button where it is */
+.boardadd{display:inline-flex;align-items:center;gap:var(--space-3)}
+.boardadd .boardicon{color:var(--board)}
+.boardremove{font:inherit;font-size:var(--text-xs);line-height:1.2;
+ padding:var(--space-1) var(--space-3);border-radius:var(--radius-s);cursor:pointer}
+.boardchip .boardremove,.screen-box h3 .boardremove{border:1px solid rgba(255,255,255,.55);
+ background:rgba(255,255,255,.15);color:#fff}
+.boardchip .boardremove:hover,.screen-box h3 .boardremove:hover{background:rgba(255,255,255,.3)}
+.screen-box h3 .boardremove{margin-left:auto}
+.screen-box h3 .bandnone{font-weight:400;opacity:.85}
 .keep{display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;
  width:calc(100% - 1.8rem);margin:0 var(--space-6) var(--space-5);text-align:left;
  padding:var(--space-3) var(--space-4);
@@ -1039,17 +1047,6 @@ select{font:inherit;font-size:var(--text-m);padding:var(--space-2) var(--space-3
 .boardicon{color:var(--board);flex:0 0 auto}
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
 .boardicon{width:16px;height:16px;margin:-1.5px}
-
-/* Drawn as the board boxes it opens are, with their chip and their shape. It is outlined to
-   set up and filled while setting up */
-.setupbutton{display:inline-flex;align-items:center;gap:var(--space-3);
- padding:var(--space-3) var(--space-4);
- border-radius:var(--radius);border:1.5px solid var(--boardOuts);background:none;
- color:var(--boardOuts);font:600 var(--text-m) var(--font);cursor:pointer}
-.setupbutton:hover{background:#eef2f7}
-.setupbutton .boardicon{color:currentColor}
-.setupbutton.on{background:var(--boardOuts);color:#fff}
-.setupbutton.on:hover{background:#34505f}
 
 /* Saving in the header, the next thing to do filled in the page's colour */
 :root{--warn:#b33;--warn-bg:#fbeaea}
@@ -1360,6 +1357,13 @@ body.scenesintab #looks>.shelf{margin-top:0}
  align-items:center;gap:var(--space-3);cursor:pointer}
 .headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
+/* The Wiring chip opens the outputs' wiring view and closes it, so it answers the pointer, and
+   shows pressed while the view is open */
+#outFacts .boardchip{cursor:pointer}
+#outFacts .boardchip:hover{filter:brightness(1.12)}
+body.setupall #outFacts .boardchip{
+ box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),inset 0 3px 6px rgba(0,0,0,.45)}
+
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once. A run's cards stand back around
    its lights, which are the board's */
@@ -1445,7 +1449,7 @@ details[open]>summary .accswatch{display:none}
 .ledtab:hover{color:var(--ink)}
 .ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .ledtab .accswatch{margin:0}
-/* On a narrow page the LED tabs' swatches give way, so the row keeps Edit board inside it */
+/* On a narrow page the LED tabs' swatches give way, so the row stays inside the page */
 .ledtabs .ledtab{flex:0 1 auto;min-width:0}
 .ledtab b{white-space:nowrap}
 .ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}
@@ -1485,10 +1489,9 @@ html{scrollbar-gutter:stable}
 .ledtab .tabunder{display:block;font:var(--text-xs)/.55rem var(--font);color:var(--dim);
  white-space:nowrap;width:0;overflow:visible}
 .ledtab .tabname{display:flex;flex-direction:column;gap:var(--space-3)}
-/* A sixth tab leaves the row short of room, so Edit board keeps one line and only the lights'
-   stripes narrow, never past the names above them */
+/* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
+   names above them */
 #ledTabs:has([data-panel=sensorPanel]){gap:var(--space-6)}
-#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
  [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
@@ -1552,7 +1555,6 @@ html{scrollbar-gutter:stable}
 .screen-box.b{--hub:#a44ad0}
 .lightopt input[type=range]{width:6.5rem;accent-color:var(--hub,var(--strip))}
 .lightfigure{min-width:2.4rem;font-variant-numeric:tabular-nums;color:var(--ink)}
-body:not(.setupall) .screen-box h3 .drop{visibility:hidden}
 .place.picked{border-color:var(--group,var(--hub));
  background:color-mix(in srgb,var(--group,var(--hub)) 13%,transparent)}
 .place.picked:hover{background:color-mix(in srgb,var(--group,var(--hub)) 18%,transparent)}
@@ -1599,9 +1601,6 @@ body.nolooks #looks{opacity:.3;pointer-events:none}
 /* In the box of the section they are for, the looks are hidden with it, every section keeping
    its place so the tabs' place stays as tall as the tallest */
 body.looksbelow #looks{margin:var(--space-6) 0 0}
-/* Setting up is the last thing on the tabs' row, at its far end */
-.ledtabs .gap{flex:1}
-.ledtabs .setupbutton{align-self:center}
 
 /* The button beside the version where newer firmware is out, and the sheet it opens. The sheet's
    foot keeps the downloads in view while the notes scroll */
@@ -1919,13 +1918,7 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 .hubswitch button{border:0;border-radius:0;background:transparent;color:var(--screenA);
  font:inherit;line-height:1.3;padding:var(--space-3) var(--space-4);cursor:pointer}
 .hubswitch button.on{background:var(--screenA);color:#fff}
-.hubswitch:not(.locked) button:not(.on):hover{background:rgba(31,111,235,.1)}
-/* Locked, the choice made reads as a fact, a filled chip like the other tabs' boxes, and the
-   other is only a grey mention with no outline of its own to press */
-.hubswitch.locked{box-shadow:inset 0 0 0 1px var(--line)}
-.hubswitch.locked button{cursor:default;color:var(--dim);opacity:.7}
-.hubswitch.locked button.on{color:#fff;opacity:1}
-.hubswitch.locked .hublead:not(.on) .boardicon{color:var(--dim);opacity:.7}
+.hubswitch button:not(.on):hover{background:rgba(31,111,235,.1)}
 .hubbox{grid-column:1/-1;--hub:#1f6feb;--hubwash:rgba(31,111,235,.06)}
 .hubbox.b{--hub:#a44ad0;--hubwash:rgba(164,74,208,.06)}
 .hubbox h3 .hubcount{font-weight:400;opacity:.85;margin-left:var(--space-3)}
@@ -1937,19 +1930,17 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 .placesize{font-size:var(--text-xs);padding:var(--space-1) var(--space-1);
  border-radius:var(--radius-s)}
 .placetop .placechip{color:var(--hub);margin-right:var(--space-2)}
-.placesize:disabled{opacity:.75;color:var(--ink);background:transparent;border-color:transparent;
- appearance:none;-webkit-appearance:none;padding:var(--space-1) 0}
 .placesays{font-size:var(--text-xs);color:var(--dim);max-width:100%;overflow:hidden;
  text-overflow:ellipsis;white-space:nowrap}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:var(--radius-s);font-size:var(--text-xs);color:var(--dim);
  background:var(--cross) transparent;outline:1px dashed var(--dashed);outline-offset:-1px}
-.placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
- border:0;border-radius:var(--radius-s);background:var(--hub);color:#fff;font-size:var(--text-l);
- line-height:1}
 .placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:var(--radius);
  background:var(--panel);color:var(--hub);font:600 var(--text-s) var(--font);
  padding:var(--space-1) var(--space-4)}
+.placefit .boardicon{color:var(--hub)}
+.place .boardremove{padding:var(--space-1) var(--space-3)}
+.placenone .boardadd{font-size:var(--text-xs);padding:var(--space-2) var(--space-3)}
 .hubsettings{width:100%;display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-5);
  align-items:center;
  min-height:2rem}
@@ -1982,6 +1973,10 @@ body.setupall .hubsettings{opacity:.35;pointer-events:none}
 /* As tall as while editing, when it holds the choice of what is fitted, so the remote below stays
    put as the board is edited, as a strip's box does */
 #sensorFacts .chip{box-sizing:border-box;min-height:37px}
+/* The sensor's add button is centred over its row, as a strip's and a screen's are in their boxes,
+   and takes no height from it, so the row stays as tall as the fitted chip */
+#sensorFacts{position:relative}
+#sensorFacts .sensoradd{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .remotediagram{display:grid;grid-template-columns:1fr var(--middle) 1fr;margin-top:var(--space-4)}
 .remoteside{position:relative}
 .remoterow{position:absolute;display:flex;align-items:center;justify-content:space-between;
@@ -2206,8 +2201,13 @@ function saving(text) {
   }, SPOT_STEP_MS);
 }
 var bannerSteps = [];
+var reportedSave = null;
+function setReportedSave(text) {
+  reportedSave = text;
+}
 function banner(text, warn, detail) {
   stopSpots();
+  reportedSave = null;
   bannerSteps.forEach(function(step2) {
     step2(text, warn);
   });
@@ -2415,6 +2415,7 @@ var DRAW_AFTER = [
   "sensor",
   "tabSwatches",
   "hub",
+  "filePreview",
   "boardSettings",
   "saveMenu",
   "program",
@@ -4315,7 +4316,7 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Colour cycle")) + 1, 0, {
 var setupOn = false;
 var BOARD_CHIP_CLASSES = { outPanel: "outs" };
 function canEdit(panel) {
-  return setupOn;
+  return panel === "outPanel" ? setupOn : true;
 }
 var heldPick = null;
 var heldOutput = null;
@@ -4881,7 +4882,9 @@ function renderSceneAside() {
       className: "sceneremove",
       title: "Remove this scene",
       onclick: function() {
-        removeScene(which);
+        var name = picked.name.trim() || "this scene";
+        if (confirm("Remove " + name + " and everything it plays?"))
+          removeScene(which);
       }
     }, "Remove scene")
   );
@@ -5117,13 +5120,29 @@ async function waitForBoard(before, nothingYet) {
   }
   return before;
 }
-function sayWhatHappened(said, also) {
+async function waitForReturn() {
+  var deadline = Date.now() + BOARD_WAIT_MS;
+  var wentAway = false;
+  while (Date.now() < deadline) {
+    await new Promise(function(settle2) {
+      setTimeout(settle2, BOARD_POLL_MS);
+    });
+    if (await driveAnswers()) {
+      if (wentAway) return true;
+    } else if (!wentAway) {
+      wentAway = true;
+      deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
+    }
+  }
+  return false;
+}
+function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot once to play the save. If the lights have already changed, the board has played it but this computer is showing an old copy of the drive. Press Reset on the board so the computer sees what it wrote.", true);
   else if (said)
     banner("The board reported problems:", true, said);
   else
-    banner("Playing on the board. No problems reported." + (also || ""));
+    banner((nothing ? "Nothing is playing on the board." : "Playing on the board.") + " No problems reported." + (also || ""));
 }
 async function openDrive(fresh) {
   try {
@@ -5142,7 +5161,7 @@ function openFresh() {
   openDrive(true);
 }
 var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
-var drive = { dirHandle: null, fileHandle: null };
+var drive = { dirHandle: null, fileHandle: null, text: null };
 var WROTE_KEY = "fx-picker-wrote";
 function overwriteQuestion() {
   return "The file on the board has changed since it was opened here. Overwrite those changes?";
@@ -5850,16 +5869,6 @@ function dropStrip(run) {
   apply(slotAt(state.at).body);
   draw();
 }
-function stripDrop(run) {
-  return h("button", {
-    type: "button",
-    className: "drop",
-    title: "Remove this strip from every scene",
-    onclick: function() {
-      dropStrip(run);
-    }
-  }, "\xD7");
-}
 function stripOfToken(token) {
   var named2 = token.match(/^(\w+)=/);
   var name = named2 && named2[1].toLowerCase();
@@ -6062,6 +6071,7 @@ function breakingOutputs() {
   });
   return found;
 }
+var ONE_LIGHT = OUTPUTS.length === 1 && !breakingOutputs().length;
 function brokenSaid() {
   var breaking = breakingOutputs();
   var broken = breaking.filter(function(out) {
@@ -6906,16 +6916,19 @@ function crossing(out, colour) {
   });
 }
 function headSteps(row, run) {
-  var join = toolButton(
-    "&#10231;",
-    "Join all",
-    run.sections.length < 2,
-    "join",
-    "merge into one stretch, keeping the selected stretch's look"
-  );
-  join.onclick = function() {
-    joinAll(run);
-  };
+  var join = null;
+  if (run.lamps.length > 1) {
+    join = toolButton(
+      "&#10231;",
+      "Join all",
+      run.sections.length < 2,
+      "join",
+      "merge into one stretch, keeping the selected stretch's look"
+    );
+    join.onclick = function() {
+      joinAll(run);
+    };
+  }
   var zooms = run.strip && run.count > ZOOMS_OVER;
   row.appendChild(h(
     "span",
@@ -7171,6 +7184,7 @@ function noArrow() {
 }
 
 // boards/editor/picker/setup.js
+var BOARD_SETTING_SAYS = "Board setup, shared by every scene";
 function stripChipChoice(run) {
   var choice;
   if (run.made === null) {
@@ -7206,6 +7220,22 @@ function stripChipChoice(run) {
 STRIPS.forEach(function(strip) {
   BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id;
 });
+function boardButton(words) {
+  return h("button", { type: "button", className: "boardadd" }, boardIcon(), words);
+}
+function removeButton(what, act) {
+  return h("button", {
+    type: "button",
+    className: "boardremove",
+    title: "Take this " + what + " off the board, in every scene",
+    // A hub position picks itself on a click, which a removed one cannot be
+    onclick: function(event) {
+      event.stopPropagation();
+      if (state.scenes.length && !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
+      act();
+    }
+  }, "remove");
+}
 function unmark() {
   document.querySelectorAll(".sec.picked, .card.picked").forEach(function(one) {
     one.classList.remove("picked");
@@ -7214,7 +7244,7 @@ function unmark() {
 function boardBox(panel, parts) {
   return h("span", {
     className: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
-    title: "Board setup, shared by every scene"
+    title: BOARD_SETTING_SAYS
   }, boardIcon(), parts);
 }
 function small(words) {
@@ -7227,11 +7257,16 @@ function boardIcon() {
     height: "13",
     class: "boardicon",
     "aria-hidden": "true",
-    html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"
+    html: "<title>" + BOARD_SETTING_SAYS + "</title><rect x='3' y='3' width='8' height='8' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"
   });
 }
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
+  if (ONE_LIGHT) {
+    replace(box);
+    headSteps(box, active.strip ? lastOutputRun : active);
+    return;
+  }
   var hint = null;
   if (canEdit("outPanel")) {
     var breaking = breakingOutputs();
@@ -7258,9 +7293,11 @@ function renderLeds(where, run) {
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
+    chip.title = BOARD_SETTING_SAYS;
     chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
+    chip.appendChild(removeButton("strip", function() {
+      dropStrip(run);
+    }));
   } else {
     replace(box, boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
@@ -7296,19 +7333,20 @@ function renderStripChip(where, run) {
 }
 function renderStripOut(box, run, panel) {
   var blocked = stripBlockedBy(run);
+  var add = null;
+  if (!blocked) {
+    add = boardButton("add this strip");
+    add.classList.add("addstrip");
+    add.onclick = function() {
+      stripThere(run, true);
+      workOn(panel);
+      draw();
+    };
+  }
   replace(
     box,
     boardBox(panel, ["Strip", small("not fitted")]),
-    blocked ? h("span", { className: "stripblocked says" }, blocked) : h("button", {
-      type: "button",
-      className: "addstrip",
-      disabled: !canEdit(panel),
-      onclick: function() {
-        stripThere(run, true);
-        workOn(panel);
-        draw();
-      }
-    }, "add this strip")
+    blocked ? h("span", { className: "stripblocked says" }, blocked) : add
   );
 }
 var lastOutputRun = outs;
@@ -7321,6 +7359,12 @@ function setSetup(on) {
   setSetupMode(on);
   showChosen();
 }
+document.addEventListener("click", function(event) {
+  if (event.target.closest("select, input, button, header")) return;
+  if (!event.target.closest("#outFacts .boardchip")) return;
+  setSetup(!setupOn);
+  draw();
+});
 var TAB_NAMES = { outPanel: BOARD.output_words.tab };
 BOARD.strips.forEach(function(strip) {
   TAB_NAMES[strip.name + "Panel"] = strip.tab;
@@ -7342,6 +7386,7 @@ function chosenTakesLooks() {
 }
 addStep(drawSteps.before, DRAW_BEFORE, "tabs", function() {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
+  showChosen();
 });
 function showChosen() {
   TAB_PANELS.forEach(function(panel) {
@@ -7386,35 +7431,24 @@ function tabBlocked(panel) {
 }
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
-  replace(
-    bar,
-    TAB_PANELS.map(function(panel) {
-      var blocked = tabBlocked(panel);
-      var swatch = h("span", { className: "accswatch" });
-      tabSwatch(swatch, panel);
-      return h("button", {
-        type: "button",
-        className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
-        title: blocked || null,
-        "data-panel": panel,
-        onclick: function() {
-          chosenTab = panel;
-          if (chosenTakesLooks()) workOn(panel);
-          showChosen();
-          draw();
-        }
-      }, h("b", {}, TAB_NAMES[panel]), swatch);
-    }),
-    h("span", { className: "gap" }),
-    // The tabs grow and shrink as setting up opens and closes, so they are held where they
-    // were on the screen
-    setupButton(setupOn ? "Done" : "Edit board", setupOn, function() {
-      var was = bar.getBoundingClientRect().top;
-      setSetup(!setupOn);
-      draw();
-      window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
-    })
-  );
+  replace(bar, TAB_PANELS.map(function(panel) {
+    var blocked = tabBlocked(panel);
+    var swatch = h("span", { className: "accswatch" });
+    tabSwatch(swatch, panel);
+    return h("button", {
+      type: "button",
+      className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
+      title: blocked || null,
+      "data-panel": panel,
+      onclick: function() {
+        if (setupOn && panel !== "outPanel") setSetup(false);
+        chosenTab = panel;
+        if (chosenTakesLooks()) workOn(panel);
+        showChosen();
+        draw();
+      }
+    }, h("b", {}, TAB_NAMES[panel]), swatch);
+  }));
 }
 function keptOpen(panel) {
   var node = document.getElementById(panel);
@@ -7445,14 +7479,6 @@ if (!/[?&]above\b/.test(location.search)) {
   document.body.classList.add("looksbelow");
   document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
 }
-function setupButton(label, on, act) {
-  return h(
-    "button",
-    { type: "button", className: "setupbutton" + (on ? " on" : ""), onclick: act },
-    boardIcon(),
-    label
-  );
-}
 var firstFitted;
 
 // boards/editor/picker/tab_swatches.js
@@ -7482,6 +7508,7 @@ LED_PANELS.forEach(function(panel) {
 addStep(drawSteps.after, DRAW_AFTER, "tabSwatches", paintAll);
 
 // boards/editor/picker/writing.js
+var NOTHING_PLAYING = "# Nothing is playing yet.";
 function entriesOf(body) {
   apply(body);
   var lines = lampLines().filter(function(line) {
@@ -7526,7 +7553,7 @@ function currentText() {
   });
   var board = boardLine();
   if (board) head.push(board, "");
-  return HEADER + head.join("\n") + "\n" + (lines.length ? lines.join("\n") : "# Nothing is playing yet.");
+  return HEADER + head.join("\n") + "\n" + (lines.length ? lines.join("\n") : NOTHING_PLAYING);
 }
 
 // boards/editor/picker/file_preview.js
@@ -7629,6 +7656,7 @@ document.getElementById("save").onclick = async function() {
       localStorage.setItem(WROTE_KEY, text);
     } catch (e) {
     }
+    drive.text = text;
     takeAnswer(null, text);
     await new Promise(function(settle2) {
       setTimeout(settle2, SAVING_TAIL_MS);
@@ -7636,23 +7664,28 @@ document.getElementById("save").onclick = async function() {
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard) ? " The drive will be hidden next time the board starts. Double-press Boot to show it." : "";
     if (/\bprogram=/.test(onBoard)) {
       banner("Saved. The board is running a program, so press Reset to play this change." + hides);
+      setReportedSave(text);
       return;
     }
     if (errorsBefore !== void 0 && /\bprogram=/.test(text)) {
-      banner("Saved. The board is restarting to run the program." + hides);
+      banner("Saved. The board is restarting to run the program...", "hold");
+      banner((await waitForReturn() ? "Running the program on the board." : "Saved. The board is restarting to run the program.") + hides);
+      setReportedSave(text);
       return;
     }
     if (errorsBefore === void 0) {
       banner("Saved. " + (playsItself(text) ? "Eject the FX drive or press Boot once to play it. Future saves will play automatically." : "Eject the FX drive to play it. Then double-press Boot to show the drive again and press 'Check board'.") + hides);
+      setReportedSave(text);
       return;
     }
     banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     var said = await waitForBoard(was, function() {
-      banner("Playing on the board. Checking for problems...", "hold");
+      banner("Saved. Checking the board for problems...", "hold");
     });
-    sayWhatHappened(said, hides);
+    sayWhatHappened(said, hides, text.slice(-NOTHING_PLAYING.length) === NOTHING_PLAYING);
     if (said !== CHECKING) takeAnswer(said, text);
+    if (!said) setReportedSave(text);
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "QuotaExceededError") {
@@ -7693,6 +7726,14 @@ document.getElementById("check").onclick = async function() {
 document.getElementById("open").onclick = function() {
   openDrive(false);
 };
+addStep(drawSteps.after, DRAW_AFTER, "filePreview", function() {
+  if (reportedSave !== null && currentText() !== reportedSave) banner("");
+});
+window.addEventListener("beforeunload", function(event) {
+  if (drive.text === null || currentText() === drive.text) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page needs Chrome or Edge to reach the drive.");
@@ -7827,6 +7868,7 @@ function programNote() {
   note.hidden = !boardSet.program;
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
+  note.title = BOARD_SETTING_SAYS;
   replace(
     note,
     boardIcon(),
@@ -8419,6 +8461,9 @@ function binButton(name, kind) {
     }
   }, "\xD7");
 }
+function filesCounted(count, what) {
+  return count + " " + (count === 1 ? what.replace(/s$/, "") : what);
+}
 async function addFiles(kinds, what, takes) {
   var picked;
   try {
@@ -8466,7 +8511,7 @@ async function addFiles(kinds, what, takes) {
         refused = refused.concat(picked.slice(i + 1).map(function(p) {
           return p.name;
         }));
-        banner("The FX drive filled up: " + landed + " " + what + " copied, no room for " + refused.join(", ") + ". Delete something from it and try again.", true);
+        banner("The FX drive filled up: " + filesCounted(landed, what) + " copied, no room for " + refused.join(", ") + ". Delete something from it and try again.", true);
         break;
       }
     }
@@ -8480,13 +8525,13 @@ async function addFiles(kinds, what, takes) {
   });
   var reason = trouble ? ". " + await driveTrouble(trouble) : "";
   if (refused.length && landed)
-    banner(landed + " copied. These could not be copied: " + refused.join(", ") + reason, true);
+    banner(filesCounted(landed, what) + " copied. These could not be copied: " + refused.join(", ") + reason, true);
   else if (refused.length)
     banner("Nothing copied: " + refused.join(", ") + reason, true);
   else if (unoffered.length)
     banner(unoffered.join(", ") + " copied, but only drawings appear here. A drawing's opening string has a Drawing: line with its name.", true);
   else if (landed)
-    banner(landed + " " + what + " copied to the drive.");
+    banner(filesCounted(landed, what) + " copied to the drive.");
   draw();
 }
 async function removeFromDrive(name, kind) {
@@ -9213,7 +9258,7 @@ function emptyPicture() {
 function heroNote(path) {
   return h(
     "div",
-    { className: "programnote" },
+    { className: "programnote", title: BOARD_SETTING_SAYS },
     boardIcon(),
     h("span", {}, path ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are kept, and play if the program is missing or stops, with the reason in errors.txt." : "No program chosen, so the board plays the effects. Choose one below to run it instead."),
     path ? h("button", {
@@ -10949,7 +10994,7 @@ function cardLamps(run, section, faces) {
 }
 
 // boards/editor/picker/readback.js
-var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
+var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat([NOTHING_PLAYING]);
 var boardComments = [];
 var notesNow = {};
 function readHeading(line) {
@@ -11122,8 +11167,8 @@ function absorbFile(text) {
     if (part.read) part.read(bodies);
   });
   readLights(bodies);
-  state.at = -1;
-  apply(state.always.body);
+  state.at = state.scenes.length && !hasContent(state.always.body) ? 0 : -1;
+  apply(slotAt(state.at).body);
   runs.filter(function(run) {
     return run.strip && run.there && runs.some(function(other) {
       return other.strip && other.there && run.takes.indexOf(other.name) >= 0;
@@ -11274,10 +11319,34 @@ function stretchWriting(run, texts, span2) {
     if (!canPlay(look, targetFor(run, section))) continue;
     solveSliders(run, section, look, texts);
     var written = sectionLines(run, section, look);
-    if (sameLines(written, texts)) return section;
-    if (sameShape(written, texts) && refineSliders(run, section, look, texts)) return section;
+    if (sameLines(written, texts) || sameShape(written, texts) && refineSliders(run, section, look, texts)) {
+      roundSliders(run, section, look, texts);
+      return section;
+    }
   }
   return null;
+}
+function roundSliders(run, section, look, texts) {
+  function roundness(step2) {
+    return step2 % 20 === 0 ? 3 : step2 % 10 === 0 ? 2 : step2 % 2 === 0 ? 1 : 0;
+  }
+  ["pace", "mood"].forEach(function(slider) {
+    if (section.exact && section.exact[slider]) return;
+    var writing = [];
+    for (var step2 = 0; step2 <= 200; step2++) {
+      var trial = Object.assign({}, section);
+      trial[slider] = step2 / 200;
+      if (sameLines(sectionLines(run, trial, look), texts)) writing.push(step2);
+    }
+    if (!writing.length) return;
+    var middle = (writing[0] + writing[writing.length - 1]) / 2;
+    var best = writing.reduce(function(chosen, step3) {
+      if (roundness(step3) !== roundness(chosen))
+        return roundness(step3) > roundness(chosen) ? step3 : chosen;
+      return Math.abs(step3 - middle) < Math.abs(chosen - middle) ? step3 : chosen;
+    });
+    section[slider] = best / 200;
+  });
 }
 function signalTimings(look, texts) {
   if (!SIGNAL_TIMINGS[look.name]) return null;
@@ -11602,6 +11671,7 @@ addStep(connectSteps, CONNECT_ORDER, "readback", async function() {
     }
   }
   absorbFile(text);
+  drive.text = currentText();
   rememberRead(text);
 });
 function rememberRead(text) {
@@ -12152,13 +12222,7 @@ function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
 }
 function bandFact(control) {
-  control.disabled = control.disabled || !setupOn;
-  return h(
-    "span",
-    { className: "bandfact", title: "Board setup, shared by every scene" },
-    boardIcon(),
-    control
-  );
+  return h("span", { className: "bandfact", title: BOARD_SETTING_SAYS }, boardIcon(), control);
 }
 function screenButton(letter) {
   return SCREENS.length > 1 ? letter : "Show";
@@ -15096,16 +15160,12 @@ function apartSaid(sends) {
 function hubSwitch() {
   return h(
     "div",
-    {
-      className: "hubswitch" + (setupOn ? "" : " locked"),
-      title: setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it"
-    },
+    { className: "hubswitch", title: BOARD_SETTING_SAYS },
     h("span", { className: "hublead" + (state.hub.on ? "" : " on") }, boardIcon()),
     [[false, "A screen on each connector"], [true, "A Screen Hub across both"]].map(function(pair) {
       return h("button", {
         type: "button",
         className: state.hub.on === pair[0] ? "on" : "",
-        disabled: !setupOn,
         onclick: function() {
           state.hub.on = pair[0];
           draw();
@@ -15114,30 +15174,35 @@ function hubSwitch() {
     })
   );
 }
+function takePlaceOff(place) {
+  state.hub.was[place] = state.hub.sizes[place];
+  state.hub.sizes[place] = "";
+  store();
+  allBodies().forEach(function(body) {
+    body.places[place].shows = null;
+  });
+  apply(slotAt(state.at).body);
+  draw();
+}
 function placeTile(place) {
   var picked = place === placePicked && placeThere(place);
   var name = h("b", { className: "placename" }, place);
   if (!state.hub.sizes[place]) {
+    var add = boardButton("add a panel");
+    add.onclick = function(event) {
+      event.stopPropagation();
+      state.hub.sizes[place] = state.hub.was[place] || SCREEN_SIZES[0];
+      draw();
+    };
     return h(
       "div",
       { className: "place" + (picked ? " picked" : "") + " empty", "data-place": place },
       h("div", { className: "placetop" }, name),
-      h("span", { className: "placenone" }, "no panel"),
-      setupOn ? h("button", {
-        type: "button",
-        className: "placefit",
-        title: "A panel is fitted at " + place,
-        onclick: function(event) {
-          event.stopPropagation();
-          state.hub.sizes[place] = state.hub.was[place] || "2.8";
-          draw();
-        }
-      }, "add") : null
+      h("span", { className: "placenone" }, add)
     );
   }
   var size = h("select", {
     className: "placesize",
-    disabled: !setupOn,
     title: "Panel at " + place + ", shared by every scene",
     onclick: function(event) {
       event.stopPropagation();
@@ -15173,22 +15238,10 @@ function placeTile(place) {
       { className: "placesays" },
       held.off ? "off" : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") + pictureSaid(under.always.shows) : under ? "off in this scene" : held.shows || "nothing"
     ),
-    setupOn ? h("button", {
-      type: "button",
-      className: "placedrop",
-      title: "No panel at " + place + ", in every scene",
-      onclick: function(event) {
-        event.stopPropagation();
-        state.hub.was[place] = state.hub.sizes[place];
-        state.hub.sizes[place] = "";
-        store();
-        allBodies().forEach(function(body) {
-          body.places[place].shows = null;
-        });
-        apply(slotAt(state.at).body);
-        draw();
-      }
-    }, "\xD7") : null
+    // Under the panel, as the size above leaves no room beside the position's letter
+    removeButton("panel", function() {
+      takePlaceOff(place);
+    })
   );
 }
 function placeSettings() {
@@ -15380,12 +15433,15 @@ function mediaGroups() {
   });
 }
 function offCard() {
+  var fitted = state.hub && state.hub.on || SCREENS.some(function(letter) {
+    return state.screens[letter].there;
+  });
   return h(
     "div",
     {
       className: "card nothing small offasset",
       title: "Turn a screen off in this scene",
-      style: { visibility: state.at < 0 ? "hidden" : null }
+      style: { visibility: state.at < 0 || !fitted ? "hidden" : null }
     },
     h("div", { className: "face" }, "Off"),
     h("div", { className: "pick" }, SCREENS.map(function(letter) {
@@ -15487,22 +15543,37 @@ screenParts.renderTab = renderScreensTab;
 function renderScreenBoxes() {
   replace(document.getElementById("screensHead"), SCREENS.map(screenBox));
 }
+function takeScreenOff(letter) {
+  state.screens[letter].there = false;
+  store();
+  allBodies().forEach(function(held) {
+    held.screens[letter].shows = null;
+    held.screens[letter].kept = null;
+  });
+  apply(slotAt(state.at).body);
+  draw();
+}
 function screenBox(letter) {
   var screen = state.screens[letter];
   if (!screen.there) {
+    var add = boardButton("add this screen");
+    add.onclick = function() {
+      screen.there = true;
+      screen.shows = null;
+      screen.kept = null;
+      draw();
+    };
     return h(
       "div",
       { className: "screen-box " + letter.toLowerCase() },
-      h("h3", { title: "Board setup, shared by every scene" }, boardIcon(), screenShown(letter)),
-      h("div", { className: "body adding" }, h("button", {
-        disabled: !setupOn,
-        onclick: function() {
-          screen.there = true;
-          screen.shows = null;
-          screen.kept = null;
-          draw();
-        }
-      }, "add this screen"))
+      h(
+        "h3",
+        { title: BOARD_SETTING_SAYS },
+        boardIcon(),
+        screenShown(letter),
+        h("small", { className: "bandnone" }, "not fitted")
+      ),
+      h("div", { className: "body adding" }, add)
     );
   }
   var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"]).filter(function(inches) {
@@ -15554,21 +15625,9 @@ function screenBox(letter) {
       bandFact(size),
       // Taking the screen out is the only way to have none, as a screen showing nothing
       // would say the same thing twice
-      h("button", {
-        className: "drop",
-        title: "Remove this screen from every scene",
-        disabled: !setupOn,
-        onclick: function() {
-          screen.there = false;
-          store();
-          allBodies().forEach(function(held2) {
-            held2.screens[letter].shows = null;
-            held2.screens[letter].kept = null;
-          });
-          apply(slotAt(state.at).body);
-          draw();
-        }
-      }, "\xD7")
+      removeButton("screen", function() {
+        takeScreenOff(letter);
+      })
     ),
     body,
     // What the file already says for this screen, where the picker did not write it and
@@ -15959,14 +16018,9 @@ var PIR_ART = [
 
 // boards/editor/picker/sensor/sensor.js
 var SENSOR_KINDS = [
-  ["none", "nothing", "none", ""],
-  [
-    "ir",
-    "an Aye Arr Remote",
-    "Aye Arr",
-    "through an IR Receiver Stick on the sensor connector"
-  ],
-  ["pir", "a PIR Stick", "PIR Stick", "on the sensor connector"]
+  ["none", "not fitted", "none"],
+  ["ir", "Aye Arr Remote", "Aye Arr"],
+  ["pir", "PIR Stick", "PIR Stick"]
 ];
 state.sensorKind = "none";
 state.remote = {};
@@ -16301,21 +16355,31 @@ function sensorSaid(words, className) {
   return h("p", { className: className || null }, words);
 }
 function sensorBox() {
-  var fitted = sensorFacts();
-  var editing = canEdit("sensorPanel");
-  var choice = editing ? h("select", {
+  var facts = document.getElementById("sensorFacts");
+  if (state.sensorKind === "none") {
+    var add = boardButton("add a sensor");
+    add.classList.add("sensoradd");
+    add.onclick = function() {
+      state.sensorKind = "ir";
+      draw();
+    };
+    replace(facts, boardBox("sensorPanel", ["Sensor", small("not fitted")]), add);
+    return;
+  }
+  var choice = h("select", {
     onchange: function() {
       state.sensorKind = choice.value;
       draw();
     }
-  }, SENSOR_KINDS.map(function(kind) {
+  }, SENSOR_KINDS.filter(function(kind) {
+    return kind[0] !== "none";
+  }).map(function(kind) {
     return h("option", { value: kind[0], selected: kind[0] === state.sensorKind }, kind[1]);
-  })) : null;
-  replace(
-    document.getElementById("sensorFacts"),
-    boardBox("sensorPanel", editing ? ["Sensor", choice, fitted[3] ? small(fitted[3]) : null] : ["Sensor", small(state.sensorKind === "none" ? "nothing on the sensor connector" : fitted[1] + ", " + fitted[3])]),
-    !editing && state.sensorKind === "none" ? h("span", { className: "hint" }, "Edit board to fit one.") : null
-  );
+  }));
+  replace(facts, boardBox("sensorPanel", ["Sensor", choice, removeButton("sensor", function() {
+    state.sensorKind = "none";
+    draw();
+  })]));
 }
 var PIR_STICK = { width: 22.692, height: 77.102 };
 var PIR_SCALE = 3.3;
@@ -17591,7 +17655,7 @@ chosenSteps.push(function(where, run) {
   who.appendChild(h("span", {}, Array.from(who.childNodes)));
   who.classList.add("withway");
   if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
+  if (run.lamps.length > 1) who.appendChild(directionToggle(run, section));
 });
 chosenSteps.push(function(where, run) {
   var box = document.getElementById(where);
@@ -17794,6 +17858,7 @@ state.always.body = capture();
 workOn(chosenTab);
 showChosen();
 draw();
+drive.text = currentText();
 if (HOLDING_STILL) {
   setBeat(0.37);
   paintAll();

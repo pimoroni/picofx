@@ -305,12 +305,6 @@ export function dropStrip(run) {
   draw();
 }
 
-// The cross on a strip's chip while the board is edited, as a screen has on its own
-export function stripDrop(run) {
-  return h("button", {type: "button", className: "drop", title: "Remove this strip from every scene",
-                      onclick: function () { dropStrip(run); }}, "\u00d7");
-}
-
 // ---- writing them back ------------------------------------------------------------------------
 
 // The strip a board token gives a length, such as stripl for stripl=30, or null

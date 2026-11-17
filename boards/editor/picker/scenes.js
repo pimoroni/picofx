@@ -159,7 +159,7 @@ export function blankBody() {
   return body;
 }
 
-function hasContent(body) {
+export function hasContent(body) {
   return Object.keys(body.runs).some(function (name) {
     return body.runs[name].sections.some(function (section) { return section.look; });
   }) || bodyParts.some(function (part) { return part.hasContent && part.hasContent(body); });
@@ -318,7 +318,11 @@ export function renderSceneAside() {
   replace(aside,
           h("span", {className: "sceneplace" + (problem ? " warn" : ""), title: said}, said),
           h("button", {type: "button", className: "sceneremove", title: "Remove this scene",
-                       onclick: function () { removeScene(which); }}, "Remove scene"));
+                       onclick: function () {
+                         var name = picked.name.trim() || "this scene";
+                         if (confirm("Remove " + name + " and everything it plays?"))
+                           removeScene(which);
+                       }}, "Remove scene"));
 }
 
 // ---- how a scene ends ---------------------------------------------------------------------------

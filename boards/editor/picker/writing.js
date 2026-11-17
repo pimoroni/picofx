@@ -5,6 +5,9 @@ import {apply, bodyParts, sceneAfter, sceneRestarts, slotAt, state, store} from 
 
 // ---- what the whole file says now -------------------------------------------------------
 
+// The line a file with no entries ends in, so the board has nothing to play
+export var NOTHING_PLAYING = "# Nothing is playing yet.";
+
 // The lamps' lines are written from the runs as they stand, so each scene's body is applied in
 // turn, which keeps one writer for all of them
 function entriesOf(body) {
@@ -58,5 +61,5 @@ export function currentText() {
   var board = boardLine();
   if (board) head.push(board, "");
   return HEADER + head.join("\n") + "\n" +
-         (lines.length ? lines.join("\n") : "# Nothing is playing yet.");
+         (lines.length ? lines.join("\n") : NOTHING_PLAYING);
 }

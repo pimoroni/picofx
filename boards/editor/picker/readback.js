@@ -23,9 +23,11 @@ import {
 } from "./reading.js";
 import {blank, fileHead, outs, runs, settle} from "./runs.js";
 import {
-  BODY_ORDER, apply, blankBody, bodyParts, capture, sceneMark, settleLoneScene, state
+  BODY_ORDER, apply, blankBody, bodyParts, capture, hasContent, sceneMark, settleLoneScene, slotAt,
+  state
 } from "./scenes.js";
 import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./strips.js";
+import {NOTHING_PLAYING, currentText} from "./writing.js";
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
@@ -34,7 +36,7 @@ import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./strips.j
 // screens, sound and the lights out of the kept lines.
 
 // The lines this page writes of its own accord, which a file read back does not keep
-var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
+var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat([NOTHING_PLAYING]);
 // The comments written above the board line
 var boardComments = [];
 // The comments of the lines the scene on show read, by the line they sit above
@@ -223,8 +225,9 @@ function absorbFile(text) {
   bodyParts.forEach(function (part) { if (part.readBoard) part.readBoard(); });
   bodyParts.forEach(function (part) { if (part.read) part.read(bodies); });
   readLights(bodies);
-  state.at = -1;
-  apply(state.always.body);
+  // A file whose Always on plays nothing opens on its first scene, where there is something to see
+  state.at = state.scenes.length && !hasContent(state.always.body) ? 0 : -1;
+  apply(slotAt(state.at).body);
   // A file fitting a strip beside one whose terminals it takes plays the other, as the board
   // does, so this one is taken out with its lines
   runs.filter(function (run) {
@@ -382,10 +385,40 @@ function stretchWriting(run, texts, span) {
     if (!canPlay(look, targetFor(run, section))) continue;
     solveSliders(run, section, look, texts);
     var written = sectionLines(run, section, look);
-    if (sameLines(written, texts)) return section;
-    if (sameShape(written, texts) && refineSliders(run, section, look, texts)) return section;
+    if (sameLines(written, texts) ||
+        (sameShape(written, texts) && refineSliders(run, section, look, texts))) {
+      roundSliders(run, section, look, texts);
+      return section;
+    }
   }
   return null;
+}
+
+// Rounded values let several places on a slider write the same lines, such as Campfire's speed at
+// 0.44 and 0.45. Each slider moves to the roundest of those places, as a person sets a slider, so a
+// save reads back at the place it was saved at
+function roundSliders(run, section, look, texts) {
+  function roundness(step) {
+    return step % 20 === 0 ? 3 : step % 10 === 0 ? 2 : step % 2 === 0 ? 1 : 0;
+  }
+  ["pace", "mood"].forEach(function (slider) {
+    if (section.exact && section.exact[slider]) return;
+    var writing = [];
+    for (var step = 0; step <= 200; step++) {
+      var trial = Object.assign({}, section);
+      trial[slider] = step / 200;
+      if (sameLines(sectionLines(run, trial, look), texts)) writing.push(step);
+    }
+    if (!writing.length) return;
+    // Of the roundest, the one nearest the middle of the places that write the lines
+    var middle = (writing[0] + writing[writing.length - 1]) / 2;
+    var best = writing.reduce(function (chosen, step) {
+      if (roundness(step) !== roundness(chosen))
+        return roundness(step) > roundness(chosen) ? step : chosen;
+      return Math.abs(step - middle) < Math.abs(chosen - middle) ? step : chosen;
+    });
+    section[slider] = best / 200;
+  });
 }
 
 // A signal's timings as its lines give them, each its own setting, or null for any other look
@@ -737,6 +770,7 @@ addStep(connectSteps, CONNECT_ORDER, "readback", async function () {
     }
   }
   absorbFile(text);
+  drive.text = currentText();
   rememberRead(text);
 });
 

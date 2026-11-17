@@ -1,10 +1,10 @@
-import {banner, saving} from "./banner.js";
-import {drawParts} from "./draw.js";
+import {banner, reportedSave, saving, setReportedSave} from "./banner.js";
+import {DRAW_AFTER, addStep, drawParts, drawSteps} from "./draw.js";
 import {
   CAN_REACH_A_DRIVE, CHECKING, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking, openDrive,
-  overwriteQuestion, playsItself, readErrors, sayWhatHappened, waitForBoard
+  overwriteQuestion, playsItself, readErrors, sayWhatHappened, waitForBoard, waitForReturn
 } from "./drive.js";
-import {currentText} from "./writing.js";
+import {NOTHING_PLAYING, currentText} from "./writing.js";
 
 // ---- the file, painted -----------------------------------------------------------------------
 
@@ -126,6 +126,7 @@ document.getElementById("save").onclick = async function () {
       throw differs;
     }
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
+    drive.text = text;
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
@@ -137,13 +138,16 @@ document.getElementById("save").onclick = async function () {
     if (/\bprogram=/.test(onBoard)) {
       // A program keeps the board busy, so neither an eject nor a press reaches it
       banner("Saved. The board is running a program, so press Reset to play this change." + hides);
+      setReportedSave(text);
       return;
     }
     // Check if a board that plays each save itself is given a program
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
-      // The board restarts to run the program, so there is no answer to wait for
-      banner("Saved. The board is restarting to run the program." +
-             hides);
+      // The board restarts to run the program, so its answer is the drive coming back
+      banner("Saved. The board is restarting to run the program...", "hold");
+      banner((await waitForReturn() ? "Running the program on the board."
+                                    : "Saved. The board is restarting to run the program.") + hides);
+      setReportedSave(text);
       return;
     }
     if (errorsBefore === undefined) {
@@ -152,15 +156,18 @@ document.getElementById("save").onclick = async function () {
                "it. Future saves will play automatically."
              : "Eject the FX drive to play it. Then double-press " +
                "Boot to show the drive again and press 'Check board'.") + hides);
+      setReportedSave(text);
       return;
     }
     banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
+    // No change to errors.txt after a while says nothing yet, as the board may still be loading
     var said = await waitForBoard(was, function () {
-      banner("Playing on the board. Checking for problems...", "hold");
+      banner("Saved. Checking the board for problems...", "hold");
     });
-    sayWhatHappened(said, hides);
+    sayWhatHappened(said, hides, text.slice(-NOTHING_PLAYING.length) === NOTHING_PLAYING);
     if (said !== CHECKING) takeAnswer(said, text);
+    if (!said) setReportedSave(text);
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "QuotaExceededError") {
@@ -202,6 +209,19 @@ document.getElementById("check").onclick = async function () {
 };
 
 document.getElementById("open").onclick = function () { openDrive(false); };
+
+// Check if the page has changed since the save the banner reports on
+addStep(drawSteps.after, DRAW_AFTER, "filePreview", function () {
+  if (reportedSave !== null && currentText() !== reportedSave) banner("");
+});
+
+// Leaving or reloading the page asks first where it holds changes not yet saved. The browser
+// words the question itself
+window.addEventListener("beforeunload", function (event) {
+  if (drive.text === null || currentText() === drive.text) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;

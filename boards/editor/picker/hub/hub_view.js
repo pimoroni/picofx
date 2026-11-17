@@ -7,26 +7,22 @@ import {
 } from "./hub.js";
 import {inNumberedGroup, placeGroups} from "./hub_groups.js";
 import {apartSaid, namesSaid} from "./hub_text.js";
-import {setupOn} from "../runs.js";
 import {allBodies, apply, capture, frozen, slotAt, state, store} from "../scenes.js";
 import {panelPreview} from "../screens/screen_art.js";
 import {lookSections} from "../screens/screen_settings.js";
 import {bandFact, kindOf, pictureSaid} from "../screens/screens.js";
-import {boardIcon} from "../setup.js";
+import {BOARD_SETTING_SAYS, boardButton, boardIcon, removeButton} from "../setup.js";
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
-// The choice of two screens or a hub, which takes both connectors. It is always shown, so it can
-// be seen to be a choice, and only changed while editing the board. It sits at the top of the
+// The choice of two screens or a hub, which takes both connectors. It sits at the top of the
 // tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
-  return h("div", {
-    className: "hubswitch" + (setupOn ? "" : " locked"),
-    title: setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it"
-  }, h("span", {className: "hublead" + (state.hub.on ? "" : " on")}, boardIcon()),
+  return h("div", {className: "hubswitch", title: BOARD_SETTING_SAYS},
+     h("span", {className: "hublead" + (state.hub.on ? "" : " on")}, boardIcon()),
      [[false, "A screen on each connector"], [true, "A Screen Hub across both"]].map(function (pair) {
        return h("button", {
-         type: "button", className: state.hub.on === pair[0] ? "on" : "", disabled: !setupOn,
+         type: "button", className: state.hub.on === pair[0] ? "on" : "",
          onclick: function () {
            state.hub.on = pair[0];
            draw();
@@ -35,27 +31,35 @@ function hubSwitch() {
      }));
 }
 
+// Take the panel at a hub position off, in every scene, keeping its size to offer back
+function takePlaceOff(place) {
+  state.hub.was[place] = state.hub.sizes[place];
+  state.hub.sizes[place] = "";
+  store();
+  allBodies().forEach(function (body) { body.places[place].shows = null; });
+  apply(slotAt(state.at).body);
+  draw();
+}
+
 function placeTile(place) {
   var picked = place === placePicked && placeThere(place);
   var name = h("b", {className: "placename"}, place);
+  // An empty position offers a panel, at the size it last had
   if (!state.hub.sizes[place]) {
+    var add = boardButton("add a panel");
+    add.onclick = function (event) {
+      event.stopPropagation();
+      state.hub.sizes[place] = state.hub.was[place] || SCREEN_SIZES[0];
+      draw();
+    };
     return h("div", {className: "place" + (picked ? " picked" : "") + " empty", "data-place": place},
              h("div", {className: "placetop"}, name),
-             h("span", {className: "placenone"}, "no panel"),
-             setupOn ? h("button", {
-               type: "button", className: "placefit", title: "A panel is fitted at " + place,
-               onclick: function (event) {
-                 event.stopPropagation();
-                 state.hub.sizes[place] = state.hub.was[place] || "2.8";
-                 draw();
-               }
-             }, "add") : null);
+             h("span", {className: "placenone"}, add));
   }
 
-  // Which panel is here, shown in every mode and changed only while editing the board, beside the
-  // board's chip
+  // Which panel is here, beside the board's chip
   var size = h("select", {
-    className: "placesize", disabled: !setupOn, title: "Panel at " + place + ", shared by every scene",
+    className: "placesize", title: "Panel at " + place + ", shared by every scene",
     onclick: function (event) { event.stopPropagation(); },
     onchange: function () {
       state.hub.sizes[place] = size.value;
@@ -87,18 +91,8 @@ function placeTile(place) {
        : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") +
                                  pictureSaid(under.always.shows)
        : under ? "off in this scene" : held.shows || "nothing"),
-     setupOn ? h("button", {
-       type: "button", className: "placedrop", title: "No panel at " + place + ", in every scene",
-       onclick: function (event) {
-         event.stopPropagation();
-         state.hub.was[place] = state.hub.sizes[place];
-         state.hub.sizes[place] = "";
-         store();
-         allBodies().forEach(function (body) { body.places[place].shows = null; });
-         apply(slotAt(state.at).body);
-         draw();
-       }
-     }, "\u00d7") : null);
+     // Under the panel, as the size above leaves no room beside the position's letter
+     removeButton("panel", function () { takePlaceOff(place); }));
 }
 
 // The picked position's settings, the same sections a screen has. What each position shows is

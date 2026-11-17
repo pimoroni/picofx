@@ -4,7 +4,7 @@ import {renderChosen} from "./led_panels.js";
 import {LED_PANELS, runsOfPanel, workOn} from "./led_sections.js";
 import {BOARD} from "./looks.js";
 import {active, runs, setSetupMode, setupOn} from "./runs.js";
-import {boardIcon, lastOutputRun, setLastOutputRun} from "./setup.js";
+import {lastOutputRun, setLastOutputRun} from "./setup.js";
 import {STRIPS, stripBlockedBy} from "./strips.js";
 
 // ---- the LED sections as tabs -----------------------------------------------------------
@@ -16,15 +16,23 @@ import {STRIPS, stripBlockedBy} from "./strips.js";
 //
 // The tabs sit in the scene's body and not with the scene tabs, and are drawn as a row of
 // names with a line under the chosen one, so they read as parts of one board and not as
-// another row of scenes. Setting up the board is one button at the end of the tabs, and
-// keeps to them, as the whole board is being set up, a section at a time, and the tabs stay
-// live to move between sections while it is.
+// another row of scenes. The outputs' wiring view opens from their Wiring chip and closes when
+// another tab is chosen.
 
-// Turn setting up the board on or off, and show the tab chosen
+// Open or close the outputs' wiring view, and show the tab chosen
 function setSetup(on) {
   setSetupMode(on);
   showChosen();
 }
+
+// The Wiring chip opens the outputs' wiring view, where it shows pressed, and a second click
+// closes it
+document.addEventListener("click", function (event) {
+  if (event.target.closest("select, input, button, header")) return;
+  if (!event.target.closest("#outFacts .boardchip")) return;
+  setSetup(!setupOn);
+  draw();
+});
 
 export var TAB_NAMES = {outPanel: BOARD.output_words.tab};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
@@ -48,10 +56,12 @@ function chosenTakesLooks() {
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
-// A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
-// Edit board and changing scene each put back a stretch of their own, which can be another tab's
+// A look goes to the stretch being worked on, so that stays in the section shown. Closing the
+// wiring view and changing scene each put back a stretch of their own, which can be another tab's
 addStep(drawSteps.before, DRAW_BEFORE, "tabs", function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
+  // A strip added or removed where it is shown changes whether the looks are for this tab
+  showChosen();
 });
 
 // Every tab's section stays laid out in one shared place, only the chosen one seen, so the
@@ -122,20 +132,14 @@ function renderLedTabs() {
       className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
       title: blocked || null, "data-panel": panel,
       onclick: function () {
+        // The wiring view is the outputs' own, so leaving their tab closes it
+        if (setupOn && panel !== "outPanel") setSetup(false);
         chosenTab = panel;
         if (chosenTakesLooks()) workOn(panel);
         showChosen();
         draw();
       }
     }, h("b", {}, TAB_NAMES[panel]), swatch);
-  }), h("span", {className: "gap"}),
-  // The tabs grow and shrink as setting up opens and closes, so they are held where they
-  // were on the screen
-  setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
-    var was = bar.getBoundingClientRect().top;
-    setSetup(!setupOn);
-    draw();
-    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
   }));
 }
 
@@ -169,12 +173,4 @@ LED_PANELS.forEach(function (panel) { sectionStack.appendChild(document.getEleme
 if (!/[?&]above\b/.test(location.search)) {
   document.body.classList.add("looksbelow");
   document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-}
-
-// ---- turning setup on ------------------------------------------------------------------------
-
-// The board's chip, as every board setting wears it, since this is where they open
-function setupButton(label, on, act) {
-  return h("button", {type: "button", className: "setupbutton" + (on ? " on" : ""), onclick: act},
-           boardIcon(), label);
 }

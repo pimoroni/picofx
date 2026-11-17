@@ -50,8 +50,7 @@ tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
 
 Under **Effects** you'll find **DAT strip**, **CLK strip** and **APA102 strip**
 for the strips, **LED** for the board's own light, and **Screens**. Each tab
-shows a small preview of what it's playing, and [[Edit board]] sits at the end
-of the row.
+shows a small preview of what it's playing.
 
 ### Lights: Choosing a look
 
@@ -114,21 +113,24 @@ strip.
 
 ### Board: Setting up your hardware
 
-Press [[Edit board]] to tell the picker about your hardware. Everything else
-fades while you're there, and [[Done]] takes you back.
+Each tab holds the settings for its own hardware, such as the order your lights
+are wired in. Look out for the chip icon, which the picker puts on every board
+setting. These settings describe your hardware, so they're shared by every
+scene.
 
-Look out for the chip icon on [[Edit board]]. The picker marks every board
-setting with it, such as the order your lights are wired in. These settings
-describe your hardware, so they're shared by every scene.
+A part that isn't fitted has a button with the chip to add it, and a fitted part
+has [[remove]] to take it off again. Once you have scenes, the picker asks before
+removing anything, as every scene loses what it played there.
 
 ```picker
-tabs editing: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
+tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
 stripsetup: 66
 ```
 
-Choose which strips are fitted, then set how many LEDs each has and its colour
-order, which needs changing if red shows as another colour. An APA102 strip uses
-both terminals, so it replaces the other two. On **Screens**, set the size of
+On each strip's tab, set how many LEDs it has and its colour order, which needs
+changing if red shows as another colour. [[remove]] takes off a strip you haven't
+fitted, and [[add this strip]] puts it back. An APA102 strip uses both terminals,
+so it replaces the other two. On **Screens**, set the size of
 the screen.
 
 ### Screens: Showing a picture
@@ -956,6 +958,10 @@ means a more serious one:
 
 A setting with an invalid value is ignored and noted in `errors.txt`,
 and the effect uses its default instead.
+
+If the FX drive doesn't appear on your computer, double-press **Boot** to show
+it. This can happen on a Mac that was locked when the board was plugged in or
+restarted. The Mac ejects the drive, and it stays hidden after you log in.
 
 A drive that cannot be repaired can be returned to how it shipped by
 installing the board's `-full` firmware from the

@@ -1,19 +1,23 @@
-import {breakingOutputs, brokenSaid} from "./board.js";
+import {ONE_LIGHT, breakingOutputs, brokenSaid} from "./board.js";
 import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps, paintAll} from "./draw.js";
 import {stretchCount} from "./led_panels.js";
 import {workOn} from "./led_sections.js";
 import {outputSaid} from "./outputs.js";
 import {BOARD_CHIP_CLASSES, active, canEdit, outs, settle, setupOn} from "./runs.js";
+import {state} from "./scenes.js";
 import {
-  STRIPS, STRIP_BRIGHTNESSES, STRIP_FEWEST, STRIP_MOST, STRIP_ORDERS, stripBlockedBy,
-  stripChipShown, stripDrawing, stripDrop, stripPercent, stripSet, stripThere
+  STRIPS, STRIP_BRIGHTNESSES, STRIP_FEWEST, STRIP_MOST, STRIP_ORDERS, dropStrip, stripBlockedBy,
+  stripChipShown, stripDrawing, stripPercent, stripSet, stripThere
 } from "./strips.js";
 import {headSteps} from "./wiring.js";
 
 // ---- the board set up, on the page --------------------------------------------------------------
 // The facts about the board shown beside the lights, as each strip's chip and the outputs'
-// adapters, and the button that turns setting up the board on.
+// adapters, and the buttons that add a part to the board and remove it.
+
+// The tooltip on everything that wears the board's chip
+export var BOARD_SETTING_SAYS = "Board setup, shared by every scene";
 
 // What follows a strip's length on the board line, its brightness or its colour order, as the
 // choice on its chip
@@ -49,6 +53,27 @@ function stripChipChoice(run) {
 }
 STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
 
+// The chip a board setting's add button carries, before its words
+export function boardButton(words) {
+  return h("button", {type: "button", className: "boardadd"}, boardIcon(), words);
+}
+
+// The button beside a fitted part's board setting that takes the part off the board
+export function removeButton(what, act) {
+  return h("button", {
+    type: "button", className: "boardremove",
+    title: "Take this " + what + " off the board, in every scene",
+    // A hub position picks itself on a click, which a removed one cannot be
+    onclick: function (event) {
+      event.stopPropagation();
+      // Check if there are scenes to lose it, since nothing brings back what they played on it
+      if (state.scenes.length &&
+          !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
+      act();
+    }
+  }, "remove");
+}
+
 // Nothing looks picked while setup is on. The marks are drawn by the pages below, so they
 // are taken off once drawn
 function unmark() {
@@ -60,7 +85,7 @@ function unmark() {
 // A section's coloured box, the chip icon inside it with whatever the fact says
 export function boardBox(panel, parts) {
   return h("span", {className: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
-                    title: "Board setup, shared by every scene"}, boardIcon(), parts);
+                    title: BOARD_SETTING_SAYS}, boardIcon(), parts);
 }
 
 export function small(words) {
@@ -68,11 +93,13 @@ export function small(words) {
 }
 
 // The board's chip, three legs a side, set three apart as the smallest spacing that still
-// reads as legs at 16px
+// reads as legs at 16px. It carries the board's tooltip itself, so a chip with no box around it
+// says it too
 export function boardIcon() {
   return h("svg:svg", {viewBox: "0 0 14 14", width: "13", height: "13", class: "boardicon",
                        "aria-hidden": "true",
-                       html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
+                       html: "<title>" + BOARD_SETTING_SAYS + "</title>" +
+                             "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
                              "stroke='currentColor' stroke-width='1.3'/>" +
                              "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
                              "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
@@ -81,6 +108,12 @@ export function boardIcon() {
 
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
+  // Check if there is wiring to set, since one light has none and its row keeps only the steps
+  if (ONE_LIGHT) {
+    replace(box);
+    headSteps(box, active.strip ? lastOutputRun : active);
+    return;
+  }
   var hint = null;
   if (canEdit("outPanel")) {
     var breaking = breakingOutputs();
@@ -117,9 +150,9 @@ function renderLeds(where, run) {
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
+    chip.title = BOARD_SETTING_SAYS;
     chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
+    chip.appendChild(removeButton("strip", function () { dropStrip(run); }));
   } else {
     replace(box, boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
@@ -154,20 +187,21 @@ function renderStripChip(where, run) {
           h("span", {className: "says"}, "shared by every scene"));
 }
 
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
+// A strip not fitted offers to be added, or says why it cannot be
 function renderStripOut(box, run, panel) {
   var blocked = stripBlockedBy(run);
+  var add = null;
+  if (!blocked) {
+    add = boardButton("add this strip");
+    add.classList.add("addstrip");
+    add.onclick = function () {
+      stripThere(run, true);
+      workOn(panel);
+      draw();
+    };
+  }
   replace(box, boardBox(panel, ["Strip", small("not fitted")]),
-          blocked ? h("span", {className: "stripblocked says"}, blocked)
-          : h("button", {
-            type: "button", className: "addstrip", disabled: !canEdit(panel),
-            onclick: function () {
-              stripThere(run, true);
-              workOn(panel);
-              draw();
-            }
-          }, "add this strip"));
+          blocked ? h("span", {className: "stripblocked says"}, blocked) : add);
 }
 
 // Each section is only ever seen on its own here, so each keeps its own stretch's settings

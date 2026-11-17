@@ -3,7 +3,7 @@ import {h, replace} from "../dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "../draw.js";
 import {filterResidue} from "../kept.js";
 import {boardTokens, unquoted} from "../reading.js";
-import {BOARD_CHIP_CLASSES, canEdit} from "../runs.js";
+import {BOARD_CHIP_CLASSES} from "../runs.js";
 import {PART_DRAWINGS, REMOTE_COLOURS} from "../scene_tray.js";
 import {
   BODY_ORDER, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
@@ -12,22 +12,20 @@ import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
   remoteArtAt, remoteArtJoin
 } from "./sensor_art.js";
-import {boardBox, small} from "../setup.js";
+import {boardBox, boardButton, removeButton, small} from "../setup.js";
 import {FEATURE_TABS, TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../tabs.js";
 
 // ---- the Sensor tab -----------------------------------------------------------------------------
 // What is on the sensor connector and what it does, as a tab after Sound. Only what is fitted is
-// board setup, chosen in Edit board. What each of a remote's buttons does is set on the Always on
+// board setup. What each of a remote's buttons does is set on the Always on
 // tab for every scene, and a scene can change any button while it shows, as it can any light.
 // Two buttons are the board's in every scene: OK / Stop puts it in standby and wakes it, so there
 // is always a way to stop it, and Play / Pause holds the effects where they stand.
 
-// What the sensor connector can have on it, as [kind, as the choice says it, under the tab's name,
-// where it sits]
-var SENSOR_KINDS = [["none", "nothing", "none", ""],
-                    ["ir", "an Aye Arr Remote", "Aye Arr",
-                     "through an IR Receiver Stick on the sensor connector"],
-                    ["pir", "a PIR Stick", "PIR Stick", "on the sensor connector"]];
+// What the sensor connector can have on it, as [kind, as the choice says it, under the tab's name]
+var SENSOR_KINDS = [["none", "not fitted", "none"],
+                    ["ir", "Aye Arr Remote", "Aye Arr"],
+                    ["pir", "PIR Stick", "PIR Stick"]];
 
 state.sensorKind = "none";
 // The choices of the tab being edited, by button, where it changes what a button does
@@ -421,25 +419,32 @@ function sensorSaid(words, className) {
   return h("p", {className: className || null}, words);
 }
 
-// Fill the box saying what is on the sensor connector, a choice while the board is being set up
+// Fill the box saying what is on the sensor connector, as a choice with a remove button. Nothing
+// on it reads as not fitted, as a strip or a screen does, and offers to add the remote
 function sensorBox() {
-  var fitted = sensorFacts();
-  var editing = canEdit("sensorPanel");
-  var choice = editing ? h("select", {
+  var facts = document.getElementById("sensorFacts");
+  if (state.sensorKind === "none") {
+    var add = boardButton("add a sensor");
+    add.classList.add("sensoradd");
+    add.onclick = function () {
+      state.sensorKind = "ir";
+      draw();
+    };
+    replace(facts, boardBox("sensorPanel", ["Sensor", small("not fitted")]), add);
+    return;
+  }
+  var choice = h("select", {
     onchange: function () {
       state.sensorKind = choice.value;
       draw();
     }
-  }, SENSOR_KINDS.map(function (kind) {
+  }, SENSOR_KINDS.filter(function (kind) { return kind[0] !== "none"; }).map(function (kind) {
     return h("option", {value: kind[0], selected: kind[0] === state.sensorKind}, kind[1]);
-  })) : null;
-  replace(document.getElementById("sensorFacts"),
-          boardBox("sensorPanel", editing
-            ? ["Sensor", choice, fitted[3] ? small(fitted[3]) : null]
-            : ["Sensor", small(state.sensorKind === "none" ? "nothing on the sensor connector"
-                                                           : fitted[1] + ", " + fitted[3])]),
-          !editing && state.sensorKind === "none"
-            ? h("span", {className: "hint"}, "Edit board to fit one.") : null);
+  }));
+  replace(facts, boardBox("sensorPanel", ["Sensor", choice, removeButton("sensor", function () {
+    state.sensorKind = "none";
+    draw();
+  })]));
 }
 
 // ---- the PIR Stick with a row for each trigger --------------------------------------------------

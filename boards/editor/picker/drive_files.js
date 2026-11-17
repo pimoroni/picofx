@@ -222,6 +222,11 @@ export function binButton(name, kind) {
   }, "\u00d7");
 }
 
+// A count of files of one kind, its word taken from the plural what=, such as "1 sound"
+function filesCounted(count, what) {
+  return count + " " + (count === 1 ? what.replace(/s$/, "") : what);
+}
+
 async function addFiles(kinds, what, takes) {
   var picked;
   try {
@@ -266,7 +271,7 @@ async function addFiles(kinds, what, takes) {
       trouble = trouble || e;
       if (e.name === "QuotaExceededError") {
         refused = refused.concat(picked.slice(i + 1).map(function (p) { return p.name; }));
-        banner("The FX drive filled up: " + landed + " " + what + " copied, no room for " +
+        banner("The FX drive filled up: " + filesCounted(landed, what) + " copied, no room for " +
                refused.join(", ") + ". Delete something from it and try again.", true);
         break;
       }
@@ -279,14 +284,15 @@ async function addFiles(kinds, what, takes) {
   });
   var reason = trouble ? ". " + await driveTrouble(trouble) : "";
   if (refused.length && landed)
-    banner(landed + " copied. These could not be copied: " + refused.join(", ") + reason, true);
+    banner(filesCounted(landed, what) + " copied. These could not be copied: " +
+           refused.join(", ") + reason, true);
   else if (refused.length)
     banner("Nothing copied: " + refused.join(", ") + reason, true);
   else if (unoffered.length)
     banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
            "A drawing's opening string has a Drawing: line with its name.", true);
   else if (landed)
-    banner(landed + " " + what + " copied to the drive.");
+    banner(filesCounted(landed, what) + " copied to the drive.");
   draw();
 }
 

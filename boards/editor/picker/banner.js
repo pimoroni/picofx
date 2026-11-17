@@ -28,8 +28,18 @@ export function saving(text) {
 // The parts that also show what banner() says, each given its text and warn as banner() is
 export var bannerSteps = [];
 
+// The text of the save the banner reports on, or null where it reports on something else. An edit
+// after that save takes the banner down
+export var reportedSave = null;
+
+// Mark the banner as reporting on the save of this text, until banner() next changes it
+export function setReportedSave(text) {
+  reportedSave = text;
+}
+
 export function banner(text, warn, detail) {
   stopSpots();
+  reportedSave = null;
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
   // The warn argument may also be "hold", the amber of a save or check still under way

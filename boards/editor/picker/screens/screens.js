@@ -6,11 +6,10 @@ import {addStep} from "../draw.js";
 import {isHiddenName, nameShown} from "../drive.js";
 import {isExampleMedia, mediaHome} from "../drive_files.js";
 import {argumentFrom, openingString} from "../drive_programs.js";
-import {setupOn} from "../runs.js";
 import {
   BODY_ORDER, DRIVE_ORDER, allBodies, bodyParts, driveParts, otherScenes, state
 } from "../scenes.js";
-import {boardIcon} from "../setup.js";
+import {BOARD_SETTING_SAYS, boardIcon} from "../setup.js";
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -50,12 +49,9 @@ export function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
 }
 
-// A board setting in a box's coloured band, the board's chip beside its control, which only
-// editing the board can change
+// A board setting in a box's coloured band, the board's chip beside its control
 export function bandFact(control) {
-  control.disabled = control.disabled || !setupOn;
-  return h("span", {className: "bandfact", title: "Board setup, shared by every scene"},
-           boardIcon(), control);
+  return h("span", {className: "bandfact", title: BOARD_SETTING_SAYS}, boardIcon(), control);
 }
 
 // The words on the button under a picture that puts it on a screen, the screen's letter where
@@ -214,7 +210,7 @@ boardLineSteps.before.push(function () {
   });
 });
 
-// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
+// A screen removed, for the page's comment on what is not fitted. On a Screen Hub
 // the ports are the hub's, so neither is listed
 addStep(notFittedSteps, NOT_FITTED_ORDER, "screens", function () {
   if (state.hub.on) return [];
