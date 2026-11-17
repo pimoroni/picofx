@@ -48,6 +48,11 @@
   gap: var(--space-4);
   margin: 0;
   font: inherit;
+
+  /* On a phone what the heading says wraps under its name */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
 }
 
 body[data-pageway] #looks > .shelf.bare {

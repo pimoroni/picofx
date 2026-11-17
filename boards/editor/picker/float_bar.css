@@ -21,6 +21,27 @@
     transform: none;
     visibility: visible;
   }
+
+  /* Narrower than the header's one line the buttons keep their words on one line, at their own
+     width, and what the bar says gives way to them */
+  @media (max-width: 1180px) {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+
+    .floatbuttons button {
+      white-space: nowrap;
+    }
+  }
+
+  /* On a phone the bar keeps the drive and the save, the page it is on being in view below */
+  @media (max-width: 40rem) {
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+
+    .floatwhere,
+    #check {
+      display: none;
+    }
+  }
 }
 
 .floatname {

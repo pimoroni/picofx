@@ -10,6 +10,11 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
   margin-bottom: var(--space-6);
+
+  /* On a phone the two screens' boxes stack, each the page's width */
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .holder {

@@ -33,4 +33,17 @@
   .says {
     margin-left: var(--space-2);
   }
+
+  /* Narrower than the header's one line, as on a tablet, the strip's chip, its stretches and its
+     steps wrap onto further lines where they do not fit, and on a phone the chip's own settings
+     wrap inside it */
+  @media (max-width: 1180px) {
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 40rem) {
+    .chip {
+      flex-wrap: wrap;
+    }
+  }
 }

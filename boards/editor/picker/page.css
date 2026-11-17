@@ -607,6 +607,11 @@ body.setupall .chosen.pointing {
   gap: var(--space-4);
   margin: var(--space-7) 0 var(--space-4);
   font: 600 var(--text-l) var(--font);
+
+  /* On a phone what a heading says, and anything beside it, wraps under its name */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
 }
 
 .gallery {
@@ -708,6 +713,12 @@ pre.file {
   border-radius: var(--radius-l);
   padding: var(--space-6);
   white-space: pre-wrap;
+
+  /* On a phone a line too long for the box breaks where it must, and the box keeps its margins */
+  @media (max-width: 40rem) {
+    overflow-wrap: anywhere;
+    padding: var(--space-4);
+  }
 }
 
 details {
@@ -1082,6 +1093,25 @@ footer {
   &[hidden] {
     display: none;
   }
+
+  /* On a phone what the page says about the scene and its remove button take a line above the
+     tab, which is as wide as the frame and as tall as its settings need */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+
+    .sceneaside {
+      order: -1;
+      flex-basis: 100%;
+      height: auto;
+    }
+
+    .scenetab {
+      width: 100%;
+      max-width: none;
+      height: auto;
+      min-height: 3rem;
+    }
+  }
 }
 
 .scenetab {
@@ -1123,6 +1153,12 @@ footer {
   border: 1px solid transparent;
   border-radius: var(--radius-l);
   padding: 0;
+
+  /* On a phone the scene's tab is the frame's full width, so the frame has no corner of its own
+     at the top right */
+  @media (max-width: 40rem) {
+    border-top-right-radius: 0;
+  }
 
   &.framed .panel,
   &.framed #wiringRow,
@@ -1540,6 +1576,15 @@ body[data-pageway] #looks > .tabs:empty {
   align-items: center;
   gap: var(--space-4);
   margin: var(--space-3) 0 calc(-1 * var(--space-3));
+
+  /* On a phone the heading takes the line, and the Off or Silence card goes under it */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+
+    .foldhead {
+      flex-basis: 100%;
+    }
+  }
 }
 
 .assets .offhead:first-child,
@@ -1591,6 +1636,11 @@ body[data-pageway] #looks > .tabs:empty {
     padding: 0 var(--space-4);
     font-size: var(--text-s);
     background: var(--panel);
+
+    /* On a phone a hub's seven buttons fit the card's width */
+    @media (max-width: 40rem) {
+      padding: 0 var(--space-2);
+    }
 
     + button {
       border-left: 1px solid var(--line);
@@ -1968,6 +2018,14 @@ header .savearrow,
   border-radius: var(--radius-l);
   box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
   padding: var(--space-4) var(--space-5);
+
+  /* On a phone the buttons start at the left, so the menu does too, over the place the script
+     gives it beside its arrow */
+  @media (max-width: 40rem) {
+    left: var(--space-5) !important;
+    right: auto !important;
+    max-width: calc(100% - 2 * var(--space-5));
+  }
 }
 
 /* The board's chip in the header */
@@ -2194,6 +2252,12 @@ body.scenesintab #looks > .shelf {
   margin-top: 0;
   container-type: inline-size;
 
+  /* On a phone the steps wrap onto a line of their own, a little apart from the chip */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+
   .chip {
     flex: 0 1 auto;
     min-width: 0;
@@ -2390,6 +2454,15 @@ html {
   .ledtab:is([data-panel=screensPanel], [data-panel=soundPanel], [data-panel=sensorPanel]) {
     flex: none;
   }
+
+  /* On a phone the row scrolls instead, so the lights' tabs keep their size too */
+  @media (max-width: 40rem) {
+    gap: var(--space-5);
+
+    .ledtab:not(:is([data-panel=screensPanel], [data-panel=soundPanel], [data-panel=sensorPanel])) {
+      flex: none;
+    }
+  }
 }
 
 .boardchip.sensor {
@@ -2483,6 +2556,11 @@ html {
   grid-template-columns: repeat(6, 1fr);
   gap: var(--space-4);
   width: 100%;
+
+  /* On a phone the hub's six positions take two rows of three */
+  @media (max-width: 40rem) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .place {

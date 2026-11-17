@@ -23,6 +23,17 @@
     flex: 0 1 auto;
     min-width: 0;
   }
+
+  /* On a phone the tabs keep their size, names whole, and the row scrolls sideways */
+  @media (max-width: 40rem) {
+    gap: var(--space-5);
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    .ledtab {
+      flex: none;
+    }
+  }
 }
 
 /* Every tab's section in one grid cell, laid out whether seen or not, so the cell is as
@@ -39,6 +50,13 @@
   > .tabhidden {
     visibility: hidden;
     pointer-events: none;
+
+    /* On a phone the sections stack so tall that the tallest would leave a screen of empty page
+       under a short one, so a hidden section keeps its width but takes no height */
+    @media (max-width: 40rem) {
+      height: 0;
+      overflow: hidden;
+    }
   }
 }
 

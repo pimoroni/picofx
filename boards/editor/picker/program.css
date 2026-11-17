@@ -60,6 +60,12 @@ canvas.progthumb {
   gap: var(--space-6);
   align-items: flex-start;
   padding: var(--space-5);
+
+  /* On a phone the picture stands over its words */
+  @media (max-width: 40rem) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .progpicture {
@@ -69,6 +75,11 @@ canvas.progthumb {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* On a phone the picture stands centred over its words */
+  @media (max-width: 40rem) {
+    align-self: center;
+  }
 }
 
 .proghero .progthumb.big {
@@ -101,6 +112,11 @@ canvas.progthumb {
   .progwhere {
     font-size: var(--text-m);
     color: var(--dim);
+
+    /* On a phone a long path breaks where it must */
+    @media (max-width: 40rem) {
+      overflow-wrap: anywhere;
+    }
   }
 }
 
@@ -335,6 +351,24 @@ header h1 + .headswitch {
   margin-left: auto;
   flex-wrap: wrap;
   justify-content: flex-end;
+
+  /* On a phone the buttons take their own line under the title, starting at its left */
+  @media (max-width: 40rem) {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    gap: var(--space-4);
+
+    #status,
+    .setuphead {
+      margin-left: 0;
+
+      /* Empty, they would still take a gap at the line's start */
+      &:empty {
+        display: none;
+      }
+    }
+  }
 }
 
 /* On a window wide enough for all three, the name, the tabs over the column and the group share
@@ -402,6 +436,11 @@ header .headswitch.headsplit .cover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  /* On a phone a tab is its name, the program chosen being shown on its page */
+  @media (max-width: 40rem) {
+    display: none;
+  }
 }
 
 /* The way into scenes, at the end of the effects tab while there are none, the row it had above
@@ -420,6 +459,13 @@ body.scenesintab #looks > .tabs.sides:empty {
   margin-left: auto;
   flex: none;
   opacity: 1;
+
+  /* On a phone it is its + alone, its words kept for a screen reader and its tooltip */
+  @media (max-width: 40rem) {
+    gap: 0;
+    padding: var(--space-3);
+    font-size: 0;
+  }
 }
 
 .headswitch .cover:not(.on) .plus {

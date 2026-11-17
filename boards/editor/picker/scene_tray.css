@@ -208,6 +208,11 @@
     flex-shrink: 1;
     min-width: 6rem;
   }
+
+  /* On a phone the settings wrap onto as many lines as they need */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
 }
 
 /* How the scene ends and the scene after it, chosen in the inputs' style */

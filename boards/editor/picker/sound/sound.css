@@ -3,6 +3,16 @@
   display: flex;
   align-items: center;
   margin: 0 0 var(--space-5);
+
+  /* On a phone what does not fit wraps onto a second line, the volume giving up its margins */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+
+    .soundvolume {
+      margin: 0;
+    }
+  }
 }
 
 .soundvolume {

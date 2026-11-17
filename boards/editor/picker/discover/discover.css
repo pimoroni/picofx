@@ -158,6 +158,18 @@
   margin-top: var(--space-4);
   font-size: var(--text-m);
   color: var(--dim);
+
+  /* On a phone what the row says takes a line of its own above its buttons */
+  @media (max-width: 40rem) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    height: auto;
+
+    > :first-child {
+      flex-basis: 100%;
+    }
+  }
 }
 
 .discoverrowsaid {

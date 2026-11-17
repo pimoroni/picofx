@@ -110,7 +110,8 @@ A rule goes in the stylesheet of the part that draws what it styles. `page.css` 
 the page's frame and the rules for what several parts draw.
 
 Stylesheets are written a declaration to a line, and a rule that extends the one above it nests
-inside it, as `&.on` or `.name` under `.chip`. The drive's copy is minified for the browsers in
+inside it, as `&.on` or `.name` under `.chip`. The page fits a phone: what changes at 40rem and
+narrower is an `@media (max-width: 40rem)` nested in the rule it changes. The drive's copy is minified for the browsers in
 `tools/build_editor.py`, which flattens the nesting for those that cannot read it.
 
 Use the tokens declared on `:root` in `page.css` rather than literal values:

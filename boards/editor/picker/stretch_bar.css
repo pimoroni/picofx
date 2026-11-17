@@ -18,6 +18,16 @@
   display: inline-flex;
   margin-left: auto;
   flex: none;
+
+  /* On a phone the group may narrow to the panel, its buttons wrapping onto a second row */
+  @media (max-width: 40rem) {
+    flex: 0 1 auto;
+    min-width: 0;
+
+    .toolset {
+      flex-wrap: wrap;
+    }
+  }
 }
 
 .stretchtools .toolsays,
@@ -41,6 +51,17 @@
   gap: var(--space-3);
   padding: 0 var(--space-4) 0 var(--space-4);
   color: var(--dim);
+
+  /* On a phone the group's words give way to its icon, so the group keeps one line. The words
+     stay for a screen reader, and the number's label says them too */
+  @media (max-width: 40rem) {
+    gap: 0;
+    font-size: 0;
+
+    > span {
+      font-size: var(--text-s);
+    }
+  }
 }
 
 .stretchtools .toolset input[type=number] {

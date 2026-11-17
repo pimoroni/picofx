@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tiny FX Picker</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
 <script type="application/json" id="build">{
@@ -679,6 +680,11 @@ body.setupall .chosen.pointing {
   gap: var(--space-4);
   margin: var(--space-7) 0 var(--space-4);
   font: 600 var(--text-l) var(--font);
+
+  /* On a phone what a heading says, and anything beside it, wraps under its name */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
 }
 
 .gallery {
@@ -780,6 +786,12 @@ pre.file {
   border-radius: var(--radius-l);
   padding: var(--space-6);
   white-space: pre-wrap;
+
+  /* On a phone a line too long for the box breaks where it must, and the box keeps its margins */
+  @media (max-width: 40rem) {
+    overflow-wrap: anywhere;
+    padding: var(--space-4);
+  }
 }
 
 details {
@@ -1154,6 +1166,25 @@ footer {
   &[hidden] {
     display: none;
   }
+
+  /* On a phone what the page says about the scene and its remove button take a line above the
+     tab, which is as wide as the frame and as tall as its settings need */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+
+    .sceneaside {
+      order: -1;
+      flex-basis: 100%;
+      height: auto;
+    }
+
+    .scenetab {
+      width: 100%;
+      max-width: none;
+      height: auto;
+      min-height: 3rem;
+    }
+  }
 }
 
 .scenetab {
@@ -1195,6 +1226,12 @@ footer {
   border: 1px solid transparent;
   border-radius: var(--radius-l);
   padding: 0;
+
+  /* On a phone the scene's tab is the frame's full width, so the frame has no corner of its own
+     at the top right */
+  @media (max-width: 40rem) {
+    border-top-right-radius: 0;
+  }
 
   &.framed .panel,
   &.framed #wiringRow,
@@ -1612,6 +1649,15 @@ body[data-pageway] #looks > .tabs:empty {
   align-items: center;
   gap: var(--space-4);
   margin: var(--space-3) 0 calc(-1 * var(--space-3));
+
+  /* On a phone the heading takes the line, and the Off or Silence card goes under it */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+
+    .foldhead {
+      flex-basis: 100%;
+    }
+  }
 }
 
 .assets .offhead:first-child,
@@ -1663,6 +1709,11 @@ body[data-pageway] #looks > .tabs:empty {
     padding: 0 var(--space-4);
     font-size: var(--text-s);
     background: var(--panel);
+
+    /* On a phone a hub's seven buttons fit the card's width */
+    @media (max-width: 40rem) {
+      padding: 0 var(--space-2);
+    }
 
     + button {
       border-left: 1px solid var(--line);
@@ -2040,6 +2091,14 @@ header .savearrow,
   border-radius: var(--radius-l);
   box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
   padding: var(--space-4) var(--space-5);
+
+  /* On a phone the buttons start at the left, so the menu does too, over the place the script
+     gives it beside its arrow */
+  @media (max-width: 40rem) {
+    left: var(--space-5) !important;
+    right: auto !important;
+    max-width: calc(100% - 2 * var(--space-5));
+  }
 }
 
 /* The board's chip in the header */
@@ -2266,6 +2325,12 @@ body.scenesintab #looks > .shelf {
   margin-top: 0;
   container-type: inline-size;
 
+  /* On a phone the steps wrap onto a line of their own, a little apart from the chip */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+
   .chip {
     flex: 0 1 auto;
     min-width: 0;
@@ -2462,6 +2527,15 @@ html {
   .ledtab:is([data-panel=screensPanel], [data-panel=soundPanel], [data-panel=sensorPanel]) {
     flex: none;
   }
+
+  /* On a phone the row scrolls instead, so the lights' tabs keep their size too */
+  @media (max-width: 40rem) {
+    gap: var(--space-5);
+
+    .ledtab:not(:is([data-panel=screensPanel], [data-panel=soundPanel], [data-panel=sensorPanel])) {
+      flex: none;
+    }
+  }
 }
 
 .boardchip.sensor {
@@ -2555,6 +2629,11 @@ html {
   grid-template-columns: repeat(6, 1fr);
   gap: var(--space-4);
   width: 100%;
+
+  /* On a phone the hub's six positions take two rows of three */
+  @media (max-width: 40rem) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .place {
@@ -2931,6 +3010,19 @@ html {
   .says {
     margin-left: var(--space-2);
   }
+
+  /* Narrower than the header's one line, as on a tablet, the strip's chip, its stretches and its
+     steps wrap onto further lines where they do not fit, and on a phone the chip's own settings
+     wrap inside it */
+  @media (max-width: 1180px) {
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 40rem) {
+    .chip {
+      flex-wrap: wrap;
+    }
+  }
 }
 /* The button beside the version where newer firmware is out, and the sheet it opens. The sheet's
    foot keeps the downloads in view while the notes scroll */
@@ -3111,6 +3203,16 @@ body:has(>dialog.firmwaresheet[open]) {
   display: inline-flex;
   margin-left: auto;
   flex: none;
+
+  /* On a phone the group may narrow to the panel, its buttons wrapping onto a second row */
+  @media (max-width: 40rem) {
+    flex: 0 1 auto;
+    min-width: 0;
+
+    .toolset {
+      flex-wrap: wrap;
+    }
+  }
 }
 
 .stretchtools .toolsays,
@@ -3134,6 +3236,17 @@ body:has(>dialog.firmwaresheet[open]) {
   gap: var(--space-3);
   padding: 0 var(--space-4) 0 var(--space-4);
   color: var(--dim);
+
+  /* On a phone the group's words give way to its icon, so the group keeps one line. The words
+     stay for a screen reader, and the number's label says them too */
+  @media (max-width: 40rem) {
+    gap: 0;
+    font-size: 0;
+
+    > span {
+      font-size: var(--text-s);
+    }
+  }
 }
 
 .stretchtools .toolset input[type=number] {
@@ -3705,6 +3818,17 @@ body.setupall .screen-box .settings {
     flex: 0 1 auto;
     min-width: 0;
   }
+
+  /* On a phone the tabs keep their size, names whole, and the row scrolls sideways */
+  @media (max-width: 40rem) {
+    gap: var(--space-5);
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    .ledtab {
+      flex: none;
+    }
+  }
 }
 
 /* Every tab's section in one grid cell, laid out whether seen or not, so the cell is as
@@ -3721,6 +3845,13 @@ body.setupall .screen-box .settings {
   > .tabhidden {
     visibility: hidden;
     pointer-events: none;
+
+    /* On a phone the sections stack so tall that the tallest would leave a screen of empty page
+       under a short one, so a hidden section keeps its width but takes no height */
+    @media (max-width: 40rem) {
+      height: 0;
+      overflow: hidden;
+    }
   }
 }
 
@@ -3971,6 +4102,12 @@ canvas.progthumb {
   gap: var(--space-6);
   align-items: flex-start;
   padding: var(--space-5);
+
+  /* On a phone the picture stands over its words */
+  @media (max-width: 40rem) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .progpicture {
@@ -3980,6 +4117,11 @@ canvas.progthumb {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* On a phone the picture stands centred over its words */
+  @media (max-width: 40rem) {
+    align-self: center;
+  }
 }
 
 .proghero .progthumb.big {
@@ -4012,6 +4154,11 @@ canvas.progthumb {
   .progwhere {
     font-size: var(--text-m);
     color: var(--dim);
+
+    /* On a phone a long path breaks where it must */
+    @media (max-width: 40rem) {
+      overflow-wrap: anywhere;
+    }
   }
 }
 
@@ -4246,6 +4393,24 @@ header h1 + .headswitch {
   margin-left: auto;
   flex-wrap: wrap;
   justify-content: flex-end;
+
+  /* On a phone the buttons take their own line under the title, starting at its left */
+  @media (max-width: 40rem) {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    gap: var(--space-4);
+
+    #status,
+    .setuphead {
+      margin-left: 0;
+
+      /* Empty, they would still take a gap at the line's start */
+      &:empty {
+        display: none;
+      }
+    }
+  }
 }
 
 /* On a window wide enough for all three, the name, the tabs over the column and the group share
@@ -4313,6 +4478,11 @@ header .headswitch.headsplit .cover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  /* On a phone a tab is its name, the program chosen being shown on its page */
+  @media (max-width: 40rem) {
+    display: none;
+  }
 }
 
 /* The way into scenes, at the end of the effects tab while there are none, the row it had above
@@ -4331,6 +4501,13 @@ body.scenesintab #looks > .tabs.sides:empty {
   margin-left: auto;
   flex: none;
   opacity: 1;
+
+  /* On a phone it is its + alone, its words kept for a screen reader and its tooltip */
+  @media (max-width: 40rem) {
+    gap: 0;
+    padding: var(--space-3);
+    font-size: 0;
+  }
 }
 
 .headswitch .cover:not(.on) .plus {
@@ -4535,6 +4712,18 @@ body.scenesintab #looks > .tabs.sides:empty {
   margin-top: var(--space-4);
   font-size: var(--text-m);
   color: var(--dim);
+
+  /* On a phone what the row says takes a line of its own above its buttons */
+  @media (max-width: 40rem) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    height: auto;
+
+    > :first-child {
+      flex-basis: 100%;
+    }
+  }
 }
 
 .discoverrowsaid {
@@ -4893,6 +5082,11 @@ body.discovermodal {
   gap: var(--space-4);
   margin: 0;
   font: inherit;
+
+  /* On a phone what the heading says wraps under its name */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
 }
 
 body[data-pageway] #looks > .shelf.bare {
@@ -4984,6 +5178,27 @@ body[data-pageway] #looks > .shelf.bare {
   &.shown {
     transform: none;
     visibility: visible;
+  }
+
+  /* Narrower than the header's one line the buttons keep their words on one line, at their own
+     width, and what the bar says gives way to them */
+  @media (max-width: 1180px) {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+
+    .floatbuttons button {
+      white-space: nowrap;
+    }
+  }
+
+  /* On a phone the bar keeps the drive and the save, the page it is on being in view below */
+  @media (max-width: 40rem) {
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+
+    .floatwhere,
+    #check {
+      display: none;
+    }
   }
 }
 
@@ -5263,6 +5478,11 @@ body[data-pageway] #looks > .shelf.bare {
     flex-shrink: 1;
     min-width: 6rem;
   }
+
+  /* On a phone the settings wrap onto as many lines as they need */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
 }
 
 /* How the scene ends and the scene after it, chosen in the inputs' style */
@@ -5319,6 +5539,44 @@ body[data-pageway] #looks > .shelf.bare {
   display: grid;
   grid-template-columns: 1fr var(--middle) 1fr;
   margin-top: var(--space-4);
+
+  /* On a phone there is no room for rows down either side, so the remote or PIR Stick stands
+     above its rows, listed in one column, and the leaders between them go */
+  @media (max-width: 40rem) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    height: auto !important;
+
+    .remotemiddle {
+      order: -1;
+      align-self: center;
+      width: min(var(--middle), 100%);
+      margin-bottom: var(--space-4);
+
+      svg {
+        height: auto;
+      }
+    }
+
+    .remoteleader {
+      display: none;
+    }
+
+    .remoteside {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .remoterow,
+    .remoteside.left .remoterow {
+      position: static;
+      width: 100%;
+      flex-direction: row;
+      padding: 0 var(--space-3) 0 var(--space-4);
+    }
+  }
 }
 
 .remoteside {
@@ -5572,6 +5830,16 @@ body[data-pageway] #looks > .shelf.bare {
   display: flex;
   align-items: center;
   margin: 0 0 var(--space-5);
+
+  /* On a phone what does not fit wraps onto a second line, the volume giving up its margins */
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+
+    .soundvolume {
+      margin: 0;
+    }
+  }
 }
 
 .soundvolume {
