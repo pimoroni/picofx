@@ -621,10 +621,10 @@ function framedPanel(path, url) {
 
 // The picked program's picture. A screen program shows its captured frame on the panel it
 // would play on, as the Screens tab draws one, turned as the program turns it. Any other
-// program shows its thumbnail large
+// program, and any program on a board without screens, shows its thumbnail large
 function programPicture(path) {
   var shown = PICTURES[path] || [];
-  var onScreen = usesOf(path).some(function (key) {
+  var onScreen = SCREEN_PORTS.length && usesOf(path).some(function (key) {
     return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
   });
   if (onScreen && shown.length) {

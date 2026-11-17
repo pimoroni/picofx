@@ -10417,7 +10417,7 @@ function framedPanel(path, url) {
 }
 function programPicture(path) {
   var shown = PICTURES[path] || [];
-  var onScreen = usesOf(path).some(function(key) {
+  var onScreen = SCREEN_PORTS.length && usesOf(path).some(function(key) {
     return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
   });
   if (onScreen && shown.length) {
