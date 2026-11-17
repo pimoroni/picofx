@@ -50,9 +50,6 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .chip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;padding:.1rem .25rem}
 .chip select option{color:var(--ink)}
-.chip .drop{background:transparent;border:0;color:#fff;font-size:1.1rem;line-height:1;
- padding:0 .1rem;opacity:.8}
-.chip .drop:hover{opacity:1}
 /* A strip not fitted keeps its chip where it was and the panel its height, and the offer to add
    it stands in the middle of the room the strip took */
 .panel.strip{position:relative}
@@ -60,7 +57,8 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
    stays put as the board is edited */
 .panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
 .panel.stripout > :not(summary):not(.leds){visibility:hidden}
-.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
+/* Level with a screen's words when it is not fitted */
+.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:8rem;
  transform:translate(-50%,-50%)}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 /* A tab whose section cannot be used just now, which still opens to say why */
@@ -150,7 +148,7 @@ button.round svg{display:block}
 .bar.carded{margin-top:.75rem}
 .bar.carded .sec{display:flex;flex-direction:column}
 .cardlamps{display:flex;padding:.55rem 0 .3rem}
-/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
    without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
@@ -262,7 +260,7 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-/* ---- the lamps in Edit board ---- */
+/* ---- the lamps in the wiring view ---- */
 
 /* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
    stretches are the scene's, so only the lamps answer the pointer */
@@ -833,10 +831,23 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  border-radius:6px;background:rgba(255,255,255,.15);color:#fff;font:inherit;
  font-size:.78rem;padding:.1rem .25rem}
 .screen-box h3 select.inband option{color:var(--ink)}
-.screen-box h3 .drop{margin-left:auto;background:transparent;border:0;color:#fff;font-size:1.1rem;
- line-height:1;padding:0 .2rem;opacity:.8}
-.screen-box h3 .drop:hover{opacity:1}
 .screen-box .body.adding{justify-content:center;padding:1.4rem .9rem}
+/* A board setting's add button where the part is not fitted, and its remove button where it is */
+.boardadd{display:inline-flex;align-items:center;gap:.4rem}
+.boardadd .boardicon{color:var(--board)}
+/* The sensor's add button is centred over its row, as a strip's and a screen's are in their boxes,
+   and takes no height from it, so the row stays as tall as the fitted chip */
+#sensorFacts{position:relative}
+#sensorFacts .sensoradd{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.boardremove{font:inherit;font-size:.72rem;line-height:1.2;padding:.1rem .4rem;border-radius:6px;
+ cursor:pointer}
+.boardchip .boardremove,.screen-box h3 .boardremove{border:1px solid rgba(255,255,255,.55);
+ background:rgba(255,255,255,.15);color:#fff}
+.boardchip .boardremove:hover,.screen-box h3 .boardremove:hover{background:rgba(255,255,255,.3)}
+.screen-box h3 .boardremove{margin-left:auto}
+.screen-box h3 .bandnone{font-weight:400;opacity:.85}
+.place .boardremove{padding:.05rem .35rem}
+.placenone .boardadd{font-size:.72rem;padding:.2rem .4rem}
 .keep{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;
  width:calc(100% - 1.8rem);margin:0 .9rem .8rem;text-align:left;padding:.35rem .55rem;
  border:2px solid var(--line);border-radius:8px;background:var(--panel);font-size:.78rem}
@@ -902,16 +913,6 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 .boardicon{color:var(--board);flex:0 0 auto}
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
 .boardicon{width:16px;height:16px;margin:-1.5px}
-
-/* Drawn as the board boxes it opens are, with their chip and their shape. It is outlined to
-   set up and filled while setting up */
-.setupbutton{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
- border-radius:9px;border:1.5px solid var(--boardOuts);background:none;
- color:var(--boardOuts);font:600 .8rem system-ui,sans-serif;cursor:pointer}
-.setupbutton:hover{background:#eef2f7}
-.setupbutton .boardicon{color:currentColor}
-.setupbutton.on{background:var(--boardOuts);color:#fff}
-.setupbutton.on:hover{background:#34505f}
 
 /* Saving in the header, the next thing to do filled in the page's colour */
 :root{--warn:#b33;--warn-bg:#fbeaea}
@@ -1195,6 +1196,13 @@ body.scenesintab #looks>.shelf{margin-top:0}
  align-items:center;gap:.35rem;cursor:pointer}
 .headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
+/* The Wiring chip opens the outputs' wiring view and closes it, so it answers the pointer, and
+   shows pressed while the view is open */
+#outFacts .boardchip{cursor:pointer}
+#outFacts .boardchip:hover{filter:brightness(1.12)}
+body.setupall #outFacts .boardchip{
+ box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),inset 0 3px 6px rgba(0,0,0,.45)}
+
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once. A run's cards stand back around
    its lights, which are the board's */
@@ -1285,7 +1293,7 @@ details[open]>summary .accswatch{display:none}
 .ledtab:hover{color:var(--ink)}
 .ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .ledtab .accswatch{margin:0}
-/* On a narrow page the LED tabs' swatches give way, so the row keeps Edit board inside it */
+/* On a narrow page the LED tabs' swatches give way, so the row stays inside the page */
 .ledtabs .ledtab{flex:0 1 auto;min-width:0}
 .ledtab b{white-space:nowrap}
 .ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}
@@ -1338,10 +1346,9 @@ html{scrollbar-gutter:stable}
    remote sits in the middle of the section with its buttons' rows down either side, each row
    centred on its leader's height and the same width, so each side reads as one column */
 .ledtab[data-panel=sensorPanel] .sensorswatch{display:none}
-/* A sixth tab leaves the row short of room, so Edit board keeps one line and only the lights'
-   stripes narrow, never past the names above them */
+/* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
+   names above them */
 #ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
-#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
  [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
@@ -1466,13 +1473,7 @@ html{scrollbar-gutter:stable}
 .hubswitch button{border:0;border-radius:0;background:transparent;color:var(--screenA);
  font:inherit;line-height:1.3;padding:.3rem .55rem;cursor:pointer}
 .hubswitch button.on{background:#1f6feb;color:#fff}
-.hubswitch:not(.locked) button:not(.on):hover{background:rgba(31,111,235,.1)}
-/* Locked, the choice made reads as a fact, a filled chip like the other tabs' boxes, and the
-   other is only a grey mention with no outline of its own to press */
-.hubswitch.locked{box-shadow:inset 0 0 0 1px var(--line)}
-.hubswitch.locked button{cursor:default;color:var(--dim);opacity:.7}
-.hubswitch.locked button.on{color:#fff;opacity:1}
-.hubswitch.locked .hublead:not(.on) .boardicon{color:var(--dim);opacity:.7}
+.hubswitch button:not(.on):hover{background:rgba(31,111,235,.1)}
 .hubbox{grid-column:1/-1;--hub:#1f6feb;--hubwash:rgba(31,111,235,.06)}
 .hubbox.b{--hub:#a44ad0;--hubwash:rgba(164,74,208,.06)}
 .hubbox h3 .hubcount{font-weight:400;opacity:.85;margin-left:.3rem}
@@ -1489,8 +1490,6 @@ html{scrollbar-gutter:stable}
  color:var(--hub)}
 .placesize{font-size:.72rem;padding:.05rem .15rem;border-radius:5px}
 .placetop .placechip{color:var(--hub);margin-right:.2rem}
-.placesize:disabled{opacity:.75;color:var(--ink);background:transparent;border-color:transparent;
- appearance:none;-webkit-appearance:none;padding:.05rem 0}
 .placesays{font-size:.7rem;color:var(--dim);max-width:100%;overflow:hidden;
  text-overflow:ellipsis;white-space:nowrap}
 .place.empty{cursor:default}
@@ -1498,11 +1497,10 @@ html{scrollbar-gutter:stable}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:6px;font-size:.72rem;color:var(--dim);
  background:var(--cross) transparent;outline:1px dashed #a9a49b;outline-offset:-1px}
-.placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
- border:0;border-radius:5px;background:var(--hub);color:#fff;font-size:.95rem;line-height:1}
 .placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:7px;
  background:var(--panel);color:var(--hub);font:600 .74rem system-ui,sans-serif;
  padding:.15rem .5rem}
+.placefit .boardicon{color:var(--hub)}
 .hubsettings{width:100%;display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;
  min-height:2rem}
 .hubsettings .showing{margin:0}
@@ -1579,7 +1577,6 @@ body.setupall .hubsettings{opacity:.35;pointer-events:none}
    back with the rest while the board is edited */
 .screen-box h3 .bandfact{display:inline-flex;align-items:center;gap:.3rem;margin-left:.4rem}
 .screen-box h3 .bandfact select.inband{margin-left:0}
-body:not(.setupall) .screen-box h3 .drop{visibility:hidden}
 body.setupall .lightrow{opacity:.35;pointer-events:none}
 .sshowing.empty{color:var(--dim)}
 /* Where the sections have the room, as the hub's strip has, placement and playback are two
@@ -1675,9 +1672,6 @@ body.nolooks #looks{opacity:.3;pointer-events:none}
 /* In the box of the section they are for, the looks are hidden with it, every section keeping
    its place so the tabs' place stays as tall as the tallest */
 body.looksbelow #looks{margin:1.2rem 0 0}
-/* Setting up is the last thing on the tabs' row, at its far end */
-.ledtabs .gap{flex:1}
-.ledtabs .setupbutton{align-self:center}
 
 /* Examples to discover, with the line where a tab's examples start, the gallery over the page and
    the marks and bins on the examples on the drive. --discover is the tab's own colour */
@@ -3754,8 +3748,8 @@ function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
-// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
-// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in the wiring view too,
+// so setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
 function carded(run) {
   return !run.strip;
 }
@@ -3948,10 +3942,13 @@ function headSteps(row, run) {
                                function () { stepBack(run); }));
   steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
                                function () { stepOn(run); }));
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  steps.appendChild(join);
+  // Check if the run can be cut at all, since one light is always one stretch
+  if (run.lamps.length > 1) {
+    var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                          "merge into one stretch, keeping the selected stretch's look");
+    join.onclick = function () { joinAll(run); };
+    steps.appendChild(join);
+  }
   row.appendChild(steps);
 }
 
@@ -7144,7 +7141,8 @@ chosenSteps.push(function (where, run) {
   who.appendChild(named);
   who.classList.add("withway");
   if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
+  // One light has no direction
+  if (run.lamps.length > 1) who.appendChild(directionToggle(run, section));
 });
 
 // ---- blinking through several colours -----------------------------------------------------
@@ -7346,6 +7344,9 @@ function breakingOutputs() {
   return found;
 }
 
+// Whether the outputs are one light that does not break out, which leaves no wiring to set
+var ONE_LIGHT = OUTPUTS.length === 1 && !breakingOutputs().length;
+
 // The outputs broken out, as a person would say it
 function brokenSaid() {
   var breaking = breakingOutputs();
@@ -7401,8 +7402,8 @@ function boardLine() {
 }
 
 // ---- what is not fitted, in a comment of the page's own ---------------------------------
-// The board line names a strip or screen only where a scene plays on it, so one taken off in
-// Edit board writes the same file as one fitted and left unused. Where something the board fits
+// The board line names a strip or screen only where a scene plays on it, so one removed writes
+// the same file as one fitted and left unused. Where something the board fits
 // by default has been taken off, the page lists it by the name its tab or box shows in a comment
 // of its own, which autofx passes over, and reads it back so a reload does not fit it again
 
@@ -7444,12 +7445,54 @@ function saidNotFitted(name) {
 // Whether the whole page is in its setup mode
 var setupOn = false;
 
+// The tooltip on everything that wears the board's chip
+var BOARD_SETTING_SAYS = "Board setup, shared by every scene";
+
 // The panels that hold a board fact, and the colour each one's box takes
 var BOARD_CHIP_CLASSES = {outPanel: "outs"};
 STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
 
-// Whether the board facts in this panel can be changed just now
-function canEdit(panel) { return setupOn; }
+// Whether the board facts in this panel can be changed just now. Every board setting is changed
+// where it is shown, and only the outputs' wiring waits for its own view, where lights are
+// dragged into place
+function canEdit(panel) { return panel === "outPanel" ? setupOn : true; }
+
+// The Wiring chip opens the outputs' wiring view, where it shows pressed, and a second click
+// closes it
+document.addEventListener("click", function (event) {
+  if (event.target.closest("select, input, button, header")) return;
+  if (!event.target.closest("#outFacts .boardchip")) return;
+  setSetup(!setupOn);
+  draw();
+});
+
+// The chip a board setting's add button carries, before its words
+function boardButton(words) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "boardadd";
+  button.appendChild(boardIcon());
+  button.appendChild(document.createTextNode(words));
+  return button;
+}
+
+// The button beside a fitted part's board setting that takes the part off the board
+function removeButton(what, act) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "boardremove";
+  button.textContent = "remove";
+  button.title = "Take this " + what + " off the board, in every scene";
+  // A hub position picks itself on a click, which a removed one cannot be
+  button.addEventListener("click", function (event) {
+    event.stopPropagation();
+    // Check if there are scenes to lose it, since nothing brings back what they played on it
+    if (state.scenes.length &&
+        !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
+    act();
+  });
+  return button;
+}
 
 // ---- selection waits while the board is set up ------------------------------------------------
 // A stretch is picked to give it a look, which setup does not do, so a tap there picks
@@ -7495,7 +7538,7 @@ function unmark() {
 function boardBox(panel, parts) {
   var box = document.createElement("span");
   box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "Board setup, shared by every scene";
+  box.title = BOARD_SETTING_SAYS;
   box.appendChild(boardIcon());
   parts.forEach(function (part) {
     box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
@@ -7510,7 +7553,8 @@ function small(words) {
 }
 
 // The board's chip, three legs a side, set three apart as the smallest spacing that still
-// reads as legs at 16px
+// reads as legs at 16px. It carries the board's tooltip itself, so a chip with no box around it
+// says it too
 function boardIcon() {
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 14 14");
@@ -7518,7 +7562,8 @@ function boardIcon() {
   svg.setAttribute("height", "13");
   svg.setAttribute("class", "boardicon");
   svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
+  svg.innerHTML = "<title>" + BOARD_SETTING_SAYS + "</title>" +
+                  "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
                   "stroke='currentColor' stroke-width='1.3'/>" +
                   "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
                   "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
@@ -7539,6 +7584,11 @@ function noArrow() {
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
+  // Check if there is wiring to set, since one light has none and its row keeps only the steps
+  if (ONE_LIGHT) {
+    headSteps(box, active.strip ? lastOutputRun : active);
+    return;
+  }
   box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
   if (canEdit("outPanel")) {
     var hint = document.createElement("span");
@@ -7603,35 +7653,21 @@ function dropStrip(run) {
   draw();
 }
 
-// The cross on a strip's chip while the board is edited, as a screen has on its own
-function stripDrop(run) {
-  var drop = document.createElement("button");
-  drop.type = "button";
-  drop.className = "drop";
-  drop.textContent = "\u00d7";
-  drop.title = "Remove this strip from every scene";
-  drop.onclick = function () { dropStrip(run); };
-  return drop;
-}
-
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
+// A strip not fitted offers to be added, or says why it cannot be
 function renderStripOut(box, run, panel) {
   box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
   var blocked = stripBlockedBy(run);
   if (blocked) {
+    box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
     var why = document.createElement("span");
     why.className = "stripblocked says";
     why.textContent = blocked;
     box.appendChild(why);
     return;
   }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
+  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var add = boardButton("add this strip");
+  add.classList.add("addstrip");
   add.onclick = function () {
     stripThere(run, true);
     workOn(panel);
@@ -7656,9 +7692,9 @@ function renderLeds(where, run) {
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
+    chip.title = BOARD_SETTING_SAYS;
     chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
+    chip.appendChild(removeButton("strip", function () { dropStrip(run); }));
   } else {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
@@ -7668,17 +7704,6 @@ function renderLeds(where, run) {
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
-
-function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
-}
 
 drawSteps.after.push(function () {
   renderOutFacts();
@@ -7740,8 +7765,8 @@ function bringForward(keys, on) {
   });
 }
 
-// Lay the connectors over the chosen stretch's settings, which stand back while setting up,
-// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// Lay the connectors over the chosen stretch's settings, which stand back in the wiring view, so
+// opening and closing it moves nothing below them. The connectors cover the whole
 // of the settings, and the panel only grows by what they need beyond that room
 function overlapBelow(box) {
   var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -
@@ -8023,10 +8048,12 @@ function chosenTakesLooks() {
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
-// A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
-// Edit board and changing scene each put back a stretch of their own, which can be another tab's
+// A look goes to the stretch being worked on, so that stays in the section shown. Closing the
+// wiring view and changing scene each put back a stretch of their own, which can be another tab's
 drawSteps.before.push(function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
+  // A strip added or removed where it is shown changes whether the looks are for this tab
+  showChosen();
 });
 
 // Every tab's section stays laid out in one shared place, only the chosen one seen, so the
@@ -8104,6 +8131,8 @@ function renderLedTabs() {
     tabSwatch(swatch, panel);
     tab.appendChild(swatch);
     tab.addEventListener("click", function () {
+      // The wiring view is the outputs' own, so leaving their tab closes it
+      if (setupOn && panel !== "outPanel") setSetup(false);
       chosenTab = panel;
       if (chosenTakesLooks()) workOn(panel);
       showChosen();
@@ -8111,18 +8140,6 @@ function renderLedTabs() {
     });
     bar.appendChild(tab);
   });
-
-  var gap = document.createElement("span");
-  gap.className = "gap";
-  bar.appendChild(gap);
-  // The tabs grow and shrink as setting up opens and closes, so they are held where they
-  // were on the screen
-  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
-    var was = bar.getBoundingClientRect().top;
-    setSetup(!setupOn);
-    draw();
-    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
-  }));
 }
 
 // A section shown as a tab is not folded away, since the tab is how it is left
@@ -8413,6 +8430,19 @@ function renderScreensHead() {
 
 // A box for each screen port. A screen's box has the backlight across its top, what it shows
 // straight under the module, and its look's sections under that
+// Take a screen off the board. Every scene's choice for it goes too, since nothing is left to
+// show them
+function takeScreenOff(letter) {
+  state.screens[letter].there = false;
+  store();
+  allBodies().forEach(function (held) {
+    held.screens[letter].shows = null;
+    held.screens[letter].kept = null;
+  });
+  apply(slotAt(state.at).body);
+  draw();
+}
+
 function renderScreenBoxes() {
   var box = document.getElementById("screensHead");
   box.textContent = "";
@@ -8428,10 +8458,14 @@ function renderScreenBoxes() {
     body.className = "body";
     side.appendChild(body);
 
+    // A screen not fitted offers to be added, which shows nothing until a scene chooses something
     if (!screen.there) {
+      var none = document.createElement("small");
+      none.className = "bandnone";
+      none.textContent = "not fitted";
+      head.appendChild(none);
       body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
+      var add = boardButton("add this screen");
       add.onclick = function () {
         screen.there = true;
         screen.shows = null;
@@ -8442,25 +8476,6 @@ function renderScreenBoxes() {
       box.appendChild(side);
       return;
     }
-
-    // Taking the screen out is the only way to have none, as a screen showing nothing would
-    // say the same thing twice
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this screen from every scene";
-    drop.onclick = function () {
-      screen.there = false;
-      // Every scene's choice for it goes too, since nothing is left to show them
-      store();
-      allBodies().forEach(function (held) {
-        held.screens[letter].shows = null;
-        held.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
 
     var size = document.createElement("select");
     // The sizes a panel can be, the catalogue's hub being no panel size
@@ -8486,7 +8501,10 @@ function renderScreenBoxes() {
     };
     size.className = "inband";
     size.title = "Panel fitted, shared by every scene";
-    head.insertBefore(size, drop);
+    head.appendChild(size);
+    // Taking the screen out is the only way to have none, as a screen showing nothing would
+    // say the same thing twice
+    head.appendChild(removeButton("screen", function () { takeScreenOff(letter); }));
 
     body.appendChild(previewInScene(screen, letter));
 
@@ -8605,7 +8623,10 @@ function renderAssets() {
     var cell = document.createElement("div");
     cell.className = "card nothing small offasset";
     cell.title = "Turn a screen off in this scene";
-    if (state.at < 0) cell.style.visibility = "hidden";
+    // With no screen fitted there is nothing to turn off, and the card keeps its place unseen
+    var fitted = (state.hub && state.hub.on) ||
+                 SCREENS.some(function (letter) { return state.screens[letter].there; });
+    if (state.at < 0 || !fitted) cell.style.visibility = "hidden";
     cell.innerHTML = "<div class='face'>Off</div>";
     var pick = document.createElement("div");
     pick.className = "pick";
@@ -8805,7 +8826,7 @@ boardLineSteps.before.push(function () {
   });
 });
 
-// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
+// A screen removed, for the page's comment on what is not fitted. On a Screen Hub
 // the ports are the hub's, so neither is listed
 notFittedSteps.push(function () {
   if (state.hub.on) return [];
@@ -9125,13 +9146,8 @@ function renderScreensParts() {
   // The band is the screen's coloured box, so it wears the board's chip like the others
   head.querySelectorAll(".screen-box h3").forEach(function (band) {
     band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
+    band.title = BOARD_SETTING_SAYS;
   });
-  // Whether a screen is fitted and its size are the board's
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
-      .forEach(function (control) { control.disabled = true; });
-  }
 }
 
 // The tab's swatch is the two screens, each showing what its screen shows
@@ -9881,17 +9897,15 @@ keptOpen("soundPanel");
 
 // ---- the Sensor tab -----------------------------------------------------------------------------
 // What is on the sensor connector and what it does, as a tab after Sound. Only what is fitted is
-// board setup, chosen in Edit board. What each of a remote's buttons does is set on the Always on
+// board setup. What each of a remote's buttons does is set on the Always on
 // tab for every scene, and a scene can change any button while it shows, as it can any light.
 // Two buttons are the board's in every scene: OK / Stop puts it in standby and wakes it, so there
 // is always a way to stop it, and Play / Pause holds the effects where they stand.
 
-// What the sensor connector can have on it, as [kind, as the choice says it, under the tab's name,
-// where it sits]
-var SENSOR_KINDS = [["none", "nothing", "none", ""],
-                    ["ir", "an Aye Arr Remote", "Aye Arr",
-                     "through an IR Receiver Stick on the sensor connector"],
-                    ["pir", "a PIR Stick", "PIR Stick", "on the sensor connector"]];
+// What the sensor connector can have on it, as [kind, as the choice says it, under the tab's name]
+var SENSOR_KINDS = [["none", "not fitted", "none"],
+                    ["ir", "Aye Arr Remote", "Aye Arr"],
+                    ["pir", "PIR Stick", "PIR Stick"]];
 
 state.sensorKind = "none";
 // The choices of the tab being edited, by button, where it changes what a button does
@@ -10302,38 +10316,39 @@ function sensorSaid(words, dim) {
   return said;
 }
 
-// Fill the box saying what is on the sensor connector, a choice while the board is being set up
+// Fill the box saying what is on the sensor connector, as a choice with a remove button. Nothing
+// on it reads as not fitted, as a strip or a screen does, and offers to add the remote
 function sensorBox() {
   var facts = document.getElementById("sensorFacts");
   facts.textContent = "";
-  var fitted = sensorFacts();
-  var parts = ["Sensor"];
-  if (canEdit("sensorPanel")) {
-    var choice = document.createElement("select");
-    SENSOR_KINDS.forEach(function (kind) {
-      var option = document.createElement("option");
-      option.value = kind[0];
-      option.textContent = kind[1];
-      choice.appendChild(option);
-    });
-    choice.value = state.sensorKind;
-    choice.onchange = function () {
-      state.sensorKind = choice.value;
+  if (state.sensorKind === "none") {
+    facts.appendChild(boardBox("sensorPanel", ["Sensor", small("not fitted")]));
+    var add = boardButton("add a sensor");
+    add.classList.add("sensoradd");
+    add.onclick = function () {
+      state.sensorKind = "ir";
       draw();
     };
-    parts.push(choice);
-    if (fitted[3]) parts.push(small(fitted[3]));
-  } else {
-    parts.push(small(state.sensorKind === "none" ? "nothing on the sensor connector"
-                                                 : fitted[1] + ", " + fitted[3]));
+    facts.appendChild(add);
+    return;
   }
-  facts.appendChild(boardBox("sensorPanel", parts));
-  if (!canEdit("sensorPanel") && state.sensorKind === "none") {
-    var hint = document.createElement("span");
-    hint.className = "hint";
-    hint.textContent = "Edit board to fit one.";
-    facts.appendChild(hint);
-  }
+  var choice = document.createElement("select");
+  SENSOR_KINDS.forEach(function (kind) {
+    if (kind[0] === "none") return;
+    var option = document.createElement("option");
+    option.value = kind[0];
+    option.textContent = kind[1];
+    choice.appendChild(option);
+  });
+  choice.value = state.sensorKind;
+  choice.onchange = function () {
+    state.sensorKind = choice.value;
+    draw();
+  };
+  facts.appendChild(boardBox("sensorPanel", ["Sensor", choice, removeButton("sensor", function () {
+    state.sensorKind = "none";
+    draw();
+  })]));
 }
 
 // ---- the PIR Stick with a row for each trigger --------------------------------------------------
@@ -11530,13 +11545,12 @@ driveParts.push({
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
-// The choice of two screens or a hub, which takes both connectors. It is always shown, so it can
-// be seen to be a choice, and only changed while editing the board. It sits at the top of the
+// The choice of two screens or a hub, which takes both connectors. It sits at the top of the
 // tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
   var row = document.createElement("div");
-  row.className = "hubswitch" + (setupOn ? "" : " locked");
-  row.title = setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it";
+  row.className = "hubswitch";
+  row.title = BOARD_SETTING_SAYS;
   var lead = document.createElement("span");
   lead.className = "hublead" + (state.hub.on ? "" : " on");
   lead.appendChild(boardIcon());
@@ -11546,7 +11560,6 @@ function hubSwitch() {
       var choice = document.createElement("button");
       choice.type = "button";
       choice.className = state.hub.on === pair[0] ? "on" : "";
-      choice.disabled = !setupOn;
       choice.textContent = pair[1];
       choice.onclick = function () {
         state.hub.on = pair[0];
@@ -11555,6 +11568,16 @@ function hubSwitch() {
       row.appendChild(choice);
     });
   return row;
+}
+
+// Take the panel at a hub position off, in every scene, keeping its size to offer back
+function takePlaceOff(place) {
+  state.hub.was[place] = state.hub.sizes[place];
+  state.hub.sizes[place] = "";
+  store();
+  allBodies().forEach(function (body) { body.places[place].shows = null; });
+  apply(slotAt(state.at).body);
+  draw();
 }
 
 function placeTile(place) {
@@ -11570,29 +11593,23 @@ function placeTile(place) {
   top.appendChild(letter);
   tile.appendChild(top);
 
+  // An empty position offers a panel, at the size it last had
   if (!state.hub.sizes[place]) {
     tile.classList.add("empty");
     var none = document.createElement("span");
     none.className = "placenone";
-    none.textContent = "no panel";
+    var add = boardButton("add a panel");
+    add.onclick = function (event) {
+      event.stopPropagation();
+      state.hub.sizes[place] = state.hub.was[place] || SCREEN_SIZES[0];
+      draw();
+    };
+    none.appendChild(add);
     tile.appendChild(none);
-    if (setupOn) {
-      var fit = document.createElement("button");
-      fit.type = "button";
-      fit.className = "placefit";
-      fit.textContent = "add";
-      fit.title = "A panel is fitted at " + place;
-      fit.onclick = function (event) {
-        event.stopPropagation();
-        state.hub.sizes[place] = state.hub.was[place] || "2.8";
-        draw();
-      };
-      tile.appendChild(fit);
-    }
     return tile;
   }
 
-  // Which panel is here, shown in every mode and changed only while editing the board
+  // Which panel is here
   var size = document.createElement("select");
   size.className = "placesize";
   SCREEN_SIZES.forEach(function (inches) {
@@ -11602,7 +11619,6 @@ function placeTile(place) {
     if (state.hub.sizes[place] === inches) option.selected = true;
     size.appendChild(option);
   });
-  size.disabled = !setupOn;
   size.title = "Panel at " + place + ", shared by every scene";
   size.onclick = function (event) { event.stopPropagation(); };
   size.onchange = function () {
@@ -11625,23 +11641,8 @@ function placeTile(place) {
                                              pictureSaid(under.always.shows)
                    : under ? "off in this scene" : held.shows || "nothing";
   tile.appendChild(says);
-  if (setupOn) {
-    var drop = document.createElement("button");
-    drop.type = "button";
-    drop.className = "placedrop";
-    drop.textContent = "\u00d7";
-    drop.title = "No panel at " + place + ", in every scene";
-    drop.onclick = function (event) {
-      event.stopPropagation();
-      state.hub.was[place] = state.hub.sizes[place];
-      state.hub.sizes[place] = "";
-      store();
-      allBodies().forEach(function (body) { body.places[place].shows = null; });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    tile.appendChild(drop);
-  }
+  // Under the panel, as the size above leaves no room beside the position's letter
+  tile.appendChild(removeButton("panel", function () { takePlaceOff(place); }));
   tile.onclick = function () {
     placePicked = place;
     draw();
@@ -13129,7 +13130,7 @@ function renderScreensTab() {
     if (!chip || !size) return;
     var fact = document.createElement("span");
     fact.className = "bandfact";
-    fact.title = "Board setup, shared by every scene";
+    fact.title = BOARD_SETTING_SAYS;
     band.insertBefore(fact, size);
     fact.appendChild(chip);
     fact.appendChild(size);
@@ -14701,6 +14702,7 @@ function programNote() {
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
   note.textContent = "";
+  note.title = BOARD_SETTING_SAYS;
   note.appendChild(boardIcon());
   note.appendChild(document.createTextNode(
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
@@ -14753,7 +14755,7 @@ function renderSceneSettings() {
 // ---- how the board takes a save, on the save button ----------------------------------------------
 // Whether a save plays without an eject, and whether the drive stays hidden at start, are about
 // saving, so they are set where the drive is saved to, in a menu on a small arrow joined to the
-// save button. Neither waits for Edit board, as neither is how the board is built
+// save button
 
 function saveMenu() {
   var menu = document.getElementById("saveMenu");
@@ -15489,6 +15491,7 @@ function emptyPicture() {
 function heroNote(path) {
   var note = document.createElement("div");
   note.className = "programnote";
+  note.title = BOARD_SETTING_SAYS;
   note.appendChild(boardIcon());
   var said = document.createElement("span");
   said.textContent = path

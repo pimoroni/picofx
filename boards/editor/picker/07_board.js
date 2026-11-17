@@ -100,6 +100,9 @@ function breakingOutputs() {
   return found;
 }
 
+// Whether the outputs are one light that does not break out, which leaves no wiring to set
+var ONE_LIGHT = OUTPUTS.length === 1 && !breakingOutputs().length;
+
 // The outputs broken out, as a person would say it
 function brokenSaid() {
   var breaking = breakingOutputs();
@@ -155,8 +158,8 @@ function boardLine() {
 }
 
 // ---- what is not fitted, in a comment of the page's own ---------------------------------
-// The board line names a strip or screen only where a scene plays on it, so one taken off in
-// Edit board writes the same file as one fitted and left unused. Where something the board fits
+// The board line names a strip or screen only where a scene plays on it, so one removed writes
+// the same file as one fitted and left unused. Where something the board fits
 // by default has been taken off, the page lists it by the name its tab or box shows in a comment
 // of its own, which autofx passes over, and reads it back so a reload does not fit it again
 

@@ -670,6 +670,7 @@ function emptyPicture() {
 function heroNote(path) {
   var note = document.createElement("div");
   note.className = "programnote";
+  note.title = BOARD_SETTING_SAYS;
   note.appendChild(boardIcon());
   var said = document.createElement("span");
   said.textContent = path

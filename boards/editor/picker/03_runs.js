@@ -1057,8 +1057,8 @@ function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
-// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
-// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in the wiring view too,
+// so setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
 function carded(run) {
   return !run.strip;
 }
@@ -1251,10 +1251,13 @@ function headSteps(row, run) {
                                function () { stepBack(run); }));
   steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
                                function () { stepOn(run); }));
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  steps.appendChild(join);
+  // Check if the run can be cut at all, since one light is always one stretch
+  if (run.lamps.length > 1) {
+    var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                          "merge into one stretch, keeping the selected stretch's look");
+    join.onclick = function () { joinAll(run); };
+    steps.appendChild(join);
+  }
   row.appendChild(steps);
 }
 

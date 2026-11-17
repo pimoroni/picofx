@@ -176,6 +176,7 @@ function programNote() {
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
   note.textContent = "";
+  note.title = BOARD_SETTING_SAYS;
   note.appendChild(boardIcon());
   note.appendChild(document.createTextNode(
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"

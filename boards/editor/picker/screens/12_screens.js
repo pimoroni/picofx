@@ -239,6 +239,19 @@ function renderScreensHead() {
 
 // A box for each screen port. A screen's box has the backlight across its top, what it shows
 // straight under the module, and its look's sections under that
+// Take a screen off the board. Every scene's choice for it goes too, since nothing is left to
+// show them
+function takeScreenOff(letter) {
+  state.screens[letter].there = false;
+  store();
+  allBodies().forEach(function (held) {
+    held.screens[letter].shows = null;
+    held.screens[letter].kept = null;
+  });
+  apply(slotAt(state.at).body);
+  draw();
+}
+
 function renderScreenBoxes() {
   var box = document.getElementById("screensHead");
   box.textContent = "";
@@ -254,10 +267,14 @@ function renderScreenBoxes() {
     body.className = "body";
     side.appendChild(body);
 
+    // A screen not fitted offers to be added, which shows nothing until a scene chooses something
     if (!screen.there) {
+      var none = document.createElement("small");
+      none.className = "bandnone";
+      none.textContent = "not fitted";
+      head.appendChild(none);
       body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
+      var add = boardButton("add this screen");
       add.onclick = function () {
         screen.there = true;
         screen.shows = null;
@@ -268,25 +285,6 @@ function renderScreenBoxes() {
       box.appendChild(side);
       return;
     }
-
-    // Taking the screen out is the only way to have none, as a screen showing nothing would
-    // say the same thing twice
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this screen from every scene";
-    drop.onclick = function () {
-      screen.there = false;
-      // Every scene's choice for it goes too, since nothing is left to show them
-      store();
-      allBodies().forEach(function (held) {
-        held.screens[letter].shows = null;
-        held.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
 
     var size = document.createElement("select");
     // The sizes a panel can be, the catalogue's hub being no panel size
@@ -312,7 +310,10 @@ function renderScreenBoxes() {
     };
     size.className = "inband";
     size.title = "Panel fitted, shared by every scene";
-    head.insertBefore(size, drop);
+    head.appendChild(size);
+    // Taking the screen out is the only way to have none, as a screen showing nothing would
+    // say the same thing twice
+    head.appendChild(removeButton("screen", function () { takeScreenOff(letter); }));
 
     body.appendChild(previewInScene(screen, letter));
 
@@ -431,7 +432,10 @@ function renderAssets() {
     var cell = document.createElement("div");
     cell.className = "card nothing small offasset";
     cell.title = "Turn a screen off in this scene";
-    if (state.at < 0) cell.style.visibility = "hidden";
+    // With no screen fitted there is nothing to turn off, and the card keeps its place unseen
+    var fitted = (state.hub && state.hub.on) ||
+                 SCREENS.some(function (letter) { return state.screens[letter].there; });
+    if (state.at < 0 || !fitted) cell.style.visibility = "hidden";
     cell.innerHTML = "<div class='face'>Off</div>";
     var pick = document.createElement("div");
     pick.className = "pick";
@@ -631,7 +635,7 @@ boardLineSteps.before.push(function () {
   });
 });
 
-// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
+// A screen removed, for the page's comment on what is not fitted. On a Screen Hub
 // the ports are the hub's, so neither is listed
 notFittedSteps.push(function () {
   if (state.hub.on) return [];
@@ -951,13 +955,8 @@ function renderScreensParts() {
   // The band is the screen's coloured box, so it wears the board's chip like the others
   head.querySelectorAll(".screen-box h3").forEach(function (band) {
     band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
+    band.title = BOARD_SETTING_SAYS;
   });
-  // Whether a screen is fitted and its size are the board's
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
-      .forEach(function (control) { control.disabled = true; });
-  }
 }
 
 // The tab's swatch is the two screens, each showing what its screen shows

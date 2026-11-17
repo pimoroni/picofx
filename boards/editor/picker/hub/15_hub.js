@@ -333,13 +333,12 @@ driveParts.push({
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
-// The choice of two screens or a hub, which takes both connectors. It is always shown, so it can
-// be seen to be a choice, and only changed while editing the board. It sits at the top of the
+// The choice of two screens or a hub, which takes both connectors. It sits at the top of the
 // tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
   var row = document.createElement("div");
-  row.className = "hubswitch" + (setupOn ? "" : " locked");
-  row.title = setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it";
+  row.className = "hubswitch";
+  row.title = BOARD_SETTING_SAYS;
   var lead = document.createElement("span");
   lead.className = "hublead" + (state.hub.on ? "" : " on");
   lead.appendChild(boardIcon());
@@ -349,7 +348,6 @@ function hubSwitch() {
       var choice = document.createElement("button");
       choice.type = "button";
       choice.className = state.hub.on === pair[0] ? "on" : "";
-      choice.disabled = !setupOn;
       choice.textContent = pair[1];
       choice.onclick = function () {
         state.hub.on = pair[0];
@@ -358,6 +356,16 @@ function hubSwitch() {
       row.appendChild(choice);
     });
   return row;
+}
+
+// Take the panel at a hub position off, in every scene, keeping its size to offer back
+function takePlaceOff(place) {
+  state.hub.was[place] = state.hub.sizes[place];
+  state.hub.sizes[place] = "";
+  store();
+  allBodies().forEach(function (body) { body.places[place].shows = null; });
+  apply(slotAt(state.at).body);
+  draw();
 }
 
 function placeTile(place) {
@@ -373,29 +381,23 @@ function placeTile(place) {
   top.appendChild(letter);
   tile.appendChild(top);
 
+  // An empty position offers a panel, at the size it last had
   if (!state.hub.sizes[place]) {
     tile.classList.add("empty");
     var none = document.createElement("span");
     none.className = "placenone";
-    none.textContent = "no panel";
+    var add = boardButton("add a panel");
+    add.onclick = function (event) {
+      event.stopPropagation();
+      state.hub.sizes[place] = state.hub.was[place] || SCREEN_SIZES[0];
+      draw();
+    };
+    none.appendChild(add);
     tile.appendChild(none);
-    if (setupOn) {
-      var fit = document.createElement("button");
-      fit.type = "button";
-      fit.className = "placefit";
-      fit.textContent = "add";
-      fit.title = "A panel is fitted at " + place;
-      fit.onclick = function (event) {
-        event.stopPropagation();
-        state.hub.sizes[place] = state.hub.was[place] || "2.8";
-        draw();
-      };
-      tile.appendChild(fit);
-    }
     return tile;
   }
 
-  // Which panel is here, shown in every mode and changed only while editing the board
+  // Which panel is here
   var size = document.createElement("select");
   size.className = "placesize";
   SCREEN_SIZES.forEach(function (inches) {
@@ -405,7 +407,6 @@ function placeTile(place) {
     if (state.hub.sizes[place] === inches) option.selected = true;
     size.appendChild(option);
   });
-  size.disabled = !setupOn;
   size.title = "Panel at " + place + ", shared by every scene";
   size.onclick = function (event) { event.stopPropagation(); };
   size.onchange = function () {
@@ -428,23 +429,8 @@ function placeTile(place) {
                                              pictureSaid(under.always.shows)
                    : under ? "off in this scene" : held.shows || "nothing";
   tile.appendChild(says);
-  if (setupOn) {
-    var drop = document.createElement("button");
-    drop.type = "button";
-    drop.className = "placedrop";
-    drop.textContent = "\u00d7";
-    drop.title = "No panel at " + place + ", in every scene";
-    drop.onclick = function (event) {
-      event.stopPropagation();
-      state.hub.was[place] = state.hub.sizes[place];
-      state.hub.sizes[place] = "";
-      store();
-      allBodies().forEach(function (body) { body.places[place].shows = null; });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    tile.appendChild(drop);
-  }
+  // Under the panel, as the size above leaves no room beside the position's letter
+  tile.appendChild(removeButton("panel", function () { takePlaceOff(place); }));
   tile.onclick = function () {
     placePicked = place;
     draw();

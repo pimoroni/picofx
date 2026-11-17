@@ -50,9 +50,6 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .chip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;padding:.1rem .25rem}
 .chip select option{color:var(--ink)}
-.chip .drop{background:transparent;border:0;color:#fff;font-size:1.1rem;line-height:1;
- padding:0 .1rem;opacity:.8}
-.chip .drop:hover{opacity:1}
 /* A strip not fitted keeps its chip where it was and the panel its height, and the offer to add
    it stands in the middle of the room the strip took */
 .panel.strip{position:relative}
@@ -60,7 +57,8 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
    stays put as the board is edited */
 .panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
 .panel.stripout > :not(summary):not(.leds){visibility:hidden}
-.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
+/* Level with a screen's words when it is not fitted */
+.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:8rem;
  transform:translate(-50%,-50%)}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 /* A tab whose section cannot be used just now, which still opens to say why */
@@ -150,7 +148,7 @@ button.round svg{display:block}
 .bar.carded{margin-top:.75rem}
 .bar.carded .sec{display:flex;flex-direction:column}
 .cardlamps{display:flex;padding:.55rem 0 .3rem}
-/* Each lamp has a tile, drawn only where it says something, so Edit board shows every tile
+/* Each lamp has a tile, drawn only where it says something, so the wiring view shows every tile
    without moving a lamp */
 /* A light shrinks with its tile where many share a narrow card, so lamps never overlap. The
    gap between tiles follows the outputs' panel, not the card, so every card's lights match,
@@ -262,7 +260,7 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-/* ---- the lamps in Edit board ---- */
+/* ---- the lamps in the wiring view ---- */
 
 /* Every lamp is a tile to pick up and place, and the cards stand back to their outlines. The
    stretches are the scene's, so only the lamps answer the pointer */
@@ -833,10 +831,23 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  border-radius:6px;background:rgba(255,255,255,.15);color:#fff;font:inherit;
  font-size:.78rem;padding:.1rem .25rem}
 .screen-box h3 select.inband option{color:var(--ink)}
-.screen-box h3 .drop{margin-left:auto;background:transparent;border:0;color:#fff;font-size:1.1rem;
- line-height:1;padding:0 .2rem;opacity:.8}
-.screen-box h3 .drop:hover{opacity:1}
 .screen-box .body.adding{justify-content:center;padding:1.4rem .9rem}
+/* A board setting's add button where the part is not fitted, and its remove button where it is */
+.boardadd{display:inline-flex;align-items:center;gap:.4rem}
+.boardadd .boardicon{color:var(--board)}
+/* The sensor's add button is centred over its row, as a strip's and a screen's are in their boxes,
+   and takes no height from it, so the row stays as tall as the fitted chip */
+#sensorFacts{position:relative}
+#sensorFacts .sensoradd{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.boardremove{font:inherit;font-size:.72rem;line-height:1.2;padding:.1rem .4rem;border-radius:6px;
+ cursor:pointer}
+.boardchip .boardremove,.screen-box h3 .boardremove{border:1px solid rgba(255,255,255,.55);
+ background:rgba(255,255,255,.15);color:#fff}
+.boardchip .boardremove:hover,.screen-box h3 .boardremove:hover{background:rgba(255,255,255,.3)}
+.screen-box h3 .boardremove{margin-left:auto}
+.screen-box h3 .bandnone{font-weight:400;opacity:.85}
+.place .boardremove{padding:.05rem .35rem}
+.placenone .boardadd{font-size:.72rem;padding:.2rem .4rem}
 .keep{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;
  width:calc(100% - 1.8rem);margin:0 .9rem .8rem;text-align:left;padding:.35rem .55rem;
  border:2px solid var(--line);border-radius:8px;background:var(--panel);font-size:.78rem}
@@ -902,16 +913,6 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 .boardicon{color:var(--board);flex:0 0 auto}
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
 .boardicon{width:16px;height:16px;margin:-1.5px}
-
-/* Drawn as the board boxes it opens are, with their chip and their shape. It is outlined to
-   set up and filled while setting up */
-.setupbutton{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
- border-radius:9px;border:1.5px solid var(--boardOuts);background:none;
- color:var(--boardOuts);font:600 .8rem system-ui,sans-serif;cursor:pointer}
-.setupbutton:hover{background:#eef2f7}
-.setupbutton .boardicon{color:currentColor}
-.setupbutton.on{background:var(--boardOuts);color:#fff}
-.setupbutton.on:hover{background:#34505f}
 
 /* Saving in the header, the next thing to do filled in the page's colour */
 :root{--warn:#b33;--warn-bg:#fbeaea}
@@ -1195,6 +1196,13 @@ body.scenesintab #looks>.shelf{margin-top:0}
  align-items:center;gap:.35rem;cursor:pointer}
 .headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
+/* The Wiring chip opens the outputs' wiring view and closes it, so it answers the pointer, and
+   shows pressed while the view is open */
+#outFacts .boardchip{cursor:pointer}
+#outFacts .boardchip:hover{filter:brightness(1.12)}
+body.setupall #outFacts .boardchip{
+ box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),inset 0 3px 6px rgba(0,0,0,.45)}
+
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once. A run's cards stand back around
    its lights, which are the board's */
@@ -1285,7 +1293,7 @@ details[open]>summary .accswatch{display:none}
 .ledtab:hover{color:var(--ink)}
 .ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .ledtab .accswatch{margin:0}
-/* On a narrow page the LED tabs' swatches give way, so the row keeps Edit board inside it */
+/* On a narrow page the LED tabs' swatches give way, so the row stays inside the page */
 .ledtabs .ledtab{flex:0 1 auto;min-width:0}
 .ledtab b{white-space:nowrap}
 .ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}
@@ -1338,10 +1346,9 @@ html{scrollbar-gutter:stable}
    remote sits in the middle of the section with its buttons' rows down either side, each row
    centred on its leader's height and the same width, so each side reads as one column */
 .ledtab[data-panel=sensorPanel] .sensorswatch{display:none}
-/* A sixth tab leaves the row short of room, so Edit board keeps one line and only the lights'
-   stripes narrow, never past the names above them */
+/* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
+   names above them */
 #ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
-#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
  [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
@@ -1466,13 +1473,7 @@ html{scrollbar-gutter:stable}
 .hubswitch button{border:0;border-radius:0;background:transparent;color:var(--screenA);
  font:inherit;line-height:1.3;padding:.3rem .55rem;cursor:pointer}
 .hubswitch button.on{background:#1f6feb;color:#fff}
-.hubswitch:not(.locked) button:not(.on):hover{background:rgba(31,111,235,.1)}
-/* Locked, the choice made reads as a fact, a filled chip like the other tabs' boxes, and the
-   other is only a grey mention with no outline of its own to press */
-.hubswitch.locked{box-shadow:inset 0 0 0 1px var(--line)}
-.hubswitch.locked button{cursor:default;color:var(--dim);opacity:.7}
-.hubswitch.locked button.on{color:#fff;opacity:1}
-.hubswitch.locked .hublead:not(.on) .boardicon{color:var(--dim);opacity:.7}
+.hubswitch button:not(.on):hover{background:rgba(31,111,235,.1)}
 .hubbox{grid-column:1/-1;--hub:#1f6feb;--hubwash:rgba(31,111,235,.06)}
 .hubbox.b{--hub:#a44ad0;--hubwash:rgba(164,74,208,.06)}
 .hubbox h3 .hubcount{font-weight:400;opacity:.85;margin-left:.3rem}
@@ -1489,8 +1490,6 @@ html{scrollbar-gutter:stable}
  color:var(--hub)}
 .placesize{font-size:.72rem;padding:.05rem .15rem;border-radius:5px}
 .placetop .placechip{color:var(--hub);margin-right:.2rem}
-.placesize:disabled{opacity:.75;color:var(--ink);background:transparent;border-color:transparent;
- appearance:none;-webkit-appearance:none;padding:.05rem 0}
 .placesays{font-size:.7rem;color:var(--dim);max-width:100%;overflow:hidden;
  text-overflow:ellipsis;white-space:nowrap}
 .place.empty{cursor:default}
@@ -1498,11 +1497,10 @@ html{scrollbar-gutter:stable}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:6px;font-size:.72rem;color:var(--dim);
  background:var(--cross) transparent;outline:1px dashed #a9a49b;outline-offset:-1px}
-.placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
- border:0;border-radius:5px;background:var(--hub);color:#fff;font-size:.95rem;line-height:1}
 .placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:7px;
  background:var(--panel);color:var(--hub);font:600 .74rem system-ui,sans-serif;
  padding:.15rem .5rem}
+.placefit .boardicon{color:var(--hub)}
 .hubsettings{width:100%;display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;
  min-height:2rem}
 .hubsettings .showing{margin:0}
@@ -1579,7 +1577,6 @@ body.setupall .hubsettings{opacity:.35;pointer-events:none}
    back with the rest while the board is edited */
 .screen-box h3 .bandfact{display:inline-flex;align-items:center;gap:.3rem;margin-left:.4rem}
 .screen-box h3 .bandfact select.inband{margin-left:0}
-body:not(.setupall) .screen-box h3 .drop{visibility:hidden}
 body.setupall .lightrow{opacity:.35;pointer-events:none}
 .sshowing.empty{color:var(--dim)}
 /* Where the sections have the room, as the hub's strip has, placement and playback are two
@@ -1675,9 +1672,6 @@ body.nolooks #looks{opacity:.3;pointer-events:none}
 /* In the box of the section they are for, the looks are hidden with it, every section keeping
    its place so the tabs' place stays as tall as the tallest */
 body.looksbelow #looks{margin:1.2rem 0 0}
-/* Setting up is the last thing on the tabs' row, at its far end */
-.ledtabs .gap{flex:1}
-.ledtabs .setupbutton{align-self:center}
 
 /* Examples to discover, with the line where a tab's examples start, the gallery over the page and
    the marks and bins on the examples on the drive. --discover is the tab's own colour */
