@@ -35,6 +35,11 @@
 // The interpreter's hottest helpers run from SRAM, where from flash each cache miss stalls them
 #define MICROPY_HW_VM_IN_RAM                    (1)
 
+// machine.SPI and machine.UART need their pins named. The usual defaults are this board's LED
+// outputs, its user switch and its PSRAM chip select. machine.I2C keeps its default, Qw/ST.
+#define MICROPY_HW_SPI_NO_DEFAULT_PINS          (1)
+#define MICROPY_HW_UART_NO_DEFAULT_PINS         (1)
+
 #if defined(PIMORONI_FX_DRIVE)
 
 // USB mass storage exposes only the FX drive's volume, the FAT region at the end of flash,
