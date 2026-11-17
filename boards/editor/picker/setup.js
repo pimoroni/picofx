@@ -26,6 +26,7 @@ function stripChipChoice(run) {
   if (run.made === null) {
     choice = h("select", {
       title: "The strip's colour order. Change it if red shows as another colour",
+      name: "stripOrder", "aria-label": "Colour order",
       onchange: function () {
         stripSet(run, {order: choice.value});
         draw();
@@ -41,6 +42,7 @@ function stripChipChoice(run) {
     STRIP_BRIGHTNESSES;
   choice = h("select", {
     title: "Overall strip brightness, applied on top of each stretch's level",
+    name: "stripBrightness", "aria-label": "Strip brightness",
     onchange: function () {
       stripSet(run, {brightness: Number(choice.value)});
       draw();
@@ -178,6 +180,7 @@ addStep(drawSteps.after, DRAW_AFTER, "setup", function () {
 function renderStripChip(where, run) {
   var count = h("input", {
     type: "number", min: STRIP_FEWEST, max: STRIP_MOST, value: run.leds,
+    name: "stripLeds", "aria-label": "LEDs on the strip",
     onchange: function () {
       var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
                                                              STRIP_FEWEST));

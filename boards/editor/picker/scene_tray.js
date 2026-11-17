@@ -251,6 +251,7 @@ function sceneNameField(scene) {
   if (scene.goodName === undefined && !sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
   var field = h("input", {
     type: "text", value: scene.name, title: "Scene name", "data-focus": "scene-name",
+    name: "sceneName", "aria-label": "Scene name",
     oninput: function () {
       // The brackets and the colon are the heading's own punctuation
       scene.name = field.value.replace(/[\[\]:]/g, "");
@@ -278,7 +279,7 @@ function sceneNameField(scene) {
 // How a scene ends, shown for a time or waiting. A waiting scene has no time and no scene after
 function sceneEnds(scene) {
   var ends = h("select", {
-    className: "sceneends",
+    className: "sceneends", name: "sceneEnds", "aria-label": "How the scene ends",
     onchange: function () {
       scene.waits = ends.value === "waits";
       draw();
@@ -292,6 +293,7 @@ function sceneEnds(scene) {
 function sceneSeconds(scene) {
   var seconds = h("input", {
     type: "number", min: 1, value: scene.seconds, "data-focus": "scene-seconds",
+    name: "sceneSeconds", "aria-label": "Seconds the scene shows for",
     onchange: function () {
       scene.seconds = Math.max(1, Number(seconds.value) || 1);
       draw();
@@ -307,7 +309,7 @@ function sceneThen(scene) {
   var chosen = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder
              ? scene.then : "";
   var then = h("select", {
-    className: "scenethen",
+    className: "scenethen", name: "sceneThen", "aria-label": "The scene after",
     title: "The scene after this one, the next in order unless another is chosen",
     onchange: function () {
       scene.then = then.value || null;

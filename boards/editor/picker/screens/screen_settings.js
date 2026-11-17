@@ -99,9 +99,11 @@ function segment(options, chosen, choose, title, label) {
   }));
 }
 
-function numberBox(value, placeholder, change, step) {
+// A number to type, named label= for a screen reader
+function numberBox(value, placeholder, change, step, label) {
   var box = h("input", {
     type: "number", step: step || 1, value: value, placeholder: placeholder,
+    name: "setting", "aria-label": label,
     onchange: function () { change(box.value); draw(); }
   });
   return box;
@@ -115,7 +117,7 @@ function unit(words) {
 function lightSlider(value, change, title, words) {
   var figure = h("span", {className: "lightfigure"}, Math.round(value * 100) + "%");
   var slider = h("input", {
-    type: "range", min: 0, max: 100, step: 5, value: Math.round(value * 100),
+    type: "range", name: "light", min: 0, max: 100, step: 5, value: Math.round(value * 100),
     oninput: function () { figure.textContent = slider.value + "%"; },
     onchange: function () { change(Number(slider.value) / 100); draw(); }
   });
@@ -188,8 +190,8 @@ function placementFold(key, held, size) {
       look.anchor = null;
     };
   }
-  var x = numberBox(where.x, "centre", typed("x"));
-  var y = numberBox(where.y, "centre", typed("y"));
+  var x = numberBox(where.x, "centre", typed("x"), 1, "Pixels from the left");
+  var y = numberBox(where.y, "centre", typed("y"), 1, "Pixels from the top");
   x.title = "Pixels from the left. Leave empty to centre";
   y.title = "Pixels from the top. Leave empty to centre";
   x.className = y.className = "sxy";
@@ -267,8 +269,8 @@ function backgroundFold(key, held) {
   // How bright the background is, black having none to set
   var figure = h("span", {className: "lightfigure"}, Math.round(parts.value * 100) + "%");
   var slider = h("input", {
-    type: "range", min: 0, max: 100, step: 5, value: Math.round(parts.value * 100),
-    disabled: chosen === "black",
+    type: "range", name: "backgroundLevel", min: 0, max: 100, step: 5,
+    value: Math.round(parts.value * 100), disabled: chosen === "black",
     oninput: function () { figure.textContent = slider.value + "%"; },
     onchange: function () {
       look.bg = groundHex(parts.full, Number(slider.value) / 100);
@@ -293,7 +295,7 @@ function customGround(look, parts) {
                                               top: (1 - place.sat) * 100 + "%",
                                               background: rgbInk(parts.full)}});
   var hex = h("input", {
-    type: "text", maxLength: 7, value: look.bg,
+    type: "text", name: "backgroundHex", maxLength: 7, value: look.bg,
     title: "Use the background colour exactly as typed, including dark colours",
     onchange: function () {
       var said = hex.value.replace("#", "").trim().toLowerCase();
@@ -346,7 +348,8 @@ function drawingFold(key, held) {
                       "Speed");
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
     if (Number(value) > 0) look.every = Number(value);
-  }, look.pace === "interval" ? 0.05 : 1);
+  }, look.pace === "interval" ? 0.05 : 1, look.pace === "interval" ? "Seconds per frame"
+                                                                    : "Frames per second");
   var canvas = segment([["whole", "Whole screen"], ["half", "Half size"],
                         ["set", "Set size"]], look.canvas || "whole", function (value) {
                           look.canvas = value;
@@ -361,10 +364,10 @@ function drawingFold(key, held) {
                h("div", {}, sline(named("Canvas"), canvas), look.canvas === "set"
                  ? sline(named("Width"), numberBox(look.canvasW, "", function (value) {
                            if (Number(value) > 0) look.canvasW = Math.round(Number(value));
-                         }), unit("pixels"),
+                         }, 1, "Width"), unit("pixels"),
                          named("Height"), numberBox(look.canvasH, "", function (value) {
                            if (Number(value) > 0) look.canvasH = Math.round(Number(value));
-                         }), unit("pixels"))
+                         }, 1, "Height"), unit("pixels"))
                  : null));
   var said = [look.pace === "fps" ? look.every + " fps"
             : look.pace === "interval" ? "frame every " + look.every + " s" : "every frame",
@@ -521,10 +524,11 @@ function playbackFold(key, held, media) {
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
     // Nothing, zero or less is no pace, so the figure there stays
     if (Number(value) > 0) look.every = Number(value);
-  }, look.pace === "interval" ? 0.05 : 1);
+  }, look.pace === "interval" ? 0.05 : 1, look.pace === "interval" ? "Seconds per frame"
+                                                                    : "Frames per second");
   var atEnd = numberBox(held.hold, "0", function (value) {
     held.hold = value && Number(value) > 0 ? value : "";
-  }, 0.5);
+  }, 0.5, "Seconds held at the end");
   atEnd.disabled = !holdAllowed(held, look);
   var second = secondHoldAllowed(held, look);
   var hold = h("span", {
@@ -533,7 +537,7 @@ function playbackFold(key, held, media) {
   }, named("Hold"), atEnd, unit(second ? "seconds at the end," : "seconds"),
      second ? [numberBox(look.holdBack, "same", function (value) {
                  look.holdBack = value && Number(value) >= 0 ? value : "";
-               }, 0.5), unit("seconds at the start")] : null);
+               }, 0.5, "Seconds held at the start"), unit("seconds at the start")] : null);
   // The pace, then how it loops and holds, stacked or in two halves where the section is wide
   var body = h("div", {className: "ssplit"}, speedLine(speed, every, look),
     h("div", {},

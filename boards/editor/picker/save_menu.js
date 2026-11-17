@@ -14,7 +14,7 @@ var saveArrow = document.getElementById("saveArrow");
 // or with the reason it cannot be changed
 function saveChoice(words, hint, on, flip, refused) {
   var box = h("input", {
-    type: "checkbox", checked: on, disabled: !!refused,
+    type: "checkbox", name: "saveChoice", checked: on, disabled: !!refused,
     onchange: function () {
       flip(box.checked);
       draw();

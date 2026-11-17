@@ -62,6 +62,7 @@ function placeTile(place) {
   // Which panel is here, beside the board's chip
   var size = h("select", {
     className: "placesize", title: "Panel at " + place + ", shared by every scene",
+    name: "placeSize", "aria-label": "Panel at " + place,
     onclick: function (event) { event.stopPropagation(); },
     onchange: function () {
       state.hub.sizes[place] = size.value;
@@ -147,7 +148,7 @@ function renderHubHead() {
   box.classList.add("hubbed");
   // The hub is drawn for its screens through A, but may be wired the other way round
   var port = h("select", {
-    className: "inband",
+    className: "inband", name: "hubPort", "aria-label": "Hub wiring",
     title: "Which connectors the hub's SPI and Selects are plugged into, as labelled on the hub",
     onchange: function () { state.hub.port = port.value; draw(); }
   }, [["A", "SPI on A, Selects on B"], ["B", "SPI on B, Selects on A"]].map(function (pair) {

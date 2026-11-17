@@ -7086,6 +7086,8 @@ function brightnessSlider(tuning, run, where) {
     step: 0.01,
     value: section.level === void 0 ? 1 : section.level,
     "data-focus": where + "-level",
+    id: where + "-level",
+    name: "level",
     oninput: function() {
       run.sections[run.picked].level = Number(range.value);
       drawParts.preview();
@@ -7095,7 +7097,7 @@ function brightnessSlider(tuning, run, where) {
       draw();
     }
   });
-  tuning.prepend(h("label", {}, "Brightness"), range);
+  tuning.prepend(h("label", { htmlFor: where + "-level" }, "Brightness"), range);
 }
 function linesFor(look, target, pace, mood, colour) {
   var lines;
@@ -8378,9 +8380,16 @@ function renderChosenPanel(where, run) {
     look ? h(
       "div",
       { className: "tuning" },
-      h("label", {}, look.solid ? "Brightness" : "Speed"),
+      h(
+        "label",
+        { htmlFor: where + "-" + (look.solid ? "mood" : "pace") },
+        look.solid ? "Brightness" : "Speed"
+      ),
       slider(look.solid ? "mood" : "pace"),
-      look.solid ? null : [h("label", {}, look.mood), slider("mood")]
+      look.solid ? null : [
+        h("label", { htmlFor: where + "-mood" }, look.mood),
+        slider("mood")
+      ]
     ) : null
   ));
   function slider(key) {
@@ -8391,6 +8400,8 @@ function renderChosenPanel(where, run) {
       step: 0.01,
       value: section[key],
       "data-focus": where + "-" + key,
+      id: where + "-" + key,
+      name: key,
       // Through the run, as a page that makes the stretches afresh leaves this one behind
       oninput: function() {
         run.sections[run.picked][key] = Number(range.value);
@@ -10614,13 +10625,15 @@ function toolButton(icon, words, off, act, title) {
     " " + words
   );
 }
-function toolNumber(value, low, high, focus, change) {
+function toolNumber(value, low, high, focus, change, label) {
   var box = h("input", {
     type: "number",
     min: low,
     max: high,
     value,
     "data-focus": focus,
+    name: "toolNumber",
+    "aria-label": label,
     onchange: function() {
       change(Math.max(low, Math.min(high, Number(box.value) || low)));
       draw();
@@ -10663,7 +10676,8 @@ function splitTools(where, run) {
         where + "-ways",
         function(value) {
           run.ways = value;
-        }
+        },
+        "Split into"
       ),
       parts,
       lengths
@@ -11018,6 +11032,8 @@ function stripChipChoice(run) {
   if (run.made === null) {
     choice = h("select", {
       title: "The strip's colour order. Change it if red shows as another colour",
+      name: "stripOrder",
+      "aria-label": "Colour order",
       onchange: function() {
         stripSet(run, { order: choice.value });
         draw();
@@ -11032,6 +11048,8 @@ function stripChipChoice(run) {
   }) : STRIP_BRIGHTNESSES;
   choice = h("select", {
     title: "Overall strip brightness, applied on top of each stretch's level",
+    name: "stripBrightness",
+    "aria-label": "Strip brightness",
     onchange: function() {
       stripSet(run, { brightness: Number(choice.value) });
       draw();
@@ -11149,6 +11167,8 @@ function renderStripChip(where, run) {
     min: STRIP_FEWEST,
     max: STRIP_MOST,
     value: run.leds,
+    name: "stripLeds",
+    "aria-label": "LEDs on the strip",
     onchange: function() {
       var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) || STRIP_FEWEST));
       if (want === run.leds) return;
@@ -11680,6 +11700,7 @@ function argsFor(path, locked) {
         given[at] = argument.kind === "size" ? sizeOffered(argument) : argument.default || choices[0][0];
       }
       var choice = h("select", {
+        name: argument.name,
         disabled: !!locked,
         onchange: function() {
           given[at] = choice.value;
@@ -11696,6 +11717,7 @@ function argsFor(path, locked) {
     }
     if (given[at] === void 0 && "default" in argument) given[at] = argument.default;
     var field = h("input", {
+      name: argument.name,
       value: given[at] || "",
       disabled: !!locked,
       oninput: function() {
@@ -14201,6 +14223,8 @@ function discoverRenderBrowser() {
   }
   var choose2 = offers.length ? h("select", {
     className: "discoverfilter",
+    name: "discoverSection",
+    "aria-label": "Examples shown",
     onchange: function() {
       discoverSection = choose2.value;
       draw();
@@ -14383,6 +14407,8 @@ function discoverOfferCard(offer, shown) {
     className: "discovertick",
     checked: chosen,
     title: "Choose " + offer[1],
+    name: "discoverChosen",
+    "aria-label": "Choose " + offer[1],
     onclick: function(e) {
       e.stopPropagation();
       discoverChoose(path, e, true, shown);
@@ -15566,6 +15592,7 @@ var saveArrow = document.getElementById("saveArrow");
 function saveChoice(words, hint, on, flip, refused) {
   var box = h("input", {
     type: "checkbox",
+    name: "saveChoice",
     checked: on,
     disabled: !!refused,
     onchange: function() {
@@ -15949,6 +15976,8 @@ function sceneNameField(scene) {
     value: scene.name,
     title: "Scene name",
     "data-focus": "scene-name",
+    name: "sceneName",
+    "aria-label": "Scene name",
     oninput: function() {
       scene.name = field.value.replace(/[\[\]:]/g, "");
       if (field.value !== scene.name) field.value = scene.name;
@@ -15976,6 +16005,8 @@ function sceneEnds(scene) {
     "select",
     {
       className: "sceneends",
+      name: "sceneEnds",
+      "aria-label": "How the scene ends",
       onchange: function() {
         scene.waits = ends.value === "waits";
         draw();
@@ -15992,6 +16023,8 @@ function sceneSeconds(scene) {
     min: 1,
     value: scene.seconds,
     "data-focus": "scene-seconds",
+    name: "sceneSeconds",
+    "aria-label": "Seconds the scene shows for",
     onchange: function() {
       scene.seconds = Math.max(1, Number(seconds.value) || 1);
       draw();
@@ -16010,6 +16043,8 @@ function sceneThen(scene) {
     "select",
     {
       className: "scenethen",
+      name: "sceneThen",
+      "aria-label": "The scene after",
       title: "The scene after this one, the next in order unless another is chosen",
       onchange: function() {
         scene.then = then.value || null;
@@ -16662,7 +16697,11 @@ function remoteChoice(button) {
   var under = always[button] !== void 0 ? always[button] : remoteDefault(button);
   var choice = h(
     "select",
-    { "data-choice": button },
+    {
+      "data-choice": button,
+      name: "remoteChoice",
+      "aria-label": remoteWords(button)
+    },
     state.at >= 0 ? [
       h(
         "optgroup",
@@ -16835,6 +16874,8 @@ function sensorBox() {
     return;
   }
   var choice = h("select", {
+    name: "sensorKind",
+    "aria-label": "Sensor",
     onchange: function() {
       state.sensorKind = choice.value;
       draw();
@@ -16915,6 +16956,8 @@ function motionLines(trigger) {
     step: 0.5,
     value: timing.after,
     title: "Seconds to wait before doing it",
+    name: "motionWait",
+    "aria-label": "Seconds to wait before doing it",
     onchange: function() {
       setMotionTiming(trigger, { after: Math.max(0, Number(seconds.value) || 0) });
     }
@@ -16924,6 +16967,8 @@ function motionLines(trigger) {
     {
       className: "pircancel",
       disabled: !waits,
+      name: "motionCancel",
+      "aria-label": MOTION_CANCELLED_BY[trigger],
       onchange: function() {
         setMotionTiming(trigger, { cancel: cancels.value === "yes" });
       }
@@ -17335,6 +17380,7 @@ function volumeSlider() {
   var figure = h("span", { className: "lightfigure" });
   var slider = h("input", {
     type: "range",
+    name: "soundVolume",
     min: 0,
     max: 100,
     step: 5,
@@ -17892,6 +17938,8 @@ function renderColourPick(box, run) {
     type: "text",
     maxLength: 7,
     value: atBrightness(section.colour || "#ffffff", section.level),
+    id: "hex-" + run.id,
+    name: "hex",
     title: "the colour as written, at its brightness. Paste a colour in to set the hue, saturation and brightness below",
     oninput: function() {
       var said = hex.value.replace("#", "").trim();
@@ -17925,7 +17973,7 @@ function renderColourPick(box, run) {
     h(
       "div",
       { className: "scustomside" },
-      h("div", { className: "hexline" }, h("label", {}, "Hex"), hex),
+      h("div", { className: "hexline" }, h("label", { htmlFor: hex.id }, "Hex"), hex),
       preview
     )
   );
@@ -17969,6 +18017,8 @@ function figureCells(said, unit, title, take) {
     className: "figurebox",
     value: said,
     title,
+    name: "figure",
+    "aria-label": title,
     onchange: function() {
       var typed = parseFloat(box.value.replace(",", "."));
       if (!(typed > 0)) {
@@ -18047,6 +18097,8 @@ chosenSteps.push(function(where, run) {
       }),
       "data-focus": where + "-timing-" + part[0],
       "data-timing": part[0],
+      id: where + "-timing-" + part[0],
+      name: "timing",
       title: "seconds, " + part[1].toLowerCase(),
       oninput: function() {
         var mine = run.sections[run.picked];
@@ -18059,6 +18111,7 @@ chosenSteps.push(function(where, run) {
       "label",
       {
         className: "signalstate",
+        htmlFor: range.id,
         html: signalFace(look.name, part[0])
       },
       h("span", {}, part[1])

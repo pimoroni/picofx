@@ -202,6 +202,7 @@ function screenBox(letter) {
     .filter(function (inches) { return inches !== "hub"; });
   var size = h("select", {
     className: "inband", title: "Panel fitted, shared by every scene",
+    name: "screenSize", "aria-label": "Panel fitted",
     onchange: function () {
       if (size.value) screen.size = size.value;
       draw();

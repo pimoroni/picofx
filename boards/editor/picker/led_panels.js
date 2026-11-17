@@ -80,14 +80,18 @@ function renderChosenPanel(where, run) {
       ", " + widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") +
       ", " + (first && first.colour ? "colour" : "mono")),
     look ? h("div", {className: "tuning"},
-                h("label", {}, look.solid ? "Brightness" : "Speed"),
+                h("label", {htmlFor: where + "-" + (look.solid ? "mood" : "pace")},
+                  look.solid ? "Brightness" : "Speed"),
                 slider(look.solid ? "mood" : "pace"),
-                look.solid ? null : [h("label", {}, look.mood), slider("mood")])
+                look.solid ? null : [h("label", {htmlFor: where + "-mood"}, look.mood),
+                                     slider("mood")])
          : null));
 
+  // A slider's id is its focus key, the label beside it naming it by that
   function slider(key) {
     var range = h("input", {
       type: "range", min: 0, max: 1, step: 0.01, value: section[key], "data-focus": where + "-" + key,
+      id: where + "-" + key, name: key,
       // Through the run, as a page that makes the stretches afresh leaves this one behind
       oninput: function () {
         run.sections[run.picked][key] = Number(range.value);

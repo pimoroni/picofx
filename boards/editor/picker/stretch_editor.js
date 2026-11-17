@@ -115,6 +115,7 @@ function renderColourPick(box, run) {
   // has it, so one typed in sets the colour and the brightness both
   var hex = h("input", {
     type: "text", maxLength: 7, value: atBrightness(section.colour || "#ffffff", section.level),
+    id: "hex-" + run.id, name: "hex",
     title: "the colour as written, at its brightness. Paste a colour " +
            "in to set the hue, saturation and brightness below",
     oninput: function () {
@@ -144,7 +145,8 @@ function renderColourPick(box, run) {
   });
   var holds = h("div", {className: "customholds scustom"}, field,
                 h("div", {className: "scustomside"},
-                  h("div", {className: "hexline"}, h("label", {}, "Hex"), hex), preview));
+                  h("div", {className: "hexline"}, h("label", {htmlFor: hex.id}, "Hex"), hex),
+                  preview));
   holds.style.display = open ? "" : "none";
   box.appendChild(h("div", {className: "colourpick groundpick"}, swatches, holds));
 }
@@ -193,6 +195,7 @@ function paintPalette(swatches, lines) {
 function figureCells(said, unit, title, take) {
   var box = h("input", {
     type: "text", inputMode: "decimal", className: "figurebox", value: said, title: title,
+    name: "figure", "aria-label": title,
     onchange: function () {
       var typed = parseFloat(box.value.replace(",", "."));
       if (!(typed > 0)) {
@@ -274,6 +277,7 @@ chosenSteps.push(function (where, run) {
       style: {"accent-color": SIGNAL_TINT[part[0]]}, type: "range", min: part[3], max: part[4],
       step: 0.5, value: withSection(section, function () { return timingOf(look.name, part[0]); }),
       "data-focus": where + "-timing-" + part[0], "data-timing": part[0],
+      id: where + "-timing-" + part[0], name: "timing",
       title: "seconds, " + part[1].toLowerCase(),
       oninput: function () {
         var mine = run.sections[run.picked];
@@ -282,7 +286,7 @@ chosenSteps.push(function (where, run) {
         renderPreview();
       }
     });
-    tuning.insertBefore(h("label", {className: "signalstate",
+    tuning.insertBefore(h("label", {className: "signalstate", htmlFor: range.id,
                                     html: signalFace(look.name, part[0])},
                           h("span", {}, part[1])), after);
     tuning.insertBefore(range, after);

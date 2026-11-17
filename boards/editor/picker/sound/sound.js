@@ -166,7 +166,7 @@ function volumeSlider() {
   var under = soundUnder();
   var figure = h("span", {className: "lightfigure"});
   var slider = h("input", {
-    type: "range", min: 0, max: 100, step: 5,
+    type: "range", name: "soundVolume", min: 0, max: 100, step: 5,
     value: under ? state.always.body.soundVolume : state.soundVolume,
     disabled: !state.sound,
     oninput: function () { figure.textContent = slider.value + "%"; },

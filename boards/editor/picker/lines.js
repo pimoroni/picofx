@@ -205,6 +205,7 @@ export function brightnessSlider(tuning, run, where) {
   var range = h("input", {
     type: "range", min: FAINTEST, max: 1, step: 0.01,
     value: section.level === undefined ? 1 : section.level, "data-focus": where + "-level",
+    id: where + "-level", name: "level",
     oninput: function () {
       run.sections[run.picked].level = Number(range.value);
       drawParts.preview();
@@ -212,7 +213,7 @@ export function brightnessSlider(tuning, run, where) {
     // A colour's hex and its preview show the brightness, so they are drawn again once it is set
     onchange: function () { draw(); }
   });
-  tuning.prepend(h("label", {}, "Brightness"), range);
+  tuning.prepend(h("label", {htmlFor: where + "-level"}, "Brightness"), range);
 }
 
 // The lines a look writes for a target, as the board will play them

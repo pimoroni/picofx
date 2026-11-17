@@ -107,7 +107,7 @@ export function argsFor(path, locked) {
                                              : argument.default || choices[0][0];
       }
       var choice = h("select", {
-        disabled: !!locked,
+        name: argument.name, disabled: !!locked,
         onchange: function () {
           given[at] = choice.value;
           draw();
@@ -120,7 +120,7 @@ export function argsFor(path, locked) {
     }
     if (given[at] === undefined && "default" in argument) given[at] = argument.default;
     var field = h("input", {
-      value: given[at] || "", disabled: !!locked,
+      name: argument.name, value: given[at] || "", disabled: !!locked,
       oninput: function () {
         given[at] = field.value;
         renderPreview();

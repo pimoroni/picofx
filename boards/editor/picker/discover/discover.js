@@ -889,7 +889,7 @@ function discoverRenderBrowser() {
              }).length + ")");
   }
   var choose = offers.length ? h("select", {
-    className: "discoverfilter",
+    className: "discoverfilter", name: "discoverSection", "aria-label": "Examples shown",
     onchange: function () {
       discoverSection = choose.value;
       draw();
@@ -1044,6 +1044,7 @@ function discoverOfferCard(offer, shown) {
         "Needs " + firmware)
     : h("input", {
       type: "checkbox", className: "discovertick", checked: chosen, title: "Choose " + offer[1],
+      name: "discoverChosen", "aria-label": "Choose " + offer[1],
       onclick: function (e) {
         e.stopPropagation();
         discoverChoose(path, e, true, shown);

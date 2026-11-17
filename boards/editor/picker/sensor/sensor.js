@@ -236,7 +236,8 @@ function remoteChoice(button) {
   }
   var always = state.always.body && state.always.body.remote || {};
   var under = always[button] !== undefined ? always[button] : remoteDefault(button);
-  var choice = h("select", {"data-choice": button},
+  var choice = h("select", {"data-choice": button, name: "remoteChoice",
+                            "aria-label": remoteWords(button)},
                  state.at >= 0 ? [h("optgroup", {label: "As Always on"},
                                     option("", remoteSays(under, button) || "Nothing")),
                                   h("optgroup", {label: "In this scene"}, own)]
@@ -434,6 +435,7 @@ function sensorBox() {
     return;
   }
   var choice = h("select", {
+    name: "sensorKind", "aria-label": "Sensor",
     onchange: function () {
       state.sensorKind = choice.value;
       draw();
@@ -549,12 +551,14 @@ function motionLines(trigger) {
   var seconds = h("input", {
     type: "number", min: 0, step: 0.5, value: timing.after,
     title: "Seconds to wait before doing it",
+    name: "motionWait", "aria-label": "Seconds to wait before doing it",
     onchange: function () {
       setMotionTiming(trigger, {after: Math.max(0, Number(seconds.value) || 0)});
     }
   });
   var cancels = h("select", {
-    className: "pircancel", disabled: !waits,
+    className: "pircancel", disabled: !waits, name: "motionCancel",
+    "aria-label": MOTION_CANCELLED_BY[trigger],
     onchange: function () { setMotionTiming(trigger, {cancel: cancels.value === "yes"}); }
   }, h("option", {value: "yes", selected: timing.cancel}, "cancel this"),
      h("option", {value: "no", selected: !timing.cancel}, "finish this first"));

@@ -321,9 +321,11 @@ export function toolButton(icon, words, off, act, title) {
            h("span", {"aria-hidden": "true", html: icon}), " " + words);
 }
 
-function toolNumber(value, low, high, focus, change) {
+// A number for a tool, named label= for a screen reader
+function toolNumber(value, low, high, focus, change, label) {
   var box = h("input", {
     type: "number", min: low, max: high, value: value, "data-focus": focus,
+    name: "toolNumber", "aria-label": label,
     onchange: function () {
       change(Math.max(low, Math.min(high, Number(box.value) || low)));
       draw();
@@ -349,7 +351,7 @@ export function splitTools(where, run) {
   return h("span", {className: "stretchtools"},
            toolGroup("&#9986;", "Split into",
                      toolNumber(ways, 1, Math.max(2, wide), where + "-ways",
-                                function (value) { run.ways = value; }),
+                                function (value) { run.ways = value; }, "Split into"),
                      parts, lengths));
 }
 
