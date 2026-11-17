@@ -1,4 +1,5 @@
 import {BOARD_LINE_AFTER, boardLineSteps} from "../board.js";
+import {h, replace} from "../dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "../draw.js";
 import {filterResidue} from "../kept.js";
 import {boardTokens, unquoted} from "../reading.js";
@@ -200,62 +201,49 @@ function remoteInk(name) {
   return number ? REMOTE_COLOURS[Number(number[1]) - 1] : "#808285";
 }
 
-// Add a row's choice of what its button does. On a scene's tab the first choice leaves the button
-// to Always on and says what Always on makes it do
-function remoteRowChoice(row, button) {
+// The tip of a row holding a choice on a scene's tab
+var REMOTE_UNDER_TIP = "Striped where it does what Always on sets";
+
+// A row's choice of what its button does. On a scene's tab the first choice leaves the button to
+// Always on and says what Always on makes it do, and the row takes REMOTE_UNDER_TIP
+function remoteChoice(button) {
   var resolved = remoteResolved(button);
-  var choice = document.createElement("select");
-  choice.dataset.choice = button;
-  function option(parent, value, words) {
-    var one = document.createElement("option");
-    one.value = value;
-    one.textContent = words;
-    parent.appendChild(one);
-  }
-  var own = choice;
-  if (state.at >= 0) {
-    var always = state.always.body && state.always.body.remote || {};
-    var under = always[button] !== undefined ? always[button] : remoteDefault(button);
-    var kept = document.createElement("optgroup");
-    kept.label = "As Always on";
-    option(kept, "", remoteSays(under, button) || "Nothing");
-    choice.appendChild(kept);
-    own = document.createElement("optgroup");
-    own.label = "In this scene";
-    choice.appendChild(own);
-    row.title = "Striped where it does what Always on sets";
-  }
-  // A number goes to the scene in its place or does nothing
+  var showing = state.at >= 0 ? state.scenes[state.at] : null;
+  function option(value, words) { return h("option", {value: value}, words); }
+  var own;
+  var groups = null;
   if (isNumber(button)) {
-    option(own, "order", "Scene: " + sceneInOrder(button).name);
-    option(own, "nothing", "Nothing");
+    // A number goes to the scene in its place or does nothing
+    own = [option("order", "Scene: " + sceneInOrder(button).name), option("nothing", "Nothing")];
   } else if (!state.scenes.length) {
     // With no scenes there is nothing to go to, only Always on's effects to begin again
-    option(own, "nothing", "Nothing");
-    option(own, "restart", remoteSays("restart", button));
+    own = [option("nothing", "Nothing"), option("restart", remoteSays("restart", button))];
   } else {
-    option(own, "nothing", "Nothing");
-    var showing = state.at >= 0 ? state.scenes[state.at] : null;
+    own = [option("nothing", "Nothing")];
     // A file's choice of the scene showing where that does nothing is kept, for its note to say why
     var keptNothing = showing && resolved.from === "own" && !sceneRestarts(showing) &&
                       !sceneSelfDiffers(showing) && resolved.choice === "scene:" + sceneMark(showing);
-    var scenes = document.createElement("optgroup");
-    scenes.label = "Go to a scene";
-    state.scenes.forEach(function (scene) {
-      // The scene showing is offered from the start, and as itself only where that differs
-      if (scene !== showing || sceneSelfDiffers(scene) || keptNothing) {
-        option(scenes, "scene:" + sceneMark(scene), "Scene: " + scene.name);
-      }
-      if (scene === showing) option(scenes, "restart", remoteSays("restart", button));
-    });
-    choice.appendChild(scenes);
-    var steps = document.createElement("optgroup");
-    steps.label = "Step";
-    [["next", "Next scene"], ["previous", "Previous scene"], ["first", "First scene"]]
-      .concat(showing ? [] : [["restart", remoteSays("restart", button)]])
-      .forEach(function (step) { option(steps, step[0], step[1]); });
-    choice.appendChild(steps);
+    groups = [
+      h("optgroup", {label: "Go to a scene"}, state.scenes.map(function (scene) {
+        // The scene showing is offered from the start, and as itself only where that differs
+        return [scene !== showing || sceneSelfDiffers(scene) || keptNothing
+                  ? option("scene:" + sceneMark(scene), "Scene: " + scene.name) : null,
+                scene === showing ? option("restart", remoteSays("restart", button)) : null];
+      })),
+      h("optgroup", {label: "Step"},
+        [["next", "Next scene"], ["previous", "Previous scene"], ["first", "First scene"]]
+          .concat(showing ? [] : [["restart", remoteSays("restart", button)]])
+          .map(function (step) { return option(step[0], step[1]); }))
+    ];
   }
+  var always = state.always.body && state.always.body.remote || {};
+  var under = always[button] !== undefined ? always[button] : remoteDefault(button);
+  var choice = h("select", {"data-choice": button},
+                 state.at >= 0 ? [h("optgroup", {label: "As Always on"},
+                                    option("", remoteSays(under, button) || "Nothing")),
+                                  h("optgroup", {label: "In this scene"}, own)]
+                               : own,
+                 groups);
   choice.value = resolved.from === "own" ? resolved.choice : "";
   // Going to the scene showing where that begins it again reads as from the start
   if (showing && choice.value === "scene:" + sceneMark(showing) && sceneRestarts(showing)) {
@@ -272,7 +260,7 @@ function remoteRowChoice(row, button) {
     settleSceneRow(button);
     draw();
   };
-  row.appendChild(choice);
+  return choice;
 }
 
 // ---- the remote with a row for each button ----------------------------------------------------
@@ -344,11 +332,6 @@ function remoteLayers() {
 function remoteDiagram() {
   var width = REMOTE_BODY.right - REMOTE_BODY.left + 2 * REMOTE_REACH;
   var height = REMOTE_BODY.bottom - REMOTE_BODY.top;
-  var diagram = document.createElement("div");
-  diagram.className = "remotediagram";
-  diagram.style.height = Math.round(height * REMOTE_SCALE) + "px";
-  diagram.style.setProperty("--middle", Math.round(width * REMOTE_SCALE) + "px");
-
   var fitted = remoteFitted();
   var leaders = "", covers = "";
   REMOTE_ROWS.forEach(function (row) {
@@ -362,48 +345,42 @@ function remoteDiagram() {
               "' data-button='" + button[0] + "' cx='" + at.x + "' cy='" + at.y + "' r='" +
               (REMOTE_ART_RADIUS + 0.2) + "'/>";
   });
-  var middle = document.createElement("div");
-  middle.className = "remotemiddle";
-  middle.innerHTML = "<svg viewBox='" + (REMOTE_BODY.left - REMOTE_REACH) + " " + REMOTE_BODY.top +
-                     " " + width + " " + height + "' width='100%' height='100%' role='img' " +
-                     "aria-label='The Aye Arr Remote'>" + remoteLayers() + leaders + covers + "</svg>";
+  var middle = h("div", {
+    className: "remotemiddle",
+    html: "<svg viewBox='" + (REMOTE_BODY.left - REMOTE_REACH) + " " + REMOTE_BODY.top + " " +
+          width + " " + height + "' width='100%' height='100%' role='img' " +
+          "aria-label='The Aye Arr Remote'>" + remoteLayers() + leaders + covers + "</svg>"
+  });
 
-  var sides = {left: document.createElement("div"), right: document.createElement("div")};
-  sides.left.className = "remoteside left";
-  sides.right.className = "remoteside right";
-  REMOTE_ROWS.forEach(function (row) {
+  function remoteRow(row) {
     var resolved = remoteResolved(row[0]);
-    var slot = document.createElement("div");
-    // A row a scene leaves to Always on is striped, as the page marks everything Always on plays
-    slot.className = "remoterow" + (remoteDoes(row[0]) ? " lit" : "") +
-                     (fitted && resolved.from === "always" ? " under" : "") +
-                     (resolved.from === "fixed" ? " fixed" : "");
-    slot.dataset.button = row[0];
-    slot.style.top = Math.round((row[2] - REMOTE_BODY.top) * REMOTE_SCALE - REMOTE_ROW_PX / 2) + "px";
-    slot.appendChild(small(remoteWords(row[0])));
+    var fixed = resolved.from === "fixed";
     // A number with no scene in its place has nothing to choose until there is one
     var unbound = isNumber(row[0]) && !sceneInOrder(row[0]);
-    if (fitted && resolved.from !== "fixed" && !unbound) {
-      remoteRowChoice(slot, row[0]);
-    } else {
-      var said = document.createElement("b");
-      // 0 is bound to the tenth scene
-      said.textContent = !fitted ? "" : unbound ? "No scene " + (Number(row[0].charAt(0)) || 10)
-                                                : remoteSays(resolved.choice, row[0]);
-      slot.appendChild(said);
-      if (resolved.from === "fixed" && fitted) {
-        slot.title = REMOTE_FIXED[row[0]][1];
-        said.insertAdjacentHTML("afterbegin", "<svg class='padlock' viewBox='0 0 12 12' " +
-          "aria-hidden='true'><rect x='2' y='5' width='8' height='6' rx='1.2' fill='currentColor'/>" +
-          "<path d='M4 5V3.6a2 2 0 0 1 4 0V5' fill='none' stroke='currentColor' stroke-width='1.4'/>" +
-          "</svg>");
-      }
-    }
-    sides[row[1]].appendChild(slot);
-  });
-  diagram.appendChild(sides.left);
-  diagram.appendChild(middle);
-  diagram.appendChild(sides.right);
+    var choosing = fitted && !fixed && !unbound;
+    // 0 is bound to the tenth scene
+    var said = !fitted ? null : unbound ? "No scene " + (Number(row[0].charAt(0)) || 10)
+                                        : remoteSays(resolved.choice, row[0]) || null;
+    // A row a scene leaves to Always on is striped, as the page marks everything Always on plays
+    return h("div", {
+      className: "remoterow" + (remoteDoes(row[0]) ? " lit" : "") +
+                 (fitted && resolved.from === "always" ? " under" : "") + (fixed ? " fixed" : ""),
+      "data-button": row[0],
+      style: {top: Math.round((row[2] - REMOTE_BODY.top) * REMOTE_SCALE - REMOTE_ROW_PX / 2) + "px"},
+      title: choosing ? (state.at >= 0 ? REMOTE_UNDER_TIP : null)
+           : fixed && fitted ? REMOTE_FIXED[row[0]][1] : null
+    }, small(remoteWords(row[0])),
+       choosing ? remoteChoice(row[0]) : h("b", {}, fixed && fitted ? padlock() : null, said));
+  }
+  function remoteSide(side) {
+    return h("div", {className: "remoteside " + side},
+             REMOTE_ROWS.filter(function (row) { return row[1] === side; }).map(remoteRow));
+  }
+  var diagram = h("div", {
+    className: "remotediagram",
+    style: {height: Math.round(height * REMOTE_SCALE) + "px",
+            "--middle": Math.round(width * REMOTE_SCALE) + "px"}
+  }, remoteSide("left"), middle, remoteSide("right"));
 
   // A row and its button light together, and clicking a button opens its row's choice. With no
   // remote fitted there is nothing to choose, so nothing lights
@@ -428,47 +405,41 @@ function remoteDiagram() {
   return diagram;
 }
 
+// The padlock on a row the board keeps the same in every scene
+function padlock() {
+  return h("svg:svg", {
+    class: "padlock", viewBox: "0 0 12 12", "aria-hidden": "true",
+    html: "<rect x='2' y='5' width='8' height='6' rx='1.2' fill='currentColor'/>" +
+          "<path d='M4 5V3.6a2 2 0 0 1 4 0V5' fill='none' stroke='currentColor' stroke-width='1.4'/>"
+  });
+}
+
 // ---- the section ---------------------------------------------------------------------------------
 
-function sensorSaid(words, dim) {
-  var said = document.createElement("p");
-  said.textContent = words;
-  if (dim) said.className = "dim";
-  return said;
+// A sentence under the diagram, dimmed or a warning where className= says so
+function sensorSaid(words, className) {
+  return h("p", {className: className || null}, words);
 }
 
 // Fill the box saying what is on the sensor connector, a choice while the board is being set up
 function sensorBox() {
-  var facts = document.getElementById("sensorFacts");
-  facts.textContent = "";
   var fitted = sensorFacts();
-  var parts = ["Sensor"];
-  if (canEdit("sensorPanel")) {
-    var choice = document.createElement("select");
-    SENSOR_KINDS.forEach(function (kind) {
-      var option = document.createElement("option");
-      option.value = kind[0];
-      option.textContent = kind[1];
-      choice.appendChild(option);
-    });
-    choice.value = state.sensorKind;
-    choice.onchange = function () {
+  var editing = canEdit("sensorPanel");
+  var choice = editing ? h("select", {
+    onchange: function () {
       state.sensorKind = choice.value;
       draw();
-    };
-    parts.push(choice);
-    if (fitted[3]) parts.push(small(fitted[3]));
-  } else {
-    parts.push(small(state.sensorKind === "none" ? "nothing on the sensor connector"
-                                                 : fitted[1] + ", " + fitted[3]));
-  }
-  facts.appendChild(boardBox("sensorPanel", parts));
-  if (!canEdit("sensorPanel") && state.sensorKind === "none") {
-    var hint = document.createElement("span");
-    hint.className = "hint";
-    hint.textContent = "Edit board to fit one.";
-    facts.appendChild(hint);
-  }
+    }
+  }, SENSOR_KINDS.map(function (kind) {
+    return h("option", {value: kind[0], selected: kind[0] === state.sensorKind}, kind[1]);
+  })) : null;
+  replace(document.getElementById("sensorFacts"),
+          boardBox("sensorPanel", editing
+            ? ["Sensor", choice, fitted[3] ? small(fitted[3]) : null]
+            : ["Sensor", small(state.sensorKind === "none" ? "nothing on the sensor connector"
+                                                           : fitted[1] + ", " + fitted[3])]),
+          !editing && state.sensorKind === "none"
+            ? h("span", {className: "hint"}, "Edit board to fit one.") : null);
 }
 
 // ---- the PIR Stick with a row for each trigger --------------------------------------------------
@@ -507,12 +478,8 @@ PART_DRAWINGS.pir = "<g transform='translate(2.4 1.5) scale(1.27)' stroke-width=
                     MOTION_FIGURES.MOTION_STARTS + "</g>";
 
 function motionFigure(trigger) {
-  var figure = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  figure.setAttribute("viewBox", MOTION_FIGURE_BOX);
-  figure.setAttribute("class", "motionfigure");
-  figure.setAttribute("aria-hidden", "true");
-  figure.innerHTML = MOTION_FIGURES[trigger];
-  return figure;
+  return h("svg:svg", {viewBox: MOTION_FIGURE_BOX, class: "motionfigure", "aria-hidden": "true",
+                       html: MOTION_FIGURES[trigger]});
 }
 
 // ---- a delay on motion's triggers ---------------------------------------------------------------
@@ -569,52 +536,33 @@ function settleSceneRow(trigger) {
   delete state.motionTiming[trigger];
 }
 
-// Add a PIR box's two lines, "Trigger [what it does] after [3] s" and the question of the opposite
+// A PIR box's two lines, "Trigger [what it does] after [3] s" and the question of the opposite
 // edge. The question is greyed while there is no wait, so the box keeps its size
-function motionLines(trigger, box) {
+function motionLines(trigger) {
   var timing = motionTiming(trigger);
-  var line = document.createElement("div");
-  line.className = "pirtiming piraction";
-  line.appendChild(small("Trigger"));
-  remoteRowChoice(line, trigger);
-  box.appendChild(line);
-  line.appendChild(small("after"));
-  var seconds = document.createElement("input");
-  seconds.type = "number";
-  seconds.min = 0;
-  seconds.step = 0.5;
-  seconds.value = timing.after;
-  seconds.title = "Seconds to wait before doing it";
-  seconds.onchange = function () {
-    setMotionTiming(trigger, {after: Math.max(0, Number(seconds.value) || 0)});
-  };
-  line.appendChild(seconds);
-  line.appendChild(small("s"));
-  var asked = document.createElement("div");
-  asked.className = "pirtiming pirquestion" + (timing.after > 0 ? "" : " idle");
-  asked.appendChild(small(MOTION_CANCELLED_BY[trigger]));
-  var cancels = document.createElement("select");
-  cancels.className = "pircancel";
-  [["yes", "cancel this"], ["no", "finish this first"]].forEach(function (answer) {
-    var option = document.createElement("option");
-    option.value = answer[0];
-    option.textContent = answer[1];
-    cancels.appendChild(option);
+  var waits = timing.after > 0;
+  var seconds = h("input", {
+    type: "number", min: 0, step: 0.5, value: timing.after,
+    title: "Seconds to wait before doing it",
+    onchange: function () {
+      setMotionTiming(trigger, {after: Math.max(0, Number(seconds.value) || 0)});
+    }
   });
-  cancels.value = timing.cancel ? "yes" : "no";
-  cancels.disabled = !(timing.after > 0);
-  if (cancels.disabled) asked.title = "Asked once it waits";
-  cancels.onchange = function () { setMotionTiming(trigger, {cancel: cancels.value === "yes"}); };
-  asked.appendChild(cancels);
-  box.appendChild(asked);
+  var cancels = h("select", {
+    className: "pircancel", disabled: !waits,
+    onchange: function () { setMotionTiming(trigger, {cancel: cancels.value === "yes"}); }
+  }, h("option", {value: "yes", selected: timing.cancel}, "cancel this"),
+     h("option", {value: "no", selected: !timing.cancel}, "finish this first"));
+  return [h("div", {className: "pirtiming piraction",
+                    title: state.at >= 0 ? REMOTE_UNDER_TIP : null},
+            small("Trigger"), remoteChoice(trigger), small("after"), seconds, small("s")),
+          h("div", {className: "pirtiming pirquestion" + (waits ? "" : " idle"),
+                    title: waits ? null : "Asked once it waits"},
+            small(MOTION_CANCELLED_BY[trigger]), cancels)];
 }
 
 function pirDiagram() {
   var width = PIR_STICK.width + 2 * PIR_REACH;
-  var diagram = document.createElement("div");
-  diagram.className = "remotediagram";
-  diagram.style.height = Math.round(PIR_STICK.height * PIR_SCALE) + "px";
-  diagram.style.setProperty("--middle", Math.round(width * PIR_SCALE) + "px");
   // Each leader runs from the sensor's edge out to its side's row
   var leaders = PIR_ROWS.map(function (row) {
     var path = row[1] === "left"
@@ -623,102 +571,78 @@ function pirDiagram() {
     return "<path class='remoteleader' data-button='" + row[0] + "' d='" + path + "' stroke='" +
            (remoteDoes(row[0]) ? "#808285" : "#d6d3cd") + "'/>";
   }).join("");
-  var middle = document.createElement("div");
-  middle.className = "remotemiddle";
-  middle.innerHTML = "<svg viewBox='" + -PIR_REACH + " 0 " + width + " " + PIR_STICK.height + "' " +
-                     "width='100%' height='100%' role='img' aria-label='The PIR Stick'>" +
-                     PIR_ART.join("") +
-                     leaders + "</svg>";
-  var sides = {left: document.createElement("div"), right: document.createElement("div")};
-  sides.left.className = "remoteside left";
-  sides.right.className = "remoteside right";
+  var middle = h("div", {
+    className: "remotemiddle",
+    html: "<svg viewBox='" + -PIR_REACH + " 0 " + width + " " + PIR_STICK.height + "' " +
+          "width='100%' height='100%' role='img' aria-label='The PIR Stick'>" +
+          PIR_ART.join("") + leaders + "</svg>"
+  });
   // Each trigger has a heading across its box, its name by the leader and its figure at the outer
   // edge, and under it a box holding what it does with its delay, striped where a scene leaves it
   // to Always on as a remote's row is
-  PIR_ROWS.forEach(function (row) {
+  function pirSide(row) {
     var resolved = remoteResolved(row[0]);
-    var side = document.createElement("div");
-    side.className = "pirside";
-    side.style.top = Math.round(row[2] * PIR_SCALE - PIR_HEAD_PX / 2) + "px";
-    var head = document.createElement("div");
-    head.className = "pirhead";
-    head.appendChild(motionFigure(row[0]));
-    head.appendChild(document.createTextNode(remoteWords(row[0])));
-    side.appendChild(head);
-    var box = document.createElement("div");
-    box.className = "remoterow pirbox" + (remoteDoes(row[0]) ? " lit" : "") +
-                    (resolved.from === "always" ? " under" : "");
-    box.dataset.button = row[0];
-    motionLines(row[0], box);
-    side.appendChild(box);
-    sides[row[1]].appendChild(side);
-  });
-  diagram.appendChild(sides.left);
-  diagram.appendChild(middle);
-  diagram.appendChild(sides.right);
-  return diagram;
+    return h("div", {className: "pirside",
+                     style: {top: Math.round(row[2] * PIR_SCALE - PIR_HEAD_PX / 2) + "px"}},
+             h("div", {className: "pirhead"}, motionFigure(row[0]), remoteWords(row[0])),
+             h("div", {className: "remoterow pirbox" + (remoteDoes(row[0]) ? " lit" : "") +
+                                  (resolved.from === "always" ? " under" : ""),
+                       "data-button": row[0]},
+               motionLines(row[0])));
+  }
+  function remoteSide(side) {
+    return h("div", {className: "remoteside " + side},
+             PIR_ROWS.filter(function (row) { return row[1] === side; }).map(pirSide));
+  }
+  return h("div", {
+    className: "remotediagram",
+    style: {height: Math.round(PIR_STICK.height * PIR_SCALE) + "px",
+            "--middle": Math.round(width * PIR_SCALE) + "px"}
+  }, remoteSide("left"), middle, remoteSide("right"));
 }
 
 function renderSensor() {
   sensorBox();
-  var box = document.getElementById("sensor");
-  box.textContent = "";
-  var words = document.createElement("div");
-  words.className = "sensorwords";
+  var said;
   if (pirFitted()) {
-    box.appendChild(pirDiagram());
-    words.appendChild(sensorSaid(state.at < 0
+    said = sensorSaid(state.at < 0
       ? "What motion starting and stopping does in every scene. A scene can change either while " +
         "it shows."
-      : "Striped rows do what Always on sets. Choose one to change it in this scene."));
-    sensorNotes(words);
-    box.appendChild(words);
-    return;
-  }
-  box.appendChild(remoteDiagram());
-  if (!remoteFitted()) {
-    words.appendChild(sensorSaid("The sensor connector takes one thing at a time, such as the " +
-                                 "Aye Arr Remote through an IR Receiver Stick.", true));
+      : "Striped rows do what Always on sets. Choose one to change it in this scene.");
+  } else if (!remoteFitted()) {
+    said = sensorSaid("The sensor connector takes one thing at a time, such as the " +
+                      "Aye Arr Remote through an IR Receiver Stick.", "dim");
   } else if (state.at < 0) {
-    words.appendChild(sensorSaid("What each button does in every scene. A scene can change any " +
-                                 "of them while it shows."));
-    if (!state.scenes.length) {
-      words.appendChild(sensorSaid("With scenes, the numbers go to them and the arrows step " +
-                                   "through them.", true));
-      var split = document.createElement("button");
-      split.className = "plus";
-      split.textContent = "split into scenes";
-      split.onclick = addScene;
-      words.appendChild(split);
-    }
+    said = [sensorSaid("What each button does in every scene. A scene can change any " +
+                       "of them while it shows."),
+            state.scenes.length ? null
+              : [sensorSaid("With scenes, the numbers go to them and the arrows step " +
+                            "through them.", "dim"),
+                 h("button", {className: "plus", onclick: addScene}, "split into scenes")]];
   } else {
-    words.appendChild(sensorSaid("Striped buttons do what Always on sets. Choose one to change " +
-                                 "it in this scene."));
+    said = sensorSaid("Striped buttons do what Always on sets. Choose one to change " +
+                      "it in this scene.");
   }
-  sensorNotes(words);
-  box.appendChild(words);
+  replace(document.getElementById("sensor"), pirFitted() ? pirDiagram() : remoteDiagram(),
+          h("div", {className: "sensorwords"}, said, sensorNotes()));
 }
 
-// Add the warnings under the sensor's diagram, for what the file gave that the page cannot use
-function sensorNotes(words) {
+// The warnings under the sensor's diagram, for what the file gave that the page cannot use
+function sensorNotes() {
   // A trigger going to the scene showing, which waits and does not restart
   var idle = triggerDoingNothing();
-  if (idle) {
-    var showing = state.scenes[state.at].name;
-    var nothing = sensorSaid(remoteWords(idle) + " does nothing here, as " + showing + " is " +
-                             "already showing and waits. Choose \"Scene: " + showing + ", from " +
-                             "the start\" to begin it again.");
-    nothing.className = "warn";
-    words.appendChild(nothing);
-  }
+  var showing = idle ? state.scenes[state.at].name : null;
   // Check if the file gave a trigger twice in this tab, whose second line is kept as written
-  if (fittedTriggers().length && state.remoteRepeats.length) {
-    var repeated = sensorSaid((state.remoteRepeats.length === 1 ? "" : "Each of ") +
-      state.remoteRepeats.map(remoteWords).join(", ") + " is given twice in the file here. The " +
-      "page uses the first and keeps the second line as it is.");
-    repeated.className = "warn";
-    words.appendChild(repeated);
-  }
+  var repeats = fittedTriggers().length && state.remoteRepeats.length;
+  return [
+    idle ? sensorSaid(remoteWords(idle) + " does nothing here, as " + showing + " is " +
+                      "already showing and waits. Choose \"Scene: " + showing + ", from " +
+                      "the start\" to begin it again.", "warn") : null,
+    repeats ? sensorSaid((state.remoteRepeats.length === 1 ? "" : "Each of ") +
+                         state.remoteRepeats.map(remoteWords).join(", ") + " is given twice in " +
+                         "the file here. The page uses the first and keeps the second line as " +
+                         "it is.", "warn") : null
+  ];
 }
 
 // ---- what the file says ---------------------------------------------------------------------------
@@ -921,14 +845,8 @@ tabSwatches.sensorPanel = function (swatch) {
 function sensorUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=sensorPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named = document.createElement("span");
-  named.className = "tabname";
-  named.appendChild(tab.querySelector("b"));
-  var kind = document.createElement("small");
-  kind.className = "tabunder";
-  kind.textContent = sensorFacts()[2];
-  named.appendChild(kind);
-  tab.insertBefore(named, tab.firstChild);
+  tab.prepend(h("span", {className: "tabname"}, tab.querySelector("b"),
+                h("small", {className: "tabunder"}, sensorFacts()[2])));
 }
 
 addStep(drawSteps.after, DRAW_AFTER, "sensor", function () {
@@ -936,16 +854,11 @@ addStep(drawSteps.after, DRAW_AFTER, "sensor", function () {
   renderSensor();
 });
 
-(function () {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "sensorPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Sensor</summary><div class='facts' id='sensorFacts'></div>" +
-                    "<div id='sensor'></div>";
-  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
-}());
+document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
+  h("details", {className: "panel", id: "sensorPanel", open: true},
+    h("summary", {}, "Sensor"),
+    h("div", {className: "facts", id: "sensorFacts"}),
+    h("div", {id: "sensor"})));
 
 TAB_NAMES.sensorPanel = "Sensor";
 addStep(TAB_PANELS, FEATURE_TABS, "sensor", "sensorPanel");
