@@ -131,6 +131,24 @@ function alwaysSays(body) {
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }
 
+// The id of a scene's tab, Always on's being which= -1
+function sceneTabId(which) {
+  return which < 0 ? "sceneTabAlways" : "sceneTab" + which;
+}
+
+// The scene before or after with the arrow keys, from Always on to the last scene without
+// wrapping, or the first or last with Home and End. The keyboard stays on the tab shown
+function stepScenes(event, which) {
+  var last = state.scenes.length - 1;
+  var to = {ArrowRight: Math.min(last, which + 1), ArrowDown: Math.min(last, which + 1),
+            ArrowLeft: Math.max(-1, which - 1), ArrowUp: Math.max(-1, which - 1),
+            Home: -1, End: last}[event.key];
+  if (to === undefined) return;
+  event.preventDefault();
+  if (to !== state.at) switchTo(to);
+  document.getElementById(sceneTabId(state.at)).focus();
+}
+
 function sceneTab(which, slot, name, says) {
   var here = state.at === which;
   var body = here ? capture() : slot.body;
@@ -157,7 +175,11 @@ function sceneTab(which, slot, name, says) {
     // rings anything chosen
     style: {"--scene": sceneColour(scene), "--band": scene ? sceneBand(scene) : null},
     title: name,
-    onclick: function () { if (state.at !== which) switchTo(which); }
+    // A tab of the scenes' tablist, only the chosen one in the page's tab order
+    role: "tab", id: sceneTabId(which), "aria-selected": String(here),
+    "aria-controls": "sceneBody", tabindex: here ? "0" : "-1",
+    onclick: function () { if (state.at !== which) switchTo(which); },
+    onkeydown: function (event) { stepScenes(event, which); }
   }, h("b", {}, h("span", {className: "cardname"}, name), which >= 0 ? grip() : null),
      which < 0 ? [h("small", {className: "role"}, "Plays under every scene"), says ? under : null,
                   parts]
@@ -324,6 +346,14 @@ addStep(drawSteps.after, DRAW_AFTER, "sceneTray", function () {
   renderSceneSettings();
 });
 
+// Set node's attributes while there are scenes, and take them off where there are none
+function tabRoles(node, attributes) {
+  Object.keys(attributes).forEach(function (name) {
+    if (state.scenes.length) node.setAttribute(name, attributes[name]);
+    else node.removeAttribute(name);
+  });
+}
+
 function renderScenes() {
   var box = document.getElementById("tabs");
   var plus = h("button", {
@@ -345,6 +375,10 @@ function renderScenes() {
           }),
           plus);
   box.classList.toggle("tray", state.scenes.length > 0);
+  // The cards are a tablist while there are scenes to choose between, the frame their panel
+  tabRoles(box, {role: "tablist", "aria-label": "Scenes"});
+  tabRoles(document.getElementById("sceneBody"),
+           {role: "tabpanel", "aria-labelledby": sceneTabId(state.at)});
   spanTray();
 
   // The frame is what says these belong to the picked card, so it appears with the cards, in

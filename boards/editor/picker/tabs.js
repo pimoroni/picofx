@@ -121,24 +121,46 @@ function tabBlocked(panel) {
   return run && run.strip ? stripBlockedBy(run) : "";
 }
 
+// Show a tab's section, and keep the keyboard on its tab, which the draw has made afresh
+function choose(panel) {
+  // The wiring view is the outputs' own, so leaving their tab closes it
+  if (setupOn && panel !== "outPanel") setSetup(false);
+  chosenTab = panel;
+  if (chosenTakesLooks()) workOn(panel);
+  showChosen();
+  draw();
+  document.getElementById("tab-" + panel).focus();
+}
+
+// The tab before or after with the arrow keys, wrapping round, or the first or last with Home and
+// End, as a screen reader expects of a row of tabs
+function stepTab(event, panel) {
+  var step = {ArrowRight: 1, ArrowLeft: -1}[event.key];
+  var at = TAB_PANELS.indexOf(panel);
+  var to = event.key === "Home" ? 0 : event.key === "End" ? TAB_PANELS.length - 1
+         : step ? (at + step + TAB_PANELS.length) % TAB_PANELS.length : -1;
+  if (to < 0) return;
+  event.preventDefault();
+  choose(TAB_PANELS[to]);
+}
+
+// The tabs as a tablist, only the chosen one in the page's tab order
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   replace(bar, TAB_PANELS.map(function (panel) {
     var blocked = tabBlocked(panel);
-    var swatch = h("span", {className: "accswatch"});
+    var chosen = panel === chosenTab;
+    var swatch = h("span", {className: "accswatch", "aria-hidden": "true"});
     tabSwatch(swatch, panel);
     return h("button", {
-      type: "button",
-      className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
+      type: "button", role: "tab", id: "tab-" + panel,
+      className: "ledtab" + (chosen ? " on" : "") + (blocked ? " blocked" : ""),
       title: blocked || null, "data-panel": panel,
-      onclick: function () {
-        // The wiring view is the outputs' own, so leaving their tab closes it
-        if (setupOn && panel !== "outPanel") setSetup(false);
-        chosenTab = panel;
-        if (chosenTakesLooks()) workOn(panel);
-        showChosen();
-        draw();
-      }
+      "aria-selected": String(chosen), "aria-controls": panel, tabindex: chosen ? "0" : "-1",
+      // A blocked tab still opens, to say why
+      "aria-disabled": blocked ? "true" : null,
+      onclick: function () { choose(panel); },
+      onkeydown: function (event) { stepTab(event, panel); }
     }, h("b", {}, TAB_NAMES[panel]), swatch);
   }));
 }
@@ -165,7 +187,9 @@ addStep(drawSteps.after, DRAW_AFTER, "tabs", function () {
 // The tabs, then the one place every tab's section is laid out in. A section a page adds after
 // one of these lands in it too
 var sectionStack = h("div", {className: "tabstack", id: "tabStack"});
-document.getElementById("outPanel").before(h("div", {className: "ledtabs", id: "ledTabs"}),
+document.getElementById("outPanel").before(h("div", {className: "ledtabs", id: "ledTabs",
+                                                  role: "tablist",
+                                                  "aria-label": "Parts of the board"}),
                                            sectionStack);
 LED_PANELS.forEach(function (panel) { sectionStack.appendChild(document.getElementById(panel)); });
 

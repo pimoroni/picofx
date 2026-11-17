@@ -10814,23 +10814,46 @@ function tabBlocked(panel) {
   var run = runsOfPanel(panel)[0];
   return run && run.strip ? stripBlockedBy(run) : "";
 }
+function choose(panel) {
+  if (setupOn && panel !== "outPanel") setSetup(false);
+  chosenTab = panel;
+  if (chosenTakesLooks()) workOn(panel);
+  showChosen();
+  draw();
+  document.getElementById("tab-" + panel).focus();
+}
+function stepTab(event, panel) {
+  var step2 = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+  var at = TAB_PANELS.indexOf(panel);
+  var to = event.key === "Home" ? 0 : event.key === "End" ? TAB_PANELS.length - 1 : step2 ? (at + step2 + TAB_PANELS.length) % TAB_PANELS.length : -1;
+  if (to < 0) return;
+  event.preventDefault();
+  choose(TAB_PANELS[to]);
+}
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   replace(bar, TAB_PANELS.map(function(panel) {
     var blocked = tabBlocked(panel);
-    var swatch = h("span", { className: "accswatch" });
+    var chosen = panel === chosenTab;
+    var swatch = h("span", { className: "accswatch", "aria-hidden": "true" });
     tabSwatch(swatch, panel);
     return h("button", {
       type: "button",
-      className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
+      role: "tab",
+      id: "tab-" + panel,
+      className: "ledtab" + (chosen ? " on" : "") + (blocked ? " blocked" : ""),
       title: blocked || null,
       "data-panel": panel,
+      "aria-selected": String(chosen),
+      "aria-controls": panel,
+      tabindex: chosen ? "0" : "-1",
+      // A blocked tab still opens, to say why
+      "aria-disabled": blocked ? "true" : null,
       onclick: function() {
-        if (setupOn && panel !== "outPanel") setSetup(false);
-        chosenTab = panel;
-        if (chosenTakesLooks()) workOn(panel);
-        showChosen();
-        draw();
+        choose(panel);
+      },
+      onkeydown: function(event) {
+        stepTab(event, panel);
       }
     }, h("b", {}, TAB_NAMES[panel]), swatch);
   }));
@@ -10854,7 +10877,12 @@ addStep(drawSteps.after, DRAW_AFTER, "tabs", function() {
 });
 var sectionStack = h("div", { className: "tabstack", id: "tabStack" });
 document.getElementById("outPanel").before(
-  h("div", { className: "ledtabs", id: "ledTabs" }),
+  h("div", {
+    className: "ledtabs",
+    id: "ledTabs",
+    role: "tablist",
+    "aria-label": "Parts of the board"
+  }),
   sectionStack
 );
 LED_PANELS.forEach(function(panel) {
@@ -14169,6 +14197,24 @@ function alwaysSays(body) {
   if (!names.length) return "";
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }
+function sceneTabId(which) {
+  return which < 0 ? "sceneTabAlways" : "sceneTab" + which;
+}
+function stepScenes(event, which) {
+  var last = state.scenes.length - 1;
+  var to = {
+    ArrowRight: Math.min(last, which + 1),
+    ArrowDown: Math.min(last, which + 1),
+    ArrowLeft: Math.max(-1, which - 1),
+    ArrowUp: Math.max(-1, which - 1),
+    Home: -1,
+    End: last
+  }[event.key];
+  if (to === void 0) return;
+  event.preventDefault();
+  if (to !== state.at) switchTo(to);
+  document.getElementById(sceneTabId(state.at)).focus();
+}
 function sceneTab(which, slot, name, says) {
   var here = state.at === which;
   var body = here ? capture() : slot.body;
@@ -14196,8 +14242,17 @@ function sceneTab(which, slot, name, says) {
       // rings anything chosen
       style: { "--scene": sceneColour(scene), "--band": scene ? sceneBand(scene) : null },
       title: name,
+      // A tab of the scenes' tablist, only the chosen one in the page's tab order
+      role: "tab",
+      id: sceneTabId(which),
+      "aria-selected": String(here),
+      "aria-controls": "sceneBody",
+      tabindex: here ? "0" : "-1",
       onclick: function() {
         if (state.at !== which) switchTo(which);
+      },
+      onkeydown: function(event) {
+        stepScenes(event, which);
       }
     },
     h("b", {}, h("span", { className: "cardname" }, name), which >= 0 ? grip() : null),
@@ -14370,6 +14425,12 @@ addStep(drawSteps.after, DRAW_AFTER, "sceneTray", function() {
   renderScenes();
   renderSceneSettings();
 });
+function tabRoles(node, attributes) {
+  Object.keys(attributes).forEach(function(name) {
+    if (state.scenes.length) node.setAttribute(name, attributes[name]);
+    else node.removeAttribute(name);
+  });
+}
 function renderScenes() {
   var box = document.getElementById("tabs");
   var plus = h(
@@ -14396,6 +14457,11 @@ function renderScenes() {
     plus
   );
   box.classList.toggle("tray", state.scenes.length > 0);
+  tabRoles(box, { role: "tablist", "aria-label": "Scenes" });
+  tabRoles(
+    document.getElementById("sceneBody"),
+    { role: "tabpanel", "aria-labelledby": sceneTabId(state.at) }
+  );
   spanTray();
   var frame = document.getElementById("sceneBody");
   frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
@@ -15806,7 +15872,7 @@ function sline() {
 function named(words) {
   return h("span", { className: "snamed" }, words);
 }
-function segment(options, chosen, choose, title) {
+function segment(options, chosen, choose2, title) {
   return h("span", { className: "sseg", title: title || null }, options.map(function(option) {
     return h("button", {
       type: "button",
@@ -15815,7 +15881,7 @@ function segment(options, chosen, choose, title) {
       className: option[0] === chosen ? "on" : "",
       disabled: !!option[2],
       onclick: function() {
-        choose(option[0]);
+        choose2(option[0]);
         draw();
       }
     });
@@ -17184,7 +17250,7 @@ chosenSteps.push(function(where, run) {
   var blinks = section.blinks || { colours: [section.colour || "#ff0000"], at: 0 };
   blinks.colours[blinks.at] = section.colour;
   section.blinks = blinks;
-  function choose(at) {
+  function choose2(at) {
     var mine = live();
     mine.blinks.at = at;
     mine.colour = mine.blinks.colours[at];
@@ -17204,7 +17270,7 @@ chosenSteps.push(function(where, run) {
           style: { "--chip": hex },
           title: (at === blinks.at ? "the colour being edited below, " : "change ") + (blinkNamed(hex) || hex),
           onclick: function() {
-            choose(at);
+            choose2(at);
           }
         }),
         several ? h("button", {
@@ -17234,7 +17300,7 @@ chosenSteps.push(function(where, run) {
         if (!mine.blinks) mine.blinks = { colours: [mine.colour], at: 0 };
         var colours = mine.blinks.colours;
         colours.push(colours[colours.length - 1]);
-        choose(colours.length - 1);
+        choose2(colours.length - 1);
       }
     }, "+ another colour")
   ));
