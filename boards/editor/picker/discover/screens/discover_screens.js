@@ -1,12 +1,11 @@
 import {
-  discoverBin, discoverBinBeside, discoverDivider, discoverDrawings, discoverElement,
-  discoverKinds, discoverPictureSaid, discoverPill, discoverPlaceBar, discoverThumbImage,
-  discoverThumbs
+  discoverBin, discoverBinBeside, discoverDivider, discoverDrawings, discoverKinds,
+  discoverPictureSaid, discoverPill, discoverPlaceBar, discoverThumbImage, discoverThumbs
 } from "../discover.js";
+import {h, replace} from "../../dom.js";
 import {addStep} from "../../draw.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia} from "../../drive_files.js";
 import {openingString} from "../../drive_programs.js";
-import {escapeHtml} from "../../file_preview.js";
 import {state} from "../../scenes.js";
 import {drawingInk} from "../../screens/screen_art.js";
 import {copyDrawing} from "../../screens/screen_settings.js";
@@ -51,16 +50,13 @@ addStep(assetSteps, ASSET_ORDER, "discover", function () {
 function discoverDrawingFace(path) {
   if (discoverDrawings[path].kind === "picture") return discoverPictureFace(path);
   var drawing = discoverDrawings[path].drawing;
-  var card = discoverElement("div", "asset discoveroffer");
-  card.title = drawing.description || "";
-  var face = discoverElement("div", "face");
+  var face = h("div", {className: "face"});
   // Its icon or initial on its colour, where it has no thumbnail or the thumbnail will not load
   function made() {
     face.className = "face drawingface";
     face.style.background = drawingInk(drawing, path);
-    face.innerHTML = drawing.icon
-      ? "<span class='drawingicon'>" + escapeHtml(drawing.icon) + "</span>"
-      : "<span class='drawingletter'>" + escapeHtml(drawing.title[0]) + "</span>";
+    replace(face, drawing.icon ? h("span", {className: "drawingicon"}, drawing.icon)
+                               : h("span", {className: "drawingletter"}, drawing.title[0]));
   }
   if (discoverThumbs[path]) {
     var picture = discoverThumbImage(path);
@@ -69,25 +65,23 @@ function discoverDrawingFace(path) {
   } else {
     made();
   }
-  card.appendChild(face);
   // Its name and what it does under the picture, as a program card has them
-  card.appendChild(discoverElement("span", "progname", drawing.title));
-  card.appendChild(discoverElement("span", "discoverdoes", drawing.description || ""));
-  return card;
+  return h("div", {className: "asset discoveroffer", title: drawing.description || ""},
+           face,
+           h("span", {className: "progname"}, drawing.title),
+           h("span", {className: "discoverdoes"}, drawing.description || null));
 }
 
 // A picture as a drawing's card has it, the picture itself in the face, a GIF playing, a slideshow
 // by its first picture and tagged as one, its file or folder name and what it is under it
 function discoverPictureFace(path) {
   var picture = discoverDrawings[path].picture;
-  var card = discoverElement("div", "asset discoveroffer");
-  var face = discoverElement("div", "face");
-  if (discoverThumbs[path]) face.appendChild(discoverThumbImage(path));
-  if (picture.slideshow) face.appendChild(discoverElement("span", "discoverkind", "slideshow"));
-  card.appendChild(face);
-  card.appendChild(discoverElement("span", "progname", picture.title));
-  card.appendChild(discoverElement("span", "discoverdoes", discoverPictureSaid(picture)));
-  return card;
+  return h("div", {className: "asset discoveroffer"},
+           h("div", {className: "face"},
+             discoverThumbs[path] ? discoverThumbImage(path) : null,
+             picture.slideshow ? h("span", {className: "discoverkind"}, "slideshow") : null),
+           h("span", {className: "progname"}, picture.title),
+           h("span", {className: "discoverdoes"}, discoverPictureSaid(picture)));
 }
 
 discoverKinds.drawing = {

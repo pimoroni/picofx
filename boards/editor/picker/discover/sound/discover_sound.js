@@ -1,7 +1,7 @@
 import {
-  discoverBin, discoverElement, discoverKinds, discoverPill, discoverPlaceBar, discoverSay,
-  discoverSounds
+  discoverBin, discoverKinds, discoverPill, discoverPlaceBar, discoverSay, discoverSounds
 } from "../discover.js";
+import {h} from "../../dom.js";
 import {draw} from "../../draw.js";
 import {nameShown} from "../../drive.js";
 import {isExampleMedia} from "../../drive_files.js";
@@ -32,23 +32,23 @@ soundSteps.push(function () {
 // GitHub before it is downloaded. Its outline is not known until it is, so a still wave stands in
 function discoverSoundFace(path) {
   var sound = discoverSounds[path].sound;
-  var card = discoverElement("div", "sound discoveroffer");
-  card.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none' aria-hidden='true'>" +
-    "<path d='M0 15 Q6.5 3 13 15 T26 15 T39 15 T52 15 T65 15 T78 15 T91 15 T104 15' fill='none' " +
-    "stroke='#c9c3b9' stroke-width='2'/></svg>";
-  card.appendChild(discoverElement("b", "", sound.title));
-  card.appendChild(discoverElement("small", "", sound.seconds ? sound.seconds + "s" : "WAV file"));
   var playing = hearing.name === path;
-  var listen = discoverElement("span", "hear" + (playing ? " playing" : ""),
-                             playing ? "■" : "▶");
-  listen.setAttribute("role", "button");
-  listen.title = (playing ? "Stop " : "Play ") + sound.title + " here";
-  listen.onclick = function (e) {
-    e.stopPropagation();
-    discoverHear(path, sound.url);
-  };
-  card.appendChild(listen);
-  return card;
+  return h("div", {className: "sound discoveroffer"},
+           h("svg:svg", {
+             viewBox: "0 0 104 30", preserveAspectRatio: "none", "aria-hidden": "true",
+             html: "<path d='M0 15 Q6.5 3 13 15 T26 15 T39 15 T52 15 T65 15 T78 15 T91 15 " +
+                   "T104 15' fill='none' stroke='#c9c3b9' stroke-width='2'/>"
+           }),
+           h("b", {}, sound.title),
+           h("small", {}, sound.seconds ? sound.seconds + "s" : "WAV file"),
+           h("span", {
+             className: "hear" + (playing ? " playing" : ""), role: "button",
+             title: (playing ? "Stop " : "Play ") + sound.title + " here",
+             onclick: function (e) {
+               e.stopPropagation();
+               discoverHear(path, sound.url);
+             }
+           }, playing ? "■" : "▶"));
 }
 
 // Play a sound from GitHub, or stop it where it is playing, one at a time as the Sound tab does

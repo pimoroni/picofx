@@ -3,6 +3,7 @@ import {SCREEN_PORTS, firmwareHooks} from "../board.js";
 import {
   PROGRAMS, boardSet, programNamed, programsElsewhere, setPrograms
 } from "../board_settings.js";
+import {h} from "../dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "../draw.js";
 import {drive, driveTrouble, nameShown} from "../drive.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../drive_files.js";
@@ -563,14 +564,6 @@ function discoverUpdates(kind) {
 
 // ---- the check's line, where each gallery's examples start ---------------------------------------
 
-function discoverButton(label, press) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.textContent = label;
-  button.onclick = press;
-  return button;
-}
-
 var DISCOVER_ICONS = {
   get: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M7 18.5h-.5a4.5 4.5 0 0 1-.6-8.96 " +
        "6 6 0 0 1 11.6-1.3A5 5 0 0 1 17.5 18.5H17 M12 11v8 M9 16l3 3 3-3' fill='none' " +
@@ -582,17 +575,7 @@ var DISCOVER_ICONS = {
 };
 
 function discoverIcon(name, className) {
-  var icon = document.createElement("span");
-  icon.className = className;
-  icon.innerHTML = DISCOVER_ICONS[name];
-  return icon;
-}
-
-export function discoverElement(tag, className, text) {
-  var made = document.createElement(tag);
-  made.className = className;
-  if (text) made.textContent = text;
-  return made;
+  return h("span", {className: className, html: DISCOVER_ICONS[name]});
 }
 
 // What a check of one kind found, as the examples to download and the updates, and how many of
@@ -613,40 +596,30 @@ function discoverCount(count, one, many) {
   return count + " " + (count === 1 ? one : many);
 }
 
-// A bar filling as far as [done, of] has got
-function discoverProgress(at) {
-  var bar = discoverElement("div", "discoverprogress");
-  var fill = discoverElement("span", "");
-  fill.style.width = (at ? Math.round(100 * at[0] / Math.max(1, at[1])) : 8) + "%";
-  bar.appendChild(fill);
-  return bar;
+// A bar filling as far as [done, of] has got, greyed where idle= is true
+function discoverProgress(at, idle) {
+  return h("div", {className: "discoverprogress" + (idle ? " discoveridle" : "")},
+           h("span", {style: {width: (at ? Math.round(100 * at[0] / Math.max(1, at[1])) : 8) + "%"}}));
 }
 
 // What the last download said, marked done, under way or failed
 function discoverNotice(check) {
   if (!check.notice) return null;
   var warn = check.notice[1];
-  var notice = discoverElement("div", "discovernotice" + (warn === "hold" ? " hold" : warn ? " warn" : ""));
-  if (warn !== "hold") notice.appendChild(discoverIcon(warn ? "warn" : "done", "discovermark"));
-  notice.appendChild(document.createTextNode(check.notice[0]));
-  return notice;
+  return h("div", {className: "discovernotice" + (warn === "hold" ? " hold" : warn ? " warn" : "")},
+           warn === "hold" ? null : discoverIcon(warn ? "warn" : "done", "discovermark"),
+           check.notice[0]);
 }
 
 // A missing example's thumbnail, taken away where it will not load, so the dark background shows
 export function discoverThumbImage(path) {
-  var img = document.createElement("img");
-  img.alt = "";
-  img.onerror = function () { img.remove(); };
-  img.src = discoverThumbs[path];
+  var img = h("img", {alt: "", onerror: function () { img.remove(); }, src: discoverThumbs[path]});
   return img;
 }
 
 // Where a tab's examples start, a rule naming them, over the Discover button and the line under it
 function discoverBar(kind) {
-  var bar = discoverElement("div", "discoverbar");
-  bar.appendChild(discoverDivider("Examples"));
-  bar.appendChild(discoverPanel(kind));
-  return bar;
+  return h("div", {className: "discoverbar"}, discoverDivider("Examples"), discoverPanel(kind));
 }
 
 // Put a tab's examples line where its examples start, after the user's own group, which always
@@ -678,19 +651,15 @@ var DISCOVER_INK = {program: "var(--board)", drawing: "var(--accent)", sound: "v
 // once checked, and the line for updates under it
 function discoverPanel(kind) {
   var check = discover[kind];
-  var panel = discoverElement("div", "discoverpanel");
-  panel.style.setProperty("--discover", DISCOVER_INK[kind]);
   var found = check.status === "done" ? discoverFound(kind) : null;
-  var open = discoverElement("button", "discoverwide");
-  open.type = "button";
-  open.appendChild(discoverIcon("get", "discoverwideicon"));
-  open.appendChild(document.createTextNode("Discover " + discoverAsked(kind)));
-  if (found && found.waiting.length)
-    open.appendChild(discoverElement("span", "discovercountchip", String(found.waiting.length)));
-  open.onclick = function () { discoverOpenBrowser(kind); };
-  panel.appendChild(open);
-  panel.appendChild(discoverUpdateRow(kind, check, found));
-  return panel;
+  return h("div", {className: "discoverpanel", style: {"--discover": DISCOVER_INK[kind]}},
+           h("button", {
+             type: "button", className: "discoverwide",
+             onclick: function () { discoverOpenBrowser(kind); }
+           }, discoverIcon("get", "discoverwideicon"), "Discover " + discoverAsked(kind),
+              found && found.waiting.length
+                ? h("span", {className: "discovercountchip"}, String(found.waiting.length)) : null),
+           discoverUpdateRow(kind, check, found));
 }
 
 // The line under Discover for the examples on the drive, one height whatever it says. It says what
@@ -698,39 +667,36 @@ function discoverPanel(kind) {
 // right of it while anything runs. Update all and Check for updates are always in place, greyed
 // where they cannot be pressed. The drive's examples are checked without opening the gallery
 function discoverUpdateRow(kind, check, found) {
-  var row = discoverElement("div", "discoverupdaterow");
-  var said = discoverElement("span", "discoverrowsaid");
   var running = check.status === "checking" ? check.progress || [0, 1]
               : check.updating || discoverFetching || check.refreshing;
   var busy = check.status === "checking" || running ||
              (check.notice && check.notice[1] === "hold");
-  if (check.status === "idle") {
-    said.textContent = "Check the examples on the drive for newer versions.";
-  } else if (check.status === "checking") {
-    said.textContent = "Checking for updates...";
-  } else if (check.status === "failed") {
-    said.textContent = check.error || DISCOVER_OFFLINE;
-    said.classList.add("discoverwarn");
-  } else {
-    said.textContent = found.updates.length
-      ? discoverCount(found.updates.length, "update", "updates") + " for examples on the drive."
-      : "The examples on the drive are up to date.";
-    var notice = discoverNotice(check);
-    if (notice) said = notice;
+  // Once checked, what the last download said takes the place of what the check found
+  var said = check.status === "done" && discoverNotice(check);
+  if (said) said.classList.add("discoverrowsaid");
+  else {
+    said = h("span", {className: "discoverrowsaid" +
+                                 (check.status === "failed" ? " discoverwarn" : "")},
+             check.status === "idle" ? "Check the examples on the drive for newer versions."
+             : check.status === "checking" ? "Checking for updates..."
+             : check.status === "failed" ? check.error || DISCOVER_OFFLINE
+             : found.updates.length
+               ? discoverCount(found.updates.length, "update", "updates") +
+                 " for examples on the drive."
+               : "The examples on the drive are up to date.");
   }
-  said.classList.add("discoverrowsaid");
-  row.appendChild(said);
-  var progress = discoverProgress(running || null);
-  if (!running) progress.classList.add("discoveridle");
-  row.appendChild(progress);
-  var update = discoverButton("Update all", function () { discoverUpdateAll(kind); });
-  update.className = "discoverprimary";
-  update.disabled = busy || !found || !found.updates.length;
-  row.appendChild(update);
-  var again = discoverButton("Check for updates", function () { discoverCheck(kind); });
-  again.disabled = !!busy;
-  row.appendChild(again);
-  return row;
+  return h("div", {className: "discoverupdaterow"},
+           said,
+           discoverProgress(running || null, !running),
+           h("button", {
+             type: "button", className: "discoverprimary",
+             disabled: busy || !found || !found.updates.length,
+             onclick: function () { discoverUpdateAll(kind); }
+           }, "Update all"),
+           h("button", {
+             type: "button", disabled: !!busy,
+             onclick: function () { discoverCheck(kind); }
+           }, "Check for updates"));
 }
 
 // Open a kind's gallery, checking GitHub first where it has not been
@@ -781,9 +747,7 @@ function discoverOffers(kind) {
 // A rule with words in it, "Examples" in its middle where a tab's examples start. With minor, it
 // has a kind's name at its left where the Screens tab's drawings or pictures start within them
 export function discoverDivider(words, minor) {
-  var rule = discoverElement("div", "discoverdivide" + (minor ? " minor" : ""));
-  rule.appendChild(discoverElement("span", "", words));
-  return rule;
+  return h("div", {className: "discoverdivide" + (minor ? " minor" : "")}, h("span", {}, words));
 }
 
 // The kind of example a gallery section holds, "picture" or another, from the offers in it
@@ -896,20 +860,7 @@ function discoverRenderBrowser() {
   if (!discoverBrowsing) return;
   var kind = discoverBrowsing;
   var check = discover[kind];
-  var shade = discoverElement("div", "discovershade");
-  shade.style.setProperty("--discover", DISCOVER_INK[kind]);
-  shade.id = "discoverbrowser";
-  shade.onclick = function (e) { if (e.target === shade) discoverCloseBrowser(); };
-  var sheet = discoverElement("div", "discoversheet");
-  shade.appendChild(sheet);
-
-  var head = discoverElement("div", "discoversheethead");
-  var back = discoverButton("\u2039 Back", discoverCloseBrowser);
-  head.appendChild(back);
   var asked = discoverAsked(kind);
-  head.appendChild(discoverElement("h2", "", asked.charAt(0).toUpperCase() + asked.slice(1)));
-  sheet.appendChild(head);
-
   var every = check.status === "done" ? discoverOffers(kind) : [];
   // Programs are shown by what is to hand, as the program tab shows them, its chips repeated here
   // and changing both
@@ -917,7 +868,6 @@ function discoverRenderBrowser() {
     return passesFilter(offer[0]);
   }) : every;
   var chips = kind === "program" ? discoverChips(every) : null;
-  if (chips) sheet.appendChild(chips);
   var sections = discoverSections(kind, offers).filter(Boolean);
   // Both kinds offered, the filter groups the sections by kind, each group led by the whole kind
   var kinds = kind === "program" ? [] : ["drawing", "picture"].filter(function (one) {
@@ -930,52 +880,42 @@ function discoverRenderBrowser() {
   discoverChosen = discoverChosen.filter(function (path) {
     return offers.some(function (offer) { return offer[0] === path; });
   });
-  var choose = document.createElement("select");
-  choose.className = "discoverfilter";
-  function choice(into, value, words) {
-    var option = document.createElement("option");
-    option.value = value;
-    option.textContent = words + " (" + offers.filter(function (offer) {
-      return !value || (value.indexOf("kind:") === 0
-        ? discoverSectionKind(offers, offer[3]) === value.slice(5) : offer[3] === value);
-    }).length + ")";
-    option.selected = value === discoverSection;
-    into.appendChild(option);
+  // An option in the filter with how many offers it shows
+  function choice(value, words) {
+    return h("option", {value: value, selected: value === discoverSection},
+             words + " (" + offers.filter(function (offer) {
+               return !value || (value.indexOf("kind:") === 0
+                 ? discoverSectionKind(offers, offer[3]) === value.slice(5) : offer[3] === value);
+             }).length + ")");
   }
-  choice(choose, "", "All");
-  if (grouped) {
-    kinds.forEach(function (one) {
-      var group = document.createElement("optgroup");
-      group.label = one === "picture" ? "Pictures" : "Drawings";
-      choice(group, "kind:" + one, one === "picture" ? "All pictures" : "All drawings");
-      sections.forEach(function (section) {
-        if (discoverSectionKind(offers, section) === one) choice(group, section, section);
-      });
-      choose.appendChild(group);
-    });
-  } else {
-    sections.forEach(function (section) { choice(choose, section, section); });
-  }
-  choose.onchange = function () {
-    discoverSection = choose.value;
-    draw();
-  };
-  if (offers.length) head.appendChild(choose);
+  var choose = offers.length ? h("select", {
+    className: "discoverfilter",
+    onchange: function () {
+      discoverSection = choose.value;
+      draw();
+    }
+  }, choice("", "All"), grouped
+    ? kinds.map(function (one) {
+        return h("optgroup", {label: one === "picture" ? "Pictures" : "Drawings"},
+                 choice("kind:" + one, one === "picture" ? "All pictures" : "All drawings"),
+                 sections.filter(function (section) {
+                   return discoverSectionKind(offers, section) === one;
+                 }).map(function (section) { return choice(section, section); }));
+      })
+    : sections.map(function (section) { return choice(section, section); })) : null;
 
   // The cards scroll in a box of their own, so a long gallery keeps its head and foot in view
-  var scroll = discoverElement("div", "discoverscroll");
-  sheet.appendChild(scroll);
+  var scrolling = [];
   if (check.status !== "done") {
     // Checking, or failed, said in the middle of the gallery
-    var waiting = discoverElement("div", "discoverwaiting");
-    waiting.appendChild(discoverElement("p", "", check.status === "failed"
-      ? check.error || DISCOVER_OFFLINE : "Checking for examples..."));
-    if (check.status !== "failed") waiting.appendChild(discoverProgress(check.progress));
-    scroll.appendChild(waiting);
+    scrolling.push(h("div", {className: "discoverwaiting"},
+                     h("p", {}, check.status === "failed" ? check.error || DISCOVER_OFFLINE
+                                                          : "Checking for examples..."),
+                     check.status === "failed" ? null : discoverProgress(check.progress)));
   } else if (!offers.length) {
     // An index with none of this kind has none to offer yet, as with sounds before any ship
     var any = check.index.examples.some(function (entry) { return discoverTab(entry) === kind; });
-    scroll.appendChild(discoverElement("div", "discoverwaiting", every.length
+    scrolling.push(h("div", {className: "discoverwaiting"}, every.length
       ? "Every example here needs hardware that is not ticked."
       : any ? "The drive has every example."
       : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
@@ -985,7 +925,7 @@ function discoverRenderBrowser() {
       return discover.newer[offer[0]] && discoverReleased(discoverEntry(offer[0]).firmware) === true;
     }).length;
     if (updatable) {
-      scroll.appendChild(discoverElement("p", "discoverhint discoverneeds",
+      scrolling.push(h("p", {className: "discoverhint discoverneeds"},
         discoverCount(updatable, "example here needs", "examples here need") + " newer firmware. " +
         "To update, go back and press Update available beside the version."));
     }
@@ -1005,52 +945,61 @@ function discoverRenderBrowser() {
     var held = offers.filter(function (offer) { return offer[3] === section; });
     var sectionKind = discoverSectionKind(offers, section);
     if (named && sectionKind !== lastKind)
-      scroll.appendChild(discoverDivider(sectionKind === "picture" ? "Pictures" : "Drawings", true));
+      scrolling.push(discoverDivider(sectionKind === "picture" ? "Pictures" : "Drawings", true));
     lastKind = sectionKind;
     // Where more than one section is shown, each is named over its own cards
     if (listed.length > 1)
-      scroll.appendChild(discoverElement("h3", "discoverhead", section || "Other examples"));
+      scrolling.push(h("h3", {className: "discoverhead"}, section || "Other examples"));
     // The grid each tab lays its own cards in
-    var grid = discoverElement("div", "discovergrid proggrid" + (kind === "program" ? ""
-      : kind === "sound" ? " discoversounds" : " discoverdrawings"));
-    held.forEach(function (offer) {
-      shown.push(offer[0]);
-      grid.appendChild(discoverOfferCard(offer, shown));
-    });
-    scroll.appendChild(grid);
+    scrolling.push(h("div", {className: "discovergrid proggrid" + (kind === "program" ? ""
+                               : kind === "sound" ? " discoversounds" : " discoverdrawings")},
+                     held.map(function (offer) {
+                       shown.push(offer[0]);
+                       return discoverOfferCard(offer, shown);
+                     })));
   });
+  var scroll = h("div", {className: "discoverscroll"}, scrolling);
 
-  var foot = discoverElement("div", "discoversheetfoot");
-  var footSays = discoverElement("div", "discoverfootsays");
   var chosen = offers.filter(function (offer) { return discoverChosen.indexOf(offer[0]) >= 0; });
   var busy = discoverFetching || check.refreshing ||
              chosen.some(function (offer) { return discover.busy[offer[0]]; });
   var notice = discoverNotice(check);
-  if (notice && (!chosen.length || busy)) footSays.appendChild(notice);
-  else if (chosen.length === 1) footSays.appendChild(discoverElement("b", "", chosen[0][1]));
-  else if (chosen.length) footSays.appendChild(discoverElement("b", "",
-    discoverCount(chosen.length, "example", "examples") + " chosen"));
-  else if (check.refreshing) footSays.appendChild(discoverElement("span", "discoverhint",
-    "Checking the drive for changes..."));
-  else if (offers.length) footSays.appendChild(discoverElement("span", "discoverhint",
-    "Choose an example to download. Tick its box to choose more than one."));
-  if (discoverFetching || check.refreshing)
-    footSays.appendChild(discoverProgress(discoverFetching || check.refreshing));
-  foot.appendChild(footSays);
-  if (chosen.length > 1 && !busy) {
-    foot.appendChild(discoverButton("Clear", function () {
-      discoverChosen = [];
-      draw();
-    }));
-  }
   var downloading = busy && !check.refreshing;
-  var get = discoverButton(downloading ? "Downloading..." : chosen.length > 1
-                         ? "Download " + chosen.length : "Download",
-                         function () { discoverDownloadChosen(kind); });
-  get.className = "discoverprimary";
-  get.disabled = !chosen.length || !!busy;
-  foot.appendChild(get);
-  sheet.appendChild(foot);
+  var foot = h("div", {className: "discoversheetfoot"},
+               h("div", {className: "discoverfootsays"},
+                 notice && (!chosen.length || busy) ? notice
+                 : chosen.length === 1 ? h("b", {}, chosen[0][1])
+                 : chosen.length ? h("b", {}, discoverCount(chosen.length, "example", "examples") +
+                                              " chosen")
+                 : check.refreshing ? h("span", {className: "discoverhint"},
+                                        "Checking the drive for changes...")
+                 : offers.length ? h("span", {className: "discoverhint"},
+                                     "Choose an example to download. Tick its box to choose " +
+                                     "more than one.")
+                 : null,
+                 discoverFetching || check.refreshing
+                   ? discoverProgress(discoverFetching || check.refreshing) : null),
+               chosen.length > 1 && !busy ? h("button", {
+                 type: "button",
+                 onclick: function () {
+                   discoverChosen = [];
+                   draw();
+                 }
+               }, "Clear") : null,
+               h("button", {
+                 type: "button", className: "discoverprimary", disabled: !chosen.length || !!busy,
+                 onclick: function () { discoverDownloadChosen(kind); }
+               }, downloading ? "Downloading..."
+                  : chosen.length > 1 ? "Download " + chosen.length : "Download"));
+  var shade = h("div", {
+    className: "discovershade", id: "discoverbrowser", style: {"--discover": DISCOVER_INK[kind]},
+    onclick: function (e) { if (e.target === shade) discoverCloseBrowser(); }
+  }, h("div", {className: "discoversheet"},
+       h("div", {className: "discoversheethead"},
+         h("button", {type: "button", onclick: discoverCloseBrowser}, "‹ Back"),
+         h("h2", {}, asked.charAt(0).toUpperCase() + asked.slice(1)),
+         choose),
+       chips, scroll, foot));
   document.body.appendChild(shade);
   // Only once in the page can the gallery be scrolled back to where it was
   scroll.scrollTop = scrolled;
@@ -1065,17 +1014,15 @@ function discoverProgramFace(path) {
   PICTURES[path] = discoverPicturesOf(path);
   var tabCard = programCard(path);
   delete PICTURES[path];
-  var card = discoverElement("div", "progcard discoveroffer");
-  var thumb = discoverElement("div", "discoverthumbwrap");
-  card.appendChild(thumb);
-  Array.from(tabCard.childNodes).forEach(function (part) {
-    if (!part.classList || part.classList.contains("copytile") || part.classList.contains("bin"))
-      return;
-    (part.classList.contains("progname") ? card : thumb).appendChild(part);
+  var parts = Array.from(tabCard.children).filter(function (part) {
+    return !part.classList.contains("copytile") && !part.classList.contains("bin");
   });
-  card.appendChild(discoverElement("span", "discoverdoes", (programNamed(path) || {}).does || ""));
-  card.title = tabCard.title;
-  return card;
+  function named(part) { return part.classList.contains("progname"); }
+  return h("div", {className: "progcard discoveroffer", title: tabCard.title},
+           h("div", {className: "discoverthumbwrap"},
+             parts.filter(function (part) { return !named(part); })),
+           parts.filter(named),
+           h("span", {className: "discoverdoes"}, (programNamed(path) || {}).does || null));
 }
 
 // An example as a card in the gallery, looking as it does in its own tab, its box ticked while it
@@ -1091,23 +1038,17 @@ function discoverOfferCard(offer, shown) {
   card.tabIndex = 0;
   card.setAttribute("role", "button");
   card.setAttribute("aria-pressed", chosen);
-  if (!discover.newer[path]) {
-    var box = document.createElement("input");
-    box.type = "checkbox";
-    box.className = "discovertick";
-    box.checked = chosen;
-    box.title = "Choose " + offer[1];
-    box.onclick = function (e) {
-      e.stopPropagation();
-      discoverChoose(path, e, true, shown);
-    };
-    card.appendChild(box);
-  }
-  if (discover.newer[path]) {
-    var needs = discoverElement("span", "discoverpill newer", "Needs " + discoverEntry(path).firmware);
-    needs.title = discoverNeedsSays(discoverEntry(path).firmware);
-    card.appendChild(needs);
-  }
+  var firmware = discover.newer[path] ? discoverEntry(path).firmware : null;
+  card.append(firmware
+    ? h("span", {className: "discoverpill newer", title: discoverNeedsSays(firmware)},
+        "Needs " + firmware)
+    : h("input", {
+      type: "checkbox", className: "discovertick", checked: chosen, title: "Choose " + offer[1],
+      onclick: function (e) {
+        e.stopPropagation();
+        discoverChoose(path, e, true, shown);
+      }
+    }));
   card.onclick = function (e) {
     if (!discover.newer[path]) discoverChoose(path, e, false, shown);
   };
@@ -1140,35 +1081,33 @@ export function discoverPill(cardPath) {
   var path = discoverTarget(cardPath);
   var entry = discoverEntry(path);
   if (!entry || discover[discoverTab(entry)].status !== "done") return null;
-  var pill = document.createElement("span");
-  pill.className = "discoverpill";
-  if (discover.busy[path]) {
-    pill.textContent = "...";
-    pill.title = "Downloading";
-  } else if (discover.newer[path] && discover.states[path] !== "current") {
-    pill.textContent = "Needs " + entry.firmware;
-    pill.className += " newer";
-    pill.title = discoverNeedsSays(entry.firmware);
-  } else if (discover.states[path] === "missing") {
-    pill.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11' aria-hidden='true'><path " +
-                     "d='M5.5 1 L5.5 7.5 M2.5 4.8 L5.5 7.8 L8.5 4.8 M1.5 9.8 L9.5 9.8' " +
-                     "stroke='currentColor' stroke-width='1.6' fill='none' " +
-                     "stroke-linecap='round' stroke-linejoin='round'/></svg>";
-    pill.title = "Download";
-  } else if (DISCOVER_UPDATES.indexOf(discover.states[path]) >= 0) {
-    pill.textContent = "Update";
-    pill.className += " update";
-    pill.title = discover.files[entry.files[0].path].state === "changed"
-      ? "Download the newer version. Your changed copy is kept."
-      : "Download the newer version.";
-    pill.onclick = function (e) {
-      e.stopPropagation();
-      discoverDownload(path);
-    };
-  } else {
-    return null;
+  if (discover.busy[path]) return h("span", {className: "discoverpill", title: "Downloading"}, "...");
+  if (discover.newer[path] && discover.states[path] !== "current") {
+    return h("span", {className: "discoverpill newer", title: discoverNeedsSays(entry.firmware)},
+             "Needs " + entry.firmware);
   }
-  return pill;
+  if (discover.states[path] === "missing") {
+    return h("span", {
+      className: "discoverpill", title: "Download",
+      html: "<svg width='11' height='11' viewBox='0 0 11 11' aria-hidden='true'><path " +
+            "d='M5.5 1 L5.5 7.5 M2.5 4.8 L5.5 7.8 L8.5 4.8 M1.5 9.8 L9.5 9.8' " +
+            "stroke='currentColor' stroke-width='1.6' fill='none' " +
+            "stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    });
+  }
+  if (DISCOVER_UPDATES.indexOf(discover.states[path]) >= 0) {
+    return h("span", {
+      className: "discoverpill update",
+      title: discover.files[entry.files[0].path].state === "changed"
+        ? "Download the newer version. Your changed copy is kept."
+        : "Download the newer version.",
+      onclick: function (e) {
+        e.stopPropagation();
+        discoverDownload(path);
+      }
+    }, "Update");
+  }
+  return null;
 }
 
 // ---- the program tab ----------------------------------------------------------------------------
@@ -1204,39 +1143,37 @@ function discoverChips(offers) {
     });
   });
   if (!used.length) return null;
-  var row = discoverElement("div", "featurefilter discoverchips");
-  row.appendChild(discoverElement("span", "", "With:"));
-  used.forEach(function (feature) {
-    var chip = discoverElement("button", "featurechip" + (had(feature[0]) ? " on" : ""));
-    chip.type = "button";
-    chip.dataset.feature = feature[0];
-    chip.title = had(feature[0]) ? "Showing programs that use " + feature[1]
-                                 : "Hiding programs that need " + feature[1];
-    chip.appendChild(featureIcon(feature[0]));
-    chip.appendChild(document.createTextNode(feature[2]));
-    chip.onclick = function () {
-      var at = unhad.indexOf(feature[0]);
-      if (at >= 0) unhad.splice(at, 1);
-      else unhad.push(feature[0]);
-      draw();
-    };
-    row.appendChild(chip);
-  });
-  var clears = discoverElement("div", "featureclears");
-  [["all", function () { return unhad.filter(function (key) {
-     return !used.some(function (feature) { return feature[0] === key; });
-   }); }],
-   ["none", function () { return unhad.concat(used.map(function (feature) { return feature[0]; })); }]]
-    .forEach(function (one) {
-      var choice = discoverButton(one[0], function () {
-        setUnhad(one[1]());
-        draw();
-      });
-      choice.className = "featureclear";
-      clears.appendChild(choice);
-    });
-  row.appendChild(clears);
-  return row;
+  return h("div", {className: "featurefilter discoverchips"},
+           h("span", {}, "With:"),
+           used.map(function (feature) {
+             return h("button", {
+               type: "button", className: "featurechip" + (had(feature[0]) ? " on" : ""),
+               "data-feature": feature[0],
+               title: had(feature[0]) ? "Showing programs that use " + feature[1]
+                                      : "Hiding programs that need " + feature[1],
+               onclick: function () {
+                 var at = unhad.indexOf(feature[0]);
+                 if (at >= 0) unhad.splice(at, 1);
+                 else unhad.push(feature[0]);
+                 draw();
+               }
+             }, featureIcon(feature[0]), feature[2]);
+           }),
+           h("div", {className: "featureclears"},
+             [["all", function () { return unhad.filter(function (key) {
+                return !used.some(function (feature) { return feature[0] === key; });
+              }); }],
+              ["none", function () {
+                return unhad.concat(used.map(function (feature) { return feature[0]; }));
+              }]].map(function (one) {
+               return h("button", {
+                 type: "button", className: "featureclear",
+                 onclick: function () {
+                   setUnhad(one[1]());
+                   draw();
+                 }
+               }, one[0]);
+             })));
 }
 
 // ---- deleting an example ------------------------------------------------------------------------
@@ -1245,14 +1182,13 @@ function discoverChips(offers) {
 // it shares with others is left. The galleries are read again so it is offered at once
 
 export function discoverBin(path, kind) {
-  var bin = discoverElement("span", "bin", "\u00d7");
-  bin.setAttribute("role", "button");
-  bin.title = "Delete " + nameShown(path) + " from the FX drive";
-  bin.onclick = function (e) {
-    e.stopPropagation();
-    discoverDelete(path, kind);
-  };
-  return bin;
+  return h("span", {
+    className: "bin", role: "button", title: "Delete " + nameShown(path) + " from the FX drive",
+    onclick: function (e) {
+      e.stopPropagation();
+      discoverDelete(path, kind);
+    }
+  }, "\u00d7");
 }
 
 async function discoverDelete(path, kind) {
