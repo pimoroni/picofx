@@ -10308,6 +10308,24 @@ async function waitForBoard(before, nothingYet) {
   return before;
 }
 
+// Wait for the drive to go and come back, as it does while the board restarts. Whether it came back.
+// The wait for it to go is the one a save gives the board, and once gone it has as long to return
+// as waitForBoard() gives it
+async function waitForReturn() {
+  var deadline = Date.now() + BOARD_WAIT_MS;
+  var wentAway = false;
+  while (Date.now() < deadline) {
+    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
+    if (await driveAnswers()) {
+      if (wentAway) return true;
+    } else if (!wentAway) {
+      wentAway = true;
+      deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
+    }
+  }
+  return false;
+}
+
 // nothing= says the save plays nothing, as a file with no entries does
 function sayWhatHappened(said, also, nothing) {
   if (said === CHECKING)
@@ -10492,9 +10510,10 @@ document.getElementById("save").onclick = async function () {
     }
     // Check if a board that plays each save itself is given a program
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
-      // The board restarts to run the program, so there is no answer to wait for
-      banner("Saved. The board is restarting to run the program." +
-             hides);
+      // The board restarts to run the program, so its answer is the drive coming back
+      banner("Saved. The board is restarting to run the program...", "hold");
+      banner((await waitForReturn() ? "Running the program on the board."
+                                    : "Saved. The board is restarting to run the program.") + hides);
       reportedSave = text;
       return;
     }
