@@ -139,13 +139,24 @@ export function acrossWiring(change) {
 }
 
 // A cut is one run's step. A change to the wiring is every run's, since each holds lamps that
-// moved, so its snapshots take marks next to each other and are stepped over together
+// moved, so its snapshots share one mark and are stepped over together
 var thisStep = 0;
 
-export function remember(run) {
+// Remember a run's stretches at mark=, clearing what it could step on to
+function rememberAt(run, mark) {
   run.undone = [];
-  run.was.push(JSON.stringify({mark: thisStep, sections: run.sections}));
+  run.was.push(JSON.stringify({mark: mark, sections: run.sections}));
   if (run.was.length > 40) run.was.shift();
+}
+
+export function remember(run) {
+  rememberAt(run, thisStep);
+  thisStep++;
+}
+
+// Remember every run as one step, as a change to the wiring is
+function rememberAll() {
+  runs.forEach(function (run) { rememberAt(run, thisStep); });
   thisStep++;
 }
 
@@ -156,8 +167,7 @@ function steppingWith(run, stack) {
   if (!top) return [];
   return runs.filter(function (other) {
     if (other === run || !other[stack].length) return false;
-    var mine = JSON.parse(other[stack][other[stack].length - 1]);
-    return Math.abs(mine.mark - top.mark) < runs.length;
+    return JSON.parse(other[stack][other[stack].length - 1]).mark === top.mark;
   });
 }
 
@@ -324,7 +334,7 @@ export function joinAll(run) {
 
 export function breakOutWiring(out) {
   if (wiring[out].broken) return;
-  runs.forEach(remember);
+  rememberAll();
   acrossWiring(function () {
     wiring[out] = {broken: true};
     // The three take the place the one held, and are free to be moved apart from there
@@ -355,7 +365,7 @@ export function pickOutput(out) {
 
 export function rejoinWiring(out) {
   if (!wiring[out].broken || OUTPUTS[out].mono) return;
-  runs.forEach(remember);
+  rememberAll();
   acrossWiring(function () {
     wiring[out] = {broken: false};
     // Wherever its three ended up, the one lamp takes the place of the first of them

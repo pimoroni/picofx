@@ -8063,10 +8063,19 @@ function acrossWiring(change) {
   settle();
 }
 var thisStep = 0;
-function remember(run) {
+function rememberAt(run, mark) {
   run.undone = [];
-  run.was.push(JSON.stringify({ mark: thisStep, sections: run.sections }));
+  run.was.push(JSON.stringify({ mark, sections: run.sections }));
   if (run.was.length > 40) run.was.shift();
+}
+function remember(run) {
+  rememberAt(run, thisStep);
+  thisStep++;
+}
+function rememberAll() {
+  runs.forEach(function(run) {
+    rememberAt(run, thisStep);
+  });
   thisStep++;
 }
 function steppingWith(run, stack) {
@@ -8074,8 +8083,7 @@ function steppingWith(run, stack) {
   if (!top) return [];
   return runs.filter(function(other) {
     if (other === run || !other[stack].length) return false;
-    var mine = JSON.parse(other[stack][other[stack].length - 1]);
-    return Math.abs(mine.mark - top.mark) < runs.length;
+    return JSON.parse(other[stack][other[stack].length - 1]).mark === top.mark;
   });
 }
 function stepBack(run) {
@@ -8253,7 +8261,7 @@ function joinAll(run) {
 }
 function breakOutWiring(out) {
   if (wiring[out].broken) return;
-  runs.forEach(remember);
+  rememberAll();
   acrossWiring(function() {
     wiring[out] = { broken: true };
     var at = placeOf({ out, channel: null });
@@ -8286,7 +8294,7 @@ function pickOutput(out) {
 }
 function rejoinWiring(out) {
   if (!wiring[out].broken || OUTPUTS[out].mono) return;
-  runs.forEach(remember);
+  rememberAll();
   acrossWiring(function() {
     wiring[out] = { broken: false };
     var first = -1;
