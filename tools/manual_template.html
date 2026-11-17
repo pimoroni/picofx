@@ -364,5 +364,12 @@ footer .company {
 </div>
 <p class="company">Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</p>
 </footer>
+<script>
+// Open a contents entry when its own link is followed, as the arrow beside it does
+document.querySelector("nav.contents").addEventListener("click", function (event) {
+  var link = event.target.closest("summary > a");
+  if (link) link.closest("details").open = true;
+});
+</script>
 </body>
 </html>

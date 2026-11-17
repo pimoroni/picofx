@@ -305,10 +305,9 @@ def table_of_contents(contents):
     """
     Build the contents list, with the sections in their groups.
 
-    A section with subsections becomes a details, so opening and closing needs no
-    script. Its summary holds the section link, and following that link opens the
-    section on the way past, which is what someone clicking a heading wants. The
-    sections before the first group start open.
+    A section with subsections becomes a details, which opens and closes with no
+    script. Its summary holds the section's link, and the template's one script opens
+    the entry when that link is followed. The sections before the first group start open.
 
     A group named "fold" has no label. Its first section holds the group's other
     sections, shut, each with its own subsections a level further in.
