@@ -11,8 +11,8 @@ PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 # while a screen is being sent a frame
 PIMORONI_AYE_ARR_VERSION="patch/receive-by-dma"
 
-# v3.1.0 with a pixel format chosen at build time. A board setting PV_PIXEL_FORMAT 2 gets RGBA4444
-# canvases, and every other builds as v3.1.0 does
+# v3.1.0 with a pixel format chosen at build time, and picovector's later fixes. A board setting
+# PV_PIXEL_FORMAT 2 gets RGBA4444 canvases, and every other board builds as v3.1.0 does
 PIMORONI_PICOVECTOR_VERSION="rgba4444-pixel-format"
 
 PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
@@ -254,7 +254,7 @@ function ci_cmake_build {
     # and the ls failing would stop the CI shell, which runs with pipefail
     FULL_UF2=$(ls "$BUILD_DIR"/firmware*-with-libs-and-examples-drive-full.uf2 2>/dev/null | head -1 || true)
 
-    # A drive build's examples are on its FX drive, which only the -full image writes
+    # Any examples a drive build has are on its FX drive, which only the -full image writes
     LIBS_SUFFIX=with-libs-and-examples
     if [ -n "$FULL_UF2" ]; then
         LIBS_SUFFIX=with-libs

@@ -20,7 +20,7 @@ cp -r -v "$SCRIPT_PATH/visible_libs/." "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/../visible_libs/." "$TARGET/lib"
 cp -r -v "$CI_BUILD_ROOT/aye_arr/aye_arr" "$TARGET/lib"
 
-# autofx plays the FX drive, which only the drive variant carries, frozen into its firmware
+# autofx plays the FX drive, which only the drive variants carry, frozen into their firmware
 rm -rv "$TARGET/lib/autofx"
 
 # Remove any markdown files

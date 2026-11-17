@@ -6,9 +6,8 @@ does, so the two writers can never meet. While the computer holds it, the mount
 point is a read-only view read straight from the flash, so a program still finds
 its files there.
 
-The drive is shown at boot and controlled from then on by the button passed to
-service(). A double press shows or hides it, and hiding it, or ejecting it on the
-computer, re-reads the file. An eject does not show it again.
+service() takes the state of a button. A double press shows or hides the drive, and
+an eject on the computer hides it, after which the board can read effects.txt again.
 """
 
 from .fat import Stream, stream

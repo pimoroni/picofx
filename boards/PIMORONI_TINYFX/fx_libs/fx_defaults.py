@@ -2,21 +2,18 @@
 #
 # SPDX-License-Identifier: MIT
 
-# The hand-written files a fresh board writes for itself, one constant per file. Every
-# board folder has its own version of this module. EFFECTS, README and SECRETS go on the
-# FX drive and are rebuilt by fx_drive, SECRETS only on a board with a wireless module.
-# MAIN goes to the filesystem root and is rebuilt by boot.py.
+# The files a fresh board writes for itself, one constant per file, in a version for each board.
+# EFFECTS, README and SECRETS go on the FX drive and are rebuilt by fx_drive, SECRETS only on a
+# board with a wireless module. MAIN goes to the filesystem root and is rebuilt by boot.py.
 #
-# A drive build ships no main.py or secrets.py, so these are its only copies. The builds
-# without the drive ship the examples' secrets.py, which holds the same settings as SECRETS.
-#
-# Kept apart from fx_drive so a change of wording shows on its own in a diff. Only a
+# A drive build ships no main.py or secrets.py, so these are its only copies. The W build without
+# the drive ships the examples' secrets.py, which holds the same settings as SECRETS. Only a
 # literal triple quote needs escaping inside these.
 #
 # The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
 # fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
-# In single quotes, as the program it holds opens with a docstring
+# In single quotes, as the program it holds has a docstring in double quotes
 MAIN = '''\
 from tiny_fx import TinyFX
 
@@ -31,7 +28,7 @@ Play the effects described by effects.txt on the FX drive.
 
 Plug the board into a computer and the drive appears. Edit effects.txt, eject the
 drive, and the new effects start straight away. Press "Boot" once to try an edit
-without putting the drive away, or twice to hide the drive and twice again to bring it back.
+without ejecting the drive, or twice to hide the drive and twice again to bring it back.
 
 Replace this file with your own program if you would rather write code. Deleting
 it brings this one back, and an empty one leaves the board quiet.

@@ -8,7 +8,7 @@ A tiny stamp-sized LED driver for model making and construction kit projects. Bu
 
 * The standard build: MicroPython with the PicoFX library and examples. Tiny FX ships with this build.
 * The `w` variant: the same for Tiny FX W, adding WiFi and Bluetooth.
-* The `drive` variant: adds the FX drive, which plays `effects.txt` with no code needed and carries the picker, editor and manual.
+* The `drive` variant: adds the FX drive and plays its `effects.txt` with no code needed. The drive also carries the picker, editor and manual.
 * The `w_drive` variant: the FX drive on Tiny FX W.
 
 ## Pimoroni Mighty FX

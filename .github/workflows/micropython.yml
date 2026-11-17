@@ -14,25 +14,25 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: TinyFX
+          - name: Tiny FX
             shortname: tiny_fx
             board: PIMORONI_TINYFX
-          - name: TinyFX W
+          - name: Tiny FX W
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
-          - name: TinyFX with the FX drive
+          - name: Tiny FX with the FX drive
             shortname: tiny_fx_drive
             board: PIMORONI_TINYFX
             variant: drive
-          - name: TinyFX W with the FX drive
+          - name: Tiny FX W with the FX drive
             shortname: tiny_fx_w_drive
             board: PIMORONI_TINYFX
             variant: w_drive
-          - name: MightyFX
+          - name: Mighty FX
             shortname: mighty_fx
             board: PIMORONI_MIGHTYFX
-          - name: MightyFX with the FX drive
+          - name: Mighty FX with the FX drive
             shortname: mighty_fx_drive
             board: PIMORONI_MIGHTYFX
             variant: drive
@@ -118,7 +118,7 @@ jobs:
         path: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
         if-no-files-found: ignore
 
-    # A drive build's examples are on its FX drive, so its filesystem image carries the libraries alone
+    # A drive build's filesystem image carries the libraries alone, as any examples go on its FX drive
     - name: "Artifacts: Upload .uf2 (With Libraries)"
       uses: actions/upload-artifact@v7
       with:

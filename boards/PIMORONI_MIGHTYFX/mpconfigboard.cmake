@@ -51,8 +51,7 @@ set(MICROPY_BLUETOOTH_BTSTACK ON)
 set(MICROPY_PY_BLUETOOTH_CYW43 ON)
 
 # Firmware, then a read-only ROMFS for the fonts, then the filesystem, then the FX drive's volume
-# to the end of flash where the variant has one. The filesystem starts in the same place either
-# way, so the variants differ only in its size. The port reads this split from here, so
+# to the end of flash where the variant has one. The port reads this split from here, so
 # mpconfigboard.h sets none of it. FLASH_SIZE_BYTES must match PICO_FLASH_SIZE_BYTES in
 # pimoroni_mightyfx.h, which the SDK has not read into cmake by this point
 math(EXPR FLASH_SIZE_BYTES "16 * 1024 * 1024")

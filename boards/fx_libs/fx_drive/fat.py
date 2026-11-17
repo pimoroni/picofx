@@ -1,4 +1,5 @@
-# The drive's FAT read straight from its flash, as a reader, a stream and a view
+# The classes here read the drive's File Allocation Table (FAT) volume straight from its flash,
+# as a reader, a stream and a view. Handing the drive over is left to handover.py
 
 import errno
 import rp2
@@ -66,7 +67,7 @@ class FatReader:
         total = self.__u16(boot, 19) or self.__u32(boot, 32)
         fat_sectors = self.__u16(boot, 22)
 
-        # FAT32 keeps neither a fixed root directory nor a 16-bit table size
+        # Check if the volume is FAT32, which has no fixed root directory or 16-bit table size
         if not (sector and per_cluster and root_entries and fat_sectors):
             raise OSError(errno.ENODEV)
 
@@ -78,7 +79,7 @@ class FatReader:
         self.__cluster_bytes = sector * per_cluster
         self.__clusters = (total - reserved - fats * fat_sectors - root_sectors) // per_cluster
 
-        # The cluster count alone decides the table's width
+        # Check if the cluster count, which alone decides the table's width, makes it FAT32
         if self.__clusters >= 65525:
             raise OSError(errno.ENODEV)
         self.__fat12 = self.__clusters < 4085
@@ -87,8 +88,8 @@ class FatReader:
     def __fat_u16(self, offset):
         # The table's bytes come from the window holding them, read afresh only on leaving it
         into = offset % self.__WINDOW
+        # Check if a FAT12 entry straddles two windows
         if into == self.__WINDOW - 1:
-            # A FAT12 entry straddling two windows
             return self.__u16(self.__read(self.__fat_at + offset, 2), 0)
         window_at = offset - into
         if window_at != self.__fat_window_at:
@@ -147,14 +148,14 @@ class FatReader:
 
     @staticmethod
     def __cut(units):
-        # A long name ends at its first zero unit, 0xFFFF filling the rest of its last entry
+        # A long name ends at its first zero unit, and 0xFFFF fills the rest of its last entry
         end = units.find(b"\x00\x00")
         while end > 0 and end & 1:
             end = units.find(b"\x00\x00", end + 1)
         return units if end < 0 else units[:end]
 
     def __decoded(self, units):
-        # A long name's UTF-16 units as text, or None where one is beyond what chr() takes
+        # A long name's UTF-16 units as text, or None where it holds a character beyond 0xFFFF
         name = ""
         for at in range(0, len(units), 2):
             code = self.__u16(units, at)
@@ -183,10 +184,10 @@ class FatReader:
     def __short_name(entry):
         base = bytes(entry[:8]).rstrip(b" ")
         extension = bytes(entry[8:11]).rstrip(b" ")
-        # A name starting 0xE5 is stored as 0x05, since 0xE5 marks a deleted entry
+        # Check if the name starts 0xE5, which is stored as 0x05 since 0xE5 marks a deleted entry
         if base[:1] == b"\x05":
             base = b"\xe5" + base[1:]
-        # A lowercase 8.3 name is stored in capitals with these flags, and no long name
+        # Check if flags mark a lowercase 8.3 name, stored in capitals without a long name
         if entry[12] & 0x08:
             base = base.lower()
         if entry[12] & 0x10:
@@ -198,9 +199,8 @@ class FatReader:
             return None
 
     def __entries(self, runs):
-        # Each entry in a directory as its drive offset, its bytes and its long name as
-        # UTF-16 units, None where it has none. Deleted entries and the volume label are
-        # left out
+        # Each entry in a directory as its drive offset, its bytes and its long name as UTF-16
+        # units, or None where it has none. Deleted entries and the volume label are left out
         parts = None
         checksum = None
         window = bytearray(self.__WINDOW)
@@ -220,7 +220,7 @@ class FatReader:
 
                 attributes = entry[11]
                 if attributes & self.__ATTR_LONG_NAME_MASK == self.__ATTR_LONG_NAME:
-                    # Stored last part first, the first stored carrying 0x40
+                    # Check if this entry opens a long name, whose parts are stored last first
                     if first & 0x40:
                         parts = {}
                         checksum = entry[13]
@@ -231,9 +231,8 @@ class FatReader:
                     continue
 
                 long_name = None
-                # A long name belongs to the short entry after it only where the
-                # checksum matches, so one orphaned by a host without long names is
-                # not taken for this file's
+                # Check if the long name is whole and carries this entry's checksum. A host
+                # without long names can leave one orphaned before an unrelated file
                 if parts and sorted(parts) == list(range(1, len(parts) + 1)) and \
                         checksum == self.__checksum(entry):
                     long_name = self.__cut(b"".join(parts[order] for order in sorted(parts)))
@@ -253,13 +252,12 @@ class FatReader:
         return lowered
 
     def __find_in(self, runs, wanted):
-        # The drive offset and bytes of the entry named `wanted` in a directory, matched
-        # by its long name or its short one, ASCII case ignored. None where it is absent
+        # The drive offset and bytes of the entry named `wanted` in a directory, by its long
+        # name or its short one, ignoring ASCII case. None where it is absent
 
-        # Long names are compared as stored, so none need be decoded. wanted arrives lowered,
-        # and bytes.lower() is the quick test, but it also lowers bytes of units beyond ASCII,
-        # so a long name it passes is confirmed unit by unit
+        # `wanted` arrives lowered, and long names are compared as stored UTF-16 units
         wanted_units = self.__units_of(wanted)
+        # A quick test that also lowers bytes beyond ASCII, so a pass is confirmed unit by unit
         quick_units = wanted_units.lower()
         # A short name is eight characters, a dot and three more at most
         could_be_short = len(wanted) <= 12
@@ -275,7 +273,7 @@ class FatReader:
 
     def __find(self, name, directory=False):
         # The drive offset and bytes of the entry a path leads to, through any folders.
-        # `directory` says what the last part must be, None taking either
+        # `directory=` says whether the last part must be a folder or file, and None takes either
         runs = [(0, self.__root_at, self.__root_bytes)]
         parts = [part for part in name.split("/") if part]
         if not parts or ".." in parts:
@@ -299,13 +297,13 @@ class FatReader:
 
 class Lookup(FatReader):
     """
-    A reader answering the view and the save watcher with what a path names, a folder's
-    contents, the drive's capacity and one root entry's bytes.
+    A reader answering what a path names, a folder's contents, the drive's capacity and
+    one root entry's bytes.
     """
 
     def __init__(self):
         super().__init__()
-        # Made by the first root_entry_bytes(), since only the save watcher calls it
+        # Made by the first root_entry_bytes(), so a Lookup that never calls it holds no window
         self.__probe = None
         self.__root_window = None
 
@@ -330,7 +328,7 @@ class Lookup(FatReader):
         return S_IFREG, self.__u32(entry, 28)
 
     def listing(self, path):
-        """A folder's contents as (name, stat mode, size), its own . and .. left out."""
+        """A folder's contents as (name, stat mode, size), without its own . and .. entries."""
         listed = []
         for _, entry, long_name in self.__entries(self.__runs_of_directory(path)):
             name = (self.__decoded(long_name) if long_name else None) or self.__short_name(entry)
@@ -349,11 +347,11 @@ class Lookup(FatReader):
             self.__probe = bytearray(36)
             self.__root_window = bytearray(self.__WINDOW)
 
-        # A reformat by the computer changes the boot sector's fields, so the layout is read again
         flash.readblocks(0, self.__probe, 0)
         flash.readblocks(0, self.__signature, 510)
         if self.__signature != b"\x55\xaa":
             return None
+        # Check if a reformat by the computer has changed the boot sector's fields
         if self.__probe != self.__boot:
             self.__read_layout()
 
@@ -367,8 +365,8 @@ class Lookup(FatReader):
                 lead = window[into]
                 if lead == 0x00:
                     return None
-                # Two bytes are tested before the name is sliced, as names often share a first
-                # letter and each slice is an allocation
+                # Check if two bytes match before slicing the name, since names often share
+                # a first letter and each slice is an allocation
                 if lead == first and window[into + 1] == second \
                         and window[into:into + 11] == short_name:
                     return window[into + start:into + end]
@@ -382,11 +380,8 @@ class Lookup(FatReader):
 class Stream(FatReader):
     """
     A file on the drive read straight from its flash, which reads on while the computer
-    holds the drive. A file opened through the board's mount goes stale at every
-    handover, so this finds the file's clusters once, from the tables on the flash, and
-    reads them directly from then on. Read-only, and blind to the computer rewriting
-    the file, which reads as whatever then fills its clusters. changed() says when that
-    has happened.
+    holds the drive. Read-only. It finds the file's clusters once, so a file the computer
+    rewrites reads as whatever then fills them, and changed() says when that has happened.
     """
 
     def __init__(self, name):
@@ -414,7 +409,7 @@ class Stream(FatReader):
             return True
 
     def __run_holding(self, position):
-        # Reads run forwards, so the run last read from, or the next, almost always holds it
+        # Reads move forwards, so the run last read from almost always holds the position
         runs = self.__runs
         index = self.__run
         if not runs[index][0] <= position < runs[index][0] + runs[index][2]:
@@ -466,11 +461,9 @@ class Stream(FatReader):
 
 def stream(name):
     """
-    Open a file on the drive for reading in a form that reads on while the computer
-    holds the drive. None where it cannot be found that way, for a name differing in
-    case beyond ASCII, a path through "..", or a volume the computer reformatted as
-    other than FAT12 or FAT16. The mount then answers, and a file the computer then
-    takes will not read on.
+    Open a file on the drive as a Stream, which reads on while the computer holds the
+    drive. None where the file cannot be found that way, such as a name differing in
+    case beyond ASCII, a path through "..", or a volume that is not FAT12 or FAT16.
     """
     try:
         return Stream(name)
@@ -486,7 +479,8 @@ class View:
     raises OSError.
     """
 
-    # What a read raises once the computer has written to the drive since its file was opened
+    # The text of the OSError a read raises once the computer has written to the drive since
+    # its file was opened
     __CHANGED_BENEATH = "the FX drive changed while this file was being read"
 
     def __init__(self):
@@ -513,17 +507,18 @@ class View:
                 return found, writes
 
     def mount(self, readonly, mkfs):
-        # vfs.mount() and vfs.umount() call these, and there is nothing to set up
+        # vfs.mount() calls this, and there is nothing to set up
         pass
 
     def umount(self):
+        # vfs.umount() calls this
         pass
 
     def open(self, path, mode):
         if "w" in mode or "a" in mode or "x" in mode or "+" in mode:
             raise OSError(EROFS)
         stream, writes = self.__settled(Stream, self.__resolve(path))
-        # Read in C, every read checking the write count against this one
+        # Read in C, where every read checks the write count against this one
         return rp2.MSCFile(stream.extents(), stream.size, writes, text="b" not in mode,
                            message=self.__CHANGED_BENEATH)
 

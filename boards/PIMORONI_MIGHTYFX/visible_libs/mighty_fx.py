@@ -14,7 +14,7 @@ from spidisplay import release_buffers
 from ports import ScreenPort
 
 
-# The PWM objects wake() lit, held here since one that is collected stops driving its pin
+# The PWM objects wake() lit
 __waking = []
 
 
@@ -317,8 +317,8 @@ class MightyFX:
     # SPCEPort
     SCREENS = (("screenA", "spce_a"), ("screenB", "spce_b"))
 
-    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
-    # the programs that go online. Every Mighty FX carries one
+    # Whether the board has a wireless module, so the FX drive is given the WiFi credentials file.
+    # Every Mighty FX carries one
     WIRELESS = True
 
     # How long a strip takes to power up once the rail is on. It misses any frame sent sooner.

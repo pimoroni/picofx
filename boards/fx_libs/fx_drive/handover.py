@@ -1,5 +1,5 @@
-# The drive's handover between board and computer, and the save watcher that runs while
-# the computer holds it
+# This module hands the drive between the board and the computer, and watches for a
+# save to effects.txt while the computer holds it
 
 import machine
 import time
@@ -11,16 +11,13 @@ from .heal import FILE_PATH, MOUNT_POINT, mount as __mount_for_board, remount
 
 DOUBLE_PRESS_MS = 400
 
-# service() events. HIDDEN, EJECTED and RELOADED all mean the drive is back with the
-# board and effects.txt can be read. HIDDEN and EJECTED leave it hidden, since a user
-# who hid or ejected it is done, while RELOADED wants it shown again once the caller
-# has read the file. BUSY is a request refused because the computer was mid-write,
-# which the user retries once it finishes.
+# The events service() returns. HIDDEN, EJECTED and RELOADED mean the drive is back
+# with the board so effects.txt can be read, and only RELOADED asks for it shown again.
 IDLE = 0
 SHOWN = 1
 HIDDEN = 2
 EJECTED = 3
-BUSY = 4
+BUSY = 4        # A press refused while the computer was mid-write
 RELOADED = 5
 
 # How long to wait out a write the computer still has in flight before taking the
@@ -29,8 +26,8 @@ SETTLE_MS = 1500
 
 # How long the board stays off the bus before rejoining. The first activation of the
 # runtime USB device in a session does not wait here, as it disconnects and reconnects by
-# itself with the 50ms hold TinyUSB applies. Measured working on macOS 15.5 and Windows 11
-# at this value, and not tried lower.
+# itself with the 50ms hold MicroPython's USB device applies. Measured working on macOS
+# 15.5 and Windows 11 at this value, and not tried lower.
 __OFF_BUS_MS = 500
 
 # How long after a bus reset the computer may take to enumerate the board before
@@ -39,17 +36,14 @@ __OFF_BUS_MS = 500
 ENUMERATION_LIMIT_MS = 3000
 
 # How often the save watcher compares effects.txt's directory entry while the computer
-# holds the drive. Every kind of save updates the entry, and copying other files never
-# does. A change counts once two polls in a row see it, so a half-finished save or a
-# read torn by a host write cannot act. A poll only reads the entry where the computer
-# has written since the last, which is what keeps it out of a screen's frame.
+# holds the drive. Every kind of save updates the entry, and copying other files never does.
 WATCH_POLL_MS = 500
 
 __exposed = False
 __was_pressed = False   # The button as the last service() call saw it
 __last_edge = None      # When a press began that a second may make a double, else None
 __watching = False
-__entry_seen = None     # effects.txt's directory entry as last shown or acted on
+__entry_seen = None     # effects.txt's entry when the drive was shown, or at the first poll
 __entry_pending = None  # A changed entry seen once, counting when the next look matches it
 __writes_seen = None    # The computer's write count at the last look, None before the first
 __watch_at = None       # When service() last polled
@@ -68,7 +62,7 @@ def watch(enabled):
 
 
 def __short_form(name):
-    # A name that fits 8.3 as the 11 bytes its directory entry stores
+    # Pack a name that fits 8.3 into the 11 bytes its directory entry stores
     base, _, extension = name.upper().partition(".")
     return (base + "        ")[:8].encode() + (extension + "   ")[:3].encode()
 
@@ -78,9 +72,9 @@ __EFFECTS_SHORT = __short_form(FILE_PATH.rsplit("/", 1)[1])
 
 
 def __effects_entry():
-    # The bytes that change when effects.txt is saved: time, date, first cluster and
-    # size from its directory entry, read straight from the flash, so the volume the
-    # computer holds is never touched. None where the volume or the entry is absent
+    # Read the time, date, first cluster and size from effects.txt's directory entry, the
+    # bytes a save changes, straight from the flash so the computer's volume is untouched.
+    # Returns None where the volume or the entry is absent
     global __watch_reader
     try:
         if __watch_reader is None:
@@ -95,11 +89,10 @@ def __entry_settled():
     # looks in a row, so a save has landed. Each call is one poll
     global __entry_seen, __entry_pending, __writes_seen
 
-    # Has the computer written nothing since the last look, with no change waiting on a
-    # second one? The entry cannot have moved, and reading it takes longer than a
-    # screen's frame has to spare
+    # Has the computer written nothing since the last look, with no change waiting?
     writes = rp2.msc_write_count()
     if writes == __writes_seen and __entry_pending is None:
+        # The entry cannot have moved, so the flash read is skipped
         return False
 
     # The count is read before the entry, so a write landing between the two moves the
@@ -118,9 +111,10 @@ def __entry_settled():
 
 
 def __reset_if_saved(_timer):
-    # The save watcher for while nothing calls service(), run by reset_on_save()
+    # Reset the board once a save settles, for while nothing calls service().
+    # reset_on_save() runs this from a timer
     global __entry_pending
-    # Timer callbacks arrive via the scheduler, so one already in flight at deinit
+    # Check if the watcher is still on. A timer callback already scheduled at deinit
     # can still run after the watcher is turned off
     if __save_timer is None or not (__exposed and __watching):
         return
@@ -133,10 +127,12 @@ def __reset_if_saved(_timer):
 
 def reset_on_save(enabled):
     """
-    Set whether a save that watch() would answer resets the board instead, for a caller
-    that hands the board to something which never calls service(). A soft timer does
-    the polling, so it runs wherever the computer can save at all, the USB task
-    being scheduled the same way. An eject resets nothing.
+    Set whether a save that service() would answer with RELOADED resets the board
+    instead, while watch() is on. It is for a caller that hands the board to something
+    which never calls service(). An eject resets nothing.
+
+    A soft timer does the polling, so it runs wherever the computer can save at all,
+    since the USB task is scheduled the same way.
     """
     global __save_timer
     if __save_timer is not None:
@@ -153,9 +149,8 @@ def exposed():
 
 def busy():
     """
-    Whether the computer is mid-transfer. Worth standing aside for, since a transfer
-    costs anything running from a timer on a Mighty FX most of a tenth of a second in
-    one hitch, which reads as a lurch.
+    Whether the computer is mid-transfer. A transfer holds up anything run from a timer
+    in one hitch, so a caller may stand its work aside until it ends.
     """
     return __exposed and rp2.is_msc_busy()
 
@@ -165,9 +160,9 @@ def enumerating():
     Whether the computer is still enumerating the board after a bus reset.
 
     Enumeration's replies are due within tens of milliseconds, and the board answers
-    them between other scheduled work, so anything busy on the board stands aside
-    until it is over. A reset can come at any time, from a rejoin, the computer
-    waking, or a port it reset after an error.
+    them between other scheduled work, so a caller with heavy work can stand it aside
+    while this is True, for at most ENUMERATION_LIMIT_MS. A reset can come at any time,
+    from a rejoin, the computer waking, or a port it reset after an error.
     """
     global __reset_at
     if __reset_at is None:
@@ -181,9 +176,10 @@ def enumerating():
 
 def on_bus_reset(callback):
     """
-    Have callback called on every USB bus reset, with no arguments, or None to stop.
+    Have callback called with no arguments on every USB bus reset from the drive's first
+    show, or pass None to stop.
 
-    It runs in the USB task, ahead of enumeration's first reply, so it can quiet the
+    It runs in the USB task ahead of enumeration's first reply, so it can quiet the
     board at once rather than at its caller's next look.
     """
     global __on_reset
@@ -191,7 +187,7 @@ def on_bus_reset(callback):
 
 
 def __bus_reset():
-    # The reset callback __rejoin_bus() configures, run in the USB task
+    # Note when a bus reset came and call the on_bus_reset() callback. Runs in the USB task
     global __reset_at
     __reset_at = time.ticks_ms()
     if __on_reset is not None:
@@ -199,13 +195,9 @@ def __bus_reset():
 
 
 def __rejoin_bus():
-    # Leave the USB bus and return, so the computer enumerates the board afresh.
-    #
-    # A computer can keep its view of the volume from before the board took it back,
-    # serving it, failing reads, or writing it over what the board wrote since, and
-    # nothing on its side recovers. Leaving the bus it cannot miss. The serial console
-    # drops and returns with it, and macOS reports the drive as not ejected properly,
-    # which is true
+    # Leave the USB bus and return, so the computer enumerates the board afresh and drops
+    # any view of the volume it kept from before the board took it back. The serial console
+    # drops and returns with it, and macOS reports the drive as not ejected properly
     usbd = machine.USBDevice()
     if usbd.active():
         usbd.active(False)
@@ -214,8 +206,8 @@ def __rejoin_bus():
         # The first activation disconnects and reconnects by itself, with the
         # built-in serial and drive descriptors since nothing else is configured
         usbd.builtin_driver = usbd.BUILTIN_DEFAULT
-    # The built-in descriptors unchanged, configured here for the reset callback, which
-    # sees every bus reset from now on
+    # Configure the built-in descriptors unchanged, adding the reset callback so it sees
+    # every bus reset from now on
     usbd.config(usbd.builtin_driver.desc_dev, usbd.builtin_driver.desc_cfg,
                 desc_strs=None, reset_cb=__bus_reset)
     usbd.active(True)
@@ -223,14 +215,12 @@ def __rejoin_bus():
 
 def expose():
     """
-    Show the drive to the connected computer, releasing the board's own
-    mount while the computer owns it.
+    Show the drive to the connected computer and mount a read-only view in its place.
+    Returns False when the drive was already shown.
 
-    The board stays on the USB bus and the computer finds the drive as it arrives. It
-    let go of the drive when the board took it. Only a session's first show rejoins the
-    bus, which drops the serial console once. Anything the caller runs from a timer
-    carries on through that rejoin. Anything it drives itself, such as a screen, holds
-    its last frame.
+    Only a session's first show leaves the USB bus and returns, which drops the serial
+    console once. Anything the caller runs from a timer carries on through that, and
+    anything it drives itself, such as a screen, holds its last frame.
     """
     global __exposed, __entry_seen, __entry_pending, __writes_seen, __watch_at
     if __exposed:
@@ -247,7 +237,8 @@ def expose():
         # reset callback sees every bus reset from then on
         __rejoin_bus()
     __exposed = True
-    # Counted before the entry is read, as every poll does. Not watching, the first poll looks
+    # Count the writes before reading the entry, as every poll does. When not watching,
+    # both are left for the first poll to take
     __writes_seen = rp2.msc_write_count() if __watching else None
     __entry_seen = __effects_entry() if __watching else None
     __entry_pending = None
@@ -256,13 +247,9 @@ def expose():
 
 
 def __take_from_computer():
-    # Take the media from a computer that has it, then leave the USB bus and return. A
-    # write still in flight is waited out first. Returns whether the computer had the media.
-    #
-    # A computer that stays connected learns the media has gone only from a failed
-    # transfer. macOS retries that for as long as the board stays on the bus, and
-    # everything reading the drive waits with it. Leaving the bus makes the computer drop
-    # its view of the volume at once
+    # Take the media from a computer that has it, waiting out a write still in flight, then
+    # leave the USB bus and return. Returns whether the computer had the media. macOS
+    # retries a failed transfer while the board stays on the bus, so the board leaves it
     deadline = time.ticks_add(time.ticks_ms(), SETTLE_MS)
     while rp2.is_msc_busy() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
         time.sleep_ms(50)
@@ -324,22 +311,17 @@ def mount(screens=True, wireless=False, sound=True):
 
 def service(pressed):
     """
-    Call regularly with the button state.
+    Call regularly with the button state. Returns one of the events declared above.
 
-    A double press shows the drive to the connected computer, and another, or an
-    eject on the computer, takes it back. A single press while the drive is showing
-    takes it back too, but asks for it to be shown again, which is the quick way to
-    try an edit without putting the drive away. Either answers BUSY instead while
-    the computer is mid-write, and the user retries once it finishes.
+    A double press shows the drive to the connected computer, and another, or an eject on
+    the computer, takes it back. A single press while the drive is showing takes it back
+    and asks for it to be shown again, the quick way to try an edit. Either press answers
+    BUSY while the computer is mid-write.
 
-    Returns one of the events declared above.
+    With watch() on, a save to effects.txt answers RELOADED as a single press does. Only
+    that file's directory entry is read, so nothing else written takes the drive back.
 
-    With watch() on, a save landing on effects.txt answers RELOADED as a single
-    press does, read from the file's directory entry, so nothing else written to
-    the drive ever takes it back.
-
-    A single press cannot be told from the first of a double until the double press
-    window has passed, so it lands DOUBLE_PRESS_MS after the press began.
+    A single press lands DOUBLE_PRESS_MS after it began, once it cannot start a double.
     """
     global __was_pressed, __last_edge, __watch_at, __entry_pending
     if __exposed and rp2.msc_ejected():
@@ -378,7 +360,7 @@ def service(pressed):
 
     __was_pressed = pressed
 
-    # The save watcher, under everything the button asked for
+    # Check if the save watcher should poll, which it does when the button asked for nothing
     if event == IDLE and __exposed and __watching:
         if rp2.is_msc_busy():
             # A save may still be in flight, so nothing seen counts yet
