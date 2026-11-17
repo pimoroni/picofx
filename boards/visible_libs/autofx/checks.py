@@ -16,7 +16,7 @@ from .parser import expand, read_number, unquoted, value_fault, value_shown
 
 
 def __degrees(text):
-    # A fraction of a turn from 0 to 360 written with 'deg', or None if it is not
+    # A fraction of a turn from an angle of 0deg to 360deg, or None if the text is not one
     if not isinstance(text, str) or not text.lower().endswith("deg"):
         return None
 
@@ -27,11 +27,8 @@ def __degrees(text):
 
 
 def __candidates(name):
-    # Where a file the effects file names may be, the drive's copy first.
-    #
-    # A path is taken as written, since a doubled separator would otherwise fold and
-    # '/prog.py' would quietly find the drive's copy. A plain name looks on the drive
-    # first, that being the one the reader can see and edit
+    # Where a file the effects file names may be. A plain name looks on the drive first, where
+    # the reader can edit it. A path is taken as written, so '/prog.py' never finds the drive's
     if name.startswith("/"):
         return (name,)
 
@@ -77,8 +74,8 @@ def find_file(name, line, problems, folder=None):
 
 def read_fault(error):
     """
-    What went wrong reading a file, saying what to do where the drive failed to read it.
-    Any other error keeps its own text.
+    What went wrong reading a file. Where the drive failed to read it, the text says what to
+    do, and any other error keeps its own text.
     """
     if not isinstance(error, OSError):
         return str(error)
@@ -226,8 +223,8 @@ def check_board(entry, has_strips, problems, lines):
     return settings
 
 
-# Where a hub and a screen were both played on, which of them was refused, kept among the
-# board settings under a name no file can write so their entries are not answered twice
+# The hub and the screen refused where both were played on. They are kept among the board
+# settings under a name no file can write, so their entries are not answered twice
 REFUSED = " refused"
 
 
@@ -295,7 +292,7 @@ def check_settings(entry, taken, problems):
     settings = {}
 
     for key, value in entry.settings.items():
-        # An entry may run over several lines, so a setting answers on its own
+        # An entry may run over several lines, so a setting is reported against its own line
         at = entry.lines.get(key, entry.line)
 
         if key not in taken:
@@ -303,8 +300,8 @@ def check_settings(entry, taken, problems):
                 at, entry.effect, key, ", ".join(taken) if taken else "no settings"))
             continue
 
-        # An effect names its own settings, so one added to picofx may name a setting
-        # this file has no reading for. The effect still runs, on its own value for it
+        # An effect names its own settings, so one added to picofx may name a setting that
+        # SETTINGS gives no kind. The effect still runs, on its own value for it
         kind = SETTINGS.get(key)
         if kind is None:
             problems.append("line {}: {}'s '{}' cannot be set from a file, so it was "

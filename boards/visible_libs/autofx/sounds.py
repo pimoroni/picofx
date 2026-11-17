@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-# The sounds. Each audio entry is built into a WAV that plays beside the effects, and the
-# board plays one at a time. A scene change gives the speaker to the sound that scene wants.
+# The sounds. Each audio entry is built into a Sound that plays its WAV file beside the
+# effects, and the board plays one at a time. A scene change gives the speaker to the sound
+# that scene wants, which may be a Silence from `audio: none`.
 
 import io
 import time
@@ -89,15 +90,15 @@ class Sound:
             return
         if time.ticks_diff(now, self.__moved) < 500:
             return
-        # The player feeds its buffers over a chain of I2S callbacks, and one lost ends the
-        # chain with the state still playing. A restart from here rebuilds both
+        # The player feeds its buffers over a chain of I2S callbacks, and one lost ends the chain
+        # with the state still playing. A restart here refills the buffers and starts a new chain
         self.__from = at
         self.__moved = now
         print("the sound stalled, and starts again from where it stopped")
         self.start()
 
     def set_aside(self):
-        """Put aside by a scene switch: silenced, remembering where it reached."""
+        """Silence it for a scene switch, and remember where it reached."""
         if not self.live:
             return
         self.wav.pause()
@@ -115,7 +116,7 @@ class Sound:
         # None is a sound that had already ended, which joining the bus leaves ended
         if self.wav.position() is None:
             return
-        # Faded out before it stops, a cut mid-waveform clicking
+        # Faded out before it stops, since a cut mid-waveform clicks
         self.wav.pause()
         deadline = time.ticks_add(time.ticks_ms(), self.FADE_MS)
         while not self.wav.is_paused() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
@@ -129,7 +130,7 @@ class Sound:
 
     def resume(self):
         """Play on from where pause() stopped, unless the computer has replaced the file."""
-        # The stall watch starts afresh, the position having stood still through the pause
+        # The stall watch starts afresh, since the position stood still through the pause
         self.__at = None
         if self.__file_changed():
             return
@@ -228,7 +229,7 @@ def build_sounds(entries, fx, problems, volume=None):
     sounds = []
     stream = volume.stream if volume is not None else None
     taken = set()
-    # A board without audio raises from the property, naming the setting to change
+    # A board without audio raises from the property, and the message names the setting to change
     try:
         wav = fx.wav
     except (AttributeError, RuntimeError):

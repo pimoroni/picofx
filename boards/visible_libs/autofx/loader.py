@@ -34,8 +34,9 @@ class Scene:
         # it is found. None where it goes on to the next in order
         self.after_name = None
         self.after = None
-        # What the sensor's triggers do while it shows, as {trigger: (step, scene's place)},
-        # the place given only for a step to a scene. Always on's are the board's
+        # What the sensor's triggers do while it shows, as {trigger: (step, scene's place)}.
+        # The place is None unless the step goes to a scene, and a motion trigger's delay is
+        # kept under its name and " after". Always on's are the board's
         self.triggers = {}
         # Whether its heading has already been answered, so one mistake is not
         # reported twice, as a heading missing its colon has no time either
@@ -46,7 +47,7 @@ class Scene:
         self.curves = None
         self.driven = set()         # The slots this scene fills, which a switch clears
         # What this scene's entries built, one per entry, for a restart to reach. A
-        # travelling effect hands the player a closure and keeps its offset on this object
+        # travelling effect hands the player a closure and keeps its offset on the effect
         self.sources = []
 
     def __repr__(self):
@@ -58,8 +59,7 @@ def __build_effect(entry, count, problems):
     # The effect an entry asks for, or None if it could not be made
     known = EFFECTS.get(entry.effect)
     if known is None:
-        # An entry that named no effect at all has been answered already, so it is
-        # left alone here
+        # An entry that named no effect at all has been answered already, so it is left alone here
         if entry.effect in SCREEN_EFFECTS and not BOARD_SCREENS:
             problems.append("line {}: {} plays on a screen, and this board has none".format(
                 entry.line, entry.effect))
@@ -94,7 +94,7 @@ def __build_effect(entry, count, problems):
 
 
 def __callables(effect, how, count, entry, problems):
-    # One callable per channel, in the order the entry wrote them. how is the effect's
+    # One callable per channel, in the order the entry wrote them. how= is the effect's
     # CALLED, None where one effect serves every channel, "position" where it is called with
     # each channel's place, and otherwise the method each channel calls
     if how is None:
@@ -117,11 +117,9 @@ def __curve(curve, seconds):
 
 
 def __assemble(entries, slots, effects, levels, colours, curves, claimed, problems):
-    # Fill one scene's arrays from its entries, or the always-on set's from those
-    # before any heading. Claims span every call, since scenes take turns with the
-    # same hardware but different channels on it would fight. Returns the slots
-    # driven here, which is what a switch must know to clear, and the effects built,
-    # which is what a restart begins again
+    # Fill one scene's arrays from its entries, or the always-on set's. Claims span every call,
+    # since scenes share the hardware. Returns the slots driven, for a switch to clear, and the
+    # effects built, for a restart to begin again
     driven = set()
     sources = []
 
@@ -220,7 +218,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
 def __read_triggers(entries, scenes, known, board, problems):
     """
     What each remote: and motion: entry gives its triggers, as {scene key: {trigger: (step,
-    scene's place)}}, Always on's under None. A motion trigger's delay is kept under the
+    scene's place)}}, with Always on's under None. A motion trigger's delay is kept under the
     trigger's name and " after", as (seconds, whether the opposite edge cancels it). An
     entry for what the board line does not fit, a trigger it does not have, or a step it
     cannot take is reported and left out.
@@ -349,8 +347,7 @@ def __unreached_scenes(scenes, board):
     if not unreached or triggers:
         return unreached, None
 
-    # Without a sensor the turns are one line from the first scene, and a scene with no time
-    # ends it
+    # Without a sensor the turns run in one line from the first scene until a scene with no time
     at = 0
     seen = [False] * len(scenes)
     while not seen[at] and scenes[at].hold is not None:
@@ -361,9 +358,8 @@ def __unreached_scenes(scenes, board):
 
 
 def __trigger_default(trigger):
-    # What a trigger does where no file gives it anything, as the page shows: a number goes to
-    # the scene in its place, 0 to the tenth, the side arrows step back and on, and the rest
-    # do nothing
+    # What a trigger does where no file gives it anything. A number goes to the scene in its
+    # place, 0 to the tenth, the side arrows step back and on, and the rest do nothing
     if trigger[0].isdigit():
         return ("scene", (int(trigger[0]) or 10) - 1)
     if trigger == "left":
@@ -376,8 +372,9 @@ def __trigger_default(trigger):
 def trigger_given(scenes, board, at, trigger):
     """
     What a trigger is given while the scene in place `at` shows, as (what, place) before any
-    step is taken. The scene's own choice comes first, then Always on's, then what the trigger
-    does where no file gives it anything. The board's own two buttons are "standby" and "pause".
+    step is taken. The remote's OK / Stop is always "standby" and its Play / Pause "pause".
+    Otherwise the scene's own choice comes first, then Always on's, and last what the
+    trigger does where no file gives it anything.
     """
     if trigger == "ok_stop":
         return ("standby", None)
@@ -395,8 +392,8 @@ def trigger_does(scenes, board, at, trigger):
     or None where it does nothing. Next goes on as the scene's time would, to the scene its
     heading names after 'then' or the next in order. The steps wrap at either end.
 
-    With no scenes, restart begins Always on's effects again and its place is None. Nothing
-    else has a scene to go to.
+    With no scenes, restart begins Always on's effects again with its place None, and
+    nothing else has a scene to go to.
     """
     what, place = trigger_given(scenes, board, at, trigger)
     if what in ("standby", "pause"):
@@ -425,10 +422,9 @@ def apply_scene(players, shows, sounds, scene, restart=None):
     always-on entries and turn off what other scenes drive, so this is an exchange
     of lists the players read on their next tick.
 
-    A scene told to restart begins its own content again while the always-on entries
-    carry on, their effects being built in their own pass and never among a scene's.
-    An effect that keeps no offset has nothing to begin again. `restart=` begins it
-    again or not whatever its heading says, for a trigger that restarts the scene.
+    A scene told to restart begins its own content again, and the always-on entries carry on
+    since their effects are built in their own pass, never among a scene's. An effect that
+    keeps no offset has nothing to begin again. `restart=` overrides what its heading says.
     """
     again = scene.restart if restart is None else restart
 
@@ -455,11 +451,8 @@ def apply_scene(players, shows, sounds, scene, restart=None):
         if player.kind in scene.colours:
             player.colours = scene.colours[player.kind]
 
-    # One show at a time may have a panel, and a screen may be named by an always-on entry
-    # and by a scene both. The scene's own takes it while the scene shows, as a scene takes
-    # an always-on output, and the always-on one has it the rest of the time. Held by place,
-    # since a pair's show covers two screens and a hub's several positions, so an always-on
-    # show a scene takes one place from plays on through the rest
+    # A panel plays one show at a time. A scene's show takes a screen from an always-on one
+    # while the scene shows, by place, so an always-on pair or hub plays on in the rest
     holding = {}
     for show in shows:
         if show.scene is None:
@@ -479,8 +472,8 @@ def apply_scene(players, shows, sounds, scene, restart=None):
                 show.restart()
             show.resume()
             continue
-        # Another show has these panels, so they stay lit and this one just waits. One
-        # no show has now goes dark, the glass keeping its frame
+        # Another show has these panels, so they stay lit and this one waits. A panel no show has
+        # now goes dark, and the glass keeps its frame
         dark = [place for place in show.places if place not in holding]
         if dark:
             show.rest(dark)
@@ -498,10 +491,7 @@ def apply_scene(players, shows, sounds, scene, restart=None):
 
 
 def restart_always(players, shows, sounds):
-    """
-    Begin every effect, show and sound again, for a file with no scenes whose trigger
-    restarts what it plays.
-    """
+    """Begin every effect, show and sound again, for a file with no scenes."""
     for player in players:
         for effect in player.effects:
             begin = getattr(effect, "reset", None)
@@ -518,20 +508,18 @@ def load(text, fx, maker=None, volume=None, on_built=None):
     Read the effects file. Returns the board it plays on, the players it describes,
     the shows its screen entries play, the sounds its audio entries name, its
     scenes in heading order, the settings its board entries carry, and any
-    problems. Without headings there are no scenes and everything plays at once,
-    which is the file as it has always been.
+    problems. Without headings there are no scenes and everything plays at once.
 
-    `fx` is a board or something that makes one, a board class being the usual thing.
-    Where it makes one, the board is built here rather than by the caller, once the
-    file's own board entry has been read, so what the file declares reaches the
-    constructor. A board built already is used as it is, unless `maker` says what
-    would build its replacement. Then a board entry that no longer matches the
-    running hardware shuts the board down and a fresh one is built, as a restart
-    would. Without a maker the change is reported instead. `volume` is the drive the
-    file came from, whose sounds play on while a computer holds it.
+    `fx` is a board or something that makes one, usually a board class. Where it makes
+    one, the board is built here rather than by the caller, once the file's own board
+    entry has been read, so what the file declares reaches the constructor. A board
+    built already is used as it is, unless `maker` says what would build its
+    replacement. Then a board entry that no longer matches the running hardware shuts
+    the board down and a fresh one is built, as a restart would. Without a maker the
+    change is reported instead. `volume` is the drive the file came from, whose sounds
+    play on while a computer holds it.
 
-    `on_built` is called with the board as soon as it is built, before the screens,
-    which take most of a load.
+    `on_built` gets the board once it is built, before the screens, which take most of a load.
     """
     # The board is learned first, so the parser's examples name its own parts
     learn_board(fx)
@@ -578,8 +566,8 @@ def load(text, fx, maker=None, volume=None, on_built=None):
                 problems.append("line {}: the board entry is about the board, so it "
                                 "sits outside every scene".format(entry.line))
             given = check_board(entry, has_strips, problems, board_lines)
-            # A board entry may be written more than once, so where the arguments were
-            # written is kept for checking once all are read, the program perhaps coming later
+            # A board entry may be written more than once, and the program may come after
+            # the arguments, so where they were written is kept for checking once all are read
             if "args" in given:
                 args_line = entry.lines.get("args", entry.line)
             board.update(given)
@@ -617,8 +605,8 @@ def load(text, fx, maker=None, volume=None, on_built=None):
             board.pop(kind, None)
             board.pop(kind + after_length(kind), None)
 
-    # A strip taking another's terminals cannot play beside it. The other plays, being the
-    # commoner build, and this one's entries go unanswered past the reason given here
+    # A strip taking another's terminals cannot play beside it. The other plays, since it is
+    # the commoner build, and this one's entries go unanswered past the reason given here
     left_off = set()
     for kind, taken in BOARD_TAKES:
         playing = [other for other in taken if board.get(other)]
@@ -665,7 +653,7 @@ def load(text, fx, maker=None, volume=None, on_built=None):
                             "changes when its {:g}s are up. Add restart to begin it again, or "
                             "leave out the time".format(scene.line, scene.name, scene.hold))
 
-    # What the sensor's triggers do, Always on's kept with the board settings where it gives any
+    # Read what the sensor's triggers do. Always on's go with the board settings where it gives any
     triggers = __read_triggers(trigger_entries, scenes, known, board, problems)
     if triggers.get(None):
         board[ALWAYS_TRIGGERS] = triggers[None]
@@ -704,9 +692,8 @@ def load(text, fx, maker=None, volume=None, on_built=None):
             problems.append("line {}: {} {}, as no scene goes on to {}".format(
                 scenes[unreached[0]].line, shown, verb, them))
 
-    # A changed board entry gets a fresh board, as a restart would. The running one
-    # is shut down and the build below makes its replacement from the file's own
-    # declarations
+    # A changed board entry gets a fresh board, as a restart would. The running one is shut down
+    # and the build below makes its replacement from the file's own declarations
     if maker is not None and not callable(fx) and \
             hardware_changed(board, wants_full_size(screen_entries, board)):
         forget_built()
@@ -732,7 +719,7 @@ def load(text, fx, maker=None, volume=None, on_built=None):
     resolve_strips(entries, board, problems, failed | left_off)
 
     # Every kind of channel this board offers, as the names each player's slots take
-    names =[("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]
+    names = [("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]
 
     # LEDs the board builds past the length a strip was asked for, to catch a frame
     # torn by a flash write before it overruns onto a strip's last real LED. Their
@@ -752,8 +739,7 @@ def load(text, fx, maker=None, volume=None, on_built=None):
     effects = {kind: [None] * len(holds) for kind, holds in names}
     levels = {kind: [1.0] * len(holds) for kind, holds in names}
     curves = {kind: [None] * len(holds) for kind, holds in names}
-    # Every kind but the mono channels can show a colour, and holds the tint a mono effect
-    # is drawn in
+    # Every kind but mono can show a colour, and holds the tint a mono effect is drawn in
     colours = {kind: [(255, 255, 255)] * len(holds) for kind, holds in names
                if kind != "mono"}
     claimed = {}
@@ -822,7 +808,7 @@ def load(text, fx, maker=None, volume=None, on_built=None):
             for scene in scenes:
                 scene.effects[kind][index] = off
 
-    # One timer drives them all, each ticking the next, so every channel steps together
+    # Each player ticks the next, so one timer drives them all and every channel steps together
     for first, second in zip(players, players[1:]):
         first.pair(second)
 

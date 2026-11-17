@@ -24,7 +24,7 @@ COLOURS = {
 
 COMPONENTS = ("r", "g", "b")
 
-# The one name on the left that is not a channel, its entry holding board settings
+# The name on the left whose entry holds board settings in place of a channel's effect
 BOARD = "board"
 
 # The two names on the left for what the sensor connector's triggers do, each holding settings
@@ -49,8 +49,8 @@ TRIGGERS_FIXED = ("ok_stop", "play_pause")
 # What a trigger can do besides going to a scene, which is written as scene and its name
 TRIGGER_STEPS = ("nothing", "next", "previous", "first", "restart")
 
-# A motion trigger's delay, written after it on its line: after= the seconds it waits, and
-# cancel= whether the opposite edge coming first cancels it, which it does unless cancel=no
+# A motion trigger's delay, written after the trigger on its line. after= is the seconds it
+# waits, and the opposite edge coming first cancels it unless cancel=no
 TRIGGER_TIMING = ("after", "cancel")
 
 # Where the board settings keep what Always on gives the triggers, under a name no file can
@@ -68,12 +68,10 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
         if _name is not None:
             EFFECTS[_name] = (_effect, _kind, _effect.CALLED, _effect.TAKES)
 
-# Each screen effect and the settings it takes, kept apart from EFFECTS since a screen shows
-# images where an output lights. "gif" plays an animated GIF and "sequence" a folder of
-# images in the order their names number them, each at its own delays unless fps names one.
-# "image" holds one still, and "drawing" runs a Python file's draw() after running its
-# module body once. Each looks on the drive first, then the board. "none" shows black, which
-# lets a scene take a screen from the always-on entries and show nothing there.
+# Each screen effect and the settings it takes. "gif" plays an animated GIF, "sequence" a
+# folder of numbered images, "image" one still and "drawing" a Python file's draw(). Each
+# looks on the drive first, then the board. "none" shows only the background, so a scene
+# can take a screen from the always-on entries.
 SCREEN_EFFECTS = {
     "drawing": ("file", "fps", "interval", "width", "height", "style"),
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
@@ -83,13 +81,11 @@ SCREEN_EFFECTS = {
 }
 
 # A Screen Hub's positions as its silk letters them, each named in a file as hubA to hubF.
-# A board entry gives a connector the hub with screenA=hub or screenB=hub, its selects
-# taking the other
+# A board entry gives a connector the hub, such as screenA=hub, and its selects take the other
 HUB = "hub"
 HUB_POSITIONS = "abcdef"
 
-# The panel sizes a screen or a hub position is declared as, a size being unreadable
-# from the panel itself
+# The panel sizes a screen or hub position is declared as, since a panel cannot report it
 SCREEN_SIZES = ("2.8", "1.54")
 
 # The one selector that plays sound, "wav" streaming a file once or with loop=true for good,
@@ -106,12 +102,9 @@ AUDIO_EFFECTS = {
 FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "drawing": "drawings",
            "wav": "sounds"}
 
-# What each effect setting's value must be, stated once since a name means the same thing
-# wherever it appears. "count" is a whole number of 1 or more, since each divides or repeats
-# something, where "whole" may be zero or negative. "angle" is a fraction that takes degrees
-# as well, and "span" a distance across the outputs above zero, since an effect divides by
-# it. "colour" is a name or hex the parser turns into a tuple, "name" a file name kept as
-# written, and "word" a drawing's style, which only the drawing itself can check.
+# What each effect setting's value must be. "count" is a whole number of 1 or more and
+# "whole" any whole number. "angle" also takes degrees, "span" is a distance above zero,
+# "colour" a name or hex, "name" a file name kept as written and "word" a drawing's style.
 # CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
 SETTINGS = {
     "speed": "number",
@@ -158,26 +151,25 @@ SETTINGS = {
     "style": "word",
 }
 
-# Settings written as a pair, the smaller named first
+# Pairs of settings that bound a range, the smaller named first
 PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
                    ("brightness_min", "brightness_max"))
 
-# What a board entry takes, and the values a setting is limited to, None taking any. A
-# program is a file name, answered when it is looked for. A screen's size and a strip's
-# length are facts about the hardware the board cannot discover, set once in the board
-# entry where an entry's settings vary per scene. So each screen port the board declares is
-# a setting too, taking a panel size or the hub, and each strip, taking a number.
+# What a board entry takes, and the values a setting is limited to, or None for any. A
+# screen's size and a strip's length are set once here, since the board cannot discover
+# them, so each screen port and each strip is a setting too
 BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
                   "program": None, "args": None, "sensor": ("ir", "pir")}
 
-# What follows a strip's length, as 'stripL=60|rgb' or 'stripApa=144|50%', kept among the
-# board settings under the strip's name and one of these, which no file can write
+# What follows a strip's length, a colour order such as '60|rgb' or a brightness such as
+# '144|50%' for a strip that has one, kept among the board settings under the strip's name
+# and one of these, which no file can write
 ORDER = " order"
 BRIGHTNESS = " brightness"
 
-# What each left-side setting's value must be. level and backlight answer alike, both being
-# how bright something is. colour, background and offset have shapes of their own and are
-# read where they are applied
+# What each left-side setting's value must be. level and backlight answer alike, since
+# both say how bright something is. colour, background, offset and tile have shapes of
+# their own and are read where they are applied
 CHANNEL_KINDS = {"level": "fraction", "fade": "seconds", "ease": "seconds",
                  "backlight": "fraction", "rotation": "quarter", "mirror": "boolean",
                  "pixel_double": "boolean"}

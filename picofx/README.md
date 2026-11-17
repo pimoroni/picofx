@@ -221,7 +221,7 @@ class BreatheFX(Cycling):
         return abs(self.__offset * 2 - 1) * self.brightness
 ```
 
-The effects the board already knows are the ones in `MONO_EFFECTS` and `COLOUR_EFFECTS`, which is a list an effect of your own can be added to. Do it in `main.py`, before `autofx` is imported, since that is when the names are gathered:
+The effects the board already knows are the ones in `MONO_EFFECTS` and `COLOUR_EFFECTS`, and an effect of your own can be added to either list. Save the class as `breathe.py` on the board, then add these lines to `main.py` above the line that imports `autofx`, since `autofx` gathers the names as it is imported:
 
 ```python
 from picofx.mono import MONO_EFFECTS
@@ -234,4 +234,4 @@ import autofx
 
 `out1-4: breathe speed=0.5 brightness=80%` then plays it, and a value the effect cannot use is reported in `errors.txt` the way any other is.
 
-Settings are named rather than invented: `TAKES` may only hold names the effects file already reads, `speed`, `duty`, `interval`, `brightness`, `hue` and the rest listed in the manual. A name it has no reading for is reported and the effect runs on its own value for it.
+Settings are named rather than invented: `TAKES` may only hold names the effects file already reads, `speed`, `duty`, `interval`, `brightness`, `hue` and the rest listed in the manual. If an entry writes a name the effects file cannot read, `errors.txt` says so and the effect keeps its own value for it.
