@@ -10318,7 +10318,7 @@ function headSteps(row, run) {
   var zooms = run.strip && run.count > ZOOMS_OVER;
   row.appendChild(h(
     "span",
-    { className: "headsteps" },
+    { className: "headsteps", role: "group", "aria-label": "Steps" },
     zooms ? [
       iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001, function() {
         zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
@@ -12833,7 +12833,11 @@ function featureFilter() {
   var chips = chipFeatures();
   return h(
     "div",
-    { className: "featurefilter" },
+    {
+      className: "featurefilter",
+      role: "group",
+      "aria-label": "Show programs using"
+    },
     h("span", {}, "With:"),
     chips.map(function(feature) {
       return h("button", {
@@ -15887,8 +15891,13 @@ function sline() {
 function named(words) {
   return h("span", { className: "snamed" }, words);
 }
-function segment(options, chosen, choose2, title) {
-  return h("span", { className: "sseg", title: title || null }, options.map(function(option) {
+function segment(options, chosen, choose2, title, label) {
+  return h("span", {
+    className: "sseg",
+    title: title || null,
+    role: "group",
+    "aria-label": label
+  }, options.map(function(option) {
     return h("button", {
       type: "button",
       "data-value": option[0],
@@ -15951,7 +15960,7 @@ function orientationFold(key, held) {
     return [value, rotationMark(value) + value + "&deg;"];
   }), turn, function(value) {
     setTurn(held, value);
-  }, "Screen rotation");
+  }, "Screen rotation", "Rotation");
   rotation.classList.add("rotationseg");
   var mirror = toggle(
     "&#8646;",
@@ -15975,7 +15984,9 @@ function placementFold(key, held, size) {
   var where = pictureOffset(look, held.shows, size, held.turn);
   var anchor = h("span", {
     className: "sanchor",
-    title: "Picture position, calculated from its size and the panel's"
+    title: "Picture position, calculated from its size and the panel's",
+    role: "group",
+    "aria-label": "Position"
   }, ANCHOR_NAMES.map(function(name, at) {
     return h("button", {
       type: "button",
@@ -16011,7 +16022,8 @@ function placementFold(key, held, size) {
       function(value) {
         look[side] = value;
       },
-      "Fill the screen " + (down ? "top to bottom" : "left to right") + " with copies. Mirror flips every other copy to join up the edges"
+      "Fill the screen " + (down ? "top to bottom" : "left to right") + " with copies. Mirror flips every other copy to join up the edges",
+      down ? "Tiling down" : "Tiling across"
     );
     seg.classList.add(down ? "tiledown" : "tileacross");
     return seg;
@@ -16051,7 +16063,7 @@ function backgroundFold(key, held) {
   if (open) look.customBg = look.bg;
   var row = h(
     "div",
-    { className: "sswatches" },
+    { className: "sswatches", role: "group", "aria-label": "Background" },
     names.map(function(name) {
       return h("button", {
         type: "button",
@@ -16182,7 +16194,8 @@ function drawingFold(key, held) {
       if (flips) look.every = Math.round(100 / look.every) / 100;
       look.pace = value;
     },
-    "Frames per second, seconds per frame, or as fast as the screen allows"
+    "Frames per second, seconds per frame, or as fast as the screen allows",
+    "Speed"
   );
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function(value) {
     if (Number(value) > 0) look.every = Number(value);
@@ -16193,7 +16206,7 @@ function drawingFold(key, held) {
     ["set", "Set size"]
   ], look.canvas || "whole", function(value) {
     look.canvas = value;
-  });
+  }, null, "Canvas");
   canvas.querySelector("[data-value=whole]").title = "As big as the screen";
   canvas.querySelector("[data-value=half]").title = "Half the screen's width and height, using a quarter of the memory. With Pixel double it fills the screen";
   canvas.querySelector("[data-value=set]").title = "A custom size in pixels, positioned like a small picture";
@@ -16231,7 +16244,7 @@ function drawingFold(key, held) {
       var picked = styleChoices(drawing, look.style);
       picked[at] = value;
       look.style = styleWord(drawing, picked);
-    }, "The style this drawing is drawn in");
+    }, "The style this drawing is drawn in", "Style");
   });
   var rows = h("span", { className: "sstylerows" }, segments);
   return foldSection(
@@ -16362,7 +16375,8 @@ function playbackFold(key, held, media) {
       if (flips) look.every = Math.round(100 / look.every) / 100;
       look.pace = value;
     },
-    "Frames per second, seconds per frame, or the delays " + (media.kind === "folder" ? "written in each picture's file name" : "saved in the file")
+    "Frames per second, seconds per frame, or the delays " + (media.kind === "folder" ? "written in each picture's file name" : "saved in the file"),
+    "Speed"
   );
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function(value) {
     if (Number(value) > 0) look.every = Number(value);
@@ -16720,19 +16734,23 @@ function offCard() {
       style: { visibility: state.at < 0 || !fitted ? "hidden" : null }
     },
     h("div", { className: "face" }, "Off"),
-    h("div", { className: "pick" }, SCREENS.map(function(letter) {
-      var screen = state.screens[letter];
-      return h("button", {
-        className: screen.off ? "lit" + (letter === "B" ? " b" : "") : "",
-        "aria-pressed": String(!!screen.off),
-        disabled: !screen.there,
-        onclick: function() {
-          screen.off = !screen.off;
-          if (screen.off) screen.shows = null;
-          draw();
-        }
-      }, screenButton(letter));
-    }))
+    h(
+      "div",
+      { className: "pick", role: "group", "aria-label": "Off" },
+      SCREENS.map(function(letter) {
+        var screen = state.screens[letter];
+        return h("button", {
+          className: screen.off ? "lit" + (letter === "B" ? " b" : "") : "",
+          "aria-pressed": String(!!screen.off),
+          disabled: !screen.there,
+          onclick: function() {
+            screen.off = !screen.off;
+            if (screen.off) screen.shows = null;
+            draw();
+          }
+        }, screenButton(letter));
+      })
+    )
   );
 }
 function assetTile(media) {
@@ -16760,21 +16778,25 @@ function assetTile(media) {
       media.kind === "image" ? null : h("span", { className: "kind" }, media.kind === "folder" ? "slideshow" : media.kind === "drawing" ? "drawing" : "gif"),
       h("div", { className: "label" }, nameShown(name))
     ),
-    h("div", { className: "pick" }, SCREENS.map(function(letter) {
-      var lit = on[letter];
-      return h("button", {
-        className: lit ? "lit" + (letter === "B" ? " b" : "") : "",
-        "aria-pressed": String(!!lit),
-        disabled: !state.screens[letter].there,
-        style: { opacity: state.screens[letter].there ? null : ".3" },
-        onclick: function() {
-          var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
-          screen.shows = screen.shows !== name ? name : screen.kept ? "keep" : null;
-          screen.off = false;
-          draw();
-        }
-      }, screenButton(letter));
-    })),
+    h(
+      "div",
+      { className: "pick", role: "group", "aria-label": "Show " + nameShown(name) },
+      SCREENS.map(function(letter) {
+        var lit = on[letter];
+        return h("button", {
+          className: lit ? "lit" + (letter === "B" ? " b" : "") : "",
+          "aria-pressed": String(!!lit),
+          disabled: !state.screens[letter].there,
+          style: { opacity: state.screens[letter].there ? null : ".3" },
+          onclick: function() {
+            var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
+            screen.shows = screen.shows !== name ? name : screen.kept ? "keep" : null;
+            screen.off = false;
+            draw();
+          }
+        }, screenButton(letter));
+      })
+    ),
     // An example keeps no bin here, as flashing the board's examples again brings it back. Where
     // the board's examples can be discovered, discover/screens/discover_screens.js gives it one
     isExampleMedia(name) ? null : binButton(name, media.kind),
@@ -16955,7 +16977,7 @@ function renderColourPick(box, run) {
   var kept = customColours[remembered];
   var swatches = h(
     "div",
-    { className: "sswatches" },
+    { className: "sswatches", role: "group", "aria-label": "Colour" },
     offered.map(function(name) {
       return h("button", {
         type: "button",
@@ -17285,7 +17307,7 @@ chosenSteps.push(function(where, run) {
   var several = blinks.colours.length > 1;
   pick2.prepend(h(
     "div",
-    { className: "blinklist" },
+    { className: "blinklist", role: "group", "aria-label": "Blink colours" },
     h("span", { className: "blinksay" }, several ? "Blinks through" : "Blinks in"),
     blinks.colours.map(function(hex, at) {
       return [

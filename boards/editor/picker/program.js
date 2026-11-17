@@ -804,7 +804,8 @@ function offeredPaths() {
 
 function featureFilter() {
   var chips = chipFeatures();
-  return h("div", {className: "featurefilter"},
+  return h("div", {className: "featurefilter", role: "group",
+                   "aria-label": "Show programs using"},
            h("span", {}, "With:"),
            chips.map(function (feature) {
              return h("button", {

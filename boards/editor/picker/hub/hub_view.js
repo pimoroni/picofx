@@ -18,7 +18,8 @@ import {BOARD_SETTING_SAYS, boardButton, boardIcon, removeButton} from "../setup
 // The choice of two screens or a hub, which takes both connectors. It sits at the top of the
 // tab, where the outputs and strips have their board box, and at that box's size
 function hubSwitch() {
-  return h("div", {className: "hubswitch", title: BOARD_SETTING_SAYS},
+  return h("div", {className: "hubswitch", title: BOARD_SETTING_SAYS, role: "group",
+                   "aria-label": "Screens connected as"},
      h("span", {className: "hublead" + (state.hub.on ? "" : " on")}, boardIcon()),
      [[false, "A screen on each connector"], [true, "A Screen Hub across both"]].map(function (pair) {
        return h("button", {

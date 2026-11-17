@@ -47,7 +47,7 @@ function renderColourPick(box, run) {
                                  level: section.level === undefined ? 1 : section.level};
   }
   var kept = customColours[remembered];
-  var swatches = h("div", {className: "sswatches"},
+  var swatches = h("div", {className: "sswatches", role: "group", "aria-label": "Colour"},
     offered.map(function (name) {
       return h("button", {
         type: "button", className: "swatch" + (chosenWord === name ? " on" : ""),
@@ -377,7 +377,7 @@ chosenSteps.push(function (where, run) {
   }
 
   var several = blinks.colours.length > 1;
-  pick.prepend(h("div", {className: "blinklist"},
+  pick.prepend(h("div", {className: "blinklist", role: "group", "aria-label": "Blink colours"},
     h("span", {className: "blinksay"}, several ? "Blinks through" : "Blinks in"),
     blinks.colours.map(function (hex, at) {
       return [h("button", {

@@ -61,7 +61,7 @@ export function headSteps(row, run) {
   // Zooming is only any use where there are more lights than a panel can show. The
   // buttons hold the middle of the view, since a press has no place on the run to hold
   var zooms = run.strip && run.count > ZOOMS_OVER;
-  row.appendChild(h("span", {className: "headsteps"},
+  row.appendChild(h("span", {className: "headsteps", role: "group", "aria-label": "Steps"},
     zooms ? [iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001, function () {
                zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
              }),

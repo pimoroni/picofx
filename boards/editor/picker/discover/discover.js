@@ -1143,7 +1143,8 @@ function discoverChips(offers) {
     });
   });
   if (!used.length) return null;
-  return h("div", {className: "featurefilter discoverchips"},
+  return h("div", {className: "featurefilter discoverchips", role: "group",
+                   "aria-label": "Show examples using"},
            h("span", {}, "With:"),
            used.map(function (feature) {
              return h("button", {

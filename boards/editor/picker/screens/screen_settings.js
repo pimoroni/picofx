@@ -85,9 +85,11 @@ function named(words) {
   return h("span", {className: "snamed"}, words);
 }
 
-// One choice of several, as a row of buttons. options are [value, label html, refused]
-function segment(options, chosen, choose, title) {
-  return h("span", {className: "sseg", title: title || null}, options.map(function (option) {
+// One choice of several, as a row of buttons grouped under label= for a screen reader. options
+// are [value, label html, refused]
+function segment(options, chosen, choose, title, label) {
+  return h("span", {className: "sseg", title: title || null, role: "group",
+                    "aria-label": label}, options.map(function (option) {
     return h("button", {
       type: "button", "data-value": option[0], html: option[1],
       className: option[0] === chosen ? "on" : "", disabled: !!option[2],
@@ -142,7 +144,7 @@ function orientationFold(key, held) {
   var turn = Number(held.turn || 0);
   var rotation = segment([0, 90, 180, 270].map(function (value) {
     return [value, rotationMark(value) + value + "&deg;"];
-  }), turn, function (value) { setTurn(held, value); }, "Screen rotation");
+  }), turn, function (value) { setTurn(held, value); }, "Screen rotation", "Rotation");
   rotation.classList.add("rotationseg");
   var mirror = toggle("&#8646;", "Mirror", look.mirror, function (on) { look.mirror = on; },
                       "Flip the picture left to right");
@@ -163,7 +165,8 @@ function placementFold(key, held, size) {
   var look = held.look;
   var where = pictureOffset(look, held.shows, size, held.turn);
   var anchor = h("span", {
-    className: "sanchor", title: "Picture position, calculated from its size and the panel's"
+    className: "sanchor", title: "Picture position, calculated from its size and the panel's",
+    role: "group", "aria-label": "Position"
   }, ANCHOR_NAMES.map(function (name, at) {
     return h("button", {
       type: "button", className: look.anchor === at ? "on" : "", title: name,
@@ -198,7 +201,8 @@ function placementFold(key, held, size) {
                       look[side] || "off",
                       function (value) { look[side] = value; },
                       "Fill the screen " + (down ? "top to bottom" : "left to right") +
-                      " with copies. Mirror flips every other copy to join up the edges");
+                      " with copies. Mirror flips every other copy to join up the edges",
+                      down ? "Tiling down" : "Tiling across");
     seg.classList.add(down ? "tiledown" : "tileacross");
     return seg;
   }
@@ -234,7 +238,7 @@ function backgroundFold(key, held) {
   // A colour that is no swatch's is the custom one, and the ring keeps showing it while a
   // swatch is chosen, so custom comes back to it
   if (open) look.customBg = look.bg;
-  var row = h("div", {className: "sswatches"},
+  var row = h("div", {className: "sswatches", role: "group", "aria-label": "Background"},
     names.map(function (name) {
       // Named under the swatch where the section is wide enough, as the looks' picker names
       // them. A colour keeps the brightness already set
@@ -338,14 +342,15 @@ function drawingFold(key, held) {
                         if (flips) look.every = Math.round(100 / look.every) / 100;
                         look.pace = value;
                       },
-                      "Frames per second, seconds per frame, or as fast as the screen allows");
+                      "Frames per second, seconds per frame, or as fast as the screen allows",
+                      "Speed");
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
     if (Number(value) > 0) look.every = Number(value);
   }, look.pace === "interval" ? 0.05 : 1);
   var canvas = segment([["whole", "Whole screen"], ["half", "Half size"],
                         ["set", "Set size"]], look.canvas || "whole", function (value) {
                           look.canvas = value;
-                        });
+                        }, null, "Canvas");
   canvas.querySelector("[data-value=whole]").title = "As big as the screen";
   canvas.querySelector("[data-value=half]").title =
     "Half the screen's width and height, using a quarter " +
@@ -381,7 +386,7 @@ function drawingFold(key, held) {
       var picked = styleChoices(drawing, look.style);
       picked[at] = value;
       look.style = styleWord(drawing, picked);
-    }, "The style this drawing is drawn in");
+    }, "The style this drawing is drawn in", "Style");
   });
   var rows = h("span", {className: "sstylerows"}, segments);
   return foldSection(key, "Drawing", offered.concat(said).join(", "),
@@ -511,7 +516,8 @@ function playbackFold(key, held, media) {
                         look.pace = value;
                       },
                       "Frames per second, seconds per frame, or the delays " +
-                      (media.kind === "folder" ? "written in each picture's file name" : "saved in the file"));
+                      (media.kind === "folder" ? "written in each picture's file name" : "saved in the file"),
+                      "Speed");
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
     // Nothing, zero or less is no pace, so the figure there stays
     if (Number(value) > 0) look.every = Number(value);

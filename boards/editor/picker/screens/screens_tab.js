@@ -53,7 +53,8 @@ function offCard() {
     className: "card nothing small offasset", title: "Turn a screen off in this scene",
     style: {visibility: state.at < 0 || !fitted ? "hidden" : null}
   }, h("div", {className: "face"}, "Off"),
-     h("div", {className: "pick"}, SCREENS.map(function (letter) {
+     h("div", {className: "pick", role: "group", "aria-label": "Off"},
+       SCREENS.map(function (letter) {
        var screen = state.screens[letter];
        return h("button", {
          className: screen.off ? "lit" + (letter === "B" ? " b" : "") : "",
@@ -88,7 +89,8 @@ function assetTile(media) {
           : h("span", {className: "kind"}, media.kind === "folder" ? "slideshow"
                                            : media.kind === "drawing" ? "drawing" : "gif"),
         h("div", {className: "label"}, nameShown(name))),
-     h("div", {className: "pick"}, SCREENS.map(function (letter) {
+     h("div", {className: "pick", role: "group", "aria-label": "Show " + nameShown(name)},
+       SCREENS.map(function (letter) {
        var lit = on[letter];
        return h("button", {
          className: lit ? "lit" + (letter === "B" ? " b" : "") : "",

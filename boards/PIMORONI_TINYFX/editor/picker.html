@@ -10756,7 +10756,7 @@ function headSteps(row, run) {
   var zooms = run.strip && run.count > ZOOMS_OVER;
   row.appendChild(h(
     "span",
-    { className: "headsteps" },
+    { className: "headsteps", role: "group", "aria-label": "Steps" },
     zooms ? [
       iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001, function() {
         zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
@@ -13271,7 +13271,11 @@ function featureFilter() {
   var chips = chipFeatures();
   return h(
     "div",
-    { className: "featurefilter" },
+    {
+      className: "featurefilter",
+      role: "group",
+      "aria-label": "Show programs using"
+    },
     h("span", {}, "With:"),
     chips.map(function(feature) {
       return h("button", {
@@ -14457,7 +14461,11 @@ function discoverChips(offers) {
   if (!used.length) return null;
   return h(
     "div",
-    { className: "featurefilter discoverchips" },
+    {
+      className: "featurefilter discoverchips",
+      role: "group",
+      "aria-label": "Show examples using"
+    },
     h("span", {}, "With:"),
     used.map(function(feature) {
       return h("button", {
@@ -17812,7 +17820,7 @@ function renderColourPick(box, run) {
   var kept = customColours[remembered];
   var swatches = h(
     "div",
-    { className: "sswatches" },
+    { className: "sswatches", role: "group", "aria-label": "Colour" },
     offered.map(function(name) {
       return h("button", {
         type: "button",
@@ -18142,7 +18150,7 @@ chosenSteps.push(function(where, run) {
   var several = blinks.colours.length > 1;
   pick2.prepend(h(
     "div",
-    { className: "blinklist" },
+    { className: "blinklist", role: "group", "aria-label": "Blink colours" },
     h("span", { className: "blinksay" }, several ? "Blinks through" : "Blinks in"),
     blinks.colours.map(function(hex, at) {
       return [

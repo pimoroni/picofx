@@ -284,7 +284,9 @@ hubHeadSteps.push(function () {
     }
     tile.classList.toggle("picked", picked.indexOf(place) >= 0);
 
-    var numbers = h("span", {className: "groupseg"}, GROUP_NUMBERS.map(function (number) {
+    var numbers = h("span", {className: "groupseg", role: "group",
+                             "aria-label": "Position " + place + " group"},
+                    GROUP_NUMBERS.map(function (number) {
       var inIt = groupOf(place) === number;
       var fits = sizeFits(place, number);
       return h("button", {
