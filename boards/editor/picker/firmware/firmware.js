@@ -1,4 +1,5 @@
 import {firmwareHooks} from "../board.js";
+import {h, replace} from "../dom.js";
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
 import {CONNECT_ORDER, connectSteps} from "../drive.js";
 import {BOARD, VERSION} from "../looks.js";
@@ -238,14 +239,6 @@ function closeFirmware() {
   draw();
 }
 
-// A new element of the tag, with the class and text where they are given
-function firmwareElement(tag, className, text) {
-  var made = document.createElement(tag);
-  if (className) made.className = className;
-  if (text) made.textContent = text;
-  return made;
-}
-
 // The button beside the version, made on its first showing and changed in place after, so the sheet
 // gives focus back to it on closing
 var firmwareButton = null;
@@ -258,11 +251,8 @@ function renderFirmwareButton() {
   where.hidden = !behind;
   if (!behind) return;
   if (!firmwareButton) {
-    firmwareButton = firmwareElement("button", "", "Update available");
-    firmwareButton.type = "button";
-    firmwareButton.setAttribute("aria-haspopup", "dialog");
-    firmwareButton.onclick = openFirmware;
-    where.appendChild(firmwareButton);
+    firmwareButton = where.appendChild(h("button", {type: "button", "aria-haspopup": "dialog",
+                                                    onclick: openFirmware}, "Update available"));
   }
   var version = firmware.latest.version;
   var heed = firmwareWarnings(firmware.latest.notes).warnings.length > 0;
@@ -283,19 +273,19 @@ function firmwareNotes(text) {
     if (alert) {
       list = null;
       var kind = alert[1].toLowerCase();
-      shown.push(firmwareElement("h4", "", kind.charAt(0).toUpperCase() + kind.slice(1)));
+      shown.push(h("h4", {}, kind.charAt(0).toUpperCase() + kind.slice(1)));
       return;
     }
     var item = /^\s*[-*]\s+(.*)$/.exec(line);
     if (item) {
-      if (!list) shown.push(list = firmwareElement("ul"));
-      list.appendChild(firmwareElement("li", "", firmwarePlain(item[1])));
+      if (!list) shown.push(list = h("ul"));
+      list.appendChild(h("li", {}, firmwarePlain(item[1]) || null));
       return;
     }
     list = null;
     var heading = /^\s*#+\s+(.*)$/.exec(line);
-    if (heading) shown.push(firmwareElement("h4", "", firmwarePlain(heading[1])));
-    else if (line.trim()) shown.push(firmwareElement("p", "", firmwarePlain(line)));
+    if (heading) shown.push(h("h4", {}, firmwarePlain(heading[1]) || null));
+    else if (line.trim()) shown.push(h("p", {}, firmwarePlain(line) || null));
   });
   return shown;
 }
@@ -308,11 +298,7 @@ function firmwarePlain(text) {
 
 // A link that opens in a new tab
 function firmwareLink(text, url) {
-  var link = firmwareElement("a", "", text);
-  link.href = url;
-  link.target = "_blank";
-  link.rel = "noopener";
-  return link;
+  return h("a", {href: url, target: "_blank", rel: "noopener"}, text);
 }
 
 // A file's name and size, as the foot and a download's tip show it
@@ -322,22 +308,19 @@ function firmwareFileSays(file) {
 
 // The sheet's foot, which names the file beside its download, or says there is none to offer
 function firmwareFoot(latest) {
-  var foot = firmwareElement("div", "firmwaresheetfoot");
-  var says = firmwareElement("div", "firmwarefootsays");
-  foot.appendChild(says);
   var file = latest.files[0];
   if (!file) {
-    says.append(latest.known ? "This release has no file for " + BOARD.name + " yet. "
-                             : "This page could not tell which " + BOARD.name + " this is. ",
-                firmwareLink("See the release", latest.url));
-    return foot;
+    return h("div", {className: "firmwaresheetfoot"},
+             h("div", {className: "firmwarefootsays"},
+               latest.known ? "This release has no file for " + BOARD.name + " yet. "
+                            : "This page could not tell which " + BOARD.name + " this is. ",
+               firmwareLink("See the release", latest.url)));
   }
-  says.textContent = firmwareFileSays(file);
   // A new tab takes the download, so the page keeps its open drive
   var link = firmwareLink("Download for " + file.label, file.url);
   link.className = "firmwareget primary";
-  foot.appendChild(link);
-  return foot;
+  return h("div", {className: "firmwaresheetfoot"},
+           h("div", {className: "firmwarefootsays"}, firmwareFileSays(file)), link);
 }
 
 // The sheet, made on its first opening
@@ -350,52 +333,38 @@ var firmwareFilled = null;
 function fillFirmwareDialog(latest) {
   var bootloader = BOARD.release.bootloader_drive;
 
-  var head = firmwareElement("div", "firmwaresheethead");
-  var back = firmwareElement("button", "", "\u2039 Back");
-  back.type = "button";
-  back.onclick = closeFirmware;
-  var title = firmwareElement("h2", "", "Firmware " + latest.version + " is available");
-  title.id = "firmwareTitle";
-  head.append(back, title);
-
-  var body = firmwareElement("div", "firmwarescroll");
-  body.appendChild(firmwareElement("p", "", "This " + BOARD.name + " runs " + FIRMWARE_SHOWN + "."));
   var split = firmwareWarnings(latest.notes);
-  // Check if the release has warnings, which come first in amber, each behind the warning sign
-  if (split.warnings.length) {
-    var warned = firmwareElement("section", "firmwarewarnings");
-    split.warnings.forEach(function (warning) {
-      warned.appendChild(firmwareElement("p", "", FIRMWARE_SIGN + " " + firmwarePlain(warning)));
-    });
-    body.appendChild(warned);
-  }
   var news = firmwareNotes(split.rest);
-  if (news.length) {
-    body.appendChild(firmwareElement("h3", "", "What's new"));
-    news.forEach(function (one) { body.appendChild(one); });
-  }
-  body.appendChild(firmwareLink("Read the full release notes", latest.url));
-  body.appendChild(firmwareElement("h3", "", "How to update"));
-  var steps = firmwareElement("ol");
-  ["Save to board, so your scenes are on the FX drive.",
-   "Download the firmware below.",
-   "Hold Boot, press " + BOARD.release.reset_button + ", then let go of Boot.",
-   "Drag the .uf2 file onto the " + bootloader + " drive that appears.",
-   "Once the board restarts, open PICKER.html from the FX drive again."
-  ].forEach(function (step) { steps.appendChild(firmwareElement("li", "", step)); });
-  body.appendChild(steps);
-  // The board restarts as the copy ends, which a computer can report as a failed copy, and a copy
-  // that really is cut short leaves the bootloader's drive showing
-  body.appendChild(firmwareElement("p", "firmwarenote",
-    "If your computer reports an error as the board restarts, check whether the " + bootloader +
-    " drive is still showing. If it is, drag the file onto it again."));
-  // A release with a warning may empty the FX drive, so it does not promise to keep it
   var warnings = split.warnings.length;
-  body.appendChild(firmwareElement("p", "firmwarenote", warnings
-    ? "Read the " + (warnings > 1 ? "warnings" : "warning") + " at the top before you start."
-    : "Your FX drive and the files on it are kept."));
-
-  firmwareDialog.replaceChildren(head, body, firmwareFoot(latest));
+  replace(firmwareDialog,
+    h("div", {className: "firmwaresheethead"},
+      h("button", {type: "button", onclick: closeFirmware}, "\u2039 Back"),
+      h("h2", {id: "firmwareTitle"}, "Firmware " + latest.version + " is available")),
+    h("div", {className: "firmwarescroll"},
+      h("p", {}, "This " + BOARD.name + " runs " + FIRMWARE_SHOWN + "."),
+      // Check if the release has warnings, which come first in amber, each behind the warning sign
+      warnings ? h("section", {className: "firmwarewarnings"}, split.warnings.map(function (warning) {
+        return h("p", {}, FIRMWARE_SIGN + " " + firmwarePlain(warning));
+      })) : null,
+      news.length ? [h("h3", {}, "What's new"), news] : null,
+      firmwareLink("Read the full release notes", latest.url),
+      h("h3", {}, "How to update"),
+      h("ol", {}, ["Save to board, so your scenes are on the FX drive.",
+                   "Download the firmware below.",
+                   "Hold Boot, press " + BOARD.release.reset_button + ", then let go of Boot.",
+                   "Drag the .uf2 file onto the " + bootloader + " drive that appears.",
+                   "Once the board restarts, open PICKER.html from the FX drive again."
+                  ].map(function (step) { return h("li", {}, step); })),
+      // The board restarts as the copy ends, which a computer can report as a failed copy, and a
+      // copy that really is cut short leaves the bootloader's drive showing
+      h("p", {className: "firmwarenote"},
+        "If your computer reports an error as the board restarts, check whether the " +
+        bootloader + " drive is still showing. If it is, drag the file onto it again."),
+      // A release with a warning may empty the FX drive, so it does not promise to keep it
+      h("p", {className: "firmwarenote"}, warnings
+        ? "Read the " + (warnings > 1 ? "warnings" : "warning") + " at the top before you start."
+        : "Your FX drive and the files on it are kept.")),
+    firmwareFoot(latest));
 }
 
 // Draw the sheet, or close it where it should not be shown
@@ -405,18 +374,18 @@ function renderFirmwareDialog() {
     return;
   }
   if (!firmwareDialog) {
-    firmwareDialog = firmwareElement("dialog", "firmwaresheet");
-    firmwareDialog.setAttribute("aria-labelledby", "firmwareTitle");
-    // Focusable, so the sheet takes focus itself on opening. The browser would focus the Back
-    // button, which shows its focus outline
-    firmwareDialog.tabIndex = -1;
-    // Escape closes the dialog itself, so the page's state follows it
-    firmwareDialog.onclose = function () { if (firmware.open) closeFirmware(); };
-    // A click on the backdrop lands on the dialog, and one inside it lands on its contents
-    firmwareDialog.onclick = function (event) {
-      if (event.target === firmwareDialog) closeFirmware();
-    };
-    document.body.appendChild(firmwareDialog);
+    firmwareDialog = document.body.appendChild(h("dialog", {
+      className: "firmwaresheet", "aria-labelledby": "firmwareTitle",
+      // Focusable, so the sheet takes focus itself on opening. The browser would focus the Back
+      // button, which shows its focus outline
+      tabIndex: -1,
+      // Escape closes the dialog itself, so the page's state follows it
+      onclose: function () { if (firmware.open) closeFirmware(); },
+      // A click on the backdrop lands on the dialog, and one inside it lands on its contents
+      onclick: function (event) {
+        if (event.target === firmwareDialog) closeFirmware();
+      }
+    }));
   }
   var filling = JSON.stringify(firmware.latest);
   if (filling !== firmwareFilled) {

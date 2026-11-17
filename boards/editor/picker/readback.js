@@ -7,6 +7,7 @@ import {
   argsWritten, boardSet, onProgramPage, programNamed, programsReadSteps, setProgramPage
 } from "./board_settings.js";
 import {WORDS, hexOf, wordFor} from "./colours.js";
+import {h, replace} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "./draw.js";
 import {CONNECT_ORDER, WROTE_KEY, connectSteps, drive} from "./drive.js";
 import {programsKnown} from "./drive_programs.js";
@@ -652,42 +653,32 @@ fileHead.above.push(function () { return boardComments; });
 function renderKept() {
   var box = document.getElementById("keptLines");
   if (!box) {
-    box = document.createElement("div");
-    box.id = "keptLines";
-    box.className = "keptlines";
+    box = h("div", {id: "keptLines", className: "keptlines"});
     // Above the file's own box, so the lines show while the file is folded
     var preview = document.getElementById("preview");
-    var file = preview.closest("details") || preview;
-    file.parentNode.insertBefore(box, file);
+    (preview.closest("details") || preview).before(box);
   }
   var shown = keptNow.filter(function (one) { return one.text !== null; });
   box.hidden = !shown.length;
-  box.textContent = "";
-  if (!shown.length) return;
-
-  var head = document.createElement("div");
-  head.className = "keptsay";
-  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") +
-                     " the picker cannot edit:";
-  box.appendChild(head);
-  keptNow.forEach(function (one, at) {
-    if (one.text === null) return;
-    var row = document.createElement("div");
-    row.className = "keptrow";
-    var code = document.createElement("code");
-    code.textContent = one.text;
-    row.appendChild(code);
-    var drop = document.createElement("button");
-    drop.className = "keptdrop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this line from the file";
-    drop.onclick = function () {
-      keptNow.splice(at, 1);
-      draw();
-    };
-    row.appendChild(drop);
-    box.appendChild(row);
-  });
+  if (!shown.length) {
+    replace(box);
+    return;
+  }
+  replace(box,
+          h("div", {className: "keptsay"},
+            "Lines " + (state.scenes.length ? "in this scene" : "in the file") +
+            " the picker cannot edit:"),
+          keptNow.map(function (one, at) {
+            if (one.text === null) return null;
+            return h("div", {className: "keptrow"}, h("code", {}, one.text),
+                     h("button", {
+                       className: "keptdrop", title: "Remove this line from the file",
+                       onclick: function () {
+                         keptNow.splice(at, 1);
+                         draw();
+                       }
+                     }, "\u00d7"));
+          }));
 }
 
 // Mark the lights a kept line plays as taken, on the run and on a strip's bar

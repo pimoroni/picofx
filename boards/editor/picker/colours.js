@@ -1,3 +1,5 @@
+import {h} from "./dom.js";
+
 // ---- colours ------------------------------------------------------------------------------------
 // Colours turned between hex, RGB and hue, the swatches and their words, and how bright a stretch
 // is drawn at its Brightness.
@@ -117,15 +119,10 @@ export function detented(box, where, count) {
   if (!range || count < 2) return;
   range.step = 1 / (count - 1);
   if (count > MOST_TICKS) return;
-  var ticks = document.createElement("datalist");
-  ticks.id = where + "-detents";
-  for (var at = 0; at < count; at++) {
-    var tick = document.createElement("option");
-    tick.value = at / (count - 1);
-    ticks.appendChild(tick);
-  }
-  range.parentNode.appendChild(ticks);
-  range.setAttribute("list", ticks.id);
+  var ticks = [];
+  for (var at = 0; at < count; at++) ticks.push(h("option", {value: at / (count - 1)}));
+  range.parentNode.appendChild(h("datalist", {id: where + "-detents"}, ticks));
+  range.setAttribute("list", where + "-detents");
 }
 
 // ---- how bright a stretch is -------------------------------------------------------------

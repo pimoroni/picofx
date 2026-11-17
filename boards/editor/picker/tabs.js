@@ -1,3 +1,4 @@
+import {h, replace} from "./dom.js";
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "./draw.js";
 import {renderChosen} from "./led_panels.js";
 import {LED_PANELS, runsOfPanel, workOn} from "./led_sections.js";
@@ -112,36 +113,25 @@ function tabBlocked(panel) {
 
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
-  bar.textContent = "";
-  TAB_PANELS.forEach(function (panel) {
-    var tab = document.createElement("button");
-    tab.type = "button";
+  replace(bar, TAB_PANELS.map(function (panel) {
     var blocked = tabBlocked(panel);
-    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
-    if (blocked) tab.title = blocked;
-    tab.dataset.panel = panel;
-    var name = document.createElement("b");
-    name.textContent = TAB_NAMES[panel];
-    tab.appendChild(name);
-    var swatch = document.createElement("span");
-    swatch.className = "accswatch";
+    var swatch = h("span", {className: "accswatch"});
     tabSwatch(swatch, panel);
-    tab.appendChild(swatch);
-    tab.addEventListener("click", function () {
-      chosenTab = panel;
-      if (chosenTakesLooks()) workOn(panel);
-      showChosen();
-      draw();
-    });
-    bar.appendChild(tab);
-  });
-
-  var gap = document.createElement("span");
-  gap.className = "gap";
-  bar.appendChild(gap);
+    return h("button", {
+      type: "button",
+      className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
+      title: blocked || null, "data-panel": panel,
+      onclick: function () {
+        chosenTab = panel;
+        if (chosenTakesLooks()) workOn(panel);
+        showChosen();
+        draw();
+      }
+    }, h("b", {}, TAB_NAMES[panel]), swatch);
+  }), h("span", {className: "gap"}),
   // The tabs grow and shrink as setting up opens and closes, so they are held where they
   // were on the screen
-  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
+  setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
     var was = bar.getBoundingClientRect().top;
     setSetup(!setupOn);
     draw();
@@ -168,39 +158,23 @@ addStep(drawSteps.after, DRAW_AFTER, "tabs", function () {
   renderLedTabs();
 });
 
-(function () {
-  var bar = document.createElement("div");
-  bar.className = "ledtabs";
-  bar.id = "ledTabs";
-  var first = document.getElementById("outPanel");
-  first.parentNode.insertBefore(bar, first);
+// The tabs, then the one place every tab's section is laid out in. A section a page adds after
+// one of these lands in it too
+var sectionStack = h("div", {className: "tabstack", id: "tabStack"});
+document.getElementById("outPanel").before(h("div", {className: "ledtabs", id: "ledTabs"}),
+                                           sectionStack);
+LED_PANELS.forEach(function (panel) { sectionStack.appendChild(document.getElementById(panel)); });
 
-  // The one place every tab's section is laid out in. A section a page adds after one of
-  // these lands in it too
-  var stack = document.createElement("div");
-  stack.className = "tabstack";
-  stack.id = "tabStack";
-  first.parentNode.insertBefore(stack, first);
-  LED_PANELS.forEach(function (panel) {
-    stack.appendChild(document.getElementById(panel));
-  });
-
-  // The looks go in the box of the chosen section, unless the page's address asks for them above
-  if (!/[?&]above\b/.test(location.search)) {
-    document.body.classList.add("looksbelow");
-    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-  }
-}());
+// The looks go in the box of the chosen section, unless the page's address asks for them above
+if (!/[?&]above\b/.test(location.search)) {
+  document.body.classList.add("looksbelow");
+  document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+}
 
 // ---- turning setup on ------------------------------------------------------------------------
 
+// The board's chip, as every board setting wears it, since this is where they open
 function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
+  return h("button", {type: "button", className: "setupbutton" + (on ? " on" : ""), onclick: act},
+           boardIcon(), label);
 }

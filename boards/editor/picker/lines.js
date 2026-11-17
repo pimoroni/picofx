@@ -1,5 +1,6 @@
 import {blinkList, blinkWord} from "./blink.js";
 import {FAINTEST, WORDS, atBrightness, hexOf, hexRgb, rgbInk, wordFor} from "./colours.js";
+import {h} from "./dom.js";
 import {draw, drawParts} from "./draw.js";
 import {blinkDuty, blinkSpeed, isBanked, lookLines, lookNamed, withSection} from "./looks.js";
 import {
@@ -151,16 +152,14 @@ function stripLines(look, target, pace, mood) {
 // A card carries a painter's palette where its look takes a colour, and the stretch being
 // worked on can be given one
 export function paletteMark() {
-  var palette = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  palette.setAttribute("viewBox", "0 0 16 16");
-  palette.setAttribute("class", "tint palette");
-  palette.innerHTML =
-    "<path fill='currentColor' d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 " +
-    "0-.9-.7-1.1-.7-1.9 0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" +
-    [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function (at) {
-      return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' fill='var(--panel)'/>";
-    }).join("");
-  return palette;
+  return h("svg:svg", {
+    viewBox: "0 0 16 16", class: "tint palette",
+    html: "<path fill='currentColor' d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 " +
+          "0-.9-.7-1.1-.7-1.9 0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" +
+          [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function (at) {
+            return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' fill='var(--panel)'/>";
+          }).join("")
+  });
 }
 
 export function startColour(run, section, look) {
@@ -203,24 +202,17 @@ export function sectionLines(run, section, look) {
 
 export function brightnessSlider(tuning, run, where) {
   var section = run.sections[run.picked];
-  var ahead = tuning.firstChild;
-  var label = document.createElement("label");
-  label.textContent = "Brightness";
-  tuning.insertBefore(label, ahead);
-  var range = document.createElement("input");
-  range.type = "range";
-  range.min = FAINTEST;
-  range.max = 1;
-  range.step = 0.01;
-  range.value = section.level === undefined ? 1 : section.level;
-  range.dataset.focus = where + "-level";
-  range.oninput = function () {
-    run.sections[run.picked].level = Number(range.value);
-    drawParts.preview();
-  };
-  // A colour's hex and its preview show the brightness, so they are drawn again once it is set
-  range.onchange = function () { draw(); };
-  tuning.insertBefore(range, ahead);
+  var range = h("input", {
+    type: "range", min: FAINTEST, max: 1, step: 0.01,
+    value: section.level === undefined ? 1 : section.level, "data-focus": where + "-level",
+    oninput: function () {
+      run.sections[run.picked].level = Number(range.value);
+      drawParts.preview();
+    },
+    // A colour's hex and its preview show the brightness, so they are drawn again once it is set
+    onchange: function () { draw(); }
+  });
+  tuning.prepend(h("label", {}, "Brightness"), range);
 }
 
 // The lines a look writes for a target, as the board will play them

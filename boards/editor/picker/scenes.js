@@ -1,3 +1,4 @@
+import {h, replace} from "./dom.js";
 import {draw} from "./draw.js";
 import {spoken} from "./lines.js";
 import {BOARD, lookNamed} from "./looks.js";
@@ -289,14 +290,14 @@ export function spanTray() {
 // or for Always on how many scenes it plays under
 export function renderSceneAside() {
   var aside = document.getElementById("sceneAside");
-  aside.textContent = "";
-  if (!state.scenes.length) return;
-  var where = document.createElement("span");
-  where.className = "sceneplace";
   var count = state.scenes.length;
+  if (!count) {
+    replace(aside);
+    return;
+  }
   if (state.at < 0) {
-    where.textContent = "Under " + count + (count === 1 ? " scene" : " scenes");
-    aside.appendChild(where);
+    replace(aside, h("span", {className: "sceneplace"},
+                     "Under " + count + (count === 1 ? " scene" : " scenes")));
     return;
   }
   var picked = state.scenes[state.at];
@@ -309,21 +310,15 @@ export function renderSceneAside() {
                                   " waits forever before it"
                                 : "Never shows, as no scene goes on to it";
   }
-  where.classList.toggle("warn", !!problem);
   var ends = picked.waits ? "waits " + (sceneHooks.canWait() ? "for " + sceneHooks.waitsFor()
                                                              : "forever")
            : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
-  where.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
-  where.title = where.textContent;
-  aside.appendChild(where);
-  var remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "sceneremove";
-  remove.textContent = "Remove scene";
-  remove.title = "Remove this scene";
+  var said = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
   var which = state.at;
-  remove.onclick = function () { removeScene(which); };
-  aside.appendChild(remove);
+  replace(aside,
+          h("span", {className: "sceneplace" + (problem ? " warn" : ""), title: said}, said),
+          h("button", {type: "button", className: "sceneremove", title: "Remove this scene",
+                       onclick: function () { removeScene(which); }}, "Remove scene"));
 }
 
 // ---- how a scene ends ---------------------------------------------------------------------------

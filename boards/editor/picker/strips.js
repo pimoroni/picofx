@@ -133,26 +133,18 @@ export var ZOOMS_OVER = 12;
 
 // Each strip has a panel after the outputs', in the board's order, and its board box takes the
 // strip's own colour
-(function () {
-  var colours = document.createElement("style");
-  var after = document.getElementById("outPanel");
-  BOARD.strips.forEach(function (strip) {
-    var id = strip.name;
-    var panel = document.createElement("details");
-    panel.className = "panel strip";
-    panel.id = id + "Panel";
-    panel.open = true;
-    panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) +
-                      "<span class='says'>" + strip.says + "</span></summary>" +
-                      "<div class='leds' id='" + id + "Leds'></div>" +
-                      "<div class='stripbar' id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Chosen'></div>";
-    after.parentNode.insertBefore(panel, after.nextSibling);
-    after = panel;
-    colours.textContent += ".boardchip." + id + "{background:" + strip.colour + "}\n";
-  });
-  document.head.appendChild(colours);
-}());
+document.getElementById("outPanel").after(...BOARD.strips.map(function (strip) {
+  var id = strip.name;
+  return h("details", {className: "panel strip", id: id + "Panel", open: true},
+           h("summary", {}, strip.label.charAt(0).toUpperCase() + strip.label.slice(1),
+             h("span", {className: "says"}, strip.says)),
+           h("div", {className: "leds", id: id + "Leds"}),
+           h("div", {className: "stripbar", id: id + "Bar"}),
+           h("div", {id: id + "Chosen"}));
+}));
+document.head.appendChild(h("style", {}, BOARD.strips.map(function (strip) {
+  return ".boardchip." + strip.name + "{background:" + strip.colour + "}\n";
+}).join("")));
 
 // The strips are runs of the page below from here on. Each scene keeps its own cutting of
 // them in its body, which captures every run

@@ -1,4 +1,5 @@
 import {BLINK, blinkWord} from "./blink.js";
+import {h} from "./dom.js";
 import {PAINT_ORDER, addStep, draw, drawParts, paintAll, paintSteps} from "./draw.js";
 import {
   SOLID_COLOUR, START_MOODS, forwardTargetFor, linesFor, ownColourFor, runsAWay, takesColour,
@@ -502,31 +503,31 @@ export function livePlay(look, holder, t, slot, count, sim) {
 // A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are.
 // Its icon has a light at the end the stretch starts from and an arrow the way it runs
 export function directionToggle(run, section) {
-  var button = document.createElement("button");
-  button.type = "button";
   var look = lookNamed(section.look);
   var moves = runsAWay(look, forwardTargetFor(run, section), section);
-  button.className = "stoggle direction" + (section.reversed ? " reversed" : "") +
-                     (section.reversed && moves ? " on" : "");
-  button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
-  button.disabled = !moves;
-  button.title = !moves ? (!look ? "Which end it starts from, for looks that travel"
-                                 : widthOf(section) < 2 ? "One light has no direction"
-                                 : look.name + " looks the same from either end")
-               : section.reversed ? "Travels from the far end"
-                                  : "Travels from the near end";
-  button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
-    (section.reversed
-      ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-        "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>"
-      : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-        "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>") + "</svg> Reverse";
-  // Through the run, as a page that makes the stretches afresh leaves this one behind
-  button.onclick = function () {
-    remember(run);
-    var live = run.sections[run.picked];
-    live.reversed = !live.reversed;
-    draw();
-  };
-  return button;
+  return h("button", {
+    type: "button",
+    className: "stoggle direction" + (section.reversed ? " reversed" : "") +
+               (section.reversed && moves ? " on" : ""),
+    "aria-pressed": section.reversed && moves ? "true" : "false",
+    disabled: !moves,
+    title: !moves ? (!look ? "Which end it starts from, for looks that travel"
+                           : widthOf(section) < 2 ? "One light has no direction"
+                           : look.name + " looks the same from either end")
+         : section.reversed ? "Travels from the far end" : "Travels from the near end",
+    // Through the run, as a page that makes the stretches afresh leaves this one behind
+    onclick: function () {
+      remember(run);
+      var live = run.sections[run.picked];
+      live.reversed = !live.reversed;
+      draw();
+    }
+  }, h("svg:svg", {
+       width: "28", height: "13", viewBox: "0 0 28 13", "aria-hidden": "true",
+       html: section.reversed
+         ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
+           "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>"
+         : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
+           "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>"
+     }), " Reverse");
 }

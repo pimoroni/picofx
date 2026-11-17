@@ -1,3 +1,4 @@
+import {h, replace} from "./dom.js";
 import {draw} from "./draw.js";
 
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
@@ -22,9 +23,9 @@ if (typeof CATALOGUE === "undefined") {
                       strips: BOARD.strips.map(function (strip) { return strip.name; })};
   assumedPorts.forEach(function (id) { CATALOGUE.board_settings[id] = ["2.8", "1.54"]; });
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("banner").innerHTML =
-      "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
-      "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
+    replace(document.getElementById("banner"), h("div", {className: "banner warn"},
+      "catalogue.js is missing from this folder, so the board's ports are assumed. Run " +
+      "tools/build_editor.py to write it."));
   });
 }
 
@@ -117,15 +118,11 @@ function withoutColour(line) {
 
 // Anything on or off, as a toggle with its icon, greyed where playback would refuse it
 export function toggle(icon, words, on, flip, title, refused) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle" + (on && !refused ? " on" : "");
-  button.dataset.words = words;
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.title = title;
-  button.disabled = !!refused;
-  button.onclick = function () { flip(!on); draw(); };
-  return button;
+  return h("button", {
+    type: "button", className: "stoggle" + (on && !refused ? " on" : ""), "data-words": words,
+    title: title, disabled: !!refused,
+    onclick: function () { flip(!on); draw(); }
+  }, h("span", {"aria-hidden": "true", html: icon}), " " + words);
 }
 
 // ---- the looks -----------------------------------------------------------------

@@ -2149,6 +2149,43 @@ body:has(>dialog.firmwaresheet[open]){overflow:hidden}
  <p class="company">Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</p>
 </footer>
 <script>
+// boards/editor/picker/dom.js
+function h(tag, props, ...children) {
+  var element = tag.indexOf("svg:") === 0 ? document.createElementNS("http://www.w3.org/2000/svg", tag.slice(4)) : document.createElement(tag);
+  Object.entries(props || {}).forEach(function([key, value]) {
+    if (value === null || value === void 0 || value === false) return;
+    if (key.indexOf("on") === 0) element[key] = value;
+    else if (key === "style") Object.entries(value).forEach(function([name, set]) {
+      if (set !== null && set !== void 0) element.style.setProperty(name, set);
+    });
+    else if (key === "text") element.textContent = value;
+    else if (key === "html") element.innerHTML = value;
+    else if (settable(element, key)) element[key] = value;
+    else element.setAttribute(key, value === true ? "" : value);
+  });
+  append(element, children);
+  return element;
+}
+function settable(element, key) {
+  if (element instanceof SVGElement || !(key in element) || typeof element[key] === "function") return false;
+  for (var holder = element; holder; holder = Object.getPrototypeOf(holder)) {
+    var described = Object.getOwnPropertyDescriptor(holder, key);
+    if (described) return !!described.set || !!described.writable;
+  }
+  return false;
+}
+function append(element, children) {
+  children.flat(Infinity).forEach(function(child) {
+    if (child === null || child === void 0 || child === false) return;
+    element.appendChild(child instanceof Node ? child : document.createTextNode(String(child)));
+  });
+  return element;
+}
+function replace(element, ...children) {
+  element.replaceChildren();
+  return append(element, children);
+}
+
 // boards/editor/picker/banner.js
 var SPOT_STEP_MS = 120;
 var spotTimer = null;
@@ -2158,14 +2195,14 @@ function stopSpots() {
 }
 function saving(text) {
   banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
+  var row = h("span", { className: "spots" }, [0, 1, 2, 3, 4, 5, 6].map(function() {
+    return h("i");
+  }));
   document.getElementById("banner").firstChild.appendChild(row);
   var at = 0;
   spotTimer = setInterval(function() {
-    for (var i2 = 0; i2 < row.children.length; i2++)
-      row.children[i2].className = i2 === at ? "lit" : "";
+    for (var i = 0; i < row.children.length; i++)
+      row.children[i].className = i === at ? "lit" : "";
     at = (at + 1) % row.children.length;
   }, SPOT_STEP_MS);
 }
@@ -2176,17 +2213,12 @@ function banner(text, warn, detail) {
     step2(text, warn);
   });
   var box = document.getElementById("banner");
-  box.textContent = "";
-  if (!text) return;
-  var note = document.createElement("div");
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var pre = document.createElement("pre");
-    pre.textContent = detail;
-    note.appendChild(pre);
-  }
-  box.appendChild(note);
+  replace(box, text ? h(
+    "div",
+    { className: warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner" },
+    text,
+    detail ? h("pre", {}, detail) : null
+  ) : null);
 }
 
 // boards/editor/picker/colours.js
@@ -2316,15 +2348,10 @@ function detented(box, where, count) {
   if (!range || count < 2) return;
   range.step = 1 / (count - 1);
   if (count > MOST_TICKS) return;
-  var ticks = document.createElement("datalist");
-  ticks.id = where + "-detents";
-  for (var at = 0; at < count; at++) {
-    var tick = document.createElement("option");
-    tick.value = at / (count - 1);
-    ticks.appendChild(tick);
-  }
-  range.parentNode.appendChild(ticks);
-  range.setAttribute("list", ticks.id);
+  var ticks = [];
+  for (var at = 0; at < count; at++) ticks.push(h("option", { value: at / (count - 1) }));
+  range.parentNode.appendChild(h("datalist", { id: where + "-detents" }, ticks));
+  range.setAttribute("list", where + "-detents");
 }
 var FAINTEST = 0.05;
 function atBrightness(hex, level) {
@@ -2351,43 +2378,6 @@ function blinkNamed(hex) {
 }
 function blinkWord(hex) {
   return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
-}
-
-// boards/editor/picker/dom.js
-function h(tag, props, ...children) {
-  var element = tag.indexOf("svg:") === 0 ? document.createElementNS("http://www.w3.org/2000/svg", tag.slice(4)) : document.createElement(tag);
-  Object.entries(props || {}).forEach(function([key, value]) {
-    if (value === null || value === void 0 || value === false) return;
-    if (key.indexOf("on") === 0) element[key] = value;
-    else if (key === "style") Object.entries(value).forEach(function([name, set]) {
-      if (set !== null && set !== void 0) element.style.setProperty(name, set);
-    });
-    else if (key === "text") element.textContent = value;
-    else if (key === "html") element.innerHTML = value;
-    else if (settable(element, key)) element[key] = value;
-    else element.setAttribute(key, value === true ? "" : value);
-  });
-  append(element, children);
-  return element;
-}
-function settable(element, key) {
-  if (element instanceof SVGElement || !(key in element) || typeof element[key] === "function") return false;
-  for (var holder = element; holder; holder = Object.getPrototypeOf(holder)) {
-    var described = Object.getOwnPropertyDescriptor(holder, key);
-    if (described) return !!described.set || !!described.writable;
-  }
-  return false;
-}
-function append(element, children) {
-  children.flat(Infinity).forEach(function(child) {
-    if (child === null || child === void 0 || child === false) return;
-    element.appendChild(child instanceof Node ? child : document.createTextNode(String(child)));
-  });
-  return element;
-}
-function replace(element, ...children) {
-  element.replaceChildren();
-  return append(element, children);
 }
 
 // boards/editor/picker/draw.js
@@ -2531,7 +2521,11 @@ if (typeof CATALOGUE === "undefined") {
     CATALOGUE.board_settings[id] = ["2.8", "1.54"];
   });
   document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("banner").innerHTML = "<div class='banner warn'>catalogue.js is missing from this folder, so the board's ports are assumed. Run tools/build_editor.py to write it.</div>";
+    replace(document.getElementById("banner"), h(
+      "div",
+      { className: "banner warn" },
+      "catalogue.js is missing from this folder, so the board's ports are assumed. Run tools/build_editor.py to write it."
+    ));
   });
 }
 var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n# MANUAL.html on this drive explains every line.\n";
@@ -2598,18 +2592,17 @@ function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
 }
 function toggle(icon, words, on, flip, title, refused) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle" + (on && !refused ? " on" : "");
-  button.dataset.words = words;
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.title = title;
-  button.disabled = !!refused;
-  button.onclick = function() {
-    flip(!on);
-    draw();
-  };
-  return button;
+  return h("button", {
+    type: "button",
+    className: "stoggle" + (on && !refused ? " on" : ""),
+    "data-words": words,
+    title,
+    disabled: !!refused,
+    onclick: function() {
+      flip(!on);
+      draw();
+    }
+  }, h("span", { "aria-hidden": "true", html: icon }), " " + words);
 }
 var BREATHE_TONES = ["blue", "cool", "cyan", "green", "warm"];
 var SPARKLE_TONES = ["cyan", "cool", "white", "warm", "yellow"];
@@ -3208,13 +3201,13 @@ function stripLines(look, target, pace, mood) {
   return lines;
 }
 function paletteMark() {
-  var palette = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  palette.setAttribute("viewBox", "0 0 16 16");
-  palette.setAttribute("class", "tint palette");
-  palette.innerHTML = "<path fill='currentColor' d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 0-.9-.7-1.1-.7-1.9 0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" + [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function(at) {
-    return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' fill='var(--panel)'/>";
-  }).join("");
-  return palette;
+  return h("svg:svg", {
+    viewBox: "0 0 16 16",
+    class: "tint palette",
+    html: "<path fill='currentColor' d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 0-.9-.7-1.1-.7-1.9 0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" + [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function(at) {
+      return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' fill='var(--panel)'/>";
+    }).join("")
+  });
 }
 function startColour(run, section, look) {
   if (!takesColour(look)) return;
@@ -3258,25 +3251,23 @@ function sectionLines(run, section, look) {
 }
 function brightnessSlider(tuning, run, where) {
   var section = run.sections[run.picked];
-  var ahead = tuning.firstChild;
-  var label = document.createElement("label");
-  label.textContent = "Brightness";
-  tuning.insertBefore(label, ahead);
-  var range = document.createElement("input");
-  range.type = "range";
-  range.min = FAINTEST;
-  range.max = 1;
-  range.step = 0.01;
-  range.value = section.level === void 0 ? 1 : section.level;
-  range.dataset.focus = where + "-level";
-  range.oninput = function() {
-    run.sections[run.picked].level = Number(range.value);
-    drawParts.preview();
-  };
-  range.onchange = function() {
-    draw();
-  };
-  tuning.insertBefore(range, ahead);
+  var range = h("input", {
+    type: "range",
+    min: FAINTEST,
+    max: 1,
+    step: 0.01,
+    value: section.level === void 0 ? 1 : section.level,
+    "data-focus": where + "-level",
+    oninput: function() {
+      run.sections[run.picked].level = Number(range.value);
+      drawParts.preview();
+    },
+    // A colour's hex and its preview show the brightness, so they are drawn again once it is set
+    onchange: function() {
+      draw();
+    }
+  });
+  tuning.prepend(h("label", {}, "Brightness"), range);
 }
 function linesFor(look, target, pace, mood, colour) {
   var lines;
@@ -4860,14 +4851,17 @@ function spanTray() {
 }
 function renderSceneAside() {
   var aside = document.getElementById("sceneAside");
-  aside.textContent = "";
-  if (!state.scenes.length) return;
-  var where = document.createElement("span");
-  where.className = "sceneplace";
   var count = state.scenes.length;
+  if (!count) {
+    replace(aside);
+    return;
+  }
   if (state.at < 0) {
-    where.textContent = "Under " + count + (count === 1 ? " scene" : " scenes");
-    aside.appendChild(where);
+    replace(aside, h(
+      "span",
+      { className: "sceneplace" },
+      "Under " + count + (count === 1 ? " scene" : " scenes")
+    ));
     return;
   }
   var picked = state.scenes[state.at];
@@ -4877,21 +4871,21 @@ function renderSceneAside() {
   if (!problem && unreached.scenes.indexOf(picked) >= 0) {
     problem = unreached.stopper ? "Never shows, as " + unreached.stopper.name.trim() + " waits forever before it" : "Never shows, as no scene goes on to it";
   }
-  where.classList.toggle("warn", !!problem);
   var ends = picked.waits ? "waits " + (sceneHooks.canWait() ? "for " + sceneHooks.waitsFor() : "forever") : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
-  where.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
-  where.title = where.textContent;
-  aside.appendChild(where);
-  var remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "sceneremove";
-  remove.textContent = "Remove scene";
-  remove.title = "Remove this scene";
+  var said = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
   var which = state.at;
-  remove.onclick = function() {
-    removeScene(which);
-  };
-  aside.appendChild(remove);
+  replace(
+    aside,
+    h("span", { className: "sceneplace" + (problem ? " warn" : ""), title: said }, said),
+    h("button", {
+      type: "button",
+      className: "sceneremove",
+      title: "Remove this scene",
+      onclick: function() {
+        removeScene(which);
+      }
+    }, "Remove scene")
+  );
 }
 var sceneMarks = 0;
 function sceneMark(scene) {
@@ -5614,22 +5608,28 @@ function livePlay(look, holder, t, slot, count, sim) {
   });
 }
 function directionToggle(run, section) {
-  var button = document.createElement("button");
-  button.type = "button";
   var look = lookNamed(section.look);
   var moves = runsAWay(look, forwardTargetFor(run, section), section);
-  button.className = "stoggle direction" + (section.reversed ? " reversed" : "") + (section.reversed && moves ? " on" : "");
-  button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
-  button.disabled = !moves;
-  button.title = !moves ? !look ? "Which end it starts from, for looks that travel" : widthOf(section) < 2 ? "One light has no direction" : look.name + " looks the same from either end" : section.reversed ? "Travels from the far end" : "Travels from the near end";
-  button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" + (section.reversed ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/><path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>" : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/><path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>") + "</svg> Reverse";
-  button.onclick = function() {
-    remember(run);
-    var live = run.sections[run.picked];
-    live.reversed = !live.reversed;
-    draw();
-  };
-  return button;
+  return h("button", {
+    type: "button",
+    className: "stoggle direction" + (section.reversed ? " reversed" : "") + (section.reversed && moves ? " on" : ""),
+    "aria-pressed": section.reversed && moves ? "true" : "false",
+    disabled: !moves,
+    title: !moves ? !look ? "Which end it starts from, for looks that travel" : widthOf(section) < 2 ? "One light has no direction" : look.name + " looks the same from either end" : section.reversed ? "Travels from the far end" : "Travels from the near end",
+    // Through the run, as a page that makes the stretches afresh leaves this one behind
+    onclick: function() {
+      remember(run);
+      var live = run.sections[run.picked];
+      live.reversed = !live.reversed;
+      draw();
+    }
+  }, h("svg:svg", {
+    width: "28",
+    height: "13",
+    viewBox: "0 0 28 13",
+    "aria-hidden": "true",
+    html: section.reversed ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/><path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>" : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/><path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>"
+  }), " Reverse");
 }
 
 // boards/editor/picker/strips.js
@@ -5718,22 +5718,25 @@ function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? { brightness } : null;
 }
 var ZOOMS_OVER = 12;
-(function() {
-  var colours = document.createElement("style");
-  var after = document.getElementById("outPanel");
-  BOARD.strips.forEach(function(strip) {
-    var id = strip.name;
-    var panel = document.createElement("details");
-    panel.className = "panel strip";
-    panel.id = id + "Panel";
-    panel.open = true;
-    panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) + "<span class='says'>" + strip.says + "</span></summary><div class='leds' id='" + id + "Leds'></div><div class='stripbar' id='" + id + "Bar'></div><div id='" + id + "Chosen'></div>";
-    after.parentNode.insertBefore(panel, after.nextSibling);
-    after = panel;
-    colours.textContent += ".boardchip." + id + "{background:" + strip.colour + "}\n";
-  });
-  document.head.appendChild(colours);
-})();
+document.getElementById("outPanel").after(...BOARD.strips.map(function(strip) {
+  var id = strip.name;
+  return h(
+    "details",
+    { className: "panel strip", id: id + "Panel", open: true },
+    h(
+      "summary",
+      {},
+      strip.label.charAt(0).toUpperCase() + strip.label.slice(1),
+      h("span", { className: "says" }, strip.says)
+    ),
+    h("div", { className: "leds", id: id + "Leds" }),
+    h("div", { className: "stripbar", id: id + "Bar" }),
+    h("div", { id: id + "Chosen" })
+  );
+}));
+document.head.appendChild(h("style", {}, BOARD.strips.map(function(strip) {
+  return ".boardchip." + strip.name + "{background:" + strip.colour + "}\n";
+}).join("")));
 runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 var stripDrawing = { leds: function() {
@@ -6311,12 +6314,6 @@ function closeFirmware() {
   firmware.open = false;
   draw();
 }
-function firmwareElement(tag, className, text) {
-  var made = document.createElement(tag);
-  if (className) made.className = className;
-  if (text) made.textContent = text;
-  return made;
-}
 var firmwareButton = null;
 function renderFirmwareButton() {
   var where = document.getElementById("firmware");
@@ -6324,11 +6321,11 @@ function renderFirmwareButton() {
   where.hidden = !behind;
   if (!behind) return;
   if (!firmwareButton) {
-    firmwareButton = firmwareElement("button", "", "Update available");
-    firmwareButton.type = "button";
-    firmwareButton.setAttribute("aria-haspopup", "dialog");
-    firmwareButton.onclick = openFirmware;
-    where.appendChild(firmwareButton);
+    firmwareButton = where.appendChild(h("button", {
+      type: "button",
+      "aria-haspopup": "dialog",
+      onclick: openFirmware
+    }, "Update available"));
   }
   var version = firmware.latest.version;
   var heed = firmwareWarnings(firmware.latest.notes).warnings.length > 0;
@@ -6344,19 +6341,19 @@ function firmwareNotes(text) {
     if (alert) {
       list = null;
       var kind = alert[1].toLowerCase();
-      shown.push(firmwareElement("h4", "", kind.charAt(0).toUpperCase() + kind.slice(1)));
+      shown.push(h("h4", {}, kind.charAt(0).toUpperCase() + kind.slice(1)));
       return;
     }
     var item = /^\s*[-*]\s+(.*)$/.exec(line);
     if (item) {
-      if (!list) shown.push(list = firmwareElement("ul"));
-      list.appendChild(firmwareElement("li", "", firmwarePlain(item[1])));
+      if (!list) shown.push(list = h("ul"));
+      list.appendChild(h("li", {}, firmwarePlain(item[1]) || null));
       return;
     }
     list = null;
     var heading = /^\s*#+\s+(.*)$/.exec(line);
-    if (heading) shown.push(firmwareElement("h4", "", firmwarePlain(heading[1])));
-    else if (line.trim()) shown.push(firmwareElement("p", "", firmwarePlain(line)));
+    if (heading) shown.push(h("h4", {}, firmwarePlain(heading[1]) || null));
+    else if (line.trim()) shown.push(h("p", {}, firmwarePlain(line) || null));
   });
   return shown;
 }
@@ -6364,82 +6361,81 @@ function firmwarePlain(text) {
   return text.replace(/\*\*|`/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 }
 function firmwareLink(text, url) {
-  var link = firmwareElement("a", "", text);
-  link.href = url;
-  link.target = "_blank";
-  link.rel = "noopener";
-  return link;
+  return h("a", { href: url, target: "_blank", rel: "noopener" }, text);
 }
 function firmwareFileSays(file) {
   return file.name + ", " + (file.size / 1048576).toFixed(1) + " MB";
 }
 function firmwareFoot(latest) {
-  var foot = firmwareElement("div", "firmwaresheetfoot");
-  var says = firmwareElement("div", "firmwarefootsays");
-  foot.appendChild(says);
   var file = latest.files[0];
   if (!file) {
-    says.append(
-      latest.known ? "This release has no file for " + BOARD.name + " yet. " : "This page could not tell which " + BOARD.name + " this is. ",
-      firmwareLink("See the release", latest.url)
+    return h(
+      "div",
+      { className: "firmwaresheetfoot" },
+      h(
+        "div",
+        { className: "firmwarefootsays" },
+        latest.known ? "This release has no file for " + BOARD.name + " yet. " : "This page could not tell which " + BOARD.name + " this is. ",
+        firmwareLink("See the release", latest.url)
+      )
     );
-    return foot;
   }
-  says.textContent = firmwareFileSays(file);
   var link = firmwareLink("Download for " + file.label, file.url);
   link.className = "firmwareget primary";
-  foot.appendChild(link);
-  return foot;
+  return h(
+    "div",
+    { className: "firmwaresheetfoot" },
+    h("div", { className: "firmwarefootsays" }, firmwareFileSays(file)),
+    link
+  );
 }
 var firmwareDialog = null;
 var firmwareFilled = null;
 function fillFirmwareDialog(latest) {
   var bootloader = BOARD.release.bootloader_drive;
-  var head = firmwareElement("div", "firmwaresheethead");
-  var back = firmwareElement("button", "", "\u2039 Back");
-  back.type = "button";
-  back.onclick = closeFirmware;
-  var title = firmwareElement("h2", "", "Firmware " + latest.version + " is available");
-  title.id = "firmwareTitle";
-  head.append(back, title);
-  var body = firmwareElement("div", "firmwarescroll");
-  body.appendChild(firmwareElement("p", "", "This " + BOARD.name + " runs " + FIRMWARE_SHOWN + "."));
   var split = firmwareWarnings(latest.notes);
-  if (split.warnings.length) {
-    var warned = firmwareElement("section", "firmwarewarnings");
-    split.warnings.forEach(function(warning) {
-      warned.appendChild(firmwareElement("p", "", FIRMWARE_SIGN + " " + firmwarePlain(warning)));
-    });
-    body.appendChild(warned);
-  }
   var news = firmwareNotes(split.rest);
-  if (news.length) {
-    body.appendChild(firmwareElement("h3", "", "What's new"));
-    news.forEach(function(one) {
-      body.appendChild(one);
-    });
-  }
-  body.appendChild(firmwareLink("Read the full release notes", latest.url));
-  body.appendChild(firmwareElement("h3", "", "How to update"));
-  var steps = firmwareElement("ol");
-  [
-    "Save to board, so your scenes are on the FX drive.",
-    "Download the firmware below.",
-    "Hold Boot, press " + BOARD.release.reset_button + ", then let go of Boot.",
-    "Drag the .uf2 file onto the " + bootloader + " drive that appears.",
-    "Once the board restarts, open PICKER.html from the FX drive again."
-  ].forEach(function(step2) {
-    steps.appendChild(firmwareElement("li", "", step2));
-  });
-  body.appendChild(steps);
-  body.appendChild(firmwareElement(
-    "p",
-    "firmwarenote",
-    "If your computer reports an error as the board restarts, check whether the " + bootloader + " drive is still showing. If it is, drag the file onto it again."
-  ));
   var warnings = split.warnings.length;
-  body.appendChild(firmwareElement("p", "firmwarenote", warnings ? "Read the " + (warnings > 1 ? "warnings" : "warning") + " at the top before you start." : "Your FX drive and the files on it are kept."));
-  firmwareDialog.replaceChildren(head, body, firmwareFoot(latest));
+  replace(
+    firmwareDialog,
+    h(
+      "div",
+      { className: "firmwaresheethead" },
+      h("button", { type: "button", onclick: closeFirmware }, "\u2039 Back"),
+      h("h2", { id: "firmwareTitle" }, "Firmware " + latest.version + " is available")
+    ),
+    h(
+      "div",
+      { className: "firmwarescroll" },
+      h("p", {}, "This " + BOARD.name + " runs " + FIRMWARE_SHOWN + "."),
+      // Check if the release has warnings, which come first in amber, each behind the warning sign
+      warnings ? h("section", { className: "firmwarewarnings" }, split.warnings.map(function(warning) {
+        return h("p", {}, FIRMWARE_SIGN + " " + firmwarePlain(warning));
+      })) : null,
+      news.length ? [h("h3", {}, "What's new"), news] : null,
+      firmwareLink("Read the full release notes", latest.url),
+      h("h3", {}, "How to update"),
+      h("ol", {}, [
+        "Save to board, so your scenes are on the FX drive.",
+        "Download the firmware below.",
+        "Hold Boot, press " + BOARD.release.reset_button + ", then let go of Boot.",
+        "Drag the .uf2 file onto the " + bootloader + " drive that appears.",
+        "Once the board restarts, open PICKER.html from the FX drive again."
+      ].map(function(step2) {
+        return h("li", {}, step2);
+      })),
+      // The board restarts as the copy ends, which a computer can report as a failed copy, and a
+      // copy that really is cut short leaves the bootloader's drive showing
+      h(
+        "p",
+        { className: "firmwarenote" },
+        "If your computer reports an error as the board restarts, check whether the " + bootloader + " drive is still showing. If it is, drag the file onto it again."
+      ),
+      // A release with a warning may empty the FX drive, so it does not promise to keep it
+      h("p", { className: "firmwarenote" }, warnings ? "Read the " + (warnings > 1 ? "warnings" : "warning") + " at the top before you start." : "Your FX drive and the files on it are kept.")
+    ),
+    firmwareFoot(latest)
+  );
 }
 function renderFirmwareDialog() {
   if (!firmware.open || !firmware.latest) {
@@ -6447,16 +6443,21 @@ function renderFirmwareDialog() {
     return;
   }
   if (!firmwareDialog) {
-    firmwareDialog = firmwareElement("dialog", "firmwaresheet");
-    firmwareDialog.setAttribute("aria-labelledby", "firmwareTitle");
-    firmwareDialog.tabIndex = -1;
-    firmwareDialog.onclose = function() {
-      if (firmware.open) closeFirmware();
-    };
-    firmwareDialog.onclick = function(event) {
-      if (event.target === firmwareDialog) closeFirmware();
-    };
-    document.body.appendChild(firmwareDialog);
+    firmwareDialog = document.body.appendChild(h("dialog", {
+      className: "firmwaresheet",
+      "aria-labelledby": "firmwareTitle",
+      // Focusable, so the sheet takes focus itself on opening. The browser would focus the Back
+      // button, which shows its focus outline
+      tabIndex: -1,
+      // Escape closes the dialog itself, so the page's state follows it
+      onclose: function() {
+        if (firmware.open) closeFirmware();
+      },
+      // A click on the backdrop lands on the dialog, and one inside it lands on its contents
+      onclick: function(event) {
+        if (event.target === firmwareDialog) closeFirmware();
+      }
+    }));
   }
   var filling = JSON.stringify(firmware.latest);
   if (filling !== firmwareFilled) {
@@ -7386,38 +7387,35 @@ function tabBlocked(panel) {
 }
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
-  bar.textContent = "";
-  TAB_PANELS.forEach(function(panel) {
-    var tab = document.createElement("button");
-    tab.type = "button";
-    var blocked = tabBlocked(panel);
-    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
-    if (blocked) tab.title = blocked;
-    tab.dataset.panel = panel;
-    var name = document.createElement("b");
-    name.textContent = TAB_NAMES[panel];
-    tab.appendChild(name);
-    var swatch = document.createElement("span");
-    swatch.className = "accswatch";
-    tabSwatch(swatch, panel);
-    tab.appendChild(swatch);
-    tab.addEventListener("click", function() {
-      chosenTab = panel;
-      if (chosenTakesLooks()) workOn(panel);
-      showChosen();
+  replace(
+    bar,
+    TAB_PANELS.map(function(panel) {
+      var blocked = tabBlocked(panel);
+      var swatch = h("span", { className: "accswatch" });
+      tabSwatch(swatch, panel);
+      return h("button", {
+        type: "button",
+        className: "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : ""),
+        title: blocked || null,
+        "data-panel": panel,
+        onclick: function() {
+          chosenTab = panel;
+          if (chosenTakesLooks()) workOn(panel);
+          showChosen();
+          draw();
+        }
+      }, h("b", {}, TAB_NAMES[panel]), swatch);
+    }),
+    h("span", { className: "gap" }),
+    // The tabs grow and shrink as setting up opens and closes, so they are held where they
+    // were on the screen
+    setupButton(setupOn ? "Done" : "Edit board", setupOn, function() {
+      var was = bar.getBoundingClientRect().top;
+      setSetup(!setupOn);
       draw();
-    });
-    bar.appendChild(tab);
-  });
-  var gap = document.createElement("span");
-  gap.className = "gap";
-  bar.appendChild(gap);
-  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function() {
-    var was = bar.getBoundingClientRect().top;
-    setSetup(!setupOn);
-    draw();
-    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
-  }));
+      window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
+    })
+  );
 }
 function keptOpen(panel) {
   var node = document.getElementById(panel);
@@ -7436,48 +7434,39 @@ addStep(drawSteps.after, DRAW_AFTER, "tabs", function() {
   });
   renderLedTabs();
 });
-(function() {
-  var bar = document.createElement("div");
-  bar.className = "ledtabs";
-  bar.id = "ledTabs";
-  var first = document.getElementById("outPanel");
-  first.parentNode.insertBefore(bar, first);
-  var stack = document.createElement("div");
-  stack.className = "tabstack";
-  stack.id = "tabStack";
-  first.parentNode.insertBefore(stack, first);
-  LED_PANELS.forEach(function(panel) {
-    stack.appendChild(document.getElementById(panel));
-  });
-  if (!/[?&]above\b/.test(location.search)) {
-    document.body.classList.add("looksbelow");
-    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
-  }
-})();
+var sectionStack = h("div", { className: "tabstack", id: "tabStack" });
+document.getElementById("outPanel").before(
+  h("div", { className: "ledtabs", id: "ledTabs" }),
+  sectionStack
+);
+LED_PANELS.forEach(function(panel) {
+  sectionStack.appendChild(document.getElementById(panel));
+});
+if (!/[?&]above\b/.test(location.search)) {
+  document.body.classList.add("looksbelow");
+  document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+}
 function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
+  return h(
+    "button",
+    { type: "button", className: "setupbutton" + (on ? " on" : ""), onclick: act },
+    boardIcon(),
+    label
+  );
 }
 var firstFitted;
 
 // boards/editor/picker/tab_swatches.js
 function liveSwatch(swatch, panel) {
-  swatch.textContent = "";
   swatch.className = "accswatch liveswatch";
   var absent = runsOfPanel(panel).every(function(run) {
     return run.strip && run.there === false;
   });
   if (absent) swatch.classList.add("absent");
+  replace(swatch);
   runsOfPanel(panel).forEach(function(run) {
     var cells = run.lamps.map(function() {
-      var cell = document.createElement("span");
-      swatch.appendChild(cell);
-      return cell;
+      return swatch.appendChild(h("span"));
     });
     painters.push({ run, paint: function(all) {
       cells.forEach(function(cell, at) {
@@ -8402,26 +8391,34 @@ async function rescanMedia() {
   if (driveSaid() !== was) draw();
 }
 function adderTile(label, kinds, what, takes) {
-  var tile = document.createElement("button");
-  tile.className = "adder";
-  tile.innerHTML = "<svg width='13' height='13' viewBox='0 0 11 11'><path d='M5.5 1 L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/></svg>" + label;
-  tile.title = "Copy files from this computer onto the FX drive";
-  tile.onclick = function() {
-    addFiles(kinds, what, takes);
-  };
-  return tile;
+  return h(
+    "button",
+    {
+      className: "adder",
+      title: "Copy files from this computer onto the FX drive",
+      onclick: function() {
+        addFiles(kinds, what, takes);
+      }
+    },
+    h("svg:svg", {
+      width: "13",
+      height: "13",
+      viewBox: "0 0 11 11",
+      html: "<path d='M5.5 1 L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round'/>"
+    }),
+    label
+  );
 }
 function binButton(name, kind) {
   if (!CAN_REACH_A_DRIVE) return document.createTextNode("");
-  var bin = document.createElement("span");
-  bin.className = "bin";
-  bin.textContent = "\xD7";
-  bin.title = "Delete " + name + " from the FX drive";
-  bin.onclick = function(e) {
-    e.stopPropagation();
-    removeFromDrive(name, kind);
-  };
-  return bin;
+  return h("span", {
+    className: "bin",
+    title: "Delete " + name + " from the FX drive",
+    onclick: function(e) {
+      e.stopPropagation();
+      removeFromDrive(name, kind);
+    }
+  }, "\xD7");
 }
 async function addFiles(kinds, what, takes) {
   var picked;
@@ -11520,41 +11517,42 @@ fileHead.above.push(function() {
 function renderKept() {
   var box = document.getElementById("keptLines");
   if (!box) {
-    box = document.createElement("div");
-    box.id = "keptLines";
-    box.className = "keptlines";
+    box = h("div", { id: "keptLines", className: "keptlines" });
     var preview = document.getElementById("preview");
-    var file = preview.closest("details") || preview;
-    file.parentNode.insertBefore(box, file);
+    (preview.closest("details") || preview).before(box);
   }
   var shown = keptNow.filter(function(one) {
     return one.text !== null;
   });
   box.hidden = !shown.length;
-  box.textContent = "";
-  if (!shown.length) return;
-  var head = document.createElement("div");
-  head.className = "keptsay";
-  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") + " the picker cannot edit:";
-  box.appendChild(head);
-  keptNow.forEach(function(one, at) {
-    if (one.text === null) return;
-    var row = document.createElement("div");
-    row.className = "keptrow";
-    var code = document.createElement("code");
-    code.textContent = one.text;
-    row.appendChild(code);
-    var drop = document.createElement("button");
-    drop.className = "keptdrop";
-    drop.textContent = "\xD7";
-    drop.title = "Remove this line from the file";
-    drop.onclick = function() {
-      keptNow.splice(at, 1);
-      draw();
-    };
-    row.appendChild(drop);
-    box.appendChild(row);
-  });
+  if (!shown.length) {
+    replace(box);
+    return;
+  }
+  replace(
+    box,
+    h(
+      "div",
+      { className: "keptsay" },
+      "Lines " + (state.scenes.length ? "in this scene" : "in the file") + " the picker cannot edit:"
+    ),
+    keptNow.map(function(one, at) {
+      if (one.text === null) return null;
+      return h(
+        "div",
+        { className: "keptrow" },
+        h("code", {}, one.text),
+        h("button", {
+          className: "keptdrop",
+          title: "Remove this line from the file",
+          onclick: function() {
+            keptNow.splice(at, 1);
+            draw();
+          }
+        }, "\xD7")
+      );
+    })
+  );
 }
 function markKeptLights() {
   runs.forEach(function(run) {

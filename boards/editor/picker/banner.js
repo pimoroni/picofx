@@ -1,3 +1,5 @@
+import {h, replace} from "./dom.js";
+
 // ---- the banner ---------------------------------------------------------------------------------
 // The line that says what the page is doing, and the spots that move along it while a save is
 // under way.
@@ -13,9 +15,7 @@ function stopSpots() {
 
 export function saving(text) {
   banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
+  var row = h("span", {className: "spots"}, [0, 1, 2, 3, 4, 5, 6].map(function () { return h("i"); }));
   document.getElementById("banner").firstChild.appendChild(row);
   var at = 0;
   spotTimer = setInterval(function () {
@@ -32,16 +32,9 @@ export function banner(text, warn, detail) {
   stopSpots();
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
-  box.textContent = "";
-  if (!text) return;
-  var note = document.createElement("div");
   // The warn argument may also be "hold", the amber of a save or check still under way
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var pre = document.createElement("pre");
-    pre.textContent = detail;
-    note.appendChild(pre);
-  }
-  box.appendChild(note);
+  replace(box, text ? h("div", {className: warn === "hold" ? "banner hold" : warn ? "banner warn"
+                                                                                : "banner"},
+                        text, detail ? h("pre", {}, detail) : null)
+                    : null);
 }

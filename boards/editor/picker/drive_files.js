@@ -1,5 +1,6 @@
 import {banner} from "./banner.js";
 import {screenHooks} from "./board.js";
+import {h} from "./dom.js";
 import {addStep, draw} from "./draw.js";
 import {
   CAN_REACH_A_DRIVE, CONNECT_ORDER, connectSteps, drive, driveTrouble, isHiddenName
@@ -201,27 +202,24 @@ async function rescanMedia() {
 }
 
 export function adderTile(label, kinds, what, takes) {
-  var tile = document.createElement("button");
-  tile.className = "adder";
-  tile.innerHTML = "<svg width='13' height='13' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" + label;
-  tile.title = "Copy files from this computer onto the FX drive";
-  tile.onclick = function () { addFiles(kinds, what, takes); };
-  return tile;
+  return h("button", {
+    className: "adder", title: "Copy files from this computer onto the FX drive",
+    onclick: function () { addFiles(kinds, what, takes); }
+  }, h("svg:svg", {width: "13", height: "13", viewBox: "0 0 11 11",
+                   html: "<path d='M5.5 1 L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' " +
+                         "stroke-width='1.8' stroke-linecap='round'/>"}),
+     label);
 }
 
 export function binButton(name, kind) {
   if (!CAN_REACH_A_DRIVE) return document.createTextNode("");
-  var bin = document.createElement("span");
-  bin.className = "bin";
-  bin.textContent = "\u00d7";
-  bin.title = "Delete " + name + " from the FX drive";
-  bin.onclick = function (e) {
-    e.stopPropagation();
-    removeFromDrive(name, kind);
-  };
-  return bin;
+  return h("span", {
+    className: "bin", title: "Delete " + name + " from the FX drive",
+    onclick: function (e) {
+      e.stopPropagation();
+      removeFromDrive(name, kind);
+    }
+  }, "\u00d7");
 }
 
 async function addFiles(kinds, what, takes) {
