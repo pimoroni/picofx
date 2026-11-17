@@ -109,7 +109,7 @@
 <style>
 :root{
  --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
- --accent:#00857d; --accent-ink:#fff; --strip:#1f6feb; --mono:#c2570f; --dark:#191b1d;
+ --accent:#00857d; --accent-ink:#fff; --strip:#1f6feb; --dark:#191b1d;
  --surface:#fbfaf8; --surface-2:#f0eeea; --line-strong:#c9c3b9; --dim-strong:#6b655c;
  --overlay:rgba(20,20,22,.72); --screenB:#a44ad0; --hold:#8a6415; --hold-bg:#fdf3e0;
  --accent-glow:rgba(15,138,114,.25); --unlit:#2a2d30; --dashed:#a9a49b;
@@ -156,7 +156,6 @@ main{width:100%;max-width:60rem;margin:var(--space-7) auto;padding:0 var(--space
  padding:var(--space-3) var(--space-4);
  border-radius:var(--radius);color:#fff;font:600 var(--text-m) var(--font)}
 .chip.strip{background:var(--strip)}
-.chip.mono{background:var(--mono)}
 .chip input[type=number]{width:4.2rem;padding:var(--space-1) var(--space-3);text-align:center;
  border:1px solid rgba(255,255,255,.55);border-radius:var(--radius-s);
  background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400}
@@ -411,7 +410,6 @@ body.setupall .bar.carded .sec .cut{display:none}
    board has none of is offered but not taken. It says what breaking an output out would
    give rather than leaving a gap where a choice used to be */
 .tabs{display:flex;align-items:baseline;gap:var(--space-3);margin:var(--space-7) 0 var(--space-4)}
-.tabs .of{font:600 var(--text-l) var(--font);margin-right:var(--space-3)}
 .tabs button{font-size:var(--text-m);padding:var(--space-3) var(--space-5);
  border-radius:var(--radius)}
 .tabs button.on{border-color:var(--accent);color:var(--accent);font-weight:600;
@@ -999,11 +997,8 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .screen-box .body{padding:var(--space-5) var(--space-6);display:flex;flex-direction:column;
  gap:var(--space-5);
  align-items:center}
-.screen-box .row{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 select{font:inherit;font-size:var(--text-m);padding:var(--space-2) var(--space-3);
  border:1px solid var(--line);border-radius:var(--radius-s)}
-.showing{font-size:var(--text-m);color:var(--dim);margin-top:var(--space-3)}
-.showing b{color:var(--ink)}
 /* One sound plays at a time, so these behave as a gallery of one choice, each
    showing its shape and how long it runs */
 .sounds{display:flex;flex-wrap:wrap;gap:var(--space-5)}
@@ -1019,13 +1014,6 @@ select{font:inherit;font-size:var(--text-m);padding:var(--space-2) var(--space-3
 .sound b{display:block;font:600 var(--text-s)/1.5 var(--font);color:var(--ink);
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sound small{color:var(--dim);font-size:var(--text-xs)}
-/* Whether it starts again as it ends */
-.again{align-self:center;padding:var(--space-3) var(--space-4);border:1px solid var(--line);
- border-radius:var(--radius);background:var(--panel);font:400 var(--text-s) var(--font);
- color:var(--dim);cursor:pointer}
-.again:hover:enabled{border-color:var(--dim);color:var(--ink)}
-.again:disabled{opacity:.45;cursor:default}
-.again.on{border-color:var(--accent);color:var(--accent);font-weight:600}
 #status{font-size:var(--text-m);color:var(--dim)}
 .banner{padding:var(--space-5) var(--space-6);border-radius:var(--radius-l);margin:var(--space-6) 0;
  background:#e7f2f1}
@@ -1510,8 +1498,6 @@ html{scrollbar-gutter:stable}
 /* The tile adding sounds is the size of a sound's */
 .sounds .adder{width:auto;align-self:stretch}
 .sound svg{height:3.6rem;border-bottom:1px solid var(--line)}
-.sound .nothingface{display:block;height:3.6rem;border-bottom:1px solid var(--line);
- background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 7px,var(--line) 7px,var(--line) 14px)}
 .sound b{padding:var(--space-3) var(--space-4) 0}
 .sound small{display:block;padding:0 var(--space-4) var(--space-3)}
 /* A screen showing nothing wears the stripes of nothing, as a lamp playing nothing and an empty
@@ -1790,7 +1776,6 @@ body.discovermodal{overflow:hidden}
 .screen-box .body.adding{justify-content:center;padding:var(--space-7) var(--space-6)}
 .screen-box .settings{width:100%;display:grid;grid-template-columns:1fr 1fr;
  gap:var(--space-3) var(--space-5);align-items:center}
-.screen-box .settings .showing{margin:0}
 .holder{flex-shrink:0;line-height:0}
 .twopanels .holder{zoom:.6}
 .screenssays{margin:0 0 var(--space-5)}
@@ -1938,16 +1923,11 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:var(--radius-s);font-size:var(--text-xs);color:var(--dim);
  background:var(--cross) transparent;outline:1px dashed var(--dashed);outline-offset:-1px}
-.placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:var(--radius);
- background:var(--panel);color:var(--hub);font:600 var(--text-s) var(--font);
- padding:var(--space-1) var(--space-4)}
-.placefit .boardicon{color:var(--hub)}
 .place .boardremove{padding:var(--space-1) var(--space-3)}
 .placenone .boardadd{font-size:var(--text-xs);padding:var(--space-2) var(--space-3)}
 .hubsettings{width:100%;display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-5);
  align-items:center;
  min-height:2rem}
-.hubsettings .showing{margin:0}
 .hubsettings .opt{display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-m);
  color:var(--dim);
  cursor:pointer}

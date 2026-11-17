@@ -13,7 +13,6 @@
 .screen-box .body.adding{justify-content:center;padding:var(--space-7) var(--space-6)}
 .screen-box .settings{width:100%;display:grid;grid-template-columns:1fr 1fr;
  gap:var(--space-3) var(--space-5);align-items:center}
-.screen-box .settings .showing{margin:0}
 .holder{flex-shrink:0;line-height:0}
 .twopanels .holder{zoom:.6}
 .screenssays{margin:0 0 var(--space-5)}

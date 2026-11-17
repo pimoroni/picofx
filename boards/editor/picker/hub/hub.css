@@ -31,16 +31,11 @@
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:var(--radius-s);font-size:var(--text-xs);color:var(--dim);
  background:var(--cross) transparent;outline:1px dashed var(--dashed);outline-offset:-1px}
-.placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:var(--radius);
- background:var(--panel);color:var(--hub);font:600 var(--text-s) var(--font);
- padding:var(--space-1) var(--space-4)}
-.placefit .boardicon{color:var(--hub)}
 .place .boardremove{padding:var(--space-1) var(--space-3)}
 .placenone .boardadd{font-size:var(--text-xs);padding:var(--space-2) var(--space-3)}
 .hubsettings{width:100%;display:flex;flex-wrap:wrap;gap:var(--space-3) var(--space-5);
  align-items:center;
  min-height:2rem}
-.hubsettings .showing{margin:0}
 .hubsettings .opt{display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-m);
  color:var(--dim);
  cursor:pointer}
