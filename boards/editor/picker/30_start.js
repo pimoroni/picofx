@@ -10,4 +10,6 @@ state.always.body = capture();
 workOn(chosenTab);
 showChosen();
 draw();
+// What the page opens with is not a change to keep, until a drive is read or saved to
+drive.text = currentText();
 if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }

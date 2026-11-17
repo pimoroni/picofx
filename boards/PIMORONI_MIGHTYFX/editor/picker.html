@@ -4549,7 +4549,10 @@ function renderSceneAside() {
   remove.textContent = "Remove scene";
   remove.title = "Remove this scene";
   var which = state.at;
-  remove.onclick = function () { removeScene(which); };
+  remove.onclick = function () {
+    var name = picked.name.trim() || "this scene";
+    if (confirm("Remove " + name + " and everything it plays?")) removeScene(which);
+  };
   aside.appendChild(remove);
 }
 
@@ -14270,7 +14273,9 @@ function openFresh() { openDrive(true); }
 var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 
-var drive = {dirHandle: null, fileHandle: null};
+// The drive's handles, and the page's text as it was last read from or saved to the drive, which
+// says whether the page holds changes not yet saved
+var drive = {dirHandle: null, fileHandle: null, text: null};
 
 // The board's answer as this page shows it: what errors.txt said, and the file it was about,
 // so a line is marked only while the page still writes it the same
@@ -14399,6 +14404,7 @@ document.getElementById("save").onclick = async function () {
       throw differs;
     }
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
+    drive.text = text;
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
@@ -14484,6 +14490,14 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 // Check if the page has changed since the save the banner reports on
 drawSteps.after.push(function () {
   if (reportedSave !== null && currentText() !== reportedSave) banner("");
+});
+
+// Leaving or reloading the page asks first where it holds changes not yet saved. The browser
+// words the question itself
+window.addEventListener("beforeunload", function (event) {
+  if (drive.text === null || currentText() === drive.text) return;
+  event.preventDefault();
+  event.returnValue = "";
 });
 
 if (!CAN_REACH_A_DRIVE) {
@@ -14777,6 +14791,9 @@ function saveMenu() {
   };
   document.addEventListener("click", function (event) {
     if (!menu.hidden && !menu.contains(event.target) && event.target !== arrow) menu.hidden = true;
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") menu.hidden = true;
   });
 }());
 
@@ -18107,6 +18124,7 @@ connectSteps.push(async function () {
     }
   }
   absorbFile(text);
+  drive.text = currentText();
   rememberRead(text);
 });
 
@@ -19996,6 +20014,8 @@ state.always.body = capture();
 workOn(chosenTab);
 showChosen();
 draw();
+// What the page opens with is not a change to keep, until a drive is read or saved to
+drive.text = currentText();
 if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
 </script>
 </body>

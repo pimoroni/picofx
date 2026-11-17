@@ -308,7 +308,10 @@ function renderSceneAside() {
   remove.textContent = "Remove scene";
   remove.title = "Remove this scene";
   var which = state.at;
-  remove.onclick = function () { removeScene(which); };
+  remove.onclick = function () {
+    var name = picked.name.trim() || "this scene";
+    if (confirm("Remove " + name + " and everything it plays?")) removeScene(which);
+  };
   aside.appendChild(remove);
 }
 

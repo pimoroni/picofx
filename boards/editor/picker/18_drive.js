@@ -227,7 +227,9 @@ function openFresh() { openDrive(true); }
 var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 
-var drive = {dirHandle: null, fileHandle: null};
+// The drive's handles, and the page's text as it was last read from or saved to the drive, which
+// says whether the page holds changes not yet saved
+var drive = {dirHandle: null, fileHandle: null, text: null};
 
 // The board's answer as this page shows it: what errors.txt said, and the file it was about,
 // so a line is marked only while the page still writes it the same
@@ -356,6 +358,7 @@ document.getElementById("save").onclick = async function () {
       throw differs;
     }
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
+    drive.text = text;
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
@@ -441,6 +444,14 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 // Check if the page has changed since the save the banner reports on
 drawSteps.after.push(function () {
   if (reportedSave !== null && currentText() !== reportedSave) banner("");
+});
+
+// Leaving or reloading the page asks first where it holds changes not yet saved. The browser
+// words the question itself
+window.addEventListener("beforeunload", function (event) {
+  if (drive.text === null || currentText() === drive.text) return;
+  event.preventDefault();
+  event.returnValue = "";
 });
 
 if (!CAN_REACH_A_DRIVE) {

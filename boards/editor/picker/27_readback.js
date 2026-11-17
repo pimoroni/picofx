@@ -959,6 +959,7 @@ connectSteps.push(async function () {
     }
   }
   absorbFile(text);
+  drive.text = currentText();
   rememberRead(text);
 });
 

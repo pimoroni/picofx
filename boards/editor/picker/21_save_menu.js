@@ -60,6 +60,9 @@ function saveMenu() {
   document.addEventListener("click", function (event) {
     if (!menu.hidden && !menu.contains(event.target) && event.target !== arrow) menu.hidden = true;
   });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") menu.hidden = true;
+  });
 }());
 
 drawSteps.after.push(saveMenu);
