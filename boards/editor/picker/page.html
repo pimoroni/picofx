@@ -832,6 +832,22 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  font-size:.78rem;padding:.1rem .25rem}
 .screen-box h3 select.inband option{color:var(--ink)}
 .screen-box .body.adding{justify-content:center;padding:1.4rem .9rem}
+/* A board setting's add button where the part is not fitted, and its remove button where it is */
+.boardadd{display:inline-flex;align-items:center;gap:.4rem}
+.boardadd .boardicon{color:var(--board)}
+/* The sensor's add button is centred over its row, as a strip's and a screen's are in their boxes,
+   and takes no height from it, so the row stays as tall as the fitted chip */
+#sensorFacts{position:relative}
+#sensorFacts .sensoradd{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.boardremove{font:inherit;font-size:.72rem;line-height:1.2;padding:.1rem .4rem;border-radius:6px;
+ cursor:pointer}
+.boardchip .boardremove,.screen-box h3 .boardremove{border:1px solid rgba(255,255,255,.55);
+ background:rgba(255,255,255,.15);color:#fff}
+.boardchip .boardremove:hover,.screen-box h3 .boardremove:hover{background:rgba(255,255,255,.3)}
+.screen-box h3 .boardremove{margin-left:auto}
+.screen-box h3 .bandnone{font-weight:400;opacity:.85}
+.place .boardremove{padding:.05rem .35rem}
+.placenone .boardadd{font-size:.72rem;padding:.2rem .4rem}
 .keep{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;
  width:calc(100% - 1.8rem);margin:0 .9rem .8rem;text-align:left;padding:.35rem .55rem;
  border:2px solid var(--line);border-radius:8px;background:var(--panel);font-size:.78rem}
@@ -897,16 +913,6 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 .boardicon{color:var(--board);flex:0 0 auto}
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
 .boardicon{width:16px;height:16px;margin:-1.5px}
-
-/* Drawn as the board boxes it opens are, with their chip and their shape. It is outlined to
-   set up and filled while setting up */
-.setupbutton{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
- border-radius:9px;border:1.5px solid var(--boardOuts);background:none;
- color:var(--boardOuts);font:600 .8rem system-ui,sans-serif;cursor:pointer}
-.setupbutton:hover{background:#eef2f7}
-.setupbutton .boardicon{color:currentColor}
-.setupbutton.on{background:var(--boardOuts);color:#fff}
-.setupbutton.on:hover{background:#34505f}
 
 /* Saving in the header, the next thing to do filled in the page's colour */
 :root{--warn:#b33;--warn-bg:#fbeaea}
@@ -1340,10 +1346,9 @@ html{scrollbar-gutter:stable}
    remote sits in the middle of the section with its buttons' rows down either side, each row
    centred on its leader's height and the same width, so each side reads as one column */
 .ledtab[data-panel=sensorPanel] .sensorswatch{display:none}
-/* A sixth tab leaves the row short of room, so Edit board keeps one line and only the lights'
-   stripes narrow, never past the names above them */
+/* A sixth tab leaves the row short of room, so only the lights' stripes narrow, never past the
+   names above them */
 #ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
-#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
  [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
@@ -1667,9 +1672,6 @@ body.nolooks #looks{opacity:.3;pointer-events:none}
 /* In the box of the section they are for, the looks are hidden with it, every section keeping
    its place so the tabs' place stays as tall as the tallest */
 body.looksbelow #looks{margin:1.2rem 0 0}
-/* Setting up is the last thing on the tabs' row, at its far end */
-.ledtabs .gap{flex:1}
-.ledtabs .setupbutton{align-self:center}
 
 /* Examples to discover, with the line where a tab's examples start, the gallery over the page and
    the marks and bins on the examples on the drive. --discover is the tab's own colour */

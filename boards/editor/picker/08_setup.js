@@ -19,9 +19,6 @@ STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip
 // dragged into place
 function canEdit(panel) { return panel === "outPanel" ? setupOn : true; }
 
-// A board setting's act, such as adding a screen, which is made where it is shown
-function boardAct(act) { return act; }
-
 // The Wiring chip opens the outputs' wiring view, where it shows pressed, and a second click
 // closes it
 document.addEventListener("click", function (event) {
@@ -38,6 +35,24 @@ function boardButton(words) {
   button.className = "boardadd";
   button.appendChild(boardIcon());
   button.appendChild(document.createTextNode(words));
+  return button;
+}
+
+// The button beside a fitted part's board setting that takes the part off the board
+function removeButton(what, act) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "boardremove";
+  button.textContent = "remove";
+  button.title = "Take this " + what + " off the board, in every scene";
+  // A hub position picks itself on a click, which a removed one cannot be
+  button.addEventListener("click", function (event) {
+    event.stopPropagation();
+    // Check if there are scenes to lose it, since nothing brings back what they played on it
+    if (state.scenes.length &&
+        !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
+    act();
+  });
   return button;
 }
 
@@ -195,8 +210,7 @@ function dropStrip(run) {
   draw();
 }
 
-// A strip not fitted offers to be added, which goes into Edit board to do it, or says why it
-// cannot be
+// A strip not fitted offers to be added, or says why it cannot be
 function renderStripOut(box, run, panel) {
   box.textContent = "";
   var blocked = stripBlockedBy(run);
@@ -208,13 +222,15 @@ function renderStripOut(box, run, panel) {
     box.appendChild(why);
     return;
   }
-  // The strip's choice stays, at not fitted, and choosing anything else fits it
-  box.appendChild(boardBox(panel, ["Strip", stripChipChoice(run)]));
-  var how = document.createElement("span");
-  how.className = "stripblocked says";
-  how.textContent = "Choose its " + (run.made === null ? "colour order" : "brightness") +
-                    " above to fit this strip";
-  box.appendChild(how);
+  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var add = boardButton("add this strip");
+  add.classList.add("addstrip");
+  add.onclick = function () {
+    stripThere(run, true);
+    workOn(panel);
+    draw();
+  };
+  box.appendChild(add);
 }
 
 function renderLeds(where, run) {
@@ -235,6 +251,7 @@ function renderLeds(where, run) {
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
     chip.title = BOARD_SETTING_SAYS;
     chip.insertBefore(boardIcon(), chip.firstChild);
+    chip.appendChild(removeButton("strip", function () { dropStrip(run); }));
   } else {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
@@ -244,17 +261,6 @@ function renderLeds(where, run) {
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
-
-function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
-}
 
 drawSteps.after.push(function () {
   renderOutFacts();

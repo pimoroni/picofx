@@ -267,11 +267,30 @@ function renderScreenBoxes() {
     body.className = "body";
     side.appendChild(body);
 
+    // A screen not fitted offers to be added, which shows nothing until a scene chooses something
+    if (!screen.there) {
+      var none = document.createElement("small");
+      none.className = "bandnone";
+      none.textContent = "not fitted";
+      head.appendChild(none);
+      body.className = "body adding";
+      var add = boardButton("add this screen");
+      add.onclick = function () {
+        screen.there = true;
+        screen.shows = null;
+        screen.kept = null;
+        draw();
+      };
+      body.appendChild(add);
+      box.appendChild(side);
+      return;
+    }
+
     var size = document.createElement("select");
     // The sizes a panel can be, the catalogue's hub being no panel size
     var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
       .filter(function (inches) { return inches !== "hub"; });
-    if (screen.there && !screen.size) {
+    if (!screen.size) {
       var quiet = document.createElement("option");
       quiet.value = "";
       quiet.textContent = "fitted size";
@@ -282,38 +301,19 @@ function renderScreenBoxes() {
       var option = document.createElement("option");
       option.value = inches;
       option.textContent = inches + " inch";
-      if (screen.there && screen.size === inches) option.selected = true;
+      if (screen.size === inches) option.selected = true;
       size.appendChild(option);
     });
-    // Taking the screen out is the only way to have none, as a screen showing nothing would
-    // say the same thing twice. Not fitted stays chosen, and choosing a size fits the screen
-    size.appendChild(notFittedOption(!screen.there));
-    size.onchange = boardAct(function () {
-      if (size.value === NOT_FITTED_CHOICE) {
-        takeScreenOff(letter);
-        return;
-      }
-      if (!screen.there) {
-        screen.there = true;
-        screen.shows = null;
-        screen.kept = null;
-      }
+    size.onchange = function () {
       if (size.value) screen.size = size.value;
       draw();
-    });
+    };
     size.className = "inband";
     size.title = "Panel fitted, shared by every scene";
     head.appendChild(size);
-
-    if (!screen.there) {
-      body.className = "body adding";
-      var none = document.createElement("span");
-      none.className = "says";
-      none.textContent = "Choose its size above to fit this screen";
-      body.appendChild(none);
-      box.appendChild(side);
-      return;
-    }
+    // Taking the screen out is the only way to have none, as a screen showing nothing would
+    // say the same thing twice
+    head.appendChild(removeButton("screen", function () { takeScreenOff(letter); }));
 
     body.appendChild(previewInScene(screen, letter));
 

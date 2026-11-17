@@ -420,13 +420,25 @@ function sensorSaid(words, dim) {
   return said;
 }
 
-// Fill the box saying what is on the sensor connector, as a choice. Nothing on it reads as not
-// fitted, as a strip or a screen does
+// Fill the box saying what is on the sensor connector, as a choice with a remove button. Nothing
+// on it reads as not fitted, as a strip or a screen does, and offers to add the remote
 function sensorBox() {
   var facts = document.getElementById("sensorFacts");
   facts.textContent = "";
+  if (state.sensorKind === "none") {
+    facts.appendChild(boardBox("sensorPanel", ["Sensor", small("not fitted")]));
+    var add = boardButton("add a sensor");
+    add.classList.add("sensoradd");
+    add.onclick = function () {
+      state.sensorKind = "ir";
+      draw();
+    };
+    facts.appendChild(add);
+    return;
+  }
   var choice = document.createElement("select");
   SENSOR_KINDS.forEach(function (kind) {
+    if (kind[0] === "none") return;
     var option = document.createElement("option");
     option.value = kind[0];
     option.textContent = kind[1];
@@ -437,7 +449,10 @@ function sensorBox() {
     state.sensorKind = choice.value;
     draw();
   };
-  facts.appendChild(boardBox("sensorPanel", ["Sensor", choice]));
+  facts.appendChild(boardBox("sensorPanel", ["Sensor", choice, removeButton("sensor", function () {
+    state.sensorKind = "none";
+    draw();
+  })]));
 }
 
 // ---- the PIR Stick with a row for each trigger --------------------------------------------------

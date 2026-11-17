@@ -350,10 +350,10 @@ function hubSwitch() {
       choice.type = "button";
       choice.className = state.hub.on === pair[0] ? "on" : "";
       choice.textContent = pair[1];
-      choice.onclick = boardAct(function () {
+      choice.onclick = function () {
         state.hub.on = pair[0];
         draw();
-      });
+      };
       row.appendChild(choice);
     });
   return row;
@@ -382,7 +382,23 @@ function placeTile(place) {
   top.appendChild(letter);
   tile.appendChild(top);
 
-  // Which panel is here. Not fitted takes it off and stays chosen, and a size fits one again
+  // An empty position offers a panel, at the size it last had
+  if (!state.hub.sizes[place]) {
+    tile.classList.add("empty");
+    var none = document.createElement("span");
+    none.className = "placenone";
+    var add = boardButton("add a panel");
+    add.onclick = function (event) {
+      event.stopPropagation();
+      state.hub.sizes[place] = state.hub.was[place] || SCREEN_SIZES[0];
+      draw();
+    };
+    none.appendChild(add);
+    tile.appendChild(none);
+    return tile;
+  }
+
+  // Which panel is here
   var size = document.createElement("select");
   size.className = "placesize";
   SCREEN_SIZES.forEach(function (inches) {
@@ -392,27 +408,13 @@ function placeTile(place) {
     if (state.hub.sizes[place] === inches) option.selected = true;
     size.appendChild(option);
   });
-  size.appendChild(notFittedOption(!state.hub.sizes[place]));
   size.title = "Panel at " + place + ", shared by every scene";
   size.onclick = function (event) { event.stopPropagation(); };
-  size.onchange = boardAct(function () {
-    if (size.value === NOT_FITTED_CHOICE) {
-      takePlaceOff(place);
-      return;
-    }
+  size.onchange = function () {
     state.hub.sizes[place] = size.value;
     draw();
-  });
+  };
   top.appendChild(size);
-
-  if (!state.hub.sizes[place]) {
-    tile.classList.add("empty");
-    var none = document.createElement("span");
-    none.className = "placenone";
-    none.textContent = "no panel";
-    tile.appendChild(none);
-    return tile;
-  }
 
   // A position the scene leaves to Always on shows Always on's picture in the striped frame
   var under = placeUnder(place);
@@ -428,6 +430,8 @@ function placeTile(place) {
                                              pictureSaid(under.always.shows)
                    : under ? "off in this scene" : held.shows || "nothing";
   tile.appendChild(says);
+  // Under the panel, as the size above leaves no room beside the position's letter
+  tile.appendChild(removeButton("panel", function () { takePlaceOff(place); }));
   tile.onclick = function () {
     placePicked = place;
     draw();
@@ -510,7 +514,7 @@ function renderHubHead() {
   port.className = "inband";
   port.title = "Which connectors the hub's SPI and Selects " +
                "are plugged into, as labelled on the hub";
-  port.onchange = boardAct(function () { state.hub.port = port.value; draw(); });
+  port.onchange = function () { state.hub.port = port.value; draw(); };
   head.appendChild(port);
   var fitted = document.createElement("small");
   fitted.className = "hubcount";
