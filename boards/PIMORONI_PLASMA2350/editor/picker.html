@@ -5483,7 +5483,7 @@ span.figurebox {
 <div id="saveMenu" class="savemenu" role="group" aria-label="Save settings" hidden></div></header>
 <main>
 
-<div id="banner"></div>
+<div id="banner" role="status" aria-live="polite"></div>
 <div class="tabbar" id="tabs"></div>
 <div class="scenetabrow" id="sceneTabRow" hidden>
  <div class="scenetab"><div id="sceneSettings"></div></div>
@@ -5574,9 +5574,13 @@ function stopSpots() {
 }
 function saving(text) {
   banner(text, "hold");
-  var row = h("span", { className: "spots" }, [0, 1, 2, 3, 4, 5, 6].map(function() {
-    return h("i");
-  }));
+  var row = h(
+    "span",
+    { className: "spots", "aria-hidden": "true" },
+    [0, 1, 2, 3, 4, 5, 6].map(function() {
+      return h("i");
+    })
+  );
   document.getElementById("banner").firstChild.appendChild(row);
   var at = 0;
   spotTimer = setInterval(function() {

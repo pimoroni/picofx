@@ -6625,7 +6625,7 @@ span.figurebox {
 <div id="saveMenu" class="savemenu" role="group" aria-label="Save settings" hidden></div></header>
 <main>
 
-<div id="banner"></div>
+<div id="banner" role="status" aria-live="polite"></div>
 <div class="tabbar" id="tabs"></div>
 <div class="scenetabrow" id="sceneTabRow" hidden>
  <div class="scenetab"><div id="sceneSettings"></div></div>
@@ -6716,9 +6716,13 @@ function stopSpots() {
 }
 function saving(text) {
   banner(text, "hold");
-  var row = h("span", { className: "spots" }, [0, 1, 2, 3, 4, 5, 6].map(function() {
-    return h("i");
-  }));
+  var row = h(
+    "span",
+    { className: "spots", "aria-hidden": "true" },
+    [0, 1, 2, 3, 4, 5, 6].map(function() {
+      return h("i");
+    })
+  );
   document.getElementById("banner").firstChild.appendChild(row);
   var at = 0;
   spotTimer = setInterval(function() {
@@ -14923,7 +14927,7 @@ function discoverRenderBrowser() {
   if (check.status !== "done") {
     scrolling.push(h(
       "div",
-      { className: "discoverwaiting" },
+      { className: "discoverwaiting", role: "status" },
       h("p", {}, check.status === "failed" ? check.error || DISCOVER_OFFLINE : "Checking for examples..."),
       check.status === "failed" ? null : discoverProgress(check.progress)
     ));
@@ -14931,7 +14935,7 @@ function discoverRenderBrowser() {
     var any = check.index.examples.some(function(entry) {
       return discoverTab(entry) === kind;
     });
-    scrolling.push(h("div", { className: "discoverwaiting" }, every.length ? "Every example here needs hardware that is not ticked." : any ? "The drive has every example." : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
+    scrolling.push(h("div", { className: "discoverwaiting", role: "status" }, every.length ? "Every example here needs hardware that is not ticked." : any ? "The drive has every example." : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
   } else {
     var updatable = offers.filter(function(offer) {
       return discover.newer[offer[0]] && discoverReleased(discoverEntry(offer[0]).firmware) === true;

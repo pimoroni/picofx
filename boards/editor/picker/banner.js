@@ -15,7 +15,9 @@ function stopSpots() {
 
 export function saving(text) {
   banner(text, "hold");
-  var row = h("span", {className: "spots"}, [0, 1, 2, 3, 4, 5, 6].map(function () { return h("i"); }));
+  // The spots only show that the save is under way, which the banner's words already say
+  var row = h("span", {className: "spots", "aria-hidden": "true"},
+              [0, 1, 2, 3, 4, 5, 6].map(function () { return h("i"); }));
   document.getElementById("banner").firstChild.appendChild(row);
   var at = 0;
   spotTimer = setInterval(function () {

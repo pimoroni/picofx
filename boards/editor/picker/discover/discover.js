@@ -907,15 +907,15 @@ function discoverRenderBrowser() {
   // The cards scroll in a box of their own, so a long gallery keeps its head and foot in view
   var scrolling = [];
   if (check.status !== "done") {
-    // Checking, or failed, said in the middle of the gallery
-    scrolling.push(h("div", {className: "discoverwaiting"},
+    // Checking, or failed, said in the middle of the gallery, and to a screen reader as it changes
+    scrolling.push(h("div", {className: "discoverwaiting", role: "status"},
                      h("p", {}, check.status === "failed" ? check.error || DISCOVER_OFFLINE
                                                           : "Checking for examples..."),
                      check.status === "failed" ? null : discoverProgress(check.progress)));
   } else if (!offers.length) {
     // An index with none of this kind has none to offer yet, as with sounds before any ship
     var any = check.index.examples.some(function (entry) { return discoverTab(entry) === kind; });
-    scrolling.push(h("div", {className: "discoverwaiting"}, every.length
+    scrolling.push(h("div", {className: "discoverwaiting", role: "status"}, every.length
       ? "Every example here needs hardware that is not ticked."
       : any ? "The drive has every example."
       : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
