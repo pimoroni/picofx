@@ -3905,10 +3905,13 @@ function headSteps(row, run) {
                                function () { stepBack(run); }));
   steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
                                function () { stepOn(run); }));
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  steps.appendChild(join);
+  // Check if the run can be cut at all, since one light is always one stretch
+  if (run.lamps.length > 1) {
+    var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                          "merge into one stretch, keeping the selected stretch's look");
+    join.onclick = function () { joinAll(run); };
+    steps.appendChild(join);
+  }
   row.appendChild(steps);
 }
 
@@ -7095,7 +7098,8 @@ chosenSteps.push(function (where, run) {
   who.appendChild(named);
   who.classList.add("withway");
   if (run.strip) who.appendChild(splitTools(where, run));
-  who.appendChild(directionToggle(run, section));
+  // One light has no direction
+  if (run.lamps.length > 1) who.appendChild(directionToggle(run, section));
 });
 
 // ---- blinking through several colours -----------------------------------------------------
@@ -7296,6 +7300,9 @@ function breakingOutputs() {
   OUTPUTS.forEach(function (output, out) { if (!output.mono && output.breaks) found.push(out); });
   return found;
 }
+
+// Whether the outputs are one light that does not break out, which leaves no wiring to set
+var ONE_LIGHT = OUTPUTS.length === 1 && !breakingOutputs().length;
 
 // The outputs broken out, as a person would say it
 function brokenSaid() {
@@ -7534,6 +7541,11 @@ function noArrow() {
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
+  // Check if there is wiring to set, since one light has none and its row keeps only the steps
+  if (ONE_LIGHT) {
+    headSteps(box, active.strip ? lastOutputRun : active);
+    return;
+  }
   box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
   if (canEdit("outPanel")) {
     var hint = document.createElement("span");

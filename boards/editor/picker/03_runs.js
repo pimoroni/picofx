@@ -1251,10 +1251,13 @@ function headSteps(row, run) {
                                function () { stepBack(run); }));
   steps.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
                                function () { stepOn(run); }));
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  steps.appendChild(join);
+  // Check if the run can be cut at all, since one light is always one stretch
+  if (run.lamps.length > 1) {
+    var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
+                          "merge into one stretch, keeping the selected stretch's look");
+    join.onclick = function () { joinAll(run); };
+    steps.appendChild(join);
+  }
   row.appendChild(steps);
 }
 

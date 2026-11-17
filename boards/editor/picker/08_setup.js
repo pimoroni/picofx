@@ -146,6 +146,11 @@ function noArrow() {
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
+  // Check if there is wiring to set, since one light has none and its row keeps only the steps
+  if (ONE_LIGHT) {
+    headSteps(box, active.strip ? lastOutputRun : active);
+    return;
+  }
   box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
   if (canEdit("outPanel")) {
     var hint = document.createElement("span");

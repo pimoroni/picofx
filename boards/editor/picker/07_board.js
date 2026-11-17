@@ -100,6 +100,9 @@ function breakingOutputs() {
   return found;
 }
 
+// Whether the outputs are one light that does not break out, which leaves no wiring to set
+var ONE_LIGHT = OUTPUTS.length === 1 && !breakingOutputs().length;
+
 // The outputs broken out, as a person would say it
 function brokenSaid() {
   var breaking = breakingOutputs();
