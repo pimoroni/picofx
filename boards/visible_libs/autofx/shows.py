@@ -1274,9 +1274,9 @@ def __too_big(at, target, effect, error):
     # sizes, only what this file adds is written, such as the screens sharing that memory
     said = str(error).strip()
     shared = len(BUILT_SCREENS) > 1
-    if "was free" in said:
+    if said.endswith("Every frame is stored while it plays."):
         # The player has sized it up and said why an animation wants so much
-        head = said[:-1] if said.endswith(".") else said
+        head = said[:-1]
         join = ", and the screens share that memory." if shared else "."
     elif "allocation failed" in said:
         import gc
