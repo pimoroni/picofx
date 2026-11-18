@@ -100,11 +100,13 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 <button id="check" disabled>Check board</button>
 </header>
 <main>
-<div id="banners"></div>
+<div id="banners" role="status" aria-live="polite"></div>
 <div class="editor">
-<pre id="paint"><code id="painted"></code></pre>
-<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
-<div id="suggest" class="suggest"></div>
+<pre id="paint" aria-hidden="true"><code id="painted"></code></pre>
+<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+ aria-label="effects.txt" aria-describedby="hint" aria-autocomplete="list"
+ aria-controls="suggest"></textarea>
+<div id="suggest" class="suggest" role="listbox" aria-label="Suggestions"></div>
 </div>
 <div id="hint" class="hint"></div>
 <p class="foot">One entry per line: which lights, a colon, then the effect.
@@ -965,9 +967,12 @@ function showSuggestions() {
     if (index && index === offered.divider) {
       var rule = document.createElement("div");
       rule.className = "rule";
+      rule.setAttribute("role", "none");
       suggest.appendChild(rule);
     }
     var row = document.createElement("div");
+    row.id = "suggest-" + index;
+    row.setAttribute("role", "option");
     var name = document.createElement("span");
     name.textContent = one.insert;
     row.appendChild(name);
@@ -976,7 +981,8 @@ function showSuggestions() {
       why.textContent = one.hint;
       row.appendChild(why);
     }
-    if (index === 0) row.className = "lit";
+    row.className = index === 0 ? "lit" : "";
+    row.setAttribute("aria-selected", String(index === 0));
     row.onmousedown = function (event) {
       event.preventDefault();
       accept(index);
@@ -995,11 +1001,14 @@ function showSuggestions() {
   suggest.style.left = Math.max(8, Math.min(place.left,
       window.innerWidth - suggest.offsetWidth - 8)) + "px";
   suggest.style.visibility = "";
+  // A screen reader reads the lit suggestion while the caret stays in the text
+  entry.setAttribute("aria-activedescendant", state.rows[0].id);
 }
 
 function hideSuggestions() {
   suggest.className = "suggest";
   state.offered = [];
+  entry.removeAttribute("aria-activedescendant");
 }
 
 function light(index) {
@@ -1007,8 +1016,10 @@ function light(index) {
   state.lit = (index + count) % count;
   state.rows.forEach(function (row, i) {
     row.className = i === state.lit ? "lit" : "";
+    row.setAttribute("aria-selected", String(i === state.lit));
   });
   state.rows[state.lit].scrollIntoView({block: "nearest"});
+  entry.setAttribute("aria-activedescendant", state.rows[state.lit].id);
 }
 
 function accept(index) {
