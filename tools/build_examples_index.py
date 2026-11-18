@@ -11,7 +11,8 @@ Each file has its size and hash, the one git gives the file's contents, which th
 out from a copy on the drive to tell one that matches from one that does not. Each also keeps the hashes and sizes it
 had before and the paths it was moved from, so the picker can tell an old copy from one the user
 changed, and finds an example kept where it used to be. Those are carried forward from the index
-already in the repository, which needs no git history to read.
+at the latest release tag, so a file gains at most one earlier version for each release. That
+needs the repository's tags, and before the first release with an index it carries nothing.
 
 Each example takes the picofx version the index is written at as the lowest firmware it runs on,
 unless its opening string has a "Firmware:" line naming another. Only files git tracks are
@@ -19,10 +20,8 @@ indexed, so an example still being written is left out until it is committed.
 
     python3 tools/build_examples_index.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_examples_index.py --check boards/PIMORONI_MIGHTYFX
-    python3 tools/build_examples_index.py --fresh boards/PIMORONI_MIGHTYFX
 
---check writes nothing and fails if the index is stale. --fresh writes the index with no earlier
-versions or paths, for a release whose examples no drive has held before. A board whose
+--check writes nothing and fails if the index is stale. A board whose
 description names no "examples_index" has none, and is passed over. A description's
 "examples_left_out" lists the drive paths of examples, and of their folders, that the board's drive
 build does not copy, so the index leaves them out too. A description's "wireless_examples" names a
@@ -247,7 +246,36 @@ def build(repo_dir, bases, previous, left_out=()):
         entry["files"] = [carried(name, files[name][0], files[name][1], before, gone)
                           for name in names]
         examples.append(entry)
-    return json.dumps({"format": 1, "examples": examples}, indent=1) + "\n"
+    return index_text({"format": 1, "examples": examples})
+
+
+def index_text(index):
+    """The index as text, a line for each example and each of its files, so it grows with them."""
+    examples = index["examples"]
+    lines = ['{{"format": {}, "examples": ['.format(index["format"])]
+    for at, example in enumerate(examples):
+        head = {key: value for key, value in example.items() if key != "files"}
+        lines.append(" " + json.dumps(head)[:-1] + ', "files": [')
+        for place, file in enumerate(example["files"]):
+            # Check if another file follows, since the last one closes the example
+            if place < len(example["files"]) - 1:
+                end = ","
+            else:
+                end = "]}" if at == len(examples) - 1 else "]},"
+            lines.append("  " + json.dumps(file) + end)
+    lines.append("]}")
+    return "\n".join(lines) + "\n"
+
+
+def released_index(repo_dir, index_name):
+    """The index as the latest release tag before HEAD has it, or None where there is none."""
+    tag = subprocess.run(["git", "-C", repo_dir, "describe", "--tags", "--abbrev=0"],
+                         capture_output=True)
+    if tag.returncode:
+        return None
+    shown = subprocess.run(["git", "-C", repo_dir, "show",
+                            tag.stdout.decode().strip() + ":" + index_name], capture_output=True)
+    return json.loads(shown.stdout) if shown.returncode == 0 else None
 
 
 def main():
@@ -256,13 +284,9 @@ def main():
     parser.add_argument("--check", action="store_true", help="fail if the index is stale")
     parser.add_argument("--from", dest="seed", metavar="INDEX",
                         help="an index to carry earlier versions forward from, in place of the "
-                             "board's own")
-    parser.add_argument("--fresh", action="store_true",
-                        help="carry no earlier versions or paths forward")
+                             "latest release's")
     parser.add_argument("board_dir", help="a board directory holding editor/fx_board.json")
     args = parser.parse_args()
-    if args.fresh and (args.seed or args.check):
-        parser.error("--fresh takes neither --from nor --check")
 
     repo_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     with open(os.path.join(args.board_dir, DESCRIPTION), encoding="utf-8") as handle:
@@ -271,11 +295,11 @@ def main():
         return 0
     index_path = os.path.join(repo_dir, board["examples_index"])
     base = board["examples_index"][:board["examples_index"].rfind("/") + 1]
-    previous = None
-    seed = args.seed or index_path
-    if os.path.exists(seed) and not args.fresh:
-        with open(seed, encoding="utf-8") as handle:
+    if args.seed:
+        with open(args.seed, encoding="utf-8") as handle:
             previous = json.load(handle)
+    else:
+        previous = released_index(repo_dir, board["examples_index"])
     bases = [base] + ([board["wireless_examples"]] if "wireless_examples" in board else [])
     text = build(repo_dir, bases, previous, board.get("examples_left_out", ()))
     if args.check:
