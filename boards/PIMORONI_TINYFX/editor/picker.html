@@ -7744,9 +7744,9 @@ function placeFor(run, section, look, slider, key, value) {
       best = place;
     }
   }
-  if (nearest > 1e-6) {
-    var low = settingIn(linesAt(run, section, look, slider, 0), key);
-    var high = settingIn(linesAt(run, section, look, slider, 1), key);
+  var low = settingIn(linesAt(run, section, look, slider, 0), key);
+  var high = settingIn(linesAt(run, section, look, slider, 1), key);
+  if (nearest > 1e-6 && low !== null && high !== null && (value < Math.min(low, high) || value > Math.max(low, high))) {
     best = Math.abs(low - value) < Math.abs(high - value) ? 0 : 1;
   }
   return { place: best, off: nearest };

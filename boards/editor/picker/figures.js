@@ -108,7 +108,7 @@ export function figureSaid(value) {
 }
 
 // The slider's place that writes nearest a value, looked for along its whole reach. A value no
-// place writes exactly leaves the slider at the nearer end, and the caller keeps it as typed
+// place writes exactly is kept as typed by the caller
 export function placeFor(run, section, look, slider, key, value) {
   var best = 0, nearest = Infinity;
   for (var step = 0; step <= 200; step++) {
@@ -119,9 +119,12 @@ export function placeFor(run, section, look, slider, key, value) {
       best = place;
     }
   }
-  if (nearest > 1e-6) {
-    var low = settingIn(linesAt(run, section, look, slider, 0), key);
-    var high = settingIn(linesAt(run, section, look, slider, 1), key);
+  var low = settingIn(linesAt(run, section, look, slider, 0), key);
+  var high = settingIn(linesAt(run, section, look, slider, 1), key);
+  // Check if the value is past the slider's reach, which puts it at the nearer end, not at the
+  // first place of a run that writes the same
+  if (nearest > 1e-6 && low !== null && high !== null &&
+      (value < Math.min(low, high) || value > Math.max(low, high))) {
     best = Math.abs(low - value) < Math.abs(high - value) ? 0 : 1;
   }
   return {place: best, off: nearest};
