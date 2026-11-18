@@ -18,6 +18,9 @@ The afterglow is the previous frame dimmed a little each time, so the beam is on
 where it is now.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

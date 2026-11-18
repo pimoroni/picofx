@@ -13,6 +13,9 @@ stroke() changes the shape it is called on rather than handing back a copy, so e
 shape and its stroked twin are built separately.
 
 Press "Boot" to exit the program.
+
+Section: Graphics
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

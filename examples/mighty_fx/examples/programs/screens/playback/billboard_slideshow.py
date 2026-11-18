@@ -14,6 +14,11 @@ Every poster decodes when the player is made, before the first shows. Palettised
 that affordable at a quarter of a truecolour one's memory.
 
 Press "Boot" to exit the program.
+
+Program: Billboard (slideshow)
+Args: Rotation = 0 or 180
+
+Section: Billboards and panels
 """
 
 # Constants

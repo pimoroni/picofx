@@ -11,6 +11,9 @@ and back down once it stops.
 With no sensor plugged in, the connector reads as motion and the outputs stay lit.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs warm
 """
 
 # Constants

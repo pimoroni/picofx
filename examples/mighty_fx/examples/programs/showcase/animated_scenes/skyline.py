@@ -14,6 +14,9 @@ Each entry's role is read off the table. A colour seen twice is a window lit in 
 dark, a grey is fading concrete, and any other colour is glass or signage that brightens.
 
 Press "Boot" to exit the program.
+
+Section: Animated scenes
+Args: Screen size = 2.8, Rotation = 90 or 270
 """
 
 # Constants

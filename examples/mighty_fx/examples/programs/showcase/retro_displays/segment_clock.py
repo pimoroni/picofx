@@ -17,6 +17,9 @@ instrument panel would be. COLOUR chooses red, amber or green, and METAL_CASE = 
 bare on black.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

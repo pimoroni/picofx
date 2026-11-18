@@ -4,7 +4,6 @@ These are micropython examples that bring together what the other examples show 
 
 - [Examples](#examples)
   - [Rescue Vehicle](#rescue-vehicle)
-  - [Sensor Wave](#sensor-wave)
   - [Ship Thrusters](#ship-thrusters)
   - [Space Tales](#space-tales)
   - [Space Tales with PIR Sensor](#space-tales-with-pir-sensor)
@@ -16,11 +15,6 @@ These are micropython examples that bring together what the other examples show 
 [rescue_vehicle.py](rescue_vehicle.py)
 
 Play an alternating flashing sequence on two of Tiny FX's outputs, recreating the effect of rescue vehicle beacons.
-
-### Sensor Wave
-[sensor_wave.py](sensor_wave.py)
-
-Play a wave of pulses on Tiny FX's outputs at a speed set by an analog sensor on the sensor connector.
 
 ### Ship Thrusters
 [ship_thrusters.py](ship_thrusters.py)

@@ -8,6 +8,9 @@ Plug a servo into the connector marked L. Both L and R share one power rail, so
 anything on R is live too once enable_rail() is called.
 
 Press "Boot" to exit the program.
+
+Section: Motors and servos
+Thumbnail: servo sweep
 """
 
 # Constants

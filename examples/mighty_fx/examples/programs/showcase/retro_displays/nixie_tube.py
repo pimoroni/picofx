@@ -14,6 +14,9 @@ once into the background every frame starts from. A frame is that background, th
 over it, three filters, and the front of the glass.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

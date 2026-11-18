@@ -13,6 +13,9 @@ The colour runs from blue at the cold end of the range, through purple, to red a
 warm end. The pressure and humidity the sensor also reports are printed.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs temperature
 """
 
 # Constants

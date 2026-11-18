@@ -7,6 +7,9 @@ from picofx.mono import BlinkFX, PulseFX, RandomFX, StaticFX
 Play effects for each space themed "postcard".
 
 Press "Boot" to exit the program.
+
+Section: Model lighting
+Thumbnail: outputs mono
 """
 
 # Variables

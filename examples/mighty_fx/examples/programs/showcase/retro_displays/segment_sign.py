@@ -15,6 +15,9 @@ the background every frame starts from, so an unlit one still shows faintly thro
 METAL_CASE = False leaves the windows bare on black.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # What the sign shows, a launch control panel's readouts, a page at a time with a line to each row.

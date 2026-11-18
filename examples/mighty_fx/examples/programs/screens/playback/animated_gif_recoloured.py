@@ -15,6 +15,10 @@ Each entry keeps its own brightness as read once at the start, which keeps the g
 antialiasing a flat colour would lose.
 
 Press "Boot" to exit the program.
+
+Program: Body scanner
+Section: Pictures and GIFs
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

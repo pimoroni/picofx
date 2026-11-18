@@ -10,6 +10,10 @@ Travel through a star field across every screen on a Screen Hub.
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Program: Starfield (wall)
+Section: Multi-screen
+Args: Screen size = 2.8
 """
 
 # Constants for drawing

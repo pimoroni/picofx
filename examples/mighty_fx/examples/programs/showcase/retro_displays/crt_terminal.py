@@ -14,6 +14,10 @@ Filters rewrite the pixels they cover, so the page is held as text and drawn in 
 then filtered once. No ROM face is fixed pitch, so the characters are baked into a strip of cells.
 
 Press "Boot" to exit the program.
+
+Program: CRT terminal
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

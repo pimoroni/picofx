@@ -14,6 +14,10 @@ Bezels hide a band at each join, so the pattern steps there. Indexed PNGs are th
 copying, since the player holds each at a quarter of a truecolour frame's memory.
 
 Press "Boot" to exit the program.
+
+Program: Circuit traces (wall)
+Section: Multi-screen
+Args: Rotation = 90 or 270
 """
 
 # Constants

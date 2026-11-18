@@ -18,6 +18,9 @@ every cell takes half the sum of its four neighbours less its own height a step 
 little, so the ripples spread, cross and reflect from the walls, as in Hugo Elias's water.
 
 Press "Boot" for the other floor, and hold it to exit the program.
+
+Section: Animated scenes
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

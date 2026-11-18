@@ -16,6 +16,9 @@ Every sheet is drawn unlit into the background once a pass, and the lit one stra
 The glow goes on the frame, which is opaque, and not on any sheet.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

@@ -13,6 +13,11 @@ The coin sits on a middle grey so its near-black rim shows. The panel takes that
 the file's corner, so another GIF lands on its own background.
 
 Press "Boot" to exit the program.
+
+Program: Animated GIF
+Args: Screen size = 2.8, Rotation = 90
+
+Section: Pictures and GIFs
 """
 
 # Constants

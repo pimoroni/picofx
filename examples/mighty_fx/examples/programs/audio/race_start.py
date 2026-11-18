@@ -9,6 +9,9 @@ Plays a simple boop, boop, boop, beeep countdown sound effect when
 you press Boot on Mighty FX. Great for counting down to a race start.
 
 The countdown lights output 1 red, and the start lights output 2 green.
+
+Section: Sound
+Thumbnail: outputs countdown
 """
 
 # Constants

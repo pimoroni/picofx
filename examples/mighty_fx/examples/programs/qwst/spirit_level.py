@@ -17,6 +17,9 @@ The bubble is green while the sensor is level and reddens as it tilts, so a glan
 both where it is and how far off it is. Rest the sensor on something and lift one edge.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs level
 """
 
 # Constants

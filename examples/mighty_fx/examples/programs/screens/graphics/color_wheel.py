@@ -9,6 +9,10 @@ Spin a rainbow wheel on a screen.
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Program: Colour wheel
+Section: Patterns
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

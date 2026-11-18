@@ -1,0 +1,8 @@
+# Sections for the example pictures on the picker's Screens tab, in the order they appear.
+# Each line is a section name, a short description, and its pictures separated by commas.
+# Name a folder to show it as a slideshow, or write folder/* to list each picture in it separately.
+# Pictures not listed here appear under Example pictures.
+Billboards | posters for a screen | billboards/portrait/*, billboards/landscape/*
+Animations | animated GIFs | medscan.gif, pirate_coin.gif, pirate_coin_emblem.gif
+Slideshows | folders of picture sequences | rosie, traces
+Still pictures | test cards and other pictures | gold_macaw_card.png, red_macaw_card.png, skyline.png, pirate_face.gif

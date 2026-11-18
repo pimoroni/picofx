@@ -17,6 +17,9 @@ One panel carries a world and a second carries the other, so a pair is both at o
 that takes the button has to give a way back, so leaving it is a hold.
 
 Press "Boot" to swap the worlds over, and hold it to exit the program.
+
+Section: Animated scenes
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

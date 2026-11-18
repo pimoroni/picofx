@@ -17,6 +17,9 @@ break into tongues, as in Hugo Elias's fire. Each output flickers with the hot s
 share of the bed.
 
 Press "Boot" to exit the program.
+
+Section: Animated scenes
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

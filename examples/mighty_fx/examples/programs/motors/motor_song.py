@@ -13,6 +13,9 @@ The motors alternate direction within each note, so they sing without turning.
 Set STATIONARY to False to hear it while they run.
 
 Press "Boot" to exit the program.
+
+Section: Moving things
+Thumbnail: motor song
 """
 
 # Constants

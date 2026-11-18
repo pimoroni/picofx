@@ -8,6 +8,9 @@ from picovector import color, font, image, rect, shape
 Draw a split-flap departures board with each letter flipping into place.
 
 Press "Boot" to exit the program.
+
+Section: Transport signs
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

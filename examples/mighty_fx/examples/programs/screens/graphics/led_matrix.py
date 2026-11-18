@@ -10,6 +10,10 @@ The sign costs two blits a frame whatever drew the content, so shapes, text, an 
 frame can feed it. The rainbow runs diagonally, as on the LED matrix boards.
 
 Press "Boot" to exit the program.
+
+Program: LED matrix
+Section: Patterns
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

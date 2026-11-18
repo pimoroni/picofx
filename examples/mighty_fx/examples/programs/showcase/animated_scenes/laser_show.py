@@ -15,6 +15,9 @@ bright core. Each frame dims the last a little before drawing, so a sweeping bea
 sheet behind it, as a beam seen through haze seems to.
 
 Press "Boot" to exit the program.
+
+Section: Animated scenes
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

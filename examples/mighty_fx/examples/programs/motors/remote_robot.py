@@ -26,6 +26,10 @@ Actions:
 - RIGHT Button [Hold] = Spin right
 
 Press "Boot" to exit the program.
+
+Program: Remote motor robot
+Section: Moving things
+Thumbnail: motor
 """
 
 # Constants

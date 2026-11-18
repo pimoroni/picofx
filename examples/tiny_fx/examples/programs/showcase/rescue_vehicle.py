@@ -10,6 +10,9 @@ recreating the effect of rescue vehicle beacons.
 The other outputs are static for illuminated head and tail lights.
 
 Press "Boot" to exit the program.
+
+Section: Model lighting
+Thumbnail: outputs mono
 """
 
 # Variables

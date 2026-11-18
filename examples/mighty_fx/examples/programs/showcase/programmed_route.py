@@ -31,6 +31,9 @@ Actions:
     - RETURN Button [Press] = Undo the last digit, movement, or whole entry
 
 Press "Boot" to exit the program.
+
+Section: Moving things
+Thumbnail: servo wheel
 """
 
 # Constants

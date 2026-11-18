@@ -15,6 +15,9 @@ A panel on the hub is a lane. A group streams an aspect once to every lane showi
 setting costs one write for each different aspect it shows.
 
 Press "Boot" to exit the program.
+
+Section: Transport signs
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

@@ -24,6 +24,10 @@ Actions:
 An IR Stick should be connected to the Sensor port on Tiny FX.
 
 Press "Boot" to exit the program.
+
+Program: Control HSV (FX)
+Section: With the remote
+Thumbnail: outputs warm
 """
 
 # Constants
