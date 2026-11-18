@@ -2,96 +2,109 @@
 
 These are micropython examples for the Pimoroni [Mighty FX](https://shop.pimoroni.com/products/mightyfx), a programmable, RP2350-based controller board that goes further with effects by adding motion and screens.
 
-The examples are grouped into folders by what they show, and each folder has a README describing its examples.
+Most of the examples are [programs](#programs), complete Python programs that take over the board while they run. The [drawings](#drawings) are different, each drawing a picture on a screen while `effects.txt` plays everything else.
 
-- [Function Examples](#function-examples)
-- [Effect Examples](#effect-examples)
-- [Audio Examples](#audio-examples)
-- [Infrared Examples](#infrared-examples)
-- [Qw/ST Examples](#qwst-examples)
-- [Wireless Examples](#wireless-examples)
-- [Comms Examples](#comms-examples)
-- [Motor Examples](#motor-examples)
-- [Servo Examples](#servo-examples)
-- [LED Strip Examples](#led-strip-examples)
-- [GPIO Examples](#gpio-examples)
-- [Screen Examples](#screen-examples)
-- [Showcase Examples](#showcase-examples)
+- [Programs](#programs)
+  - [Function Examples](#function-examples)
+  - [Effect Examples](#effect-examples)
+  - [Audio Examples](#audio-examples)
+  - [Infrared Examples](#infrared-examples)
+  - [Qw/ST Examples](#qwst-examples)
+  - [Wireless Examples](#wireless-examples)
+  - [Comms Examples](#comms-examples)
+  - [Motor Examples](#motor-examples)
+  - [Servo Examples](#servo-examples)
+  - [LED Strip Examples](#led-strip-examples)
+  - [GPIO Examples](#gpio-examples)
+  - [Screen Examples](#screen-examples)
+  - [Showcase Examples](#showcase-examples)
+- [Drawings](#drawings)
 
 
-## Function Examples
+## Programs
+
+The programs are grouped into folders by what they show, and each folder has a README describing its examples.
+
+
+### Function Examples
 [examples/programs/function](examples/programs/function)
 
 These are micropython examples for Mighty FX's onboard functions, being its Boot button, its voltage sense and its sensor connector.
 
 
-## Effect Examples
+### Effect Examples
 [examples/programs/effects](examples/programs/effects)
 
 These are micropython examples for the effects Mighty FX can play on its seven RGB outputs, either as whole colours or as separate mono channels.
 
 
-## Audio Examples
+### Audio Examples
 [examples/programs/audio](examples/programs/audio)
 
 These are micropython examples for the audio Mighty FX can play through its onboard amplifier.
 
 
-## Infrared Examples
+### Infrared Examples
 [examples/programs/infrared](examples/programs/infrared)
 
 These are micropython examples for controlling Mighty FX from a Pimoroni Aye Arr Remote, with an IR Stick connected to its sensor connector.
 
 
-## Qw/ST Examples
+### Qw/ST Examples
 [examples/programs/qwst](examples/programs/qwst)
 
 These are micropython examples for driving Mighty FX from a sensor plugged into its Qw/ST connector.
 
 
-## Wireless Examples
+### Wireless Examples
 [examples/programs/wireless](examples/programs/wireless)
 
 These are micropython examples for driving Mighty FX from information obtained over WiFi.
 
 
-## Comms Examples
+### Comms Examples
 [examples/programs/comms](examples/programs/comms)
 
 These are micropython examples for controlling other boards from Mighty FX over I2C.
 
 
-## Motor Examples
+### Motor Examples
 [examples/programs/motors](examples/programs/motors)
 
 These are micropython examples for driving motors from a motor driver on one of Mighty FX's SP/CE connectors.
 
 
-## Servo Examples
+### Servo Examples
 [examples/programs/servos](examples/programs/servos)
 
 These are micropython examples for driving a servo from Mighty FX's L and R connectors.
 
 
-## LED Strip Examples
+### LED Strip Examples
 [examples/programs/strips](examples/programs/strips)
 
 These are micropython examples for driving an LED strip from Mighty FX's L and R connectors.
 
 
-## GPIO Examples
+### GPIO Examples
 [examples/programs/gpio](examples/programs/gpio)
 
 These are micropython examples for using Mighty FX's SP/CE ports as general purpose inputs and outputs.
 
 
-## Screen Examples
+### Screen Examples
 [examples/programs/screens](examples/programs/screens)
 
 These are micropython examples for the screens Mighty FX can drive from its SP/CE ports, one panel at a time, as a pair, or across a hub.
 
 
-## Showcase Examples
+### Showcase Examples
 [examples/programs/showcase](examples/programs/showcase)
 
 These are micropython examples that bring together what the individual board and screen examples show to make complete projects.
+
+
+## Drawings
+[examples/drawings](examples/drawings)
+
+These are the showcase examples redrawn as drawings. A drawing is not a program. The board plays it on a screen from a `drawing` entry in `effects.txt` or from the picker, alongside the lights and the other screen.
