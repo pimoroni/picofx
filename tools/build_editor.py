@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
-Assembles a board's editor/picker.html from the parts every board shares in
-boards/editor/picker/, any of its own in its editor/picker/ and its description in
-editor/fx_board.json. A part in one of the feature folders
-goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
-so a page always offers what the firmware it ships with provides, its strips and screen ports
-from the board's class or, where the class is not in this repository, from its description. It
-writes the picker, the text editor every board shares in boards/editor/editor.html and the
-catalogue compressed into a frozen module for fx_drive to heal onto the drive. A board with no fx_libs/ carries no FX drive, and gets its picker.html and
-catalogue.js alone. The parts and pages are
-committed and the module is generated, so run this after editing a part, a page, the
-description or anything the catalogue reads.
+Assembles a board's editor/picker.html from the parts every board shares in boards/editor/picker/,
+any of its own in its editor/picker/ and its description in editor/fx_board.json. A part in one of
+the feature folders goes in only for a board with that feature. Generates catalogue.js from the live
+autofx tables so a page always offers what the firmware it ships with provides, its strips and
+screen ports from the board's class or, where the class is not in this repository, from its
+description. It writes the picker, the text editor every board shares in
+boards/editor/editor.html and the catalogue compressed into a frozen module for fx_drive to heal
+onto the drive. A board with no fx_libs/ carries no FX drive, and gets its picker.html and
+catalogue.js alone. The parts and pages are committed and the module is generated, so run this
+after editing a part, a page, the description or anything the catalogue reads.
+
+The parts are modules, bundled by the esbuild pinned in tools/picker, which npm ci --prefix
+tools/picker installs. The page's stylesheet is page.css, followed by any part's own of the same
+name, in the order the parts run. editor/picker.html holds them as one readable script, so it opens
+from disk as it is. The drive's copies of the picker and the text editor have their style and
+script minified. --dev also writes editor/picker.dev.html, which loads the parts as modules.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
+    python3 tools/build_editor.py --dev boards/PIMORONI_MIGHTYFX
 
 --check writes nothing and fails if a generated file is stale. It compares the module's
 pages once inflated, since two zlib builds need not compress the same text to the same bytes.
@@ -34,6 +40,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 import types
 import zlib
@@ -44,8 +51,8 @@ MODULE_HEADER = """# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoro
 #
 # SPDX-License-Identifier: MIT
 
-# Generated from editor/*.html and the autofx tables by tools/build_editor.py.
-# Edit those and rebuild; edits here are lost.
+# Generated from the picker's parts, the shared text editor and the autofx tables by
+# tools/build_editor.py. Edit those and rebuild, since edits here are lost.
 #
 # Each page is its length, its first and last characters, and the whole page as a zlib
 # stream. The ends let a mount see the drive already holds a page without inflating it.
@@ -54,13 +61,13 @@ MODULE_HEADER = """# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoro
 
 # Added to the header of a module carrying shells
 SHELL_HEADER = """# A shelled page also carries the opening and closing of a page that inflates itself in the
-# browser, its length and ends being that page's as the drive holds it.
+# browser. Its length and ends are that page's, as the drive holds it.
 
 """
 
-# A page that inflates itself in the browser, for a board whose drive is short of room: its
-# zlib stream in base64 between these two, which fx_drive writes around the frozen stream
-# itself. A browser without DecompressionStream says so instead.
+# A page that inflates itself in the browser, for a board whose drive is short of room. Its zlib
+# stream goes in base64 between these two, which fx_drive writes around the frozen stream itself.
+# A browser without DecompressionStream says so instead.
 SHELL_OPENING = """<!doctype html>
 <html>
 <head>
@@ -94,8 +101,7 @@ SHELL_CLOSING = """</script>
 </html>
 """
 
-# The pages a board whose description sets "shell" writes as shells; the catalogue is script,
-# read as it is
+# The pages written as shells where the description sets "shell". The catalogue is never shelled
 SHELLED = ("PICKER", "EDITOR")
 
 # How many characters of each end of a page a mount compares
@@ -123,6 +129,10 @@ SHARED_PARTS = os.path.join("boards", "editor", "picker")
 # The text editor every board shares, which takes the board's own parts from the catalogue
 SHARED_EDITOR = os.path.join("boards", "editor", "editor.html")
 
+# The colours the picker, the text editor and the manual share, which go at the top of each one's
+# stylesheet
+SHARED_TOKENS = os.path.join("boards", "editor", "tokens.css")
+
 # The folders of picker parts a board takes only where its description has the feature
 FEATURE_FOLDERS = {
     "screens": lambda board: bool(board["screens"]),
@@ -133,7 +143,9 @@ FEATURE_FOLDERS = {
     "firmware": lambda board: "release" in board,
 }
 
-# The picker's parts are its script, so the page closes after the last of them
+# The picker's parts are its script, so the script opens before the first of them and the page
+# closes after the last
+PICKER_START = "<script>\n"
 PICKER_END = "</script>\n</body>\n</html>\n"
 
 # The module that holds picofx's version, from the repository's root
@@ -141,8 +153,10 @@ VERSION_SOURCE = os.path.join("picofx", "__init__.py")
 
 
 def shown_version(repo_dir, release):
-    """The version the pages show, picofx's own, and "preview" after it unless this is its
-    release."""
+    """
+    Read the version the pages show from picofx, with "preview" after it unless this is its
+    release, and refuse a release that is not that version.
+    """
     with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as f:
         found = re.search(r'^PICOFX_VERSION = "([^"]+)"', f.read(), re.MULTILINE)
     if not found:
@@ -155,9 +169,9 @@ def shown_version(repo_dir, release):
     return version
 
 
-# The branch a picker with Discover fetches examples from. A release ships it on every board for
-# good, so a release takes it from main
+# The line of discover.js naming the branch a picker with Discover fetches examples from
 DISCOVER_BRANCH = re.compile(r'^var DISCOVER_BRANCH = "([^"]*)";$', re.MULTILINE)
+# The branch a release takes examples from, since it ships that branch on every board for good
 RELEASE_BRANCH = "main"
 
 
@@ -170,15 +184,21 @@ def check_release_branch(page):
         sys.exit("picker.html has Discover, but its DISCOVER_BRANCH line could not be read")
     if found.group(1) != RELEASE_BRANCH:
         sys.exit("Discover fetches examples from {}, and a release takes them from {}. Set "
-                 "DISCOVER_BRANCH in boards/editor/picker/discover/28_discover.js".format(
+                 "DISCOVER_BRANCH in boards/editor/picker/discover/discover.js".format(
                      found.group(1), RELEASE_BRANCH))
 
 
-def board_parts(picker_folders, board):
-    """The board's numbered parts in number order, from the shared parts and any of its own, a
-    feature folder's only where it has it. A part of the board's own adds to the shared ones."""
+def board_parts(picker_folders, board, kind=".js"):
+    """
+    List the board's parts in name order, from the shared parts and any of its own, and from a
+    feature folder only where the board has that feature. A feature folder inside another, as
+    discover/screens/, is taken only where the board has both. A part of the board's own adds to
+    the shared ones. kind= is the files' extension, ".js" for the parts and ".css" for their
+    stylesheets.
+    """
     folders = []
-    for folder in picker_folders:
+
+    def take(folder):
         folders.append(folder)
         for name in sorted(os.listdir(folder)):
             if not os.path.isdir(os.path.join(folder, name)):
@@ -187,8 +207,11 @@ def board_parts(picker_folders, board):
                 sys.exit("{} is not a feature folder the build knows".format(
                     os.path.join(folder, name)))
             if FEATURE_FOLDERS[name](board):
-                folders.append(os.path.join(folder, name))
-    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.js"))]
+                take(os.path.join(folder, name))
+
+    for folder in picker_folders:
+        take(folder)
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "*" + kind))]
     names = [os.path.basename(part) for part in parts]
     twice = sorted({name for name in names if names.count(name) > 1})
     if twice:
@@ -196,27 +219,251 @@ def board_parts(picker_folders, board):
     return sorted(parts, key=os.path.basename)
 
 
+IMPORT = re.compile(r'^import \{([^}]*)\} from "([^"]+)";\n', re.MULTILINE)
+DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |class )([A-Za-z_$][\w$]*)",
+                      re.MULTILINE)
+
+
+# The part that draws the page once every other part is in place, which runs last
+START_PART = "start.js"
+
+# The page's own stylesheet, which comes before any part's
+PAGE_STYLES = "page.css"
+
+# The page --dev writes beside picker.html, loading the parts as modules so a change to one shows
+# on reload. Modules load only from a server, as python3 -m http.server at the repository's root
+# gives, and the page is not committed
+DEV_PAGE = "picker.dev.html"
+
+
+def ordered_parts(parts):
+    """
+    Check that each import names a part the board takes and something that part exports, and that
+    no parts import each other in a circle, then put the parts in script_order().
+    """
+    texts = {}
+    for part in parts:
+        with open(part, encoding="utf-8") as f:
+            texts[os.path.normpath(part)] = f.read()
+    exports = {}
+    owners = {}
+    for part, text in texts.items():
+        exports[part] = set()
+        for exported, name in DECLARED.findall(text):
+            if name in owners:
+                sys.exit("{} and {} both declare {}".format(owners[name], part, name))
+            owners[name] = part
+            if exported:
+                exports[part].add(name)
+    sources = {}
+    for part, text in texts.items():
+        sources[part] = []
+        for names, source in IMPORT.findall(text):
+            source = os.path.normpath(os.path.join(os.path.dirname(part), source))
+            if source not in texts:
+                sys.exit("{} imports {}, which this board does not take".format(part, source))
+            for name in (name.strip() for name in names.split(",")):
+                if name and name not in exports[source]:
+                    sys.exit("{} imports {} from {}, which does not export it".format(
+                        part, name, source))
+            sources[part].append(source)
+    check_no_circle(sources)
+    return script_order(list(texts), sources, bool(os.environ.get("PICKER_REVERSE_TIES")))
+
+
+def script_order(parts, sources, reverse_ties=False):
+    """
+    Order the parts as they run, each after every part it imports and otherwise in the order given,
+    or the other way round with reverse_ties=. A check uses that to show nothing depends on the
+    order independent parts run in. The start part runs last whatever the order, since it draws the
+    page once every part is in place. sources= holds the parts each part imports.
+    """
+    order = []
+    rest = [part for part in parts if os.path.basename(part) != START_PART]
+    while len(order) < len(rest):
+        ready = [part for part in rest if part not in order and
+                 all(source in order for source in sources[part])]
+        order.append(ready[-1] if reverse_ties else ready[0])
+    return order + [part for part in parts if os.path.basename(part) == START_PART]
+
+
+def check_no_circle(sources):
+    """
+    Refuse parts that import each other in a circle, naming the circle. sources= holds the parts
+    each part imports.
+    """
+    done = set()
+
+    def visit(part, path):
+        if part in path:
+            circle = path[path.index(part):] + [part]
+            sys.exit("These parts import each other in a circle: {}".format(" -> ".join(circle)))
+        if part in done:
+            return
+        for source in sources[part]:
+            visit(source, path + [part])
+        done.add(part)
+
+    for part in sources:
+        visit(part, [])
+
+
 def picker(board_dir, repo_dir, version):
-    """picker.html, from page.html and the numbered parts after it, with the board and the
-    version filled in."""
+    """
+    Build the board's picker three ways, from page.html with the board and the version filled in
+    and the parts. picker.html bundles the parts into one readable script whose names stay global,
+    so it opens from disk. The drive's page bundles them into a function for minified() to shorten.
+    The third loads the parts as modules, for working on them.
+    """
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     check_board(board_dir, board)
     shared = os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
+    folders = [shared] + ([own] if os.path.isdir(own) else [])
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
-        text = f.read()
-    for part in board_parts([shared] + ([own] if os.path.isdir(own) else []), board):
-        with open(part, encoding="utf-8") as f:
-            text += f.read()
-    text = text.replace("__BOARD_NAME__", board["name"])
-    text = text.replace("__VERSION__", version)
-    text = text.replace("__BOARD__", json.dumps(board, indent=1))
-    text += PICKER_END
-    left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
+        page = f.read()
+    page = page.replace("__BOARD_NAME__", board["name"])
+    page = page.replace("__VERSION__", version)
+    # Written into a script block, so "</" is escaped where a string would end the block
+    build = json.dumps({"board": board, "version": version}, indent=1).replace("</", "<\\/")
+    page = page.replace("__BUILD__", build)
+    order = ordered_parts(board_parts(folders, board))
+    # The stylesheets go in after the check, as a rule may hold anything
+    left = sorted(set(re.findall(r"__[A-Z_]+__", page)) - {"__STYLES__"})
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))
+    page = page.replace("__STYLES__\n", shared_tokens(repo_dir) +
+                        styles(board_parts(folders, board, ".css"), order))
+    # Every part is kept in the readable page, as a part may be used only from the console
+    kept = page + PICKER_START + bundled(repo_dir, order, "--format=esm", "--tree-shaking=false")
+    drive = page + PICKER_START + bundled(repo_dir, order, "--format=iife")
+    editor_dir = os.path.join(board_dir, "editor")
+    loads = "".join('import "{}";\n'.format(os.path.relpath(part, editor_dir).replace(os.sep, "/"))
+                    for part in order)
+    modules = page + '<script type="module">\n' + loads + PICKER_END
+    return kept + PICKER_END, drive + PICKER_END, modules
+
+
+def shared_tokens(repo_dir):
+    """Read the colours every page shares, to go first in a page's stylesheet."""
+    with open(os.path.join(repo_dir, SHARED_TOKENS), encoding="utf-8") as f:
+        return f.read()
+
+
+def styles(sheets, order):
+    """
+    Join page.css and then each part's stylesheet in the order the parts run, so a part's rules
+    follow those of the parts it builds on. A part's stylesheet shares its name and folder, as
+    sound/sound.css beside sound/sound.js. Refuse one with no part beside it, as it would have no
+    place in that order.
+    """
+    named = {os.path.splitext(os.path.normpath(part))[0]: part for part in order}
+    placed = []
+    for sheet in sheets:
+        if os.path.basename(sheet) == PAGE_STYLES:
+            continue
+        part = named.get(os.path.splitext(os.path.normpath(sheet))[0])
+        if not part:
+            sys.exit("{} has no part of its name beside it".format(sheet))
+        placed.append((order.index(part), sheet))
+    first = [sheet for sheet in sheets if os.path.basename(sheet) == PAGE_STYLES]
+    text = ""
+    for sheet in first + [sheet for at, sheet in sorted(placed)]:
+        with open(sheet, encoding="utf-8") as f:
+            text += f.read()
     return text
+
+
+def bundled(repo_dir, order, *options):
+    """
+    Bundle the parts into one script with the pinned esbuild and the options given. An entry
+    importing every part in order runs them in that order, as each part's imports come before it.
+    """
+    tool = esbuild_path(repo_dir)
+    entry = "".join('import "./{}";\n'.format(os.path.relpath(part, repo_dir).replace(os.sep, "/"))
+                    for part in order)
+    done = subprocess.run([tool, "--bundle", "--sourcefile=picker.js", "--charset=ascii",
+                           "--target=" + BROWSERS, "--log-level=warning"] + list(options),
+                          input=entry, capture_output=True, text=True, encoding="utf-8",
+                          cwd=repo_dir)
+    if done.returncode:
+        sys.exit("esbuild could not bundle the picker's parts:\n" + done.stderr)
+    return done.stdout
+
+
+# The picker's part that finds the latest firmware release and its button's stylesheet, which the
+# text editor also carries
+RELEASE_PART = os.path.join(SHARED_PARTS, "firmware", "release.js")
+RELEASE_STYLES = os.path.join(SHARED_PARTS, "firmware", "release.css")
+
+
+def release_styles(repo_dir, board):
+    """Read the release button's stylesheet, for the text editor of a board with a release entry."""
+    if "release" not in board:
+        return ""
+    with open(os.path.join(repo_dir, RELEASE_STYLES), encoding="utf-8") as f:
+        return f.read()
+
+
+def release_script(repo_dir, board):
+    """
+    Bundle the picker's release part as the global FXRelease, for the text editor of a board whose
+    description has a release entry. Any other board's editor has FXRelease null.
+    """
+    if "release" not in board:
+        return "var FXRelease = null;\n"
+    tool = esbuild_path(repo_dir)
+    entry = 'export * from "./{}";\n'.format(RELEASE_PART.replace(os.sep, "/"))
+    done = subprocess.run([tool, "--bundle", "--sourcefile=release.js", "--charset=ascii",
+                           "--format=iife", "--global-name=FXRelease", "--target=" + BROWSERS,
+                           "--log-level=warning"],
+                          input=entry, capture_output=True, text=True, encoding="utf-8",
+                          cwd=repo_dir)
+    if done.returncode:
+        sys.exit("esbuild could not bundle the release part:\n" + done.stderr)
+    return done.stdout
+
+
+# The esbuild, pinned in tools/picker/package.json, that bundles the parts and minifies the pages
+ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
+
+# The oldest browsers the drive's copy has to run in. Only Chromium-based ones can write to the
+# drive, but Safari and Firefox have to run far enough to say so
+BROWSERS = "chrome100,edge100,firefox100,safari15"
+
+# A style or script written in the page, as opposed to one it loads from a file
+INLINE = re.compile(r"(<(style|script)>)(.*?)(</\2>)", re.DOTALL)
+
+
+def esbuild_path(repo_dir):
+    """Find the pinned esbuild, which npm ci --prefix tools/picker installs, or exit without it."""
+    tool = os.path.join(repo_dir, ESBUILD)
+    if not os.path.exists(tool):
+        sys.exit("esbuild is missing, so install it with: npm ci --prefix tools/picker")
+    return tool
+
+
+def minified(repo_dir, page):
+    """
+    Minify a page's style and script with the pinned esbuild, for the drive's copy. Names at the
+    top of a script are kept, as a page's own script shares them as globals, but those inside a
+    function, as the picker's bundle is, are shortened.
+    """
+    tool = esbuild_path(repo_dir)
+
+    def minify(block):
+        loader = "css" if block.group(2) == "style" else "js"
+        done = subprocess.run([tool, "--loader=" + loader, "--minify", "--charset=ascii",
+                               "--target=" + BROWSERS, "--log-level=warning"],
+                              input=block.group(3), capture_output=True, text=True,
+                              encoding="utf-8")
+        if done.returncode:
+            sys.exit("esbuild could not minify the page's {}:\n{}".format(block.group(2),
+                                                                         done.stderr))
+        return block.group(1) + done.stdout + block.group(4)
+
+    return INLINE.sub(minify, page)
 
 
 # The tables a board's class declares its connectors in, each a tuple
@@ -230,10 +477,10 @@ MODULE_PAGES = ("PICKER", "EDITOR", "CATALOGUE", "CATALOGUE_WITHOUT_SCREENS", "C
 
 def board_declares(board_dir):
     """
-    What a board's class declares, read from its source in visible_libs/ so no board need be
-    imported: its STRIPS, SCREENS, STRIP_BRIGHTNESS and STRIP_TAKES as lists, each empty where
-    it declares none, whether it hands back a Screen Hub, and whether it detects at run time
-    which of its parts it has. None where the board carries no class here.
+    Read what a board's class declares from its source in visible_libs/, so no board need be
+    imported. That is its STRIPS, SCREENS, STRIP_BRIGHTNESS and STRIP_TAKES as lists, each empty
+    where it declares none, whether it hands back a Screen Hub, and whether it detects at run time
+    which of its parts it has. Return None where the board carries no class here.
     """
     sources = sorted(glob.glob(os.path.join(board_dir, "visible_libs", "*.py")))
     if not sources:
@@ -301,8 +548,10 @@ def check_board(board_dir, board):
 
 
 def described(board):
-    """What a board's description says its class would declare, for a board whose class is not
-    in this repository."""
+    """
+    Build what a board's class would declare from its description, for a board whose class is not
+    in this repository.
+    """
     screens = board["screens"] or {"ports": [], "hub": False}
     return {"STRIPS": [(strip["name"], None) for strip in board["strips"]],
             "SCREENS": [(port["id"], None) for port in screens["ports"]],
@@ -313,12 +562,14 @@ def described(board):
 
 
 def catalogue(repo_dir, board_dir, board, offer_screens=True, wireless=False):
-    """catalogue.js, from the same tables autofx reads on the board, with the strips and screen
+    """
+    Generate catalogue.js from the same tables autofx reads on the board, with the strips and screen
     ports its class declares, or its description where its class is not here, and the board's
-    outputs and connectors from its description. Without offer_screens it offers no screen
-    ports, for a board that detects it has none. A board with a separate wireless build says
-    which build the catalogue is for, the wireless one with wireless, so the picker offers that
-    build's release file."""
+    outputs and connectors from its description. With offer_screens=False it offers no screen
+    ports, for a board that detects it has none. A board with a separate wireless build says which
+    build the catalogue is for, the wireless one with wireless=True, so the picker offers that
+    build's release file.
+    """
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -392,17 +643,18 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True, wireless=False):
 
 
 def stamp_style(name):
-    """The comment a page's stamp is written as, a script's or a page's."""
+    """Choose the comment form of a page's stamp, a script's for a catalogue or else HTML's."""
     return STAMP_SCRIPT if name.startswith("CATALOGUE") else STAMP_HTML
 
 
 def stamp(name, text):
-    """The last line a page ends with on the drive, the hash of its content."""
+    """Make the last line a page ends with on the drive, the hash of its content."""
     return stamp_style(name).format(hashlib.sha256(text.encode("ascii")).hexdigest()[:STAMP_DIGITS])
 
 
 def embed(name, text, shell=False):
-    """One page as a tuple of its length, its two ends and its zlib stream.
+    """
+    Pack one page as a tuple of its length, its two ends and its zlib stream.
 
     A shelled page adds its shell's opening and closing, and its length and ends are those of
     the shell as the drive will hold it. Either way the page ends with stamp(), inside the
@@ -431,7 +683,7 @@ def embed(name, text, shell=False):
 
 
 def shell_ends(text):
-    """The opening and closing of a page's shell, with the page's title and icon."""
+    """Make the opening and closing of a page's shell, with the page's title and icon."""
     title = re.search(r"<title>(.*?)</title>", text)
     icon = re.search(r'<link rel="icon"[^>]*>\n', text)
     return (SHELL_OPENING.format(title.group(1) if title else "", icon.group(0) if icon else ""),
@@ -440,8 +692,8 @@ def shell_ends(text):
 
 def unpacked(module_text):
     """
-    Each page of a module's text, inflated, after checking its length and ends agree, and the
-    names of the pages it carries as shells.
+    Inflate each page of a module's text, checking its length, ends and stamp agree, and name the
+    pages it carries as shells.
     """
     namespace = {}
     exec(compile(module_text, MODULE_NAME, "exec"), namespace)
@@ -471,7 +723,7 @@ def unpacked(module_text):
 
 
 def stale_files(generated):
-    """The generated files whose text on disk is not what they should hold."""
+    """List the generated files whose text on disk is not what they should hold."""
     stale = []
     for path, text in generated.items():
         with open(path, encoding="utf-8", newline="") as f:
@@ -481,7 +733,7 @@ def stale_files(generated):
 
 
 def build_page_only(generated, check):
-    """Write the generated pages, or with check fail where any is stale."""
+    """Write the generated pages, or with check= fail where any is stale."""
     if check:
         stale = stale_files(generated)
         if stale:
@@ -501,6 +753,8 @@ def main():
                         help="write nothing, and fail if a generated file is stale")
     parser.add_argument("--release", metavar="VERSION",
                         help="the release being built, which must be picofx's version")
+    parser.add_argument("--dev", action="store_true",
+                        help="also write editor/picker.dev.html, which loads the parts as they are")
     parser.add_argument("board_dir", help="a board directory holding editor/")
     args = parser.parse_args()
 
@@ -509,13 +763,17 @@ def main():
     editor_dir = os.path.join(args.board_dir, "editor")
     module = os.path.join(args.board_dir, "fx_libs", MODULE_NAME)
 
-    # What the generated files should hold, the picker and catalogue being generated as well as
-    # embedded. The catalogue is the autofx tables the board's firmware carries
+    # What the generated files should hold. The picker and catalogue are generated as well as
+    # embedded, and the catalogue is the autofx tables the board's firmware carries
     with open(os.path.join(editor_dir, DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     catalogue_path = os.path.join(editor_dir, "catalogue.js")
-    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir, version),
+    kept, drive, modules = picker(args.board_dir, repo_dir, version)
+    generated = {os.path.join(editor_dir, "picker.html"): kept,
                  catalogue_path: catalogue(repo_dir, args.board_dir, board)}
+    if args.dev and not args.check:
+        with open(os.path.join(editor_dir, DEV_PAGE), "w", encoding="utf-8", newline="\n") as f:
+            f.write(modules)
     if args.release:
         check_release_branch(generated[os.path.join(editor_dir, "picker.html")])
 
@@ -525,18 +783,24 @@ def main():
         return
 
     sources = {"CATALOGUE": generated[catalogue_path],
-               "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
+               "PICKER": minified(repo_dir, drive)}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
-        sources["EDITOR"] = f.read().replace("__BOARD_NAME__", board["name"]).replace(
-            "__VERSION__", version).replace(
-            "__RESET_BUTTON__", board.get("release", {}).get("reset_button", "Reset"))
+        sources["EDITOR"] = minified(repo_dir, f.read().replace("__BOARD_NAME__", board["name"])
+                                     .replace("__TOKENS__\n", shared_tokens(repo_dir))
+                                     .replace("__RELEASE_STYLES__\n",
+                                              release_styles(repo_dir, board))
+                                     .replace("__RELEASE__\n", release_script(repo_dir, board))
+                                     .replace("__VERSION__", version)
+                                     .replace("__RESET_BUTTON__",
+                                              board.get("release", {}).get("reset_button",
+                                                                           "Reset")))
     declared = board_declares(args.board_dir)
     if declared and declared["detect"]:
         sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,
                                                          offer_screens=False)
     # A board whose wireless build shares this module is told which build it is by the
-    # catalogue the firmware writes. pages.py picks one catalogue, so a board can take one
-    # variant or the other, not both
+    # catalogue the firmware writes. fx_drive's pages.py picks one catalogue, so a board can take
+    # one variant or the other, not both
     if "wireless_files" in board.get("release", {}):
         if "CATALOGUE_WITHOUT_SCREENS" in sources:
             sys.exit("{} gives a wireless build to a board that detects its screen ports, and "

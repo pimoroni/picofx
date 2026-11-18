@@ -1,0 +1,102 @@
+.screen-box .settings {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-5);
+  align-items: center;
+}
+
+.twopanels .holder {
+  zoom: .6;
+}
+
+/* Every screen setting. What is showing sits under the module, then sections that fold, each a
+   row of named choices drawn as buttons, and toggles for anything on or off */
+.screen-box .settings.looksettings,
+.hubsettings .looksettings {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.sshowing {
+  width: 100%;
+  text-align: center;
+  font-size: var(--text-m);
+  color: var(--dim);
+  margin: calc(-1 * var(--space-2)) 0 var(--space-1);
+
+  b {
+    color: var(--ink);
+  }
+
+  small {
+    display: block;
+    font-size: var(--text-xs);
+  }
+}
+
+.looksettings input[type=number] {
+  font: inherit;
+  font-size: var(--text-m);
+  width: 3.6rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+
+/* In a screen's band only the size is the board's, the chip beside it. Taking a screen out is
+   editing the board, so its cross shows only then, and the backlight, being the scene's, stands
+   back with the rest while the board is edited */
+.screen-box h3 .bandfact {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: var(--space-3);
+
+  select.inband {
+    margin-left: 0;
+  }
+}
+
+body.setupall .lightrow {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.sshowing.empty {
+  color: var(--dim);
+}
+
+/* The settings' own width decides when placement and playback stand side by side */
+.looksettings {
+  container-type: inline-size;
+}
+
+/* A drawing's tile shows its icon, asked for in its flat text form so it is white as the initial
+   is, or its initial, on its colour with its name along the foot */
+.asset .face.drawingface {
+  flex-direction: column;
+  justify-content: center;
+}
+
+.drawingicon {
+  font-size: var(--text-display);
+  line-height: 1;
+  color: #fff;
+  font-variant-emoji: text;
+  margin-bottom: var(--space-6);
+}
+
+.drawingletter {
+  font: 800 var(--text-display)/1 system-ui;
+  color: #fff;
+  margin-bottom: var(--space-6);
+}
+
+.asset .face.drawingface .label {
+  white-space: normal;
+  line-height: 1.3;
+  z-index: 3;
+}

@@ -1,0 +1,481 @@
+/* Examples to discover, with the line where a tab's examples start, the gallery over the page and
+   the marks and bins on the examples on the drive. --discover is the tab's own colour */
+.discoverbar {
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+#assets > .discoverbar,
+#assets > .discoverdivide {
+  grid-column: 1/-1;
+  width: 100%;
+  flex-basis: 100%;
+}
+
+.sounds > .discoverbar {
+  grid-column: 1/-1;
+  flex-basis: 100%;
+  width: 100%;
+}
+
+.discoverprimary {
+  background: var(--discover, var(--accent));
+  border-color: var(--discover, var(--accent));
+  color: var(--accent-ink);
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.discoverprogress {
+  height: 4px;
+  border-radius: var(--radius-xs);
+  background: rgba(0, 0, 0, .09);
+  overflow: hidden;
+  margin: var(--space-4) 0 var(--space-1);
+  max-width: 22rem;
+
+  > span {
+    display: block;
+    height: 100%;
+    background: var(--discover, var(--accent));
+    transition: width .3s ease;
+  }
+}
+
+.discovernotice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--text-m);
+  color: var(--accent);
+
+  &.hold {
+    color: #a8740f;
+  }
+}
+
+.discovernotice.warn,
+.discoverwarn {
+  color: var(--warn);
+}
+
+.discovermark {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* A rule with words in it, "Examples" in its middle where a tab's examples start and a kind's
+   name at its left, lighter, where the drawings or the pictures start within them */
+.discoverdivide {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin: var(--space-5) 0 var(--space-1);
+  color: var(--dim);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--line);
+  }
+
+  &.minor {
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    opacity: .8;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+.discoverbar > .discoverdivide {
+  margin: 0 0 var(--space-5);
+}
+
+/* The Discover button the width of the tab, and the one line under it, one height whatever it
+   says, the words cut short rather than wrapped, the bar's place kept while it is hidden */
+.discoverwide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-5) var(--space-6);
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--discover, var(--accent));
+  color: #fff;
+  font-size: var(--text-l);
+  font-weight: 600;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+
+.discoverwideicon {
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.35rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.discovercountchip {
+  background: rgba(255, 255, 255, .25);
+  border-radius: var(--radius-round);
+  padding: 0 var(--space-4);
+  font-size: var(--text-m);
+}
+
+.discoverupdaterow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(6rem, 12rem) auto auto;
+  align-items: center;
+  gap: var(--space-5);
+  height: 2.4rem;
+  margin-top: var(--space-4);
+  font-size: var(--text-m);
+  color: var(--dim);
+
+  /* On a phone what the row says takes a line of its own above its buttons */
+  @media (max-width: 40rem) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    height: auto;
+
+    > :first-child {
+      flex-basis: 100%;
+    }
+  }
+}
+
+.discoverrowsaid {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discoverupdaterow > .discovernotice {
+  margin: 0;
+}
+
+.discoverupdaterow > .discoverprogress {
+  margin: 0;
+  max-width: none;
+
+  &.discoveridle {
+    visibility: hidden;
+  }
+}
+
+.discoverupdaterow button {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-m);
+  white-space: nowrap;
+}
+
+/* An example being downloaded, faded until it is done */
+.discoverbusy {
+  opacity: .6;
+}
+
+/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
+   the bin and copy tile shown there */
+.discoverpill {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-round);
+  background: var(--overlay);
+  color: #fff;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  pointer-events: none;
+  transition: right .12s;
+
+  &.update {
+    background: var(--accent);
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  &.newer {
+    background: var(--dim);
+  }
+}
+
+.progcard:hover > .discoverpill,
+.asset:hover > .discoverpill {
+  right: 2.9rem;
+}
+
+.sound:hover > .discoverpill {
+  right: 1.6rem;
+}
+
+.discovershade .discoveroffer:hover > .discoverpill {
+  right: 4px;
+}
+
+/* The gallery over the page, its head and foot kept in view while its cards scroll */
+body.discovermodal {
+  overflow: hidden;
+}
+
+.discovershade {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(25, 27, 29, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2vh var(--space-6);
+}
+
+.discoversheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 60rem;
+  height: 100%;
+  max-height: 56rem;
+  background: var(--bg);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+}
+
+.discoversheethead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-6);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: var(--text-xl);
+    margin: 0 auto 0 0;
+  }
+}
+
+.discoverfilter {
+  font: inherit;
+  font-size: var(--text-m);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  min-width: 13rem;
+}
+
+.discoverchips {
+  padding: var(--space-4) var(--space-6);
+  margin: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.discoverscroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-3) var(--space-6) var(--space-6);
+}
+
+.discoverwaiting {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--dim);
+  font-size: var(--text-l);
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+
+  .discoverprogress {
+    width: 18rem;
+    max-width: 80%;
+  }
+}
+
+.discoverhead {
+  font-size: var(--text-l);
+  margin: var(--space-6) 0 var(--space-4);
+  color: var(--ink);
+}
+
+.discovergrid {
+  margin-top: var(--space-5);
+}
+
+.discoverhead + .discovergrid {
+  margin-top: 0;
+}
+
+.discoveroffer {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--discover);
+    outline-offset: 2px;
+  }
+
+  &.picked {
+    border-color: var(--discover);
+    box-shadow: 0 0 0 2px var(--discover);
+  }
+
+  &.newer {
+    opacity: .5;
+    cursor: default;
+  }
+}
+
+.discovertick {
+  position: absolute;
+  top: .4rem;
+  left: .4rem;
+  z-index: 4;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--discover);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.discoveroffer:hover .discovertick,
+.discoveroffer.picked .discovertick,
+.discovertick:focus-visible {
+  opacity: 1;
+}
+
+/* A program's icons sit along its thumbnail's foot, whatever follows the thumbnail */
+.discoverthumbwrap {
+  position: relative;
+
+  .proguses {
+    top: auto;
+    bottom: 4px;
+  }
+}
+
+/* A drawing's face is a program thumbnail's shape, a tall picture shown whole on dark either side.
+   Every card there is a picture or drawing, so none needs the tag, and its name is under it */
+.discoverdrawings .asset .face {
+  height: auto;
+  aspect-ratio: 4/3;
+  background: var(--dark);
+
+  img {
+    object-fit: contain;
+  }
+}
+
+.discovershade .asset .kind,
+.discovershade .asset .label,
+.discovershade .asset .drawingtitle {
+  display: none;
+}
+
+.discovershade .asset .progname {
+  display: block;
+}
+
+.discoversounds .sound {
+  width: auto;
+}
+
+/* What an example does, two lines kept for it so every card in a row is one height */
+.discoverdoes {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.6em;
+  line-height: 1.3;
+  margin: calc(-1 * var(--space-2)) var(--space-4) var(--space-4);
+  font-size: var(--text-s);
+  color: var(--dim);
+}
+
+.discoverhint {
+  color: var(--dim);
+  font-size: var(--text-m);
+}
+
+.discoverneeds {
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.discoversheetfoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.discoverfootsays {
+  flex: 1;
+  min-width: 0;
+
+  b {
+    font-weight: 600;
+  }
+
+  .discovernotice {
+    margin: 0;
+  }
+}
+
+.discoversheetfoot .discoverprimary {
+  padding: var(--space-4) var(--space-7);
+  font-size: var(--text-l);
+}

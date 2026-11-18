@@ -42,6 +42,9 @@ MOCKUP_STYLES_NAME = "manual_mockups.css"
 # The parts every board's manual shares, from the repository's root
 SHARED_PARTS = os.path.join("boards", "manual")
 
+# The colours the manual shares with the picker and the text editor, from the repository's root
+SHARED_TOKENS = os.path.join("boards", "editor", "tokens.css")
+
 # The board's description, from its directory
 DESCRIPTION = os.path.join("editor", "fx_board.json")
 
@@ -485,6 +488,8 @@ def build(markdown, tools_dir, version):
     page = page.replace("{{BODY}}", body)
     with open(os.path.join(tools_dir, MOCKUP_STYLES_NAME), encoding="utf-8") as f:
         page = page.replace("{{MOCKUP_STYLES}}", f.read().strip())
+    with open(os.path.join(tools_dir, "..", SHARED_TOKENS), encoding="utf-8") as f:
+        page = page.replace("{{TOKENS}}", f.read().strip())
 
     # Check if any character takes more than one byte. fx_drive compares and writes the page a piece
     # at a time, counting characters against a file that counts bytes

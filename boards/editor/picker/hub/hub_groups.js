@@ -1,0 +1,423 @@
+import {h, replace} from "../dom.js";
+import {DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
+import {
+  HUB_PLACES, hubHeadSteps, hubParts, pickPlace, placePicked, placeThere, placeTurnForChosen,
+  placeUnder, placesSaid, placesThere
+} from "./hub.js";
+import {spoken} from "../lines.js";
+import {BODY_ORDER, bodyParts, capture, frozen, namesOf, state} from "../scenes.js";
+import {pictureOffset} from "../screens/screen_art.js";
+import {lightRow} from "../screens/screen_settings.js";
+import {ANCHOR_NAMES, groundSaid, placingTokens, playingTokens} from "../screens/screen_text.js";
+import {
+  ASSET_ORDER, LOOK_START, assetSteps, freshLook, kindOf, pictureSaid
+} from "../screens/screens.js";
+
+// ---- the hub's positions in groups -----------------------------------------------------------
+// This part puts the hub's positions in groups, each set as one, with one picture, one turn and
+// one look sent once to all of it. With a look beside every picture, two positions showing the
+// same picture could differ in a setting no preview makes plain, and so be sent apart. A group
+// is the scene's, as what it shows is, so each scene can group the hub its own way.
+//
+// Groups are numbered 1 to 3, since six positions hold at most three groups of two or more, and
+// each has its colour. Under every position are the three numbers and which group it is in.
+// Pressing a number puts the position in that group, taking what the group shows, and pressing
+// it again leaves the position on its own, keeping what it shows. Pressing a position picks its
+// group for the settings below, and a picture goes to a group or a position on its own, never to
+// one member of a group. A group holds one panel size only, since the two sizes are sent apart.
+
+var GROUP_NUMBERS = ["1", "2", "3"];
+var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
+
+// A position on its own is its own group, named by its letter
+HUB_PLACES.forEach(function (place) { state.places[place].group = place; });
+
+function groupOf(place) { return state.places[place].group; }
+
+export function inNumberedGroup(place) { return GROUP_NUMBERS.indexOf(groupOf(place)) >= 0; }
+
+// The positions in a position's group, in the hub's order
+function membersOf(place) {
+  return placesThere().filter(function (other) { return groupOf(other) === groupOf(place); });
+}
+
+function membersOfGroup(number) {
+  return placesThere().filter(function (place) { return groupOf(place) === number; });
+}
+
+// What a picture or Off is sent to, each group with a member in number order and then each
+// position on its own in the hub's order
+function sendTargets() {
+  var targets = GROUP_NUMBERS.filter(function (number) {
+    return membersOfGroup(number).length;
+  }).map(function (number) {
+    return {name: number, places: membersOfGroup(number), ink: GROUP_INKS[number]};
+  });
+  placesThere().forEach(function (place) {
+    if (!inNumberedGroup(place)) targets.push({name: place, places: [place], ink: null});
+  });
+  return targets;
+}
+
+// ---- each scene keeps its positions' looks and the hub's light --------------------------------
+
+HUB_PLACES.forEach(function (place) { state.places[place].look = freshLook(); });
+state.hubLight = 1;
+
+// Each position keeps one look object for good, as a screen does
+var placeLookHomes = {};
+HUB_PLACES.forEach(function (place) { placeLookHomes[place] = state.places[place].look; });
+
+addStep(bodyParts, BODY_ORDER, "hubGroups", {
+  capture: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      body.places[place].look = Object.assign({}, state.places[place].look);
+    });
+    body.hubLight = state.hubLight;
+  },
+  apply: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      var home = placeLookHomes[place];
+      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
+      state.places[place].look = home;
+    });
+    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
+  }
+});
+
+// ---- each scene keeps its groups ---------------------------------------------------------------
+
+addStep(bodyParts, BODY_ORDER, "hubGroups", {
+  capture: function (body) {
+    HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
+  },
+  apply: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      if (body.places && body.places[place].group)
+        state.places[place].group = body.places[place].group;
+    });
+  }
+});
+
+// ---- joining, leaving, and a group set as one --------------------------------------------------
+
+// Whether a position can join a group, which holds one panel size
+function sizeFits(place, number) {
+  var others = membersOfGroup(number).filter(function (other) { return other !== place; });
+  return !others.length || state.hub.sizes[others[0]] === state.hub.sizes[place];
+}
+
+// Put a position in a group, or take it out where it is in it. Joining takes what the group
+// shows, and leaving keeps what it shows. A group showing nothing takes what the joining position
+// shows instead, so joining never loses a picture
+function joinOrLeave(place, number) {
+  if (groupOf(place) === number) {
+    state.places[place].group = place;
+    pickPlace(place);
+    return;
+  }
+  var others = membersOfGroup(number).filter(function (other) { return other !== place; });
+  state.places[place].group = number;
+  var groupShows = others.length && state.places[others[0]].shows;
+  pickPlace(others.length && (groupShows || !state.places[place].shows) ? others[0] : place);
+}
+
+// Give the rest of the picked position's group what it was given, before anything is drawn or
+// written. Only the picked position's settings are shown, so it is the one changed
+function settleGroups() {
+  // A position of another size than its group's first leaves it for its own
+  placesThere().forEach(function (place) {
+    var first = membersOf(place)[0];
+    if (state.hub.sizes[place] !== state.hub.sizes[first]) state.places[place].group = place;
+  });
+  if (!placeThere(placePicked)) return;
+  // The picked position takes its starting turn for a new picture first, and the rest take
+  // that turn with the picture, so none recalls a turn of its own from before it was grouped
+  placeTurnForChosen(placePicked);
+  var from = state.places[placePicked];
+  membersOf(placePicked).forEach(function (place) {
+    if (place === placePicked) return;
+    var held = state.places[place];
+    held.shows = from.shows;
+    held.turn = from.turn;
+    held.pingpong = from.pingpong;
+    held.hold = from.hold;
+    held.off = from.off;
+    held.lastShows = from.shows;
+    if (from.shows) held.turns[from.shows] = from.turn;
+    Object.assign(held.look, from.look);
+  });
+}
+
+addStep(drawSteps.before, DRAW_BEFORE, "hubGroups", settleGroups);
+
+// ---- pictures go to groups ---------------------------------------------------------------------
+
+// Whether a group of the scene being edited, left showing nothing, would show different things on
+// its members, since Always on shows on some of them. A group showing nothing writes nothing, so
+// only such a group is broken up when it is emptied, and elsewhere it is kept for its next picture
+function splitsOverAlways(places) {
+  var always = state.at >= 0 && state.always.body.places;
+  return !!always && places.some(function (place) { return always[place] && always[place].shows; });
+}
+
+// The positions among those given whose numbered group splitsOverAlways() says would split
+function breakingUp(places) {
+  return places.filter(function (place) {
+    return inNumberedGroup(place) && splitsOverAlways(membersOf(place));
+  });
+}
+
+// Under each picture, the groups and the positions on their own, then all. A picture on a
+// group shows on every member, and pressing it again takes it off
+addStep(assetSteps, ASSET_ORDER, "hubGroups", function () {
+  if (!state.hub.on) return;
+  var targets = sendTargets();
+  document.querySelectorAll("#assets .asset:not(.offasset)").forEach(function (cell) {
+    var name = cell.dataset.name;
+    // Every group and every position on its own at once, keeping the groups, or off every one
+    // where it shows on all
+    var everywhere = placesThere().length && placesThere().every(function (place) {
+      return state.places[place].shows === name;
+    });
+    replace(cell.querySelector(".pick"), targets.map(function (target) {
+      var shown = target.places.every(function (place) {
+        return state.places[place].shows === name;
+      });
+      return h("button", {
+        type: "button", "data-target": target.name, className: shown ? "lit" : "",
+        "aria-pressed": String(!!shown),
+        style: {background: shown && target.ink ? target.ink : null},
+        title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
+                          : target.name + ", on its own",
+        onclick: function () {
+          pickPlace(target.places[0]);
+          var breaking = shown ? breakingUp(target.places) : [];
+          state.places[placePicked].shows = shown ? null : name;
+          state.places[placePicked].off = false;
+          breaking.forEach(function (place) {
+            state.places[place].shows = null;
+            state.places[place].group = place;
+          });
+          draw();
+        }
+      }, target.name);
+    }), h("button", {
+      type: "button", className: "all" + (everywhere ? " lit" : ""),
+      "aria-pressed": String(!!everywhere),
+      title: everywhere ? "Off every position"
+                        : "On every group and every position on its own, keeping the groups",
+      disabled: !placesThere().length,
+      onclick: function () {
+        var breaking = everywhere ? breakingUp(placesThere()) : [];
+        placesThere().forEach(function (place) {
+          state.places[place].shows = everywhere ? null : name;
+          state.places[place].off = false;
+        });
+        breaking.forEach(function (place) { state.places[place].group = place; });
+        draw();
+      }
+    }, "all"));
+  });
+});
+
+// ---- the hub's light ---------------------------------------------------------------------------
+
+// Name what each position shows, and put the hub's one backlight in a row across the top of the
+// box. The light is apart from whatever group is being set, since it lights every screen
+hubHeadSteps.push(function () {
+  var body = document.querySelector("#screensHead .hubbox .body");
+  if (!body) return;
+  // What each position shows, a slideshow named as its folder
+  body.querySelectorAll(".place").forEach(function (tile) {
+    var says = tile.querySelector(".placesays");
+    var held = state.places[tile.dataset.place];
+    if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
+  });
+  // A scene showing nothing of its own on the hub, where Always on shows something, plays it in
+  // Always on's light, so the row shows that light, greyed
+  var mine = placesThere().some(function (place) {
+    return state.places[place].shows || state.places[place].off;
+  });
+  var always = placesThere().some(function (place) {
+    var under = placeUnder(place);
+    return under && under.always;
+  });
+  var fromAlways = always && !mine;
+  var row = lightRow(fromAlways ? state.always.body.hubLight : state.hubLight,
+                     function (value) { state.hubLight = value; },
+                     "shared backlight",
+                     "Backlight brightness for all six hub screens in this scene");
+  row.classList.add("hublightrow");
+  row.querySelector(".lightopt").classList.add("hublight");
+  if (fromAlways) frozen(row);
+  body.insertBefore(row, body.firstChild);
+});
+
+// ---- drawing the groups -----------------------------------------------------------------------
+
+// Every group wears its colour on each member, its outline and letter, and under every position
+// are the three numbers. The group being set is filled with a tint of its colour, which is the
+// only mark of being picked
+hubHeadSteps.push(function () {
+  // How the groups are sent is said under the positions that make them, above what is set
+  var pace = document.querySelector("#screensHead .hubpace");
+  var strip = document.querySelector("#screensHead .hubsettings");
+  if (pace && strip) strip.parentNode.insertBefore(pace, strip);
+  // Check if a numbered group is being set, so the settings take its colour in place of the hub's
+  if (strip && placeThere(placePicked) && inNumberedGroup(placePicked))
+    strip.style.setProperty("--hub", GROUP_INKS[groupOf(placePicked)]);
+  var picked = placeThere(placePicked) ? membersOf(placePicked) : [];
+  // The screens each position goes out with, as the file writes them, so a position on its own
+  // set just as others are can say it matches them
+  var sentWith = {};
+  placeGroups(capture()).forEach(function (send) {
+    send.places.forEach(function (place) { sentWith[place] = send.places; });
+  });
+  document.querySelectorAll("#screensHead .place").forEach(function (tile) {
+    var place = tile.dataset.place;
+    if (!placeThere(place)) return;
+    var ink = inNumberedGroup(place) ? GROUP_INKS[groupOf(place)] : null;
+    tile.classList.toggle("grouped", !!ink);
+    if (ink) {
+      tile.querySelector(".placename").style.color = ink;
+      tile.style.setProperty("--group", ink);
+    }
+    tile.classList.toggle("picked", picked.indexOf(place) >= 0);
+
+    var numbers = h("span", {className: "groupseg", role: "group",
+                             "aria-label": "Position " + place + " group"},
+                    GROUP_NUMBERS.map(function (number) {
+      var inIt = groupOf(place) === number;
+      var fits = sizeFits(place, number);
+      return h("button", {
+        type: "button", className: inIt ? "on" : "", "aria-pressed": String(inIt),
+        style: {background: inIt ? GROUP_INKS[number] : null},
+        disabled: !fits,
+        title: !fits ? "Group " + number + " holds " +
+                       state.hub.sizes[membersOfGroup(number)[0]] + "\" panels, and " +
+                       place + " is " + state.hub.sizes[place] + "\""
+             : inIt ? "Remove " + place + " from group " + number + ", keeping what it shows"
+                    : "Put " + place + " in group " + number +
+                      (!membersOfGroup(number).length ? ""
+                       : state.places[membersOfGroup(number)[0]].shows
+                         ? ", to show what the group shows"
+                         : state.places[place].shows ? ", taking what " + place + " shows" : ""),
+        onclick: function (event) {
+          event.stopPropagation();
+          joinOrLeave(place, number);
+          draw();
+        }
+      }, number);
+    }));
+    tile.appendChild(numbers);
+    // A position showing Always on's picture is grouped as Always on groups it, so its numbers are
+    // greyed, unless it is in a group of the scene's own, which it can still leave here. One the
+    // scene leaves empty says what the board does there
+    var under = placeUnder(place);
+    var inherited = !!(under && under.always);
+    if (inherited && !ink) frozen(numbers);
+    // Which screens it shares a group with, as a range the way the file names them, so a full
+    // group still fits, such as "grouped with B-F". A group of one says so, as its number is lit.
+    // A position on its own names those it matches, which go out with it until a setting differs
+    var others = membersOf(place).filter(function (other) { return other !== place; });
+    var matching = (sentWith[place] || []).filter(function (other) { return other !== place; });
+    var said = inherited && !ink ? "from Always on"
+             : under && under.off ? "lit only in " + spoken(namesOf(under.off))
+             : ink ? (others.length ? "grouped with " + placesSaid(others)
+                                    : "alone in group " + groupOf(place))
+             : matching.length ? "matches " + placesSaid(matching) : "on its own";
+    tile.appendChild(h("small", {className: "groupsaid", style: {color: ink}, title: said}, said));
+  });
+});
+
+// What makes a send differ from another showing the same picture, in the words the settings
+// use, so it is plain why they are sent apart
+export function differences(send, from) {
+  var one = send.playing;
+  var other = from.playing;
+  var look = one.look || LOOK_START;
+  var base = other.look || LOOK_START;
+  var words = [];
+  if (state.hub.sizes[send.places[0]] !== state.hub.sizes[from.places[0]])
+    words.push("a " + state.hub.sizes[send.places[0]] + "\" panel");
+  if (Number(one.turn || 0) !== Number(other.turn || 0))
+    words.push(Number(one.turn || 0) ? "turned " + one.turn + "\u00b0" : "not turned");
+  if (look.mirror !== base.mirror) words.push(look.mirror ? "mirrored" : "not mirrored");
+  if (look.anchor !== base.anchor || look.x !== base.x || look.y !== base.y)
+    words.push(look.anchor !== null && look.anchor !== undefined
+               ? "placed " + ANCHOR_NAMES[look.anchor]
+               : "placed at " + (look.x === "" ? "centre" : look.x) + ", " +
+                 (look.y === "" ? "centre" : look.y));
+  // Tiling is said for the sides it fills, which are across, down or both
+  var across = look.tile;
+  var down = look.tileDown || "off";
+  if (across !== base.tile || down !== (base.tileDown || "off")) {
+    var sides = across !== "off" && down !== "off" ? "" : across !== "off" ? " across" : " down";
+    var mirrored = across === "mirror" || down === "mirror" ? ", mirrored" : "";
+    words.push(across === "off" && down === "off" ? "not tiled" : "tiled" + sides + mirrored);
+  }
+  if (look.double !== base.double) words.push(look.double ? "pixel doubled" : "not doubled");
+  if (look.bg !== base.bg) words.push("on " + groundSaid(look.bg));
+  // Playback as the file writes it, which a still picture takes none of
+  var kind = kindOf(one.shows);
+  var played = playingTokens(one, look, kind, state.hub.sizes[send.places[0]]);
+  var basePlayed = playingTokens(other, base, kind, state.hub.sizes[from.places[0]]);
+  function paced(tokens) { return tokens.filter(function (t) { return /^(fps|interval)=/.test(t); }); }
+  function sized(tokens) { return tokens.filter(function (t) { return /^(width|height)=/.test(t); }); }
+  function looped(tokens) {
+    return tokens.filter(function (t) { return !/^(fps|interval|width|height)=/.test(t); });
+  }
+  if (paced(played).join() !== paced(basePlayed).join()) words.push("timed differently");
+  if (sized(played).join() !== sized(basePlayed).join()) words.push("drawn on another canvas");
+  if (looped(played).join() !== looped(basePlayed).join()) words.push("played differently");
+  return words;
+}
+
+export function listSaid(words) {
+  return words.length > 1 ? words.slice(0, -1).join(", ") + " and " + words[words.length - 1]
+                          : words[0];
+}
+
+// How many ways a send differs from how a screen starts
+export function plainness(send) {
+  return differences(send, {places: send.places,
+                            playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
+}
+
+// What a position plays, as a key. Positions with the same key are one entry, and one stream.
+// Panels of different sizes are sent apart, so the size is part of it. They are one send where
+// the file would say the same for them, so a setting the file leaves out, such as a still's pace
+// or the last custom colour, never splits them.
+//
+// One entry plays one drawing on every position it names, where entries of their own each run
+// it afresh, so a drawing joins others only in a numbered group
+function playingKey(playing, place) {
+  var look = playing.look || LOOK_START;
+  var size = state.hub.sizes[place];
+  var where = pictureOffset(look, playing.shows, size, playing.turn);
+  var kind = kindOf(playing.shows);
+  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
+  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
+    .concat(playingTokens(playing, look, kind, size)).join("|");
+}
+
+// The positions of one scene, gathered into what each different picture is sent to
+export function placeGroups(body) {
+  var groups = [];
+  var byKey = {};
+  placesThere().forEach(function (place) {
+    var playing = body.places && body.places[place];
+    if (!playing || !playing.shows) return;
+    var key = playingKey(playing, place);
+    if (!byKey[key]) {
+      byKey[key] = {playing: playing, places: []};
+      groups.push(byKey[key]);
+    }
+    byKey[key].places.push(place);
+  });
+  return groups;
+}
+hubParts.placeGroups = placeGroups;
+hubParts.breakingUp = breakingUp;
+hubParts.sendTargets = sendTargets;

@@ -45,6 +45,21 @@ jobs:
           git diff --exit-code -- "$board/manual/MANUAL.md" "$board/fx_libs/fx_manual.py"
         done
 
+    - name: Install Node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '22'
+
+    # The picker's parts are bundled, and the drive's pages minified, by the esbuild pinned in
+    # tools/picker, beside the parsers the module check reads the parts with
+    - name: Install the Picker's Build Tools
+      shell: bash
+      run: npm ci --prefix tools/picker
+
+    - name: Check the Picker's Imports and Exports
+      shell: bash
+      run: node tools/picker/check_modules.js
+
     - name: Check Each Board's Editor Is Rebuilt
       shell: bash
       run: |

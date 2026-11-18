@@ -6,14 +6,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
 <script src="catalogue.js"></script>
 <style>
-:root{
- --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
- --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;
- --target:#1f6feb; --effect:#0a7f78; --value:#a8500a; --scene:#7b3fb8;
- --comment:#8a8378; --faint:#5d656e;
-}
+__TOKENS__
+__RELEASE_STYLES__
 *{box-sizing:border-box}
-/* Hold the footer at the foot of the window when the page is shorter than it */
+/* Hold the footer at the bottom of the window when the page is shorter than the window */
 body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink);
  min-height:100vh;display:flex;flex-direction:column}
 header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
@@ -27,13 +23,13 @@ button:disabled{opacity:.4;cursor:default}
 main{width:100%;max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 .banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
-.banner.hold{background:#fdf3e0;color:#8a6415}
+.banner.hold{background:var(--hold-bg);color:var(--hold)}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
 /* The board's lights as it lights them while a save is written */
 .spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
 .spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
  background:rgba(138,100,21,.12)}
-.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
+.spots i.lit{background:#fff;border-color:var(--hold);box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
 
 .editor{position:relative;background:var(--panel);border:1px solid var(--line);
  border-radius:14px;overflow:hidden;height:24rem}
@@ -56,7 +52,7 @@ main{width:100%;max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 .s-name{color:var(--ink)}
 .s-punc{color:var(--faint)}
 .s-colon{color:var(--ink);font-weight:700}
-.s-comment{color:var(--comment);font-style:italic}
+.s-comment{color:var(--dim);font-style:italic}
 .s-bad{text-decoration:underline wavy var(--warn);text-decoration-skip-ink:none}
 
 .suggest{position:fixed;z-index:6;background:var(--panel);border:1px solid var(--line);
@@ -75,7 +71,7 @@ main{width:100%;max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 .foot a{color:var(--accent)}
 
 footer{margin-top:auto;padding:1.1rem 1.4rem 1.25rem;background:var(--panel);
- border-top:1px solid var(--line);color:#6b655c;font-size:.8125rem}
+ border-top:1px solid var(--line);color:var(--dim-strong);font-size:.8125rem}
 footer .maker{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
  gap:.75rem 1.5rem}
 footer .brand{display:flex;align-items:center;gap:.75rem}
@@ -94,17 +90,19 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 </head>
 <body>
 <header>
-<h1>__BOARD_NAME__ Editor <span class="version">__VERSION__</span></h1>
+<h1>__BOARD_NAME__ Editor <span class="version">__VERSION__</span><span id="firmware" hidden></span></h1>
 <button id="open" class="primary">Open FX drive</button>
 <button id="save" disabled>Save to board</button>
 <button id="check" disabled>Check board</button>
 </header>
 <main>
-<div id="banners"></div>
+<div id="banners" role="status" aria-live="polite"></div>
 <div class="editor">
-<pre id="paint"><code id="painted"></code></pre>
-<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
-<div id="suggest" class="suggest"></div>
+<pre id="paint" aria-hidden="true"><code id="painted"></code></pre>
+<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+ aria-label="effects.txt" aria-describedby="hint" aria-autocomplete="list"
+ aria-controls="suggest"></textarea>
+<div id="suggest" class="suggest" role="listbox" aria-label="Suggestions"></div>
 </div>
 <div id="hint" class="hint"></div>
 <p class="foot">One entry per line: which lights, a colon, then the effect.
@@ -124,11 +122,17 @@ cards instead, open <a href="PICKER.html">PICKER.html</a> on this drive.</p>
 <script>
 "use strict";
 
+// The text editor for effects.txt that each board's drive serves. It colours each word by its
+// role and offers what fits at the caret, from the board's parts and autofx's names in catalogue.js
+
+// The picker's release part as FXRelease, or null for a board with no releases to offer
+__RELEASE__
+
 // Check if catalogue.js is missing. The page still paints without it, and the hint line
 // says why no suggestions can be offered
 if (typeof CATALOGUE === "undefined") window.CATALOGUE = null;
 
-// ---- what the file may say, from the same tables the board reads ---------------
+// ---- what the file may say, from the same tables the board reads --------------------------------
 
 var TYPE_HINTS = {
   fraction: "0 to 1, or a percentage such as 50%",
@@ -146,7 +150,7 @@ var TYPE_HINTS = {
   word: "one of the styles the drawing's Styles: lines list, several joined by a dash"
 };
 
-// The left side's own settings. The type table carries none of their shapes but colour's
+// The left-side settings whose values have shapes of their own. Only colour's is in TYPE_HINTS
 var CHANNEL_HINTS = {
   colour: "a colour name such as warm, or a six-digit hex code without #",
   offset: "the picture's position as x|y, with * to centre on that axis",
@@ -168,7 +172,20 @@ var NAMED = OWN.outputs.filter(function (output) { return !/^out[0-9]+$/.test(ou
 var NUMBERED_COLOUR = NUMBERED.length > 0 &&
                       NUMBERED.every(function (output) { return output[1] === "colour"; });
 
-// An example of outputs joined and ranged, with the range ending on the board's last output
+// Whether the numbered outputs are plain lights, with no colour to show
+var NUMBERED_MONO = NUMBERED.length > 0 &&
+                    NUMBERED.every(function (output) { return output[1] === "mono"; });
+
+// Whether a word of an output entry's selector names a plain light, which is a component of a
+// colour output, a numbered output where those are plain or a named output that is plain
+function namesPlainLight(word) {
+  var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
+  if (bare.indexOf(".") >= 0) return true;
+  if (NUMBERED_MONO && /^(out)?[0-9]/.test(bare)) return true;
+  return NAMED.some(function (output) { return output[1] === "mono" && output[0] === bare; });
+}
+
+// An example of outputs joined, with a range to the board's last output where it has more than five
 var JOINED_EXAMPLE = NUMBERED.length > 5 ? "out1,3,5-" + NUMBERED.length : "out1,2";
 
 var COUNT_WORDS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
@@ -184,9 +201,8 @@ if (OWN.hub)
 OWN.strips.forEach(function (strip) { TARGETS.push([strip[0], "an LED strip on " + strip[1]]); });
 if (OWN.sound) TARGETS.push([CATALOGUE.audio, "a sound to play alongside the effects"]);
 
-// The entries that say what a sensor's triggers do, a remote entry for the Aye Arr Remote's
-// buttons and a motion entry for a PIR Stick, each with the triggers it can name. Empty on a
-// board without a sensor
+// The trigger entries and the triggers each can name, remote for the Aye Arr Remote's buttons and
+// motion for a PIR Stick. Empty on a board without a sensor connector
 var TRIGGERS = CATALOGUE && CATALOGUE.triggers || {};
 if (TRIGGERS.remote)
   TARGETS.push(["remote", "what the Aye Arr Remote's buttons do, with sensor=ir on the board line"]);
@@ -213,8 +229,8 @@ var TRIGGER_HINTS = {
   cancel: "no to finish the wait even if the motion changes back first"
 };
 
-// The settings a trigger entry takes. These are the triggers its sensor has, less the buttons
-// that do the same in every scene, and for motion the delay and whether it can be cancelled
+// The settings a trigger entry takes, which are its sensor's triggers less the buttons that do the
+// same in every scene. A motion entry also takes its delay and whether it can be cancelled
 function triggerSettings(target) {
   var names = (TRIGGERS[target.toLowerCase()] || []).filter(function (name) {
     return CATALOGUE.triggers_fixed.indexOf(name) < 0;
@@ -254,8 +270,8 @@ function targetKind(word) {
 }
 
 function channelSettings(kind) {
-  // A sound answers to none of the channel settings, and nor does a trigger entry. autofx
-  // reports a channel setting written on a sound
+  // Check if the entry takes no channel settings. A sound and a trigger entry take none, and
+  // autofx reports one written on a sound
   if (!CATALOGUE || kind === "board" || kind === "audio" || kind === "trigger") return [];
   if (kind === "screen") return CATALOGUE.screen_settings || [];
   return CATALOGUE.output_settings || [];
@@ -308,7 +324,7 @@ function valuesFor(name, kind) {
   return null;
 }
 
-// ---- painting, the same roles the manual gives each word -----------------------
+// ---- painting, the same roles the manual gives each word ----------------------------------------
 
 function esc(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -342,7 +358,7 @@ function badWrap(marked) {
   return '<span class="s-bad">' + marked + "</span>";
 }
 
-// A Screen Hub's positions, lettered A to F as on its silk, singly or as ranges such as hubA-C,E
+// A Screen Hub's positions lettered A to F as on its silk, singly or in ranges such as hubA-C,E
 var HUB_PLACES = /^hub[a-f](-[a-f])?(,[a-f](-[a-f])?)*$/;
 
 function validSelector(word) {
@@ -386,7 +402,7 @@ function highlightLine(line, continuation, context) {
 
   var at = body.indexOf(":");
   if (at < 0) {
-    // A line without a colon adds settings to the entry above, and is wrong where there is none
+    // Check if a line without a colon has no entry above to add its settings to, which is wrong
     if (!continuation) return badWrap(esc(body)) + comment;
     var allowed = context && CATALOGUE && context.kind === "trigger"
                 ? triggerSettings(context.target)
@@ -405,7 +421,7 @@ function highlightLine(line, continuation, context) {
   var mono = false;
   var left = tokens(esc(body.slice(0, at)), function (word) {
     if (word.indexOf("=") >= 0) return checkedSetting(word, leftAllowed);
-    if (kind === "output" && word.indexOf(".") >= 0) mono = true;
+    if (kind === "output" && namesPlainLight(word)) mono = true;
     var marked = mark("s-target", word);
     return validSelector(word) ? marked : badWrap(marked);
   });
@@ -471,11 +487,11 @@ function paint(text) {
   return painted.join("\n") + "\n";
 }
 
-// ---- where the caret stands, for offering what fits there ----------------------
+// ---- where the caret stands, for offering what fits there ---------------------------------------
 
+// The text of the caret's entry from its first line up to the caret, as one line. An entry's colon
+// is on its first line, so the lines above are taken back to the one holding it
 function entryBefore(text, caret) {
-  // The logical entry up to the caret is this line plus the lines above it that
-  // it continues, since an entry's colon is on its first line
   var lineStart = text.lastIndexOf("\n", caret - 1) + 1;
   var lines = [text.slice(lineStart, caret)];
   while (lineStart > 0 && lines[0].split("#")[0].indexOf(":") < 0) {
@@ -514,8 +530,8 @@ function outputsUsed(lines) {
   return used;
 }
 
-// The lines of the caret's scene less its own line, and the always-on section above the first
-// heading. Above the first heading the scene is the always-on section, so always is empty
+// The lines of the caret's scene less its own line, and the always-on section's lines where the
+// caret is under a heading. Above the first heading the caret's scene is the always-on section
 function sceneScope(text, caret) {
   var lines = text.split("\n");
   var here = text.slice(0, caret).split("\n").length - 1;
@@ -544,6 +560,7 @@ function selectorStart(word) {
   var lowered = word.toLowerCase();
   if (lowered.slice(0, 5) === "board") return true;
   if (TRIGGERS[lowered]) return true;
+  if (OWN.sound && lowered === CATALOGUE.audio) return true;
   if (NUMBERED.length && /^out[0-9]/.test(lowered)) return true;
   if (OWN.hub && /^hub[a-f]/.test(lowered)) return true;
   return ownPart(lowered, OWN.screens.concat(OWN.strips, NAMED), /^/);
@@ -560,7 +577,7 @@ function contextAt(text, caret) {
   var found = {prefix: prefix, target: null, kind: "output", effect: null,
                comma: false, used: {}};
 
-  // Check if a comma has closed the token, leaving the caret at a fresh word
+  // Check if a comma has closed the token, so the caret is at a fresh word
   if (prefix.slice(-1) === ",") {
     found.comma = true;
     found.prefix = prefix = "";
@@ -576,15 +593,13 @@ function contextAt(text, caret) {
     found.kind = targetKind(opening[1]);
   }
 
-  // A component anywhere in the selector makes the channel a plain light, so a
-  // colour effect has nothing there to show itself on
+  // Check if the selector names a plain light anywhere, with nothing to show a colour effect on
   if (colon >= 0 && found.kind === "output")
     found.mono = entry.slice(0, entry.indexOf(":")).split(/\s+/).some(function (word) {
-      return word.indexOf("=") < 0 && word.indexOf(".") >= 0;
+      return word.indexOf("=") < 0 && namesPlainLight(word);
     });
 
-  // What the entry already sets, to the end of the caret's line, so a setting
-  // is only ever offered once
+  // Collect what the entry sets up to the end of the caret's line, so no setting is offered twice
   var lineEnd = text.indexOf("\n", caret);
   var whole = entry + " " +
               text.slice(caret, lineEnd < 0 ? text.length : lineEnd).split("#")[0];
@@ -594,8 +609,8 @@ function contextAt(text, caret) {
   });
 
   if (colon < 0) {
-    // A comma before the colon says another output comes next, which is the
-    // writer's to number, so nothing is offered and the hint line explains
+    // A comma before the colon means another output comes next. The writer numbers it, so nothing
+    // is offered and the hint line explains
     found.mode = found.comma ? "more" : before.trim() ? "channel" : "target";
   } else {
     var settled = found.kind === "board" || found.kind === "trigger";
@@ -612,8 +627,8 @@ function contextAt(text, caret) {
       if (line.slice(0, line.length - prefix.length).trim() === "") {
         found.mode = "fresh";
       } else {
-        // A first word shaped like a selector settles it. The line is then a new
-        // entry still waiting for its colon, not the one above carrying on
+        // Check if the first word is shaped like a selector. The line is then a new entry still
+        // waiting for its colon, not the one above carrying on
         var starts = line.match(/^\s*([^\s:]+)/);
         if (starts && selectorStart(starts[1])) {
           found.target = starts[1];
@@ -655,7 +670,7 @@ function offers(found) {
       out.push({insert: insert, hint: hint || ""});
   }
 
-  // fade= and ease= are one setting written two ways, so each rules the other out
+  // Whether a setting is still free. fade= and ease= are one setting, so each rules the other out
   function unused(name) {
     if (found.used[name.toLowerCase()]) return false;
     if (name === "fade" && found.used.ease) return false;
@@ -689,13 +704,13 @@ function offers(found) {
                : TYPE_HINTS[settingType(name, found.kind)];
       offer(shown + "=", hint || "");
     });
-    // A hub's positions are a pattern where the others are names, so one is offered to start
+    // Check if the board has a Screen Hub. Its positions are a pattern, so one is offered to start
     if (found.kind === "board" && OWN.hub)
       offer("hubA=", "the screen size at a Screen Hub position, such as hubA-C=2.8");
   }
 
-  // A word already naming outputs can take more of them, one colour channel, or
-  // go to its effect. Half-written punctuation leaves the numbers to the writer
+  // Offer what follows a word naming outputs, such as more of them, one colour channel or the
+  // colon. Half-written punctuation leaves the numbers to the writer
   function selectorOffers() {
     var numbered = NUMBERED.length > 0 && /^out[0-9]/i.test(found.prefix);
     var components = (numbered && NUMBERED_COLOUR) || ownPart(found.prefix, NAMED, /^\.$/);
@@ -709,18 +724,23 @@ function offers(found) {
     if (/[-.,]$/.test(found.prefix)) return;
     if (numbered || ownPart(found.prefix, OWN.strips, /^[0-9]/)) {
       var tail = found.prefix.split(",").pop();
-      offer(found.prefix + ",", "another output, such as " + JOINED_EXAMPLE);
+      // A strip's numbers are its LEDs, so its example joins LEDs on the strip being written
+      var strip = numbered ? null : found.prefix.match(/^[a-z]+/i)[0];
+      offer(found.prefix + ",", strip ? "another LED, such as " + strip + "1,5-8"
+                                      : "another output, such as " + JOINED_EXAMPLE);
       if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
-        offer(found.prefix + "-", "a range of outputs, in either direction");
+        offer(found.prefix + "-", "a range of " + (strip ? "LEDs" : "outputs") +
+                                  ", in either direction");
       if (numbered && NUMBERED_COLOUR && tail.indexOf(".") < 0)
         offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
     } else if (ownPart(found.prefix, NAMED, /^$/)) {
       offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
-    } else if (/^(board|audio)$/i.test(found.prefix) || TRIGGERS[found.prefix.toLowerCase()] ||
+    } else if (/^board$/i.test(found.prefix) || TRIGGERS[found.prefix.toLowerCase()] ||
+               (OWN.sound && found.prefix.toLowerCase() === CATALOGUE.audio) ||
                ownPart(found.prefix, OWN.screens.concat(OWN.strips), /^$/) ||
-               HUB_PLACES.test(found.prefix.toLowerCase())) {
+               (OWN.hub && HUB_PLACES.test(found.prefix.toLowerCase()))) {
       offer(found.prefix + ": ", "then the effect");
     }
   }
@@ -843,7 +863,7 @@ function hintFor(found) {
   return "";
 }
 
-// ---- the page -----------------------------------------------------------------
+// ---- the page -----------------------------------------------------------------------------------
 
 var entry = document.getElementById("entry");
 var painted = document.getElementById("painted");
@@ -863,8 +883,8 @@ var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], ro
 
 function repaint() {
   painted.innerHTML = paint(entry.value);
-  // The box grows with the file, a spare row deep, so the text never scrolls
-  // vertically inside it and the page carries a long file instead
+  // Grow the box with the file and one spare row, so the text never scrolls vertically inside it
+  // and the page scrolls a long file instead
   var rowHeight = parseFloat(getComputedStyle(entry).lineHeight);
   var wanted = (entry.value.split("\n").length + 1) * rowHeight + 48;
   paintBox.parentNode.style.height = Math.max(384, wanted) + "px";
@@ -878,8 +898,8 @@ function repaint() {
 var SPOT_STEP_MS = 120;
 var SPOTS = NUMBERED.length || 1;
 var FLASH_STEPS = 7;
-// How long the animation outlives the write. The board holds its light for 500ms after the
-// last write, and the page adds a half-step for each light before the wait begins
+// How long the animation outlives the write. The board holds its light for 500ms after the last
+// write, then runs one pass of half-steps over its lights
 var SAVING_TAIL_MS = 500 + SPOTS * SPOT_STEP_MS / 2;
 var spotTimer = null;
 
@@ -903,13 +923,14 @@ function saving(text) {
   }, SPOT_STEP_MS);
 }
 
+// Show text in the banner, and detail= under it where given. warn= is true for a problem, or "hold"
+// for the amber of a wait still in progress
 function banner(text, warn, detail) {
   stopSpots();
   var box = document.getElementById("banners");
   box.innerHTML = "";
   if (!text) return;
   var note = document.createElement("div");
-  // The warn argument may also be "hold", the amber of a wait still in progress
   note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
   note.textContent = text;
   if (detail) {
@@ -920,7 +941,7 @@ function banner(text, warn, detail) {
   box.appendChild(note);
 }
 
-// Where the caret's line sits on the screen, found by mirroring the text up to it
+// Where the caret sits in the window, found by measuring a hidden copy of its line up to it
 function caretPlace() {
   var mirror = document.createElement("div");
   var styles = getComputedStyle(entry);
@@ -965,9 +986,12 @@ function showSuggestions() {
     if (index && index === offered.divider) {
       var rule = document.createElement("div");
       rule.className = "rule";
+      rule.setAttribute("role", "none");
       suggest.appendChild(rule);
     }
     var row = document.createElement("div");
+    row.id = "suggest-" + index;
+    row.setAttribute("role", "option");
     var name = document.createElement("span");
     name.textContent = one.insert;
     row.appendChild(name);
@@ -976,7 +1000,8 @@ function showSuggestions() {
       why.textContent = one.hint;
       row.appendChild(why);
     }
-    if (index === 0) row.className = "lit";
+    row.className = index === 0 ? "lit" : "";
+    row.setAttribute("aria-selected", String(index === 0));
     row.onmousedown = function (event) {
       event.preventDefault();
       accept(index);
@@ -984,7 +1009,7 @@ function showSuggestions() {
     suggest.appendChild(row);
     state.rows.push(row);
   });
-  // Placed below the caret's line, or above it where the screen runs out
+  // Place the list below the caret's line, or above it where the window runs out
   suggest.style.visibility = "hidden";
   suggest.className = "suggest shown";
   var place = caretPlace();
@@ -995,11 +1020,14 @@ function showSuggestions() {
   suggest.style.left = Math.max(8, Math.min(place.left,
       window.innerWidth - suggest.offsetWidth - 8)) + "px";
   suggest.style.visibility = "";
+  // A screen reader reads the lit suggestion while the caret stays in the text
+  entry.setAttribute("aria-activedescendant", state.rows[0].id);
 }
 
 function hideSuggestions() {
   suggest.className = "suggest";
   state.offered = [];
+  entry.removeAttribute("aria-activedescendant");
 }
 
 function light(index) {
@@ -1007,8 +1035,10 @@ function light(index) {
   state.lit = (index + count) % count;
   state.rows.forEach(function (row, i) {
     row.className = i === state.lit ? "lit" : "";
+    row.setAttribute("aria-selected", String(i === state.lit));
   });
   state.rows[state.lit].scrollIntoView({block: "nearest"});
+  entry.setAttribute("aria-activedescendant", state.rows[state.lit].id);
 }
 
 function accept(index) {
@@ -1040,7 +1070,7 @@ entry.addEventListener("scroll", function () {
   paintBox.scrollLeft = entry.scrollLeft;
   hideSuggestions();
 });
-// The dropdown is pinned to the screen, so anything moving under it lets go of it
+// The suggestions are fixed to the window, so a resize or any scroll outside them hides them
 window.addEventListener("resize", hideSuggestions);
 window.addEventListener("scroll", function (event) {
   if (event.target instanceof Node && suggest.contains(event.target)) return;
@@ -1067,9 +1097,9 @@ entry.addEventListener("keydown", function (event) {
   else if (event.key === "Escape") hideSuggestions();
 });
 
-// ---- remembering the drive ------------------------------------------------------
+// ---- remembering the drive ----------------------------------------------------------------------
 
-// Keep the drive's handle in IndexedDB, shared with the picker, so a later visit reaches it
+// Keep the drive's handle in the IndexedDB store the picker shares, so a later visit reaches it
 // with one click and a permission bubble. Anything failing here falls back to the file dialog
 function rememberDrive(handle) {
   try {
@@ -1123,14 +1153,14 @@ async function pickDrive() {
   return picked;
 }
 
-// Take the drive's effects.txt into the editor, asking first where it would
-// replace something written here, and ready the buttons for a save
+// Take the drive's effects.txt into the editor and ready the buttons for a save. Where the file
+// would replace something written here, ask first
 function loadFromDrive(onBoard, drive) {
   var held = entry.value.trim();
   if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
       confirm("Replace the text here with effects.txt from the drive? " +
               "Ctrl+Z (Cmd+Z on a Mac) undoes it."))) {
-    // Through the undo history, so what was here is one Ctrl+Z away
+    // Replace the text through the undo history, so what was here is one Ctrl+Z away
     entry.focus();
     entry.setSelectionRange(0, entry.value.length);
     if (!document.execCommand("insertText", false, onBoard)) entry.value = onBoard;
@@ -1138,8 +1168,7 @@ function loadFromDrive(onBoard, drive) {
     repaint();
   }
   document.getElementById("check").disabled = false;
-  // The next thing to do carries the colour, opening first and then saving. The drive button
-  // says in its tip which drive is open
+  // Move the accent colour from opening to saving, and name the open drive in the button's tooltip
   var open = document.getElementById("open");
   open.className = "";
   open.textContent = "Change drive";
@@ -1152,16 +1181,47 @@ function loadFromDrive(onBoard, drive) {
 async function connect() {
   if (!CAN_REACH_A_DRIVE) return connectByInput();
   var dir = await pickDrive();
+  try {
+    state.fileHandle = await dir.getFileHandle("effects.txt");
+  } catch (e) {
+    if (e.name !== "NotFoundError") throw e;
+    var refused = new Error("no effects.txt");
+    refused.name = "NotAnFxDrive";
+    throw refused;
+  }
   state.dirHandle = dir;
-  state.fileHandle = await dir.getFileHandle("effects.txt");
   var onBoard = await (await state.fileHandle.getFile()).text();
   loadFromDrive(onBoard, dir.name && dir.name.length > 1 ? dir.name : "the FX drive");
+}
+
+// The firmware the board runs, since the drive carries the editor made with it
+var SHOWN_VERSION = "__VERSION__";
+
+// Show Update available beside the version where newer firmware is out, as the picker does. It
+// opens the picker at #update, whose sheet says what is new and how to update
+async function checkRelease() {
+  if (!FXRelease) return;
+  // Only the picker stores GitHub's answer, since it knows which files the board takes
+  var release = await FXRelease.latestRelease(function () { return false; });
+  var version = release ? FXRelease.firmwareVersion(release) : "";
+  var where = document.getElementById("firmware");
+  where.hidden = !version || !FXRelease.firmwareBehindOf(SHOWN_VERSION, version);
+  if (where.hidden) return;
+  var looks = FXRelease.firmwareButtonLooks(version, String(release.body || ""));
+  var button = where.firstChild || where.appendChild(document.createElement("button"));
+  button.type = "button";
+  button.textContent = "Update available";
+  button.className = looks.className;
+  button.title = looks.title;
+  button.onclick = function () { window.open("PICKER.html#update", "_blank"); };
 }
 
 document.getElementById("open").onclick = async function () {
   try {
     await connect();
     banner("");
+    // Check once a drive is open, since only then is the page known to be the one the board carries
+    checkRelease();
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "NotAnFxDrive") {
@@ -1175,11 +1235,10 @@ document.getElementById("open").onclick = async function () {
   }
 };
 
-// ---- the drive without handles -------------------------------------------------
+// ---- the drive without handles ------------------------------------------------------------------
 
-// Safari and Firefox cannot hand a page a folder to write to. There the drive is
-// read through a folder chooser, and a save hands effects.txt to the browser's
-// download, which the user places on the drive
+// Safari and Firefox cannot hand a page a folder to write to. There a folder chooser reads the
+// drive, and a save hands effects.txt to the browser's download for the user to copy onto it
 var folderInput = document.createElement("input");
 folderInput.type = "file";
 folderInput.setAttribute("webkitdirectory", "");
@@ -1208,8 +1267,8 @@ function chooseFolder() {
   });
 }
 
-// effects.txt and errors.txt out of the chooser's files, at the drive's root only.
-// Firefox hands back dot entries too, the sidecars and event log a Mac leaves
+// Find effects.txt, errors.txt and the drive's name among the chooser's files, at the drive's root
+// only. Firefox also hands back dot entries, the sidecars and event log a Mac leaves
 function sortFolder(files) {
   var found = {effects: null, errors: null, drive: null};
   for (var i = 0; i < files.length; i++) {
@@ -1240,8 +1299,8 @@ async function connectByInput() {
                 found.drive && found.drive.length > 1 ? found.drive : "the FX drive");
 }
 
-// A save with nowhere to write sends effects.txt to the browser's download, and
-// the banner says where it belongs and how the board answers
+// Send effects.txt to the browser's download where the page cannot write to the drive, and say in
+// the banner where it belongs and how the board answers
 function saveByHand() {
   var text = entry.value;
   var onBoard = state.boardText || "";
@@ -1258,8 +1317,7 @@ function saveByHand() {
           : ", then eject the drive or press Boot once to play it."));
 }
 
-// Check board, asked by choosing the drive again. Only its answer is taken, and what is
-// written on the page stays as it is
+// Read the board's report by asking for the drive again. The page's text stays as it is
 async function askByInput() {
   banner("Choose the FX drive again to read the board's report.", "hold");
   var files = await chooseFolder();
@@ -1296,19 +1354,18 @@ if (!CAN_REACH_A_DRIVE) {
 }
 
 
-// ---- waiting for the board -----------------------------------------------------
+// ---- waiting for the board ----------------------------------------------------------------------
 
-// Besides this page's marker, only the board writes errors.txt, and only on re-reading
-// the file. A change therefore proves it acted
+// Only the board writes errors.txt, besides the marker either page writes. It rewrites or deletes
+// the file each time it reads effects.txt, and adds to it when a drawing or a sound stops
 
 // How long before the wait says it is still checking. A change to errors.txt ends it at once
 var BOARD_SETTLE_MS = 6000;
 // How long the wait lasts before reporting no answer
 var BOARD_WAIT_MS = 15000;
-// How long the drive is given to come back once it has been seen away. The board
-// leaves the USB bus as it takes a save, and gives the drive back once the file is
-// loaded. A file of 18 drawings kept it from a Mac for 24 seconds, measured
-// 2026-11-12, with the answer readable the moment the drive mounts
+// How long the drive is given to come back once it has been seen away. The board leaves the USB
+// bus as it takes a save, and gives the drive back once the file is loaded. A file of 18 drawings
+// kept it from a Mac for 24 seconds, measured 2026-11-12, with the answer readable as it mounts
 var BOARD_AWAY_MS = 30000;
 var BOARD_POLL_MS = 250;
 
@@ -1325,8 +1382,8 @@ function playsItself(text) {
 }
 
 // Written into errors.txt before a save, so the board's answer is always a change. The board
-// deletes the file or rewrites it, and a board that never reads it leaves this line to be found.
-// It must match the picker's, as either page reads the marker the other wrote
+// deletes the file or rewrites it, and a board that never reads the save leaves this line to be
+// found. It must match the picker's, as either page reads the marker the other wrote
 var CHECKING = "The board has not loaded the file yet.";
 
 // Write the marker and return whether it took, as it does not on a full drive
@@ -1342,9 +1399,8 @@ async function markChecking() {
   }
 }
 
-// Whether the drive is there to be asked, by listing its first entry. A drive that
-// has left the bus mid-reload makes every path vanish at once, so a missing file
-// is only missing while the directory itself still answers
+// Whether the drive is there to be asked, by listing its first entry. A drive that has left the
+// bus mid-reload makes every path vanish at once, as if each file had been deleted
 async function driveAnswers() {
   try {
     for await (var entry of state.dirHandle.values()) return true;
@@ -1371,7 +1427,7 @@ async function readErrors() {
 // after that is final, and the wait is extended once for the drive to come back
 //
 // Never read effects.txt while waiting. A read of the file just saved holds off the computer's
-// pending write, and the board then waits about half a minute to see it
+// pending write, and the board then takes far longer to see it
 async function waitForBoard(before, nothingYet) {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var settled = Date.now() + BOARD_SETTLE_MS;
@@ -1412,8 +1468,8 @@ async function waitForReturn() {
   return false;
 }
 
-// What to say once the wait is over. Silence cannot be told from a board that has
-// not got there yet, so it is reported as nothing said rather than as all well
+// Say in the banner what the board reported after a save. A marker left in place cannot be told
+// from a board that has not got there yet, so it is reported as no response, not as all well
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
     banner("No response from the board yet. Eject the FX drive or press Boot " +
@@ -1432,13 +1488,12 @@ document.getElementById("save").onclick = async function () {
     saveByHand();
     return;
   }
-  // Both are held down until the verdict. A second save cannot land in the wait and race
-  // the first, a check cannot read back the marker this save is about to write, and
-  // the buttons coming back say the board has answered
   var button = this;
   var check = document.getElementById("check");
   try {
     if (!state.fileHandle) await connect();
+    // Disable both buttons until the board answers, so a second save cannot race the first and a
+    // check cannot read back the marker this save writes. Their return says the board has answered
     button.disabled = true;
     check.disabled = true;
     var text = entry.value;
@@ -1447,7 +1502,7 @@ document.getElementById("save").onclick = async function () {
     var running = await (await state.fileHandle.getFile()).text();
     saving("Saving to the board...");
     var errorsBefore = playsItself(running) ? await readErrors() : undefined;
-    // The marker makes the answer an edge even where nothing else changes
+    // Check if the board plays its saves and the marker is written, so its answer will be a change
     if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
     var writable = await state.fileHandle.createWritable();
     await writable.write(text);
@@ -1458,8 +1513,12 @@ document.getElementById("save").onclick = async function () {
       differs.name = "NotWhatWasSaved";
       throw differs;
     }
-    // Keep the animation running for SAVING_TAIL_MS, as the board's light outlives the write
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
+    // Said once, where this save is the first to hide the drive
+    var hides = /\bdrive=manual\b/.test(uncommented(text)) &&
+                !/\bdrive=manual\b/.test(uncommented(running))
+      ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
+      : "";
     // Check if the board is running a program, which keeps it too busy for an eject or a press
     if (/\bprogram=/.test(uncommented(running))) {
       // Check if the file it started with lets a save restart it, as it does unless it says
@@ -1468,21 +1527,21 @@ document.getElementById("save").onclick = async function () {
         var runs = /\bprogram=/.test(uncommented(text));
         banner("Saved. The board is restarting to play this change...", "hold");
         var returned = await waitForReturn();
-        banner(!returned ? "Saved. The board is restarting to play this change."
-               : runs ? "Running the program on the board."
-               : "The board has restarted and is playing this change.");
+        banner((!returned ? "Saved. The board is restarting to play this change."
+                : runs ? "Running the program on the board."
+                : "The board has restarted and is playing this change.") + hides);
         return;
       }
       banner("Saved. The board is running a program, so press " + RESET_BUTTON +
-             " to play this change.");
+             " to play this change." + hides);
       return;
     }
     // Check if a board that plays its saves is given a program. It restarts to run it, so its
     // answer is the drive coming back
     if (errorsBefore !== undefined && /\bprogram=/.test(uncommented(text))) {
       banner("Saved. The board is restarting to run the program...", "hold");
-      banner(await waitForReturn() ? "Running the program on the board."
-             : "Saved. The board is restarting to run the program.");
+      banner((await waitForReturn() ? "Running the program on the board."
+              : "Saved. The board is restarting to run the program.") + hides);
       return;
     }
     if (errorsBefore === undefined) {
@@ -1490,14 +1549,14 @@ document.getElementById("save").onclick = async function () {
              ? "Eject the FX drive or press Boot once to play it. Future saves will play "
                + "automatically."
              : "Eject the FX drive to play it. Then double-press Boot to show the drive again "
-               + "and press 'Check board'."));
+               + "and press 'Check board'.") + hides);
       return;
     }
     banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     sayWhatHappened(await waitForBoard(was, function () {
       banner("Playing on the board. Checking for problems...", "hold");
-    }));
+    }), hides);
   } catch (e) {
     if (e.name === "QuotaExceededError") {
       // The drive is there but full, since saving first writes a temporary copy
@@ -1525,8 +1584,7 @@ document.getElementById("check").onclick = async function () {
     askByInput();
     return;
   }
-  // A blink before the answer, so asking again visibly did something even when
-  // the answer reads the same
+  // Blink Checking... first, so asking again visibly does something when the answer is the same
   banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });
   try {

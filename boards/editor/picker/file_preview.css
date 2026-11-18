@@ -1,0 +1,48 @@
+.s-target {
+  color: var(--target);
+}
+
+.s-effect {
+  color: var(--effect);
+  font-weight: 600;
+}
+
+.s-value {
+  color: var(--value);
+}
+
+.s-name {
+  color: var(--ink);
+}
+
+.s-punc {
+  color: var(--faint);
+}
+
+.s-colon {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.s-comment {
+  color: var(--dim);
+  font-style: italic;
+}
+
+.s-scene {
+  color: var(--scene);
+  font-weight: 600;
+}
+
+/* A line the board reported, marked while the page still writes it as the board read it. The
+   board's words follow it */
+.file .s-problem {
+  background: var(--warn-bg);
+  box-shadow: 0 0 0 2px var(--warn-bg);
+  border-radius: var(--radius-xs);
+}
+
+.file .s-said {
+  color: var(--warn);
+  font-style: italic;
+}

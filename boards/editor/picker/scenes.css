@@ -1,0 +1,38 @@
+.tabbar .plus.wide {
+  min-height: 0;
+  padding: var(--space-3) var(--space-5);
+}
+
+.sceneplace {
+  margin-right: auto;
+  font-size: var(--text-xs);
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* A warning may take two lines, as it says why */
+  &.warn {
+    color: var(--warn);
+    white-space: normal;
+    line-height: 1.2;
+    max-height: 2.4em;
+  }
+}
+
+.sceneremove {
+  flex: none;
+  white-space: nowrap;
+  font: 600 var(--text-s) var(--font);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-5);
+  color: var(--ink);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+}

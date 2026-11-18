@@ -1,0 +1,444 @@
+import {h, replace} from "./dom.js";
+import {draw} from "./draw.js";
+
+// The board's description and the looks of the FX picker, the page that saves what the board
+// plays as effects.txt. README.md says how the page is made from its parts.
+
+// What the build wrote into the page, the board's description and picofx's version
+var BUILD = JSON.parse(document.getElementById("build").textContent);
+
+// The board the page is for, from its editor/fx_board.json. It holds the board's outputs, strips,
+// screens and hub, whether it has sound and a sensor, and the examples it offers
+export var BOARD = BUILD.board;
+
+// picofx's version, with "preview" after it in a page built for no release
+export var VERSION = BUILD.version;
+
+// The catalogue is generated beside this page. Without it the screen sizes and ports cannot
+// be known, so the page says so in a banner and assumes the ports the board describes
+if (typeof CATALOGUE === "undefined") {
+  var assumedPorts = BOARD.screens ? BOARD.screens.ports.map(function (port) { return port.id; }) : [];
+  window.CATALOGUE = {board_settings: {}, screen_ports: assumedPorts,
+                      strips: BOARD.strips.map(function (strip) { return strip.name; })};
+  assumedPorts.forEach(function (id) { CATALOGUE.board_settings[id] = ["2.8", "1.54"]; });
+  document.addEventListener("DOMContentLoaded", function () {
+    replace(document.getElementById("banner"), h("div", {className: "banner warn"},
+      "catalogue.js is missing from this folder, so the board's ports are assumed. Run " +
+      "tools/build_editor.py to write it."));
+  });
+}
+
+export var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
+             "# MANUAL.html on this drive explains every line.\n";
+
+// ---- helpers -------------------------------------------------------------------
+
+export function r2(n) { return Math.round(n * 100) / 100; }
+export function lerp(a, b, t) { return r2(a + (b - a) * t); }
+
+// Each look picks from a palette of its own, so the middle of the slider is the
+// colour its card shows and moving it stays within what suits that look
+function tone(palette, t) {
+  return palette[Math.min(palette.length - 1, Math.floor(t * palette.length))];
+}
+
+// A travelling effect's length scales with the run so the wave keeps its
+// proportion whatever the light count
+function span(count, mood) {
+  return Math.max(2, Math.round(count * lerp(2, 0.6, mood)));
+}
+
+export function quoted(name) {
+  return name.indexOf(" ") >= 0 ? '"' + name + '"' : name;
+}
+
+// A run of numbers as the file writes them. Three or more climbing or falling by one close
+// up into a range, a pair stays a pair, and anything else is listed
+export function rangify(list) {
+  var parts = [];
+  var i = 0;
+  while (i < list.length) {
+    var j = i;
+    if (j + 1 < list.length && list[j + 1] === list[j] + 1) {
+      while (j + 1 < list.length && list[j + 1] === list[j] + 1) j++;
+    } else if (j + 1 < list.length && list[j + 1] === list[j] - 1) {
+      while (j + 1 < list.length && list[j + 1] === list[j] - 1) j++;
+    }
+    var count = j - i + 1;
+    if (count === 1) parts.push(String(list[i]));
+    else if (count === 2) parts.push(list[i] + "," + list[j]);
+    else parts.push(list[i] + "-" + list[j]);
+    i = j + 1;
+  }
+  return parts.join(",");
+}
+
+// Some of a target's playing lamps as the file names them. A target whose lamps are not
+// numbered outputs, such as mono channels, names its own sets
+export function nameSet(target, set) {
+  return target.nameSet ? target.nameSet(set) : target.name + rangify(set);
+}
+
+// The playing outputs dealt round-robin into `ways` groups, one colour per light in turn
+function roundRobin(playing, ways) {
+  var groups = [];
+  playing.forEach(function (which, i) {
+    var at = i % ways;
+    (groups[at] = groups[at] || []).push(which);
+  });
+  return groups;
+}
+
+// A run cut into `ways` contiguous parts as selectors, far end first for a reversed stretch
+function runThirds(name, count, reversed, ways, lights) {
+  // Places along the stretch, numbered by the run's own lights where the stretch has them, so
+  // a stretch partway along a strip names its own lights
+  function light(place) { return lights ? lights[place - 1] : place; }
+  var edges = [];
+  for (var i = 0; i <= ways; i++) edges.push(Math.round(count * i / ways));
+  var parts = [];
+  for (var g = 0; g < ways; g++) {
+    var from = edges[g] + 1;
+    var to = edges[g + 1];
+    if (to < from) continue;
+    parts.push(reversed ? name + light(count - from + 1) + "-" + light(count - to + 1)
+                        : name + light(from) + "-" + light(to));
+  }
+  return parts;
+}
+
+// Take the colour setting off a line for a mono lamp, which has no colour to be given. What is
+// left is the same effect, in the lamp's own colour
+function withoutColour(line) {
+  return line.replace(/\s+colour=[^\s:]+/g, "");
+}
+
+// Make a toggle with its icon for anything on or off, greyed where playback would refuse it
+export function toggle(icon, words, on, flip, title, refused) {
+  return h("button", {
+    type: "button", className: "stoggle" + (on && !refused ? " on" : ""), "data-words": words,
+    "aria-pressed": String(!!on && !refused),
+    title: title, disabled: !!refused,
+    onclick: function () { flip(!on); draw(); }
+  }, h("span", {"aria-hidden": "true", html: icon}), " " + words);
+}
+
+// ---- the looks -----------------------------------------------------------------
+// Each look writes real entries for whatever target it is handed, a bank of outputs
+// in the order they are to play or a run of any length. alone() is the form it
+// takes on a target of one light, and false where it has no such form.
+
+var BREATHE_TONES = ["blue", "cool", "cyan", "green", "warm"];
+var SPARKLE_TONES = ["cyan", "cool", "white", "warm", "yellow"];
+var SCANNER_TONES = ["magenta", "blue", "red", "yellow", "white"];
+var CHASE_TONES = ["magenta", "white", "yellow", "cyan", "green"];
+var COUNTER_TONES = ["white", "cyan", "green", "yellow", "red"];
+var PARTY_FIRST = ["red", "blue", "magenta", "cyan", "white"];
+var PARTY_SECOND = ["green", "white", "yellow", "warm", "red"];
+var PARTY_THIRD = ["blue", "green", "cyan", "white", "magenta"];
+
+export var LOOKS = [
+  {
+    // The one look with nothing moving in it, so a scene can hold a lamp at one colour. The colour
+    // is chosen, not slid to, so this is the one look whose settings are not two sliders
+    name: "Solid", mood: "Brightness", spans: true, onMono: true, solid: true,
+    strip: ["#d94a3d", "#e0a03a", "#3fa672", "#3a7fd9", "#8a4ad0", "#d94a9e", "#e8e2d6"],
+    entries: function (target, pace, mood, colour) {
+      return [target.selector + " colour=" + (colour || "ffffff").replace("#", "") +
+              ": static brightness=" + lerp(0.05, 1, mood)];
+    },
+    alone: function (target, pace, mood, colour) {
+      return this.entries(target, pace, mood, colour);
+    }
+  },
+  {
+    name: "Rainbow", mood: "Colour spread", spans: true, onMono: false,
+    strip: ["#e33", "#e73", "#ea3", "#3a5", "#36c", "#63c", "#a3c"],
+    entries: function (target, pace, mood) {
+      return [target.selector + ": rainbow_wave speed=" + lerp(0.05, 0.8, pace) +
+              " length=" + span(target.count, mood)];
+    },
+    alone: function (target, pace) {
+      return [target.selector + ": rainbow speed=" + lerp(0.05, 0.8, pace)];
+    }
+  },
+  {
+    name: "Campfire", mood: "Intensity", spans: true, onMono: true,
+    strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=ff5a00: flicker_each brightness=" + lerp(0.5, 1, mood) +
+              " dimness=" + lerp(0.7, 0.35, mood) +
+              " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
+              " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace)];
+    }
+  },
+  {
+    name: "Breathe", mood: "Colour", spans: true, onMono: true,
+    strip: ["#2b7f8f", "#37a0b4", "#43c1d9", "#56d8f0", "#43c1d9", "#37a0b4", "#2b7f8f"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(BREATHE_TONES, mood) +
+              " ease=" + lerp(0.8, 0.2, pace) + ": pulse speed=" + lerp(0.08, 0.5, pace)];
+    }
+  },
+  {
+    name: "Wave", mood: "Wave length", spans: true, onMono: true,
+    strip: ["#122438", "#2a4a6a", "#4a7fb5", "#7fb5e6", "#4a7fb5", "#2a4a6a", "#122438"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=cool: pulse_wave speed=" + lerp(0.1, 1, pace) +
+              " length=" + span(target.count, mood)];
+    },
+    alone: function (target, pace) {
+      return [target.selector + " colour=cool: pulse speed=" + lerp(0.1, 1, pace)];
+    }
+  },
+  {
+    name: "Sparkle", mood: "Colour", spans: true, onMono: true,
+    strip: ["#ffffff", "#999999", "#ffffff", "#cccccc", "#eeeeee", "#888888", "#ffffff"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(SPARKLE_TONES, mood) +
+              ": random_each interval=" + lerp(0.25, 0.03, pace) +
+              " brightness_min=0 brightness_max=1"];
+    }
+  },
+  {
+    name: "Scanner", mood: "Colour", spans: true, onMono: true,
+    strip: ["#330000", "#660000", "#cc0000", "#ff3333", "#cc0000", "#660000", "#330000"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(SCANNER_TONES, mood) +
+              " fade=" + lerp(0.5, 0.15, pace) + ": sweep speed=" + lerp(0.3, 2, pace) +
+              " length=" + target.count +
+              " extent=" + Math.max(1, Math.round(target.count / 8))];
+    },
+    alone: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(SCANNER_TONES, mood) +
+              " ease=" + lerp(0.5, 0.15, pace) + ": pulse speed=" + lerp(0.3, 2, pace)];
+    }
+  },
+  {
+    name: "Chase", mood: "Colour", spans: true, onMono: true,
+    strip: ["#111111", "#111111", "#ffff00", "#ffd24a", "#111111", "#111111", "#111111"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(CHASE_TONES, mood) +
+              " fade=" + lerp(0.4, 0.1, pace) + ": flash_sequence speed=" + lerp(0.3, 2, pace) +
+              " length=" + target.count + " flashes=1 window=0.4"];
+    },
+    alone: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(CHASE_TONES, mood) +
+              " fade=" + lerp(0.4, 0.1, pace) + ": flash speed=" + lerp(0.3, 2, pace) +
+              " flashes=1 window=0.4"];
+    }
+  },
+  {
+    name: "Counter", mood: "Colour", spans: true, onMono: true,
+    strip: ["#00ff00", "#111111", "#00ff00", "#00ff00", "#111111", "#00ff00", "#111111"],
+    entries: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(COUNTER_TONES, mood) +
+              ": binary_counter interval=" + lerp(1, 0.08, pace)];
+    }
+  },
+  {
+    // Two banks flashing against each other with a quiet gap between, landed on the
+    // playing outputs in their order, so a lightbar of any width works. The slider sets the
+    // flashes in each burst, one to five, three in the middle
+    name: "Emergency", mood: "Flashes", detents: 5, spans: false, onMono: true,
+    strip: ["#dd2222", "#2222dd", "#dd2222", "#111111", "#2222dd", "#dd2222", "#2222dd"],
+    entries: function (target, pace, mood) {
+      var flash = ": flash speed=" + lerp(0.6, 2.5, pace) + " flashes=" +
+                  Math.round(lerp(1, 5, mood)) + " window=0.5";
+      var playing = target.playing;
+      var half = playing.length === 1 ? 1 : Math.floor(playing.length / 2);
+      var lines = [nameSet(target, playing.slice(0, half)) + " colour=red" + flash];
+      if (playing.length > 1) {
+        lines.push(nameSet(target, playing.slice(playing.length - half)) + " colour=blue" +
+                   flash + " phase=0.5");
+        var gap = playing.slice(half, playing.length - half);
+        if (gap.length) lines.push(nameSet(target, gap) + ": none");
+      }
+      return lines;
+    },
+    alone: function (target, pace, mood) {
+      return [target.selector + " colour=red: flash speed=" + lerp(0.6, 2.5, pace) +
+              " flashes=" + Math.round(lerp(1, 5, mood)) + " window=0.5"];
+    }
+  },
+  {
+    // Five lamps in the crossing's own colours, landed on the first five playing
+    // outputs. Any beyond them are told to stay dark, and fewer take fewer lamps
+    name: "Pelican crossing", mood: "Fade", spans: false, onMono: true,
+    strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
+    entries: function (target, pace, mood) {
+      var scale = lerp(2, 0.4, pace);
+      var playing = target.playing;
+      var lamps = playing.slice(0, 5);
+      var rest = playing.slice(5);
+      var colours = ["red", "ff7800", "00d28c", "red", "00d28c"].slice(0, lamps.length);
+      var lines = [nameSet(target, lamps) + " colour=" + colours.join(",") +
+                   " ease=" + lerp(0.05, 0.6, mood) +
+                   ": pelican_crossing red_interval=" + r2(8 * scale) +
+                   " flashing_interval=" + r2(6 * scale) +
+                   " green_interval=" + r2(20 * scale) +
+                   " amber_interval=" + r2(3 * scale)];
+      if (rest.length) lines.push(nameSet(target, rest) + ": none");
+      return lines;
+    },
+    alone: false
+  },
+  {
+    // Three colours chase each other across whatever plays it. The lights split into
+    // three sets, each flashing in its own colour a third of a beat apart. The slider picks
+    // one of five sets of three colours, stopping at each
+    name: "Party", mood: "Palette", detents: 5, spans: true, onMono: true,
+    strip: ["#ff00ff", "#ffff00", "#00ffff", "#ff00ff", "#ffff00", "#00ffff", "#ff00ff"],
+    entries: function (target, pace, mood) {
+      var speed = lerp(1, 4, pace);
+      var colours = [tone(PARTY_FIRST, mood), tone(PARTY_SECOND, mood),
+                     tone(PARTY_THIRD, mood)];
+      var groups;
+      if (target.kind === "outputs") {
+        groups = roundRobin(target.playing, Math.min(3, target.playing.length))
+                 .map(function (group) {
+                   return nameSet(target, group);
+                 });
+      } else {
+        groups = runThirds(target.name, target.count, target.reversed,
+                           Math.min(3, target.count),
+                           target.lights && target.lights.slice().sort(function (a, b) {
+                             return a - b;
+                           }));
+      }
+      return groups.map(function (selector, i) {
+        return selector + " colour=" + colours[i] + ": flash speed=" + speed +
+               " flashes=1 window=0.5" + (i ? " phase=" + [0, 0.33, 0.67][i] : "");
+      });
+    },
+    alone: function (target, pace, mood) {
+      return [target.selector + " colour=" + tone(PARTY_FIRST, mood) +
+              ": flash speed=" + lerp(1, 4, pace) + " flashes=1 window=0.5"];
+    }
+  }
+];
+
+export function lookNamed(id) {
+  return LOOKS.filter(function (l) { return (l.id || l.name) === id; })[0] || null;
+}
+
+// What a look is kept as, which is its own id where it has one and its name otherwise
+export function keyOf(look) { return look.id || look.name; }
+
+// Whether a look has anything to give a target. A colour look cannot land on a mono lamp, a
+// look that does not span cannot land on a run, and some have no single-light form. A banked
+// look deals its banks along a run, so it needs more than one lamp or a single-light form
+export function canPlay(look, target) {
+  if (!look) return true;
+  if (target.kind === "run" && isBanked(look)) return target.count > 1 || look.alone !== false;
+  if (!target.colour && !look.onMono) return false;
+  if (target.count === 1 && look.alone === false) return false;
+  if (target.kind === "run" && !look.spans) return false;
+  return true;
+}
+
+// A card's tip on a target, which says why the look cannot play there or where it would play
+export function whyNot(look, target) {
+  if (!target.colour && !look.onMono) return "this look needs colour, and " +
+                                             target.label.toLowerCase() + " is mono";
+  if (target.count === 1 && look.alone === false)
+    return "this look needs several lights";
+  if (target.kind === "run" && !look.spans) return "this look needs separate lights";
+  return "play this on " + target.label.toLowerCase();
+}
+
+// The lines one look's own entries write for one target, in the form that target can take
+export function lookLines(look, target, pace, mood, colour) {
+  if (!look || !canPlay(look, target)) return [];
+  var lines = (target.count === 1 && look.alone)
+    ? look.alone(target, pace, mood, colour)
+    : look.entries(target, pace, mood, colour);
+  return target.colour ? lines : lines.map(withoutColour);
+}
+
+// The share of the time Scanner's head covers a light that its fade takes to rise
+export var RISE_OF_DWELL = 0.15;
+// The share of Chase's flash that its fade takes to rise
+export var RISE_OF_FLASH = 0.25;
+
+export function numberIn(line, key, otherwise) {
+  var found = line.match(new RegExp(" " + key + "=(-?[\\d.]+)"));
+  return found ? Math.abs(Number(found[1])) : otherwise;
+}
+
+export function riseFor(seconds) {
+  return Math.max(0.01, r2(seconds));
+}
+
+// On and off at a pace, lit for a share of each beat, picofx's blink. blink.js covers a blink
+// through several colours
+export function blinkSpeed(pace) { return lerp(0.3, 3, pace); }
+export function blinkDuty(mood) { return lerp(0.1, 0.9, mood); }
+
+// Lights taking turns in a repeating pattern, a cinema sign's marquee, picofx's blink_wave.
+// Its setting is how far apart the lit ones are, every second light to every sixth, and one
+// of each group is lit at a time
+export function marqueeGap(mood) { return Math.round(lerp(2, 6, mood)); }
+
+// Each slider is named for what it sets, short. The signals' Fade writes ease, a fade that slows
+// as it arrives, and its tip says so, since the file's own fade crosses evenly
+export var SETTING_NAMES = {"Rainbow": "Spread", "Wave": "Spread", "Campfire": "Intensity",
+                     "Pelican crossing": "Fade"};
+
+// A signal's timings are its own sliders, one for each part of its sequence, each starting at a
+// real signal's. The lines read them from the stretch being written or played. Each part is its
+// setting, its name, where it starts and the slider's two ends, in seconds
+export var SIGNAL_TIMINGS = {
+  "Traffic light": [["red_interval", "Red", 12, 2, 60],
+                    ["red_amber_interval", "Red and amber", 2, 1, 10],
+                    ["green_interval", "Green", 12, 2, 60],
+                    ["amber_interval", "Amber", 3, 1, 10]],
+  "Pelican crossing": [["red_interval", "Red", 8, 2, 60],
+                       ["flashing_interval", "Flashing", 6, 1, 20],
+                       ["green_interval", "Green", 20, 2, 60],
+                       ["amber_interval", "Amber", 3, 1, 10]]
+};
+
+// The stretch whose lines are being written or played, for the looks that read more of it
+// than a look is handed
+var sectionNow = null;
+
+export function withSection(section, write) {
+  var had = sectionNow;
+  sectionNow = section;
+  try {
+    return write();
+  } finally {
+    sectionNow = had;
+  }
+}
+
+export function timingOf(name, key) {
+  var own = sectionNow && sectionNow.timings;
+  if (own && own[key] !== undefined) return own[key];
+  return SIGNAL_TIMINGS[name].filter(function (part) { return part[0] === key; })[0][2];
+}
+
+// Rainbow's and Wave's Spread is the length of one pass of the wave in lights, longer to the
+// right as every slider's setting rises to the right. It stops at whole lights, from a little
+// over half the stretch to twice it
+function spreadRange(count) {
+  return {low: Math.max(2, Math.round(count * 0.6)), high: Math.max(2, Math.round(count * 2))};
+}
+
+export function spreadLength(count, mood) {
+  var range = spreadRange(count);
+  return range.low + Math.round(mood * (range.high - range.low));
+}
+
+export function spreadStops(target) {
+  var range = spreadRange(target.count);
+  return range.high - range.low + 1;
+}
+
+// The looks shaped to separate lamps. They play on outputs, mono lamps and strips
+var BANKED_LOOKS = ["Emergency", "Traffic light", "Pelican crossing"];
+
+export function isBanked(look) {
+  return !!look && BANKED_LOOKS.indexOf(look.name) >= 0;
+}

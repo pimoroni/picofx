@@ -1,0 +1,20 @@
+/* A live swatch is a small copy of the section's lamps. Its cells run into one another with no
+   line between, since lines on a long strip left more line than lamp */
+.accswatch.liveswatch {
+  gap: 0;
+  box-shadow: none;
+  height: .55rem;
+  background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px);
+}
+
+.liveswatch span {
+  flex: 1;
+  border-radius: 0;
+}
+
+.accswatch.liveswatch.absent {
+  background: transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--dashed);
+  outline-offset: -1px;
+}

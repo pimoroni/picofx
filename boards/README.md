@@ -27,5 +27,5 @@ A programmable, RP2350-based controller board that goes further with effects by 
 * `fx_libs`: the `fx_drive` module, frozen with the board's own pages, manual and defaults into each build that carries the FX drive.
 * `visible_libs`: libraries copied to each board's `/lib`, beside the board's own. `autofx`, which plays `effects.txt`, is left out of `/lib` and frozen into each build carrying the FX drive.
 * `frozen_libs`: modules frozen into every build.
-* `editor`: the picker and editor pages, assembled for each board by `tools/build_editor.py`.
+* `editor`: the picker and editor pages, assembled for each board by `tools/build_editor.py`. The picker is bundled with esbuild, so building it, a firmware release included, needs Node and `npm ci --prefix tools/picker` first. See `editor/picker/README.md`.
 * `manual`: the parts of the FX drive's manual, assembled for each board by `tools/build_manual.py`.
