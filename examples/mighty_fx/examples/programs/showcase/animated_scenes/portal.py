@@ -9,8 +9,7 @@ from picovector import color, image, rect, shape, vec2
 """
 Draw a glowing portal with arms spiralling into a dark opening and specks of light
 falling in. Each arm dims to black before the opening, so it seems to fall away without
-end. SCHEME chooses its colours, violet, ember, ice or emerald, and STONES = False leaves it
-on black.
+end. It glows violet, ember, ice or emerald, set into a stone wall or alone on black.
 
 RIM_WIDTH and RIM_HEIGHT size the portal to a cutout in front of the panel, and by default it is as
 large as fits. Each frame dims the opening a little before drawing, so the motes leave fading streaks.

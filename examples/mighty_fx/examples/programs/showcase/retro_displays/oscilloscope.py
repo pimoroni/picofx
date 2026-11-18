@@ -8,9 +8,11 @@ from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape
 
 """
-Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling sine grows into a
-square wave a harmonic at a time and melts back, and then the scope switches to XY mode for a
-turning Lissajous figure. SENSOR = True traces the voltage on the sensor connector instead.
+Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling sine grows
+into a square wave a harmonic at a time and melts back, and then the scope switches to XY
+mode for a turning Lissajous figure.
+
+SENSOR = True traces the voltage on the sensor connector instead.
 
 The afterglow is the previous frame dimmed a little each time, so the beam is only ever drawn
 where it is now.

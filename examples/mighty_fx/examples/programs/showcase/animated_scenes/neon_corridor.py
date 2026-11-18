@@ -9,9 +9,9 @@ from screens import SCREEN_TYPES
 
 """
 Walk without end down a corridor of neon, as rings of light come out of the haze
-towards you and a bright light shines at the far end. SCHEME sets its colours to
-neon, plaid, emerald, magenta or blueprint, SPEED sets a slow, normal, fast or
-ludicrous pace, and OBLONG = True stretches the corridor to the panel's shape.
+towards you and a bright light shines at the far end. It comes in neon, plaid,
+emerald, magenta or blueprint colours, at a slow, normal, fast or ludicrous
+pace, and square or stretched to the panel's shape.
 
 The program calculates the corridor once as it starts, and keeps a word for each pixel in one quarter
 with its depth, its nearest line and the far light on it. Each frame then moves the rings along, looks

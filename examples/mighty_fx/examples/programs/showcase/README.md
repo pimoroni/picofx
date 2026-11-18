@@ -207,7 +207,7 @@ Draw a mechanical odometer with number drums rolling in a brass frame. The last 
 
 [retro_displays/lamp_matrix.py](retro_displays/lamp_matrix.py)
 
-Draw a grid of stage lamps running through a light show. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
+Draw a grid of stage lamps running through a light show. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LED lamps can take their place, switching instantly between a handful of colours and off.
 
 <br clear="left">
 
@@ -217,7 +217,7 @@ Draw a grid of stage lamps running through a light show. Tungsten lamps glow up 
 
 [retro_displays/oscilloscope.py](retro_displays/oscilloscope.py)
 
-Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling sine grows into a square wave a harmonic at a time and melts back, then the scope switches to XY mode for a turning Lissajous figure. SENSOR = True traces the voltage on the sensor connector instead.
+Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling sine grows into a square wave a harmonic at a time and melts back, and then the scope switches to XY mode for a turning Lissajous figure.
 
 <br clear="left">
 
@@ -296,7 +296,7 @@ Drift past a city while the sky turns from noon to midnight and the windows come
 
 [animated_scenes/laser_show.py](animated_scenes/laser_show.py)
 
-Draw a laser show of beams fanning and sweeping across a dark hall. Each scene switches its projectors on and off as it goes. An upright or square panel has room for the outer two projectors only.
+Draw a laser show of beams fanning and sweeping across a dark hall. Each scene runs a few seconds, switching its projectors on and off as it goes. An upright or square panel has room for the outer two projectors only.
 
 <br clear="left">
 
@@ -316,7 +316,7 @@ Draw a fire and flicker the RGB outputs with it like firelight in a room. The fi
 
 [animated_scenes/portal.py](animated_scenes/portal.py)
 
-Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in. Each arm dims to black before the opening, so it seems to fall away without end. SCHEME chooses its colours, violet, ember, ice or emerald, STONES = False leaves it on black, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
+Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in. Each arm dims to black before the opening, so it seems to fall away without end. It glows violet, ember, ice or emerald, set into a stone wall or alone on black.
 
 <br clear="left">
 
@@ -326,7 +326,7 @@ Draw a glowing portal with arms spiralling into a dark opening and specks of lig
 
 [animated_scenes/pool.py](animated_scenes/pool.py)
 
-Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other. Holding "Boot" exits.
+Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. The floor is a modern pool's blue mosaic or a Roman bath's cream stones round an octagon.
 
 <br clear="left">
 
@@ -336,7 +336,7 @@ Draw the floor of a pool through rippling water that throws bright lines of ligh
 
 [animated_scenes/neon_corridor.py](animated_scenes/neon_corridor.py)
 
-Walk without end down a corridor of neon, as rings of light come out of the haze towards you and a bright light shines at the far end. SCHEME sets its colours to neon, plaid, emerald, magenta or blueprint, and "Boot" steps to the next. SPEED sets a slow, normal, fast or ludicrous pace, and OBLONG = True stretches the corridor to the panel's shape. Holding "Boot" exits.
+Walk without end down a corridor of neon, as rings of light come out of the haze towards you and a bright light shines at the far end. It comes in neon, plaid, emerald, magenta or blueprint colours, at a slow, normal, fast or ludicrous pace, and square or stretched to the panel's shape.
 
 <br clear="left">
 
@@ -347,7 +347,7 @@ Walk without end down a corridor of neon, as rings of light come out of the haze
 
 [animated_scenes/creature_eyes.py](animated_scenes/creature_eyes.py)
 
-Draw a creature's eyes on two screens as they look around and blink. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next. Holding "Boot" exits.
+Draw a creature's eyes on two screens as they look around and blink. The cat, owl, goat, alien, robot and zombie each have their own eyes and their own way of looking about.
 
 <br clear="left">
 

@@ -10,8 +10,8 @@ from picovector import brush, color, image, mat3, rect, shape
 
 """
 Draw a grid of stage lamps running through a light show. Tungsten lamps glow up quickly and fade
-slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each
-instantly to one of a handful of colours, or off, instead.
+slowly, white hot through orange to a dull red as each filament cools. LED lamps can take their
+place, switching instantly between a handful of colours and off.
 
 Every stage of a lamp's glow is drawn once when the program starts, before anything is shown, and
 from then on a frame only copies those drawings into place.

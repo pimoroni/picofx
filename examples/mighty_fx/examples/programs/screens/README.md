@@ -63,7 +63,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 
 [single/detect_screens.py](single/detect_screens.py)
 
-Show which screen sits on each SP/CE port. Every screen is painted its port's colour, with its letter in the top left over one bar for A or two for B.
+Show which screen sits on each SP/CE port. Every screen is painted its port's colour, with its letter in the top left over one bar for A or two for B. The console lists the same for both ports, including one where no screen answered.
 
 <br clear="left">
 
@@ -369,7 +369,7 @@ Step a test card through each rotation on two screens that mirror each other.
 
 [hub/detect_hub.py](hub/detect_hub.py)
 
-Show which screen is in each position on a Screen Hub. Every panel is painted its position's colour, with its letter in the top left over one bar for A up to six for F.
+Show which screen is in each position on a Screen Hub. Every panel is painted its position's colour, with its letter in the top left over one bar for A up to six for F. The console lists the same for every position, including those where no panel answered.
 
 <br clear="left">
 

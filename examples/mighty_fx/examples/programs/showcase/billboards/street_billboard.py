@@ -7,7 +7,7 @@ from screens import Screen280
 from picovector import brush, color, image, shape, vec2
 
 """
-Show a folder of posters as if each stood in a case behind glass.
+Show a folder of posters on a 2.8" screen as if each stood in a case behind glass.
 
 A canvas lets a case and light across the glass go over the poster, and only the poster changes.
 

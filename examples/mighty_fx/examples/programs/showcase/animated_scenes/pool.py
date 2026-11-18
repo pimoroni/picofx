@@ -10,8 +10,8 @@ from picovector import color, rect
 
 """
 Draw the floor of a pool through rippling water that throws bright lines of
-light over the tiles. STYLE chooses the floor to start on, a modern pool's
-blue mosaic or a Roman bath's cream stones round an octagon.
+light over the tiles. The floor is a modern pool's blue mosaic or a Roman
+bath's cream stones round an octagon.
 
 The water is a grid of heights, rippled by drops falling at random and the odd splash. At each step
 every cell takes half the sum of its four neighbours less its own height a step before, calmed a

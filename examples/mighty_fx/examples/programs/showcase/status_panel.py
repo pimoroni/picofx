@@ -9,7 +9,8 @@ from screens import Screen280
 from picovector import color, font, image, rect, shape
 
 """
-Draw a Pimoroni status panel with the RGB outputs lighting in step with its production line.
+Draw a Pimoroni status panel on a 2.8" screen
+with the RGB outputs lighting in step with its production line.
 
 Everything is drawn at half the panel's size and doubled on the way out, so every pixel on the
 glass is a square of four, for a quarter of the canvas and a quarter of the drawing. The ribbon
