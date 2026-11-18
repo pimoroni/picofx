@@ -1,24 +1,5 @@
-/* The button beside the version where newer firmware is out, and the sheet it opens. The sheet's
-   foot keeps the downloads in view while the notes scroll */
-#firmware {
-  margin-left: var(--space-4);
-}
-
-.firmwarebutton {
-  border-color: var(--accent);
-  border-radius: var(--radius-round);
-  color: var(--accent);
-  font-weight: 600;
-  font-size: var(--text-m);
-  padding: var(--space-2) var(--space-5);
-
-  &.hold {
-    background: var(--hold-bg);
-    border-color: var(--hold);
-    color: var(--hold);
-  }
-}
-
+/* The sheet the Update available button opens. Its foot keeps the downloads in view while the notes
+   scroll */
 body:has(>dialog.firmwaresheet[open]) {
   overflow: hidden;
 }

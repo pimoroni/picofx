@@ -108,8 +108,8 @@
 }</script>
 <script src="catalogue.js"></script>
 <style>
-/* The colours the picker, the text editor and the manual share. Each page's build puts this at
-   the top of its stylesheet, and a page's own colours follow in its own :root */
+/* The colours and scales the picker, the text editor and the manual share. Each page's build puts
+   this at the top of its stylesheet, and a page's own colours follow in its own :root */
 :root {
   --bg: #f5f3ef;
   --panel: #fff;
@@ -131,19 +131,7 @@
   --value: #a8500a;
   --scene: #7b3fb8;
   --faint: #5d656e;
-}
-/* The picker's own colours and scales, after the shared ones in boards/editor/tokens.css */
-:root {
-  --strip: #1f6feb;
-  --dark: #191b1d;
-  --surface: #fbfaf8;
-  --surface-2: #f0eeea;
-  --line-strong: #c9c3b9;
-  --overlay: rgba(20, 20, 22, .72);
-  --screenB: #a44ad0;
-  --accent-glow: rgba(15, 138, 114, .25);
-  --unlit: #2a2d30;
-  --dashed: #a9a49b;
+
   --space-1: .125rem;
   --space-2: .25rem;
   --space-3: .375rem;
@@ -165,6 +153,19 @@
   --text-l: 1rem;
   --text-xl: 1.25rem;
   --text-display: 3rem;
+}
+/* The picker's own colours, after the shared ones and the scales in boards/editor/tokens.css */
+:root {
+  --strip: #1f6feb;
+  --dark: #191b1d;
+  --surface: #fbfaf8;
+  --surface-2: #f0eeea;
+  --line-strong: #c9c3b9;
+  --overlay: rgba(20, 20, 22, .72);
+  --screenB: #a44ad0;
+  --accent-glow: rgba(15, 138, 114, .25);
+  --unlit: #2a2d30;
+  --dashed: #a9a49b;
 }
 
 * {
@@ -2922,6 +2923,26 @@ html {
   display: block;
   color: #b5aea3;
 }
+/* The Update available button beside the version, shown where newer firmware is out. It is amber
+   where the release has a warning */
+#firmware {
+  margin-left: var(--space-4);
+}
+
+.firmwarebutton {
+  border-color: var(--accent);
+  border-radius: var(--radius-round);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: var(--text-m);
+  padding: var(--space-2) var(--space-5);
+
+  &.hold {
+    background: var(--hold-bg);
+    border-color: var(--hold);
+    color: var(--hold);
+  }
+}
 .boardchip.outs {
   background: var(--boardOuts);
 }
@@ -3072,27 +3093,8 @@ html {
     }
   }
 }
-/* The button beside the version where newer firmware is out, and the sheet it opens. The sheet's
-   foot keeps the downloads in view while the notes scroll */
-#firmware {
-  margin-left: var(--space-4);
-}
-
-.firmwarebutton {
-  border-color: var(--accent);
-  border-radius: var(--radius-round);
-  color: var(--accent);
-  font-weight: 600;
-  font-size: var(--text-m);
-  padding: var(--space-2) var(--space-5);
-
-  &.hold {
-    background: var(--hold-bg);
-    border-color: var(--hold);
-    color: var(--hold);
-  }
-}
-
+/* The sheet the Update available button opens. Its foot keeps the downloads in view while the notes
+   scroll */
 body:has(>dialog.firmwaresheet[open]) {
   overflow: hidden;
 }
@@ -8659,6 +8661,113 @@ function keptLights(run) {
   return named2;
 }
 
+// boards/editor/picker/firmware/release.js
+var FIRMWARE_LATEST = "https://api.github.com/repos/pimoroni/picofx/releases/latest";
+var FIRMWARE_HOME = "https://github.com/pimoroni/picofx/";
+var FIRMWARE_RELEASES = FIRMWARE_HOME + "releases";
+var FIRMWARE_STORE = "fx-picker-firmware-release";
+var FIRMWARE_FRESH_MS = 24 * 60 * 60 * 1e3;
+var FIRMWARE_SIGN = "\u26A0\uFE0F";
+function firmwareOlder(a, b) {
+  var x = a.split("."), y = b.split(".");
+  for (var at = 0; at < Math.max(x.length, y.length); at++) {
+    var difference = (parseInt(x[at], 10) || 0) - (parseInt(y[at], 10) || 0);
+    if (difference) return difference < 0;
+  }
+  return false;
+}
+function firmwareBehindOf(shown, version) {
+  var running = shown.split(" ")[0];
+  if (firmwareOlder(running, version)) return true;
+  return / preview$/.test(shown) && !firmwareOlder(version, running);
+}
+function firmwareStored() {
+  try {
+    return JSON.parse(localStorage.getItem(FIRMWARE_STORE)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+function firmwareStore(release) {
+  try {
+    localStorage.setItem(FIRMWARE_STORE, JSON.stringify({ at: Date.now(), release }));
+  } catch (e) {
+  }
+}
+function firmwareTrimmed(release) {
+  var assets = Array.isArray(release.assets) ? release.assets : [];
+  return {
+    tag_name: release.tag_name,
+    body: release.body,
+    html_url: release.html_url,
+    assets: assets.map(function(asset) {
+      return { name: asset.name, size: asset.size, browser_download_url: asset.browser_download_url };
+    })
+  };
+}
+function firmwareVersion(release) {
+  return String(release.tag_name || "").replace(/^v/, "");
+}
+function firmwareButtonLooks(version, notes) {
+  var heed = firmwareWarnings(notes).warnings.length > 0;
+  return {
+    className: heed ? "firmwarebutton hold" : "firmwarebutton",
+    title: heed ? "See the warning for firmware " + version + " and how to update." : "See what's new in firmware " + version + " and how to update."
+  };
+}
+function firmwareOurs(url) {
+  return typeof url === "string" && url.indexOf(FIRMWARE_HOME) === 0;
+}
+async function latestRelease(keep) {
+  var stored = firmwareStored();
+  if (stored.release && Date.now() - stored.at < FIRMWARE_FRESH_MS) return stored.release;
+  try {
+    var answer = await fetch(FIRMWARE_LATEST, { cache: "no-store" });
+    if (!answer.ok) throw new Error(String(answer.status));
+    var release = firmwareTrimmed(await answer.json());
+    if (keep(release)) firmwareStore(release);
+    return release;
+  } catch (e) {
+    return stored.release || null;
+  }
+}
+var FIRMWARE_MARKS = "(?:[" + FIRMWARE_SIGN + "]|:warning:)";
+var FIRMWARE_MARKED = new RegExp("^\\s*(?:[-*]\\s+|#+\\s+)?" + FIRMWARE_MARKS + "[\\s" + FIRMWARE_SIGN + "]*");
+var FIRMWARE_MARKS_AFTER = new RegExp("(?:\\s*" + FIRMWARE_MARKS + ")+\\s*$");
+var FIRMWARE_ALERT = /^\s*>\s*\[!(\w+)\]\s*$/;
+var FIRMWARE_ALERT_WARNS = /^(?:warning|caution)$/i;
+function firmwareWarnings(notes) {
+  var warnings = [], rest = [];
+  var alert = null;
+  function warn(text) {
+    text = text.replace(FIRMWARE_MARKS_AFTER, "").trim();
+    if (text) warnings.push(text);
+  }
+  function endAlert() {
+    if (alert) warn(alert.join(" "));
+    alert = null;
+  }
+  notes.replace(/\r\n/g, "\n").split("\n").forEach(function(line) {
+    var opens = FIRMWARE_ALERT.exec(line);
+    if (opens) {
+      endAlert();
+      if (FIRMWARE_ALERT_WARNS.test(opens[1])) alert = [];
+      else rest.push(line);
+      return;
+    }
+    if (alert && /^\s*>/.test(line)) {
+      alert.push(line.replace(/^\s*>\s?/, "").trim());
+      return;
+    }
+    endAlert();
+    var marked = FIRMWARE_MARKED.exec(line);
+    if (marked) warn(line.slice(marked[0].length));
+    else rest.push(line);
+  });
+  endAlert();
+  return { warnings, rest: rest.join("\n") };
+}
+
 // boards/editor/picker/runs.js
 function Run(name, mono2) {
   return {
@@ -11054,61 +11163,16 @@ function saidNotFitted(name) {
 }
 
 // boards/editor/picker/firmware/firmware.js
-var FIRMWARE_LATEST = "https://api.github.com/repos/pimoroni/picofx/releases/latest";
-var FIRMWARE_HOME = "https://github.com/pimoroni/picofx/";
-var FIRMWARE_RELEASES = FIRMWARE_HOME + "releases";
-var FIRMWARE_STORE = "fx-picker-firmware-release";
-var FIRMWARE_FRESH_MS = 24 * 60 * 60 * 1e3;
 var FIRMWARE_SHOWN = VERSION;
-var FIRMWARE_RUNNING = FIRMWARE_SHOWN.split(" ")[0];
-var FIRMWARE_PREVIEW = / preview$/.test(FIRMWARE_SHOWN);
-var FIRMWARE_SIGN = "\u26A0\uFE0F";
 var firmware = { status: "idle", latest: null, open: false };
-function firmwareOlder(a, b) {
-  var x = a.split("."), y = b.split(".");
-  for (var at = 0; at < Math.max(x.length, y.length); at++) {
-    var difference = (parseInt(x[at], 10) || 0) - (parseInt(y[at], 10) || 0);
-    if (difference) return difference < 0;
-  }
-  return false;
-}
 function firmwareBehind(latest) {
-  if (!latest) return false;
-  if (firmwareOlder(FIRMWARE_RUNNING, latest.version)) return true;
-  return FIRMWARE_PREVIEW && !firmwareOlder(latest.version, FIRMWARE_RUNNING);
+  return !!latest && firmwareBehindOf(FIRMWARE_SHOWN, latest.version);
 }
 function firmwareCovers(version) {
   if (firmware.status !== "done" || !firmware.latest) return null;
   return firmwareBehind(firmware.latest) && !firmwareOlder(firmware.latest.version, version);
 }
 firmwareHooks.covers = firmwareCovers;
-function firmwareStored() {
-  try {
-    return JSON.parse(localStorage.getItem(FIRMWARE_STORE)) || {};
-  } catch (e) {
-    return {};
-  }
-}
-function firmwareStore(release) {
-  try {
-    localStorage.setItem(FIRMWARE_STORE, JSON.stringify({ at: Date.now(), release }));
-  } catch (e) {
-  }
-}
-function firmwareTrimmed(release) {
-  var assets = Array.isArray(release.assets) ? release.assets : [];
-  return {
-    tag_name: release.tag_name,
-    body: release.body,
-    html_url: release.html_url,
-    assets: assets.map(function(asset) {
-      return { name: asset.name, size: asset.size, browser_download_url: asset.browser_download_url };
-    })
-  };
-}
-function firmwareOurs(url) {
-  return typeof url === "string" && url.indexOf(FIRMWARE_HOME) === 0;
-}
 function firmwareHasTwoBuilds() {
   return !!BOARD.release.wireless_files;
 }
@@ -11120,7 +11184,7 @@ function firmwareStems() {
   return {};
 }
 function firmwareFrom(release) {
-  var version = String(release.tag_name || "").replace(/^v/, "");
+  var version = firmwareVersion(release);
   var assets = Array.isArray(release.assets) ? release.assets : [];
   var stems = firmwareStems();
   var files = Object.keys(stems).map(function(stem) {
@@ -11150,64 +11214,21 @@ function firmwareUse(release) {
 }
 async function checkFirmware() {
   if (firmware.status === "checking") return;
-  var stored = firmwareStored();
-  if (stored.release && Date.now() - stored.at < FIRMWARE_FRESH_MS) {
-    firmwareUse(stored.release);
-    draw();
-    return;
-  }
   firmware.status = "checking";
-  try {
-    var answer = await fetch(FIRMWARE_LATEST, { cache: "no-store" });
-    if (!answer.ok) throw new Error(String(answer.status));
-    var release = firmwareTrimmed(await answer.json());
+  var release = await latestRelease(function(fetched) {
+    return firmwareFrom(fetched).files.length > 0;
+  });
+  if (release) {
     firmwareUse(release);
-    if (firmware.latest.files.length) firmwareStore(release);
-  } catch (e) {
-    if (stored.release) {
-      firmwareUse(stored.release);
-    } else {
-      firmware.status = "failed";
-      firmware.latest = null;
-    }
+  } else {
+    firmware.status = "failed";
+    firmware.latest = null;
   }
   draw();
-}
-var FIRMWARE_MARKS = "(?:[" + FIRMWARE_SIGN + "]|:warning:)";
-var FIRMWARE_MARKED = new RegExp("^\\s*(?:[-*]\\s+|#+\\s+)?" + FIRMWARE_MARKS + "[\\s" + FIRMWARE_SIGN + "]*");
-var FIRMWARE_MARKS_AFTER = new RegExp("(?:\\s*" + FIRMWARE_MARKS + ")+\\s*$");
-var FIRMWARE_ALERT = /^\s*>\s*\[!(\w+)\]\s*$/;
-var FIRMWARE_ALERT_WARNS = /^(?:warning|caution)$/i;
-function firmwareWarnings(notes) {
-  var warnings = [], rest = [];
-  var alert = null;
-  function warn(text) {
-    text = text.replace(FIRMWARE_MARKS_AFTER, "").trim();
-    if (text) warnings.push(text);
+  if (firmware.status === "done" && location.hash === "#update" && firmwareBehind(firmware.latest)) {
+    history.replaceState(null, "", location.pathname + location.search);
+    openFirmware();
   }
-  function endAlert() {
-    if (alert) warn(alert.join(" "));
-    alert = null;
-  }
-  notes.replace(/\r\n/g, "\n").split("\n").forEach(function(line) {
-    var opens = FIRMWARE_ALERT.exec(line);
-    if (opens) {
-      endAlert();
-      if (FIRMWARE_ALERT_WARNS.test(opens[1])) alert = [];
-      else rest.push(line);
-      return;
-    }
-    if (alert && /^\s*>/.test(line)) {
-      alert.push(line.replace(/^\s*>\s?/, "").trim());
-      return;
-    }
-    endAlert();
-    var marked = FIRMWARE_MARKED.exec(line);
-    if (marked) warn(line.slice(marked[0].length));
-    else rest.push(line);
-  });
-  endAlert();
-  return { warnings, rest: rest.join("\n") };
 }
 function openFirmware() {
   firmware.open = true;
@@ -11230,10 +11251,9 @@ function renderFirmwareButton() {
       onclick: openFirmware
     }, "Update available"));
   }
-  var version = firmware.latest.version;
-  var heed = firmwareWarnings(firmware.latest.notes).warnings.length > 0;
-  firmwareButton.className = heed ? "firmwarebutton hold" : "firmwarebutton";
-  firmwareButton.title = heed ? "See the warning for firmware " + version + " and how to update." : "See what's new in firmware " + version + " and how to update.";
+  var looks = firmwareButtonLooks(firmware.latest.version, firmware.latest.notes);
+  firmwareButton.className = looks.className;
+  firmwareButton.title = looks.title;
 }
 function firmwareNotes(text) {
   var shown = [];
@@ -11381,6 +11401,7 @@ addStep(drawSteps.after, DRAW_AFTER, "firmware", renderFirmwareDialog);
 addStep(connectSteps, CONNECT_ORDER, "firmware", async function() {
   checkFirmware();
 });
+if (location.hash === "#update") checkFirmware();
 
 // boards/editor/picker/led_sections.js
 var LED_PANELS = ["outPanel"].concat(STRIPS.map(function(strip) {

@@ -392,6 +392,39 @@ def bundled(repo_dir, order, *options):
     return done.stdout
 
 
+# The picker's part that finds the latest firmware release and its button's stylesheet, which the
+# text editor also carries
+RELEASE_PART = os.path.join(SHARED_PARTS, "firmware", "release.js")
+RELEASE_STYLES = os.path.join(SHARED_PARTS, "firmware", "release.css")
+
+
+def release_styles(repo_dir, board):
+    """Read the release button's stylesheet, for the text editor of a board with a release entry."""
+    if "release" not in board:
+        return ""
+    with open(os.path.join(repo_dir, RELEASE_STYLES), encoding="utf-8") as f:
+        return f.read()
+
+
+def release_script(repo_dir, board):
+    """
+    Bundle the picker's release part as the global FXRelease, for the text editor of a board whose
+    description has a release entry. Any other board's editor has FXRelease null.
+    """
+    if "release" not in board:
+        return "var FXRelease = null;\n"
+    tool = esbuild_path(repo_dir)
+    entry = 'export * from "./{}";\n'.format(RELEASE_PART.replace(os.sep, "/"))
+    done = subprocess.run([tool, "--bundle", "--sourcefile=release.js", "--charset=ascii",
+                           "--format=iife", "--global-name=FXRelease", "--target=" + BROWSERS,
+                           "--log-level=warning"],
+                          input=entry, capture_output=True, text=True, encoding="utf-8",
+                          cwd=repo_dir)
+    if done.returncode:
+        sys.exit("esbuild could not bundle the release part:\n" + done.stderr)
+    return done.stdout
+
+
 # The esbuild, pinned in tools/picker/package.json, that bundles the parts and minifies the pages
 ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
 
@@ -754,6 +787,9 @@ def main():
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = minified(repo_dir, f.read().replace("__BOARD_NAME__", board["name"])
                                      .replace("__TOKENS__\n", shared_tokens(repo_dir))
+                                     .replace("__RELEASE_STYLES__\n",
+                                              release_styles(repo_dir, board))
+                                     .replace("__RELEASE__\n", release_script(repo_dir, board))
                                      .replace("__VERSION__", version)
                                      .replace("__RESET_BUTTON__",
                                               board.get("release", {}).get("reset_button",

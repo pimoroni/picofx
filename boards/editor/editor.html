@@ -7,6 +7,7 @@
 <script src="catalogue.js"></script>
 <style>
 __TOKENS__
+__RELEASE_STYLES__
 *{box-sizing:border-box}
 /* Hold the footer at the bottom of the window when the page is shorter than the window */
 body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink);
@@ -89,7 +90,7 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 </head>
 <body>
 <header>
-<h1>__BOARD_NAME__ Editor <span class="version">__VERSION__</span></h1>
+<h1>__BOARD_NAME__ Editor <span class="version">__VERSION__</span><span id="firmware" hidden></span></h1>
 <button id="open" class="primary">Open FX drive</button>
 <button id="save" disabled>Save to board</button>
 <button id="check" disabled>Check board</button>
@@ -123,6 +124,9 @@ cards instead, open <a href="PICKER.html">PICKER.html</a> on this drive.</p>
 
 // The text editor for effects.txt that each board's drive serves. It colours each word by its
 // role and offers what fits at the caret, from the board's parts and autofx's names in catalogue.js
+
+// The picker's release part as FXRelease, or null for a board with no releases to offer
+__RELEASE__
 
 // Check if catalogue.js is missing. The page still paints without it, and the hint line
 // says why no suggestions can be offered
@@ -1190,10 +1194,34 @@ async function connect() {
   loadFromDrive(onBoard, dir.name && dir.name.length > 1 ? dir.name : "the FX drive");
 }
 
+// The firmware the board runs, since the drive carries the editor made with it
+var SHOWN_VERSION = "__VERSION__";
+
+// Show Update available beside the version where newer firmware is out, as the picker does. It
+// opens the picker at #update, whose sheet says what is new and how to update
+async function checkRelease() {
+  if (!FXRelease) return;
+  // Only the picker stores GitHub's answer, since it knows which files the board takes
+  var release = await FXRelease.latestRelease(function () { return false; });
+  var version = release ? FXRelease.firmwareVersion(release) : "";
+  var where = document.getElementById("firmware");
+  where.hidden = !version || !FXRelease.firmwareBehindOf(SHOWN_VERSION, version);
+  if (where.hidden) return;
+  var looks = FXRelease.firmwareButtonLooks(version, String(release.body || ""));
+  var button = where.firstChild || where.appendChild(document.createElement("button"));
+  button.type = "button";
+  button.textContent = "Update available";
+  button.className = looks.className;
+  button.title = looks.title;
+  button.onclick = function () { window.open("PICKER.html#update", "_blank"); };
+}
+
 document.getElementById("open").onclick = async function () {
   try {
     await connect();
     banner("");
+    // Check once a drive is open, since only then is the page known to be the one the board carries
+    checkRelease();
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "NotAnFxDrive") {

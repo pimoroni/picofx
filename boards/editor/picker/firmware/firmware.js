@@ -3,11 +3,15 @@ import {h, replace} from "../dom.js";
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../draw.js";
 import {CONNECT_ORDER, connectSteps} from "../drive.js";
 import {BOARD, VERSION} from "../looks.js";
+import {
+  FIRMWARE_RELEASES, FIRMWARE_SIGN, firmwareBehindOf, firmwareButtonLooks, firmwareOlder,
+  firmwareOurs, firmwareVersion, firmwareWarnings, latestRelease
+} from "./release.js";
 
 // ---- firmware updates ----------------------------------------------------------------------------
 // The Update available button beside the version in the page's header, and the sheet it opens. Once
-// an FX drive is open, the page asks GitHub for the latest release and shows the button where the
-// board's firmware is older. The sheet says what is new and how to flash the board's -with-libs
+// an FX drive is open, or the page is opened at #update, the page asks for the latest release and
+// shows the button where the board's firmware is older. The sheet says what is new and how to flash the board's -with-libs
 // .uf2. That image also rewrites the filesystem holding picofx and the board's libraries, so they
 // match the new autofx, and it leaves the FX drive alone. build_editor.py takes this folder only for
 // a board whose description has a release entry.
@@ -19,52 +23,16 @@ import {BOARD, VERSION} from "../looks.js";
 // build's file empties the drive. The firmware writes catalogue.js beside the page, saying which
 // build it is, and the sheet offers the file for the build the catalogue names.
 
-// Where the latest release is fetched from
-var FIRMWARE_LATEST = "https://api.github.com/repos/pimoroni/picofx/releases/latest";
-
-// The start every address the sheet links to must have. What localStorage holds can be written by
-// any page opened from this computer, so nothing else is linked to
-var FIRMWARE_HOME = "https://github.com/pimoroni/picofx/";
-
-// The releases page, linked to where a release's own page address is missing or elsewhere
-var FIRMWARE_RELEASES = FIRMWARE_HOME + "releases";
-
-// The localStorage key that holds GitHub's answer and when it came. Every picker opened from a
-// drive shares this browser's storage, so it holds the release as firmwareTrimmed() leaves it, and
-// each board picks its own files from that
-var FIRMWARE_STORE = "fx-picker-firmware-release";
-
-// How long a stored answer is used before GitHub is asked again
-var FIRMWARE_FRESH_MS = 24 * 60 * 60 * 1000;
-
-// The firmware the board runs, since the drive carries the picker made with it. A preview build is
-// older than the release of its own number
+// The firmware the board runs, since the drive carries the picker made with it
 var FIRMWARE_SHOWN = VERSION;
-var FIRMWARE_RUNNING = FIRMWARE_SHOWN.split(" ")[0];
-var FIRMWARE_PREVIEW = / preview$/.test(FIRMWARE_SHOWN);
-
-// The warning sign, with the variation selector that asks for its emoji form
-var FIRMWARE_SIGN = "\u26a0\ufe0f";
 
 // The status is idle, checking, done or failed, latest is the release as firmwareFrom() reads it,
 // and open is whether the sheet is shown
 var firmware = {status: "idle", latest: null, open: false};
 
-// Whether version a is older than version b, each as dotted numbers
-function firmwareOlder(a, b) {
-  var x = a.split("."), y = b.split(".");
-  for (var at = 0; at < Math.max(x.length, y.length); at++) {
-    var difference = (parseInt(x[at], 10) || 0) - (parseInt(y[at], 10) || 0);
-    if (difference) return difference < 0;
-  }
-  return false;
-}
-
 // Whether the board's firmware is older than the latest release
 function firmwareBehind(latest) {
-  if (!latest) return false;
-  if (firmwareOlder(FIRMWARE_RUNNING, latest.version)) return true;
-  return FIRMWARE_PREVIEW && !firmwareOlder(latest.version, FIRMWARE_RUNNING);
+  return !!latest && firmwareBehindOf(FIRMWARE_SHOWN, latest.version);
 }
 
 // Whether the latest release would bring the board to at least the version given, or null while the
@@ -74,37 +42,6 @@ function firmwareCovers(version) {
   return firmwareBehind(firmware.latest) && !firmwareOlder(firmware.latest.version, version);
 }
 firmwareHooks.covers = firmwareCovers;
-
-// What localStorage holds under FIRMWARE_STORE, or an empty object where it cannot be read
-function firmwareStored() {
-  try {
-    return JSON.parse(localStorage.getItem(FIRMWARE_STORE)) || {};
-  } catch (e) {
-    return {};
-  }
-}
-
-// Store GitHub's answer with the time it came. A browser that refuses is asked again next time
-function firmwareStore(release) {
-  try {
-    localStorage.setItem(FIRMWARE_STORE, JSON.stringify({at: Date.now(), release: release}));
-  } catch (e) {
-  }
-}
-
-// The parts of GitHub's answer the page uses, which are all it stores
-function firmwareTrimmed(release) {
-  var assets = Array.isArray(release.assets) ? release.assets : [];
-  return {tag_name: release.tag_name, body: release.body, html_url: release.html_url,
-          assets: assets.map(function (asset) {
-            return {name: asset.name, size: asset.size, browser_download_url: asset.browser_download_url};
-          })};
-}
-
-// Whether an address is one of picofx's own pages on GitHub
-function firmwareOurs(url) {
-  return typeof url === "string" && url.indexOf(FIRMWARE_HOME) === 0;
-}
 
 // Whether the board's description has a wireless build apart from its plain one
 function firmwareHasTwoBuilds() {
@@ -124,7 +61,7 @@ function firmwareStems() {
 
 // A release as the sheet shows it. Its files are this build's -with-libs images, as CI names them
 function firmwareFrom(release) {
-  var version = String(release.tag_name || "").replace(/^v/, "");
+  var version = firmwareVersion(release);
   var assets = Array.isArray(release.assets) ? release.assets : [];
   var stems = firmwareStems();
   var files = Object.keys(stems).map(function (stem) {
@@ -145,86 +82,26 @@ function firmwareUse(release) {
   firmware.status = "done";
 }
 
-// Fetch the latest release, or use the stored one while it is fresh. A failed fetch falls back on any
-// stored release, however old, and otherwise shows nothing
+// Find the latest release and draw the page for it, or show nothing where none can be had
 async function checkFirmware() {
   if (firmware.status === "checking") return;
-  var stored = firmwareStored();
-  // Check if the stored answer is fresh enough to use without asking GitHub
-  if (stored.release && Date.now() - stored.at < FIRMWARE_FRESH_MS) {
-    firmwareUse(stored.release);
-    draw();
-    return;
-  }
   firmware.status = "checking";
-  try {
-    var answer = await fetch(FIRMWARE_LATEST, {cache: "no-store"});
-    if (!answer.ok) throw new Error(String(answer.status));
-    var release = firmwareTrimmed(await answer.json());
+  // A release whose files CI has yet to upload is asked for again next time
+  var release = await latestRelease(function (fetched) {
+    return firmwareFrom(fetched).files.length > 0;
+  });
+  if (release) {
     firmwareUse(release);
-    // A release whose files CI has yet to upload is asked for again next time
-    if (firmware.latest.files.length) firmwareStore(release);
-  } catch (e) {
-    if (stored.release) {
-      firmwareUse(stored.release);
-    } else {
-      firmware.status = "failed";
-      firmware.latest = null;
-    }
+  } else {
+    firmware.status = "failed";
+    firmware.latest = null;
   }
   draw();
-}
-
-// The warning marks a line of the notes can start or end with, as GitHub shows the sign or its
-// :warning: code
-var FIRMWARE_MARKS = "(?:[" + FIRMWARE_SIGN + "]|:warning:)";
-
-// A line starting with the marks, after any list bullet or heading marks
-var FIRMWARE_MARKED = new RegExp("^\\s*(?:[-*]\\s+|#+\\s+)?" + FIRMWARE_MARKS + "[\\s" + FIRMWARE_SIGN + "]*");
-
-// The marks at the end of a line, which some warnings close with
-var FIRMWARE_MARKS_AFTER = new RegExp("(?:\\s*" + FIRMWARE_MARKS + ")+\\s*$");
-
-// The first line of a GitHub alert, whose quoted lines below it are its text. A warning or caution
-// alert is a warning, and any other kind, such as a note, stays in the notes
-var FIRMWARE_ALERT = /^\s*>\s*\[!(\w+)\]\s*$/;
-var FIRMWARE_ALERT_WARNS = /^(?:warning|caution)$/i;
-
-// A release's notes split into its warnings and the rest. A warning is a line that starts with the
-// warning sign, or a GitHub warning alert, which a release keeps for a change a picker user must act
-// on, such as one that empties the FX drive. Each warning loses its marks
-function firmwareWarnings(notes) {
-  var warnings = [], rest = [];
-  // The lines of the alert being read, or null outside one
-  var alert = null;
-  function warn(text) {
-    text = text.replace(FIRMWARE_MARKS_AFTER, "").trim();
-    if (text) warnings.push(text);
+  // The text editor's Update available button opens this page at #update, for the sheet
+  if (firmware.status === "done" && location.hash === "#update" && firmwareBehind(firmware.latest)) {
+    history.replaceState(null, "", location.pathname + location.search);
+    openFirmware();
   }
-  function endAlert() {
-    if (alert) warn(alert.join(" "));
-    alert = null;
-  }
-  notes.replace(/\r\n/g, "\n").split("\n").forEach(function (line) {
-    // Check if the line opens an alert, which ends any alert before it, or carries on a warning one
-    var opens = FIRMWARE_ALERT.exec(line);
-    if (opens) {
-      endAlert();
-      if (FIRMWARE_ALERT_WARNS.test(opens[1])) alert = [];
-      else rest.push(line);
-      return;
-    }
-    if (alert && /^\s*>/.test(line)) {
-      alert.push(line.replace(/^\s*>\s?/, "").trim());
-      return;
-    }
-    endAlert();
-    var marked = FIRMWARE_MARKED.exec(line);
-    if (marked) warn(line.slice(marked[0].length));
-    else rest.push(line);
-  });
-  endAlert();
-  return {warnings: warnings, rest: rest.join("\n")};
 }
 
 // Show the sheet
@@ -254,11 +131,9 @@ function renderFirmwareButton() {
     firmwareButton = where.appendChild(h("button", {type: "button", "aria-haspopup": "dialog",
                                                     onclick: openFirmware}, "Update available"));
   }
-  var version = firmware.latest.version;
-  var heed = firmwareWarnings(firmware.latest.notes).warnings.length > 0;
-  firmwareButton.className = heed ? "firmwarebutton hold" : "firmwarebutton";
-  firmwareButton.title = heed ? "See the warning for firmware " + version + " and how to update."
-                              : "See what's new in firmware " + version + " and how to update.";
+  var looks = firmwareButtonLooks(firmware.latest.version, firmware.latest.notes);
+  firmwareButton.className = looks.className;
+  firmwareButton.title = looks.title;
 }
 
 // The elements that show a release's notes as text, never as HTML. A line starting - or * is a list
@@ -410,3 +285,6 @@ addStep(drawSteps.after, DRAW_AFTER, "firmware", renderFirmwareDialog);
 addStep(connectSteps, CONNECT_ORDER, "firmware", async function () {
   checkFirmware();
 });
+
+// Check at once where the page is opened at #update, as the text editor on the drive opens it
+if (location.hash === "#update") checkFirmware();
