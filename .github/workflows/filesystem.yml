@@ -75,6 +75,11 @@ jobs:
         rm -v -r -f ${{env.EX_DIR}}/examples/programs/audio/photon_sword
         rm -v -f ${{env.EX_DIR}}/examples/programs/audio/photon_sword.py
 
+    # The uf2 has no drawings either, since they play only under autofx
+    - name: "Leave the drawings out of the examples"
+      shell: bash
+      run: rm -v -r -f ${{env.EX_DIR}}/examples/drawings
+
     - name: "Append W example content"
       if: matrix.shortname == 'tiny_fx_w'
       shell: bash
