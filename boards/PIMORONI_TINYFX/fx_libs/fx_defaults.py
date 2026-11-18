@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
+#
+# SPDX-License-Identifier: MIT
+
+# The files a fresh board writes for itself, one constant per file, in a version for each board.
+# EFFECTS, README and SECRETS go on the FX drive and are rebuilt by fx_drive, SECRETS only on a
+# board with a wireless module. MAIN goes to the filesystem root and is rebuilt by boot.py.
+#
+# A drive build ships no main.py or secrets.py, so these are its only copies. The W build without
+# the drive ships the examples' secrets.py, which holds the same settings as SECRETS. Only a
+# literal triple quote needs escaping inside these.
+
+# In single quotes, as the program it holds has a docstring in double quotes
+MAIN = '''\
+from tiny_fx import TinyFX
+
+# Light the outputs first, so the board shows it is on during the slow imports below
+TinyFX.wake()
+
+import autofx
+import fx_drive
+
+"""
+Play the effects described by effects.txt on the FX drive.
+
+Plug the board into a computer and the drive appears. Edit effects.txt, eject the
+drive, and the new effects start straight away. Press "Boot" once to try an edit
+without ejecting the drive, or twice to hide the drive and twice again to bring it back.
+
+Replace this file with your own program if you would rather write code. Deleting
+it brings this one back, and an empty one leaves the board quiet.
+"""
+
+autofx.run(TinyFX, volume=fx_drive)
+'''
+
+# What a fresh board plays
+EFFECTS = """\
+out1-6: pulse_wave speed=-0.51 length=8
+rgb: rainbow speed=0.39
+"""
+
+README = """\
+Tiny FX
+=======
+Edit effects.txt to change what the lights do and save it, and the board plays
+the change a few seconds later. One line per set of outputs:
+
+  out1-6: pulse_wave speed=0.5
+  rgb: rainbow speed=0.3
+
+If a save does not seem to take, press "Boot" once or eject this drive, since a
+computer does not always write the file out straight away. Press "Boot" twice to
+hide the drive, and twice again to bring it back.
+
+Deleting effects.txt restores the default; emptying it leaves the board dark.
+
+When something is wrong, the outputs flash. The RGB output shows the colour:
+
+  white, once         the computer was still writing, so the press did nothing.
+                      Try again in a moment
+  blue, twice         something in effects.txt could not be read. errors.txt
+                      says which line
+  red, three times    there was no room to write errors.txt. This drive is full
+                      or damaged, so free some space or let a computer repair it
+
+While the computer is copying to this drive, a dim light travels along the
+outputs in place of the effects, which come back a moment after it finishes.
+While the board starts up or loads a save, a dim bar fills and empties along the
+outputs until the effects begin.
+
+This README is rebuilt by the board, so edits to it will not stick.
+"""
+
+# Empty, for the user to fill in. Written only where the drive has none, so their edits stay
+SECRETS = """\
+# Your WiFi network's name and password, for the programs that go online
+WIFI_SSID = ""
+WIFI_PASSWORD = ""
+
+# Your time zone, for the programs that show the time, such as "uk" or "eastern"
+TIME_ZONE = ""
+"""

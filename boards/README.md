@@ -8,14 +8,22 @@ A tiny stamp-sized LED driver for model making and construction kit projects. Bu
 
 * The standard build: MicroPython with the PicoFX library and examples. Tiny FX ships with this build.
 * The `w` variant: the same for Tiny FX W, adding WiFi and Bluetooth.
+* The `drive` variant: adds the FX drive, which plays `effects.txt` with no code needed.
+* The `w_drive` variant: the FX drive on Tiny FX W.
 
 ## Pimoroni Mighty FX
 
 A programmable, RP2350-based controller board that goes further with effects by adding motion and screens. Built from `PIMORONI_MIGHTYFX`:
 
 * The standard build: MicroPython with the PicoFX library and examples, for writing your own programs.
+* The `drive` variant: adds the FX drive, as on Tiny FX. Mighty FX ships with this build.
+
+## Pimoroni Plasma 2350
+
+`PIMORONI_PLASMA2350` builds Plasma 2350's FX drive firmware, one build serving the 2350 W too. Its standard firmware comes from the [plasma repository](https://github.com/pimoroni/plasma).
 
 ## Shared Between the Boards
 
-* `visible_libs`: libraries copied to each board's `/lib`, beside the board's own.
+* `fx_libs`: the FX drive, frozen into each build that carries it beside the board's own defaults.
+* `visible_libs`: libraries copied to each board's `/lib`, beside the board's own. `autofx`, which plays `effects.txt`, is left out of `/lib` and frozen into each build carrying the FX drive.
 * `frozen_libs`: modules frozen into every build.
