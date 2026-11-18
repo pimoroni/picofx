@@ -1,0 +1,46 @@
+# The example programs Mighty FX's FX drive carries, one per line from examples/programs/.
+# The rest are left off with their thumbnails, and Discover offers any that name a section.
+# A showcase program whose drawing is on the drive is left off, unless it uses two screens.
+audio/fair_use_encounters.py
+audio/race_start.py
+function/sensor_meter.py
+infrared/colour/control_hsv_fx.py
+infrared/colour/control_rainbow.py
+infrared/colour/control_rainbow_wave.py
+infrared/mono/control_channels.py
+infrared/mono/control_pulse_wave.py
+infrared/mono/toggle_effects.py
+motors/motor_song.py
+motors/remote_robot.py
+qwst/light_level.py
+qwst/spirit_level.py
+qwst/temperature_reading.py
+screens/graphics/color_wheel.py
+screens/graphics/led_matrix.py
+screens/graphics/starfield.py
+screens/hub/chevron_banks.py
+screens/hub/detect_hub.py
+screens/hub/starfield_wall.py
+screens/images/poster_ticker.py
+screens/layout/bouncing_logo.py
+screens/layout/kaleidoscope.py
+screens/pair/drifting_carpets.py
+screens/playback/animated_gif_recoloured.py
+screens/playback/neon_ping_pong.py
+screens/playback/traces_scroll.py
+screens/playback/traces_wall.py
+screens/single/detect_screens.py
+servos/remote_robot.py
+showcase/animated_scenes/creature_eyes.py
+showcase/animated_scenes/isometric_flight.py
+showcase/animated_scenes/skyline.py
+showcase/billboards/scrolling_billboard.py
+showcase/programmed_route.py
+showcase/status_panel.py
+showcase/transport_signs/bus_departures.py
+showcase/transport_signs/departure_board.py
+showcase/transport_signs/departures_list.py
+showcase/transport_signs/lane_control_gantry.py
+showcase/transport_signs/tram_stop_sign.py
+wireless/cheerlights.py
+wireless/random.py
