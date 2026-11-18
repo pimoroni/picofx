@@ -73,6 +73,7 @@
 * Add the Mighty FX examples for motor drivers, servos, LED strips and GPIO
 * Add the Mighty FX examples for screens and the Screen Hub, with the pictures they show, most taking a 1.54" screen as well as a 2.8" and a rotation in args
 * Add the Mighty FX showcases, bringing the examples together as projects
+* Example drawings of the showcase signs and scenes come with a picture of each and play from a `drawing` entry or the picker's Screens tab
 
 1.1.2
 -----

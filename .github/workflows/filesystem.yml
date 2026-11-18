@@ -71,16 +71,21 @@ jobs:
       run: |
         mkdir -p ${{env.EX_DIR}}
         cp -v -r picofx/examples/${{matrix.basename}}/. ${{env.EX_DIR}}
-        rm -v -f ${{env.EX_DIR}}/README.md
+        find ${{env.EX_DIR}} -type f -name '*.md' -exec rm -v {} \;
         rm -v -r -f ${{env.EX_DIR}}/examples/programs/audio/photon_sword
         rm -v -f ${{env.EX_DIR}}/examples/programs/audio/photon_sword.py
+
+    # The uf2 has no drawings either, since they play only under autofx
+    - name: "Leave the drawings out of the examples"
+      shell: bash
+      run: rm -v -r -f ${{env.EX_DIR}}/examples/drawings
 
     - name: "Append W example content"
       if: matrix.shortname == 'tiny_fx_w'
       shell: bash
       run: |
         cp -v -r picofx/examples/tiny_fx_w/. ${{env.EX_DIR}}
-        rm -v -f ${{env.EX_DIR}}/README.md
+        find ${{env.EX_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
     - name: Libs .zip artifact
       if: matrix.shortname != 'tiny_fx_w'
