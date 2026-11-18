@@ -170,17 +170,17 @@
  {"path": "examples/programs/gpio/spce_pwm_fade.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/gpio/spce_pwm_fade.py", "size": 2292, "hash": "7a7334cd1f6c0d7d01804ede6261a45e9a87d14c", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "size": 3930, "hash": "64a020460162eedefe11a5dafe3a7c9701be35d0", "was": []}]},
+  {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "size": 3960, "hash": "195903cbf7d2570f83d132f54ceb5ea3f7dd7276", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "size": 4060, "hash": "9ec36c98a873a069d22d52b1ea0af9f62c9cc198", "was": []}]},
+  {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "size": 4086, "hash": "bb8537111208a33eb77dccc39af239084550bfff", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_rainbow.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/infrared/colour/control_rainbow.py", "size": 3583, "hash": "e08c9aeb29f6206a3a0ad4be8e5082dc0a14ff39", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_rainbow_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/infrared/colour/control_rainbow_wave.py", "size": 4034, "hash": "6e63f6050e71939ad86b4a44d84cb56f1857a06b", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "size": 2103, "hash": "ed51d28fe06a5113acd9a5cbff194cfebf46201a", "was": []}]},
+  {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "size": 2133, "hash": "c04f8227ac7a0ef20b51eeef80417da82e6dfcb3", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "size": 2455, "hash": "b2a098e9dd067ef84c62e8d9c65f25477610f8cb", "was": []}]},
+  {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "size": 2481, "hash": "683f8da8fff6e821b3c13d1cdb6b26ed7fac43d6", "was": []}]},
  {"path": "examples/programs/infrared/mono/control_channels.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/infrared/mono/control_channels.py", "size": 3542, "hash": "c89c70e3cd08876066b698784b469671ecbdfe5d", "was": []}]},
  {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "kind": "program", "firmware": "1.1.3", "files": [

@@ -23,6 +23,7 @@ An IR Stick should be connected to the Sensor port on Mighty FX.
 
 Press "Boot" to exit the program.
 
+Program: Control HSV (direct)
 Section: With the remote
 Thumbnail: outputs warm
 """
