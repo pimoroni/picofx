@@ -1,0 +1,22 @@
+# Mighty FX Micropython Wireless Examples <!-- omit in toc -->
+
+These are micropython examples for driving Mighty FX from information obtained over WiFi.
+
+They each need a `secrets.py` file on the board's file system, holding the credentials of your WiFi network.
+
+- [Examples](#examples)
+  - [CheerLights](#cheerlights)
+  - [Random](#random)
+
+
+## Examples
+
+### CheerLights
+[cheerlights.py](cheerlights.py)
+
+Obtain the current CheerLights colour from the internet and show it on Mighty FX's RGB outputs. For more information about CheerLights, visit: https://cheerlights.com/
+
+### Random
+[random.py](random.py)
+
+Show random colours obtained from the internet on Mighty FX's outputs.
