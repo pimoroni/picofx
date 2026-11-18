@@ -168,6 +168,19 @@ var NAMED = OWN.outputs.filter(function (output) { return !/^out[0-9]+$/.test(ou
 var NUMBERED_COLOUR = NUMBERED.length > 0 &&
                       NUMBERED.every(function (output) { return output[1] === "colour"; });
 
+// Whether the numbered outputs are plain lights, with no colour to show
+var NUMBERED_MONO = NUMBERED.length > 0 &&
+                    NUMBERED.every(function (output) { return output[1] === "mono"; });
+
+// Whether a word of an output entry's selector names a plain light, which is a component of a
+// colour output, a numbered output where those are plain or a named output that is plain
+function namesPlainLight(word) {
+  var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
+  if (bare.indexOf(".") >= 0) return true;
+  if (NUMBERED_MONO && /^(out)?[0-9]/.test(bare)) return true;
+  return NAMED.some(function (output) { return output[1] === "mono" && output[0] === bare; });
+}
+
 // An example of outputs joined, with a range to the board's last output where it has more than five
 var JOINED_EXAMPLE = NUMBERED.length > 5 ? "out1,3,5-" + NUMBERED.length : "out1,2";
 
@@ -404,7 +417,7 @@ function highlightLine(line, continuation, context) {
   var mono = false;
   var left = tokens(esc(body.slice(0, at)), function (word) {
     if (word.indexOf("=") >= 0) return checkedSetting(word, leftAllowed);
-    if (kind === "output" && word.indexOf(".") >= 0) mono = true;
+    if (kind === "output" && namesPlainLight(word)) mono = true;
     var marked = mark("s-target", word);
     return validSelector(word) ? marked : badWrap(marked);
   });
@@ -575,11 +588,10 @@ function contextAt(text, caret) {
     found.kind = targetKind(opening[1]);
   }
 
-  // Check if the selector names a component anywhere. That makes the channel a plain light,
-  // which has nothing to show a colour effect on
+  // Check if the selector names a plain light anywhere, with nothing to show a colour effect on
   if (colon >= 0 && found.kind === "output")
     found.mono = entry.slice(0, entry.indexOf(":")).split(/\s+/).some(function (word) {
-      return word.indexOf("=") < 0 && word.indexOf(".") >= 0;
+      return word.indexOf("=") < 0 && namesPlainLight(word);
     });
 
   // Collect what the entry sets up to the end of the caret's line, so no setting is offered twice
