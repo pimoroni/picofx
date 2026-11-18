@@ -996,8 +996,8 @@
    "files": [
     {
      "path": "examples/programs/audio/wav_player.py",
-     "size": 1732,
-     "hash": "32dabd970cab69c1d2278dadc54a6b1953fe920d",
+     "size": 1704,
+     "hash": "a02e2f1f662ce4cc016cbb44177001de8fee4917",
      "was": [
       {
        "hash": "165827f8656e0eec58534aec95cf222e52cd3672",
@@ -1006,6 +1006,10 @@
       {
        "hash": "171580b4648f74e5554710b24ac92fb75bbb7e66",
        "size": 1855
+      },
+      {
+       "hash": "32dabd970cab69c1d2278dadc54a6b1953fe920d",
+       "size": 1732
       },
       {
        "hash": "4a940b8dc187508286e42025e711d899678d2de0",
@@ -1257,9 +1261,13 @@
    "files": [
     {
      "path": "examples/programs/effects/colour/sweep_trail.py",
-     "size": 2223,
-     "hash": "44c34bf2463728c6d4f915ff87ea35482f333e97",
+     "size": 2212,
+     "hash": "3661b6b3886b5ba14a1429cbe841239712ce12e3",
      "was": [
+      {
+       "hash": "44c34bf2463728c6d4f915ff87ea35482f333e97",
+       "size": 2223
+      },
       {
        "hash": "5bb7dd20fea01099aceadf35faaf07252b1e7277",
        "size": 2509
@@ -1283,8 +1291,8 @@
    "files": [
     {
      "path": "examples/programs/effects/colour/traffic_light.py",
-     "size": 2142,
-     "hash": "7dac5e1a3f18997866853a15c55171b23575386f",
+     "size": 2143,
+     "hash": "8258ac6f338a611b99da28c055d804b6016ccbb3",
      "was": [
       {
        "hash": "4c22b74a1c38eb63425539e2481a23151f719515",
@@ -1293,6 +1301,10 @@
       {
        "hash": "6b5cffd4ea020e71af2751dfb505795dcb7819cb",
        "size": 2492
+      },
+      {
+       "hash": "7dac5e1a3f18997866853a15c55171b23575386f",
+       "size": 2142
       },
       {
        "hash": "d927e46a288e00759b345e8ef1390268c7ddb7b7",
@@ -1625,8 +1637,8 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/traffic_light.py",
-     "size": 1876,
-     "hash": "fadbab67636feff7e0b963649d316c7173483b2e",
+     "size": 1877,
+     "hash": "3fc98d01248dec396c8a74572b4a3f6dd52aea8c",
      "was": [
       {
        "hash": "dcfb67dd1ffc5d5cd30758864d6ea6e72e63c443",
@@ -1643,6 +1655,10 @@
       {
        "hash": "ea2350141950dcdd7042e19d30881b09790250ba",
        "size": 1815
+      },
+      {
+       "hash": "fadbab67636feff7e0b963649d316c7173483b2e",
+       "size": 1876
       }
      ],
      "moved_from": [
@@ -1884,12 +1900,16 @@
    "files": [
     {
      "path": "examples/programs/infrared/colour/control_hsv_direct.py",
-     "size": 3955,
-     "hash": "41d80707a4f89b8d56b6b10a1b9b258137bc7a27",
+     "size": 3930,
+     "hash": "64a020460162eedefe11a5dafe3a7c9701be35d0",
      "was": [
       {
        "hash": "0b7024af73baa413dbd023975661ead8b6f44dee",
        "size": 3905
+      },
+      {
+       "hash": "41d80707a4f89b8d56b6b10a1b9b258137bc7a27",
+       "size": 3955
       },
       {
        "hash": "421af8383059e87e3dcd1963f0d64f5c587ff0b6",
@@ -2460,8 +2480,8 @@
    "files": [
     {
      "path": "examples/programs/qwst/light_level.py",
-     "size": 2615,
-     "hash": "6b1599a32674dd4d1fc16ce53e218ffb94134c73",
+     "size": 2617,
+     "hash": "935c9c5870d13ab2a78cc7ac7bd51156a849fb4b",
      "was": [
       {
        "hash": "297446404ce507f5d8b8f9095c210e0d3af6ffcf",
@@ -2474,6 +2494,10 @@
       {
        "hash": "671e1ad05459c962ec5807d6d4e4f03016eb9e5d",
        "size": 2877
+      },
+      {
+       "hash": "6b1599a32674dd4d1fc16ce53e218ffb94134c73",
+       "size": 2615
       },
       {
        "hash": "7a7fa9c8179a7d2f97d69a2f347e8eefd7a4cf57",
@@ -2510,11 +2534,15 @@
    "files": [
     {
      "path": "examples/programs/qwst/spirit_level.py",
-     "size": 3367,
-     "hash": "41cc41f2e178d6ea7dacabf4760c048da83b84ef",
+     "size": 3373,
+     "hash": "0b90e11c205f8e58068a08f4605f91e55b395b36",
      "was": [
       {
        "hash": "17ae3a44c470c918d02ed5b4f0c4c0eaf8d38df7",
+       "size": 3367
+      },
+      {
+       "hash": "41cc41f2e178d6ea7dacabf4760c048da83b84ef",
        "size": 3367
       },
       {
@@ -6524,12 +6552,16 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/creature_eyes.py",
-     "size": 22402,
-     "hash": "32d8f0d16f6ab0a94d6e98a51520e86bcfe4c8d0",
+     "size": 22389,
+     "hash": "6e4746449533d4b13e1655f4014b678e11620bb5",
      "was": [
       {
        "hash": "1c26b7b15b3ac233184509c30cdcc03c1c0763ec",
        "size": 22480
+      },
+      {
+       "hash": "32d8f0d16f6ab0a94d6e98a51520e86bcfe4c8d0",
+       "size": 22402
       },
       {
        "hash": "8a2a6b4f8f54e15e3fd4c5f95a63ed8e08839796",
@@ -6578,8 +6610,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/fireplace.py",
-     "size": 9655,
-     "hash": "2e29f6caf0e70b1129dd88123ec54a81480fb4e8",
+     "size": 9732,
+     "hash": "e83740e7fb5d15fbc585c0ed08ff867314cd3d91",
      "was": [
       {
        "hash": "01f41a12cec509b495643e388a16f1afed0247be",
@@ -6592,6 +6624,10 @@
       {
        "hash": "286f430a7be4ddadd69b14b767e1c7b9a6cd34c4",
        "size": 9494
+      },
+      {
+       "hash": "2e29f6caf0e70b1129dd88123ec54a81480fb4e8",
+       "size": 9655
       },
       {
        "hash": "315c654a6c8c0c7c38ee81013ee7230f6bf1a854",
@@ -6769,9 +6805,13 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/neon_corridor.py",
-     "size": 15816,
-     "hash": "47c4f0ae032867e4261424afedeb2fa1fa6aa9d2",
+     "size": 15784,
+     "hash": "06e74693fbbce54a7362e6a7a5ed4923c32249a9",
      "was": [
+      {
+       "hash": "47c4f0ae032867e4261424afedeb2fa1fa6aa9d2",
+       "size": 15816
+      },
       {
        "hash": "664f23fc8e8eb36abc36593ba4a421741e120e94",
        "size": 16098
@@ -6797,8 +6837,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/pool.py",
-     "size": 11980,
-     "hash": "5d8c382c35f929db77b1d3fad1f3bb1599a472ee",
+     "size": 11956,
+     "hash": "270cd77bd8f6656549f44ceea69287d424985909",
      "was": [
       {
        "hash": "23bbd195de020adc0f96fb996126aa247f9c603f",
@@ -6811,6 +6851,10 @@
       {
        "hash": "584ba546e4fe2f134145bad22b519ba13a4d37f1",
        "size": 12060
+      },
+      {
+       "hash": "5d8c382c35f929db77b1d3fad1f3bb1599a472ee",
+       "size": 11980
       },
       {
        "hash": "65d551a791e51c9a56c0324c09fb9d54212300bf",
@@ -6853,8 +6897,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/portal.py",
-     "size": 15427,
-     "hash": "5ee67016210a0100fd92d2e74b86d73ded0033bc",
+     "size": 15410,
+     "hash": "eb2d05ae1d030fa2edab67b032c76e6221560407",
      "was": [
       {
        "hash": "1cec786787befb94c5a89f3616cf0366e3d3605a",
@@ -6863,6 +6907,10 @@
       {
        "hash": "41766b1a0472ef5675ea9c794f4836edf4562f8b",
        "size": 14524
+      },
+      {
+       "hash": "5ee67016210a0100fd92d2e74b86d73ded0033bc",
+       "size": 15427
       },
       {
        "hash": "7e5dcdaa022ec3c7f801771430eeb27d5a52bc1f",
@@ -7000,8 +7048,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/billboards/scrolling_billboard.py",
-     "size": 4279,
-     "hash": "7e819b4a3d5cfd897c3392f4909d1dfa10579cef",
+     "size": 4296,
+     "hash": "b494f26371659162e1f2b68c407957d09e0cf542",
      "was": [
       {
        "hash": "049d7abecaa1771317ef68c6b6cd905fed0f6d32",
@@ -7026,6 +7074,10 @@
       {
        "hash": "58ed982b0a3a9ca5efddb3fc80dd0173ff88edac",
        "size": 5234
+      },
+      {
+       "hash": "7e819b4a3d5cfd897c3392f4909d1dfa10579cef",
+       "size": 4279
       },
       {
        "hash": "7ee97aa2b2fa8538b495d6df10c810d04ef9149d",
@@ -7139,8 +7191,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/billboards/street_billboard.py",
-     "size": 4796,
-     "hash": "a2aaf1a65b5e20eaa8183b65aa051c6e0003b301",
+     "size": 4813,
+     "hash": "b4e80f578c7d85c464fb9df88c84aeeb916cd526",
      "was": [
       {
        "hash": "082e532e3f37f37fa1820e6bba954aa2c489700b",
@@ -7193,6 +7245,10 @@
       {
        "hash": "9d3937eab9226f196f4b08dd61af42042aaa0ca4",
        "size": 5238
+      },
+      {
+       "hash": "a2aaf1a65b5e20eaa8183b65aa051c6e0003b301",
+       "size": 4796
       },
       {
        "hash": "cd92ab37f0ca082859a8b2e7c20c1f9a60cf8d74",
@@ -7292,8 +7348,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/billboards/trivision_billboard.py",
-     "size": 6887,
-     "hash": "2993af23616bb75239d4dfa03f2175b0846c5565",
+     "size": 6904,
+     "hash": "e4ff827f31e9942ba9a46a31078e64b85193d0ca",
      "was": [
       {
        "hash": "00a286f7b8df206584e0067cac1061d3cfe7073e",
@@ -7310,6 +7366,10 @@
       {
        "hash": "24ee42a53267cacc28b6293f5440af727da6586b",
        "size": 6903
+      },
+      {
+       "hash": "2993af23616bb75239d4dfa03f2175b0846c5565",
+       "size": 6887
       },
       {
        "hash": "4b97d1b9fe66b223a306f0c79d5a053e362491b1",
@@ -7628,8 +7688,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/flip_dot_sign.py",
-     "size": 9381,
-     "hash": "ef203b461c9a8bb406058d7f4f8994f78d27d6af",
+     "size": 9398,
+     "hash": "4296890d98ba64c9447cfe7c6a8e589123a066a4",
      "was": [
       {
        "hash": "0319059e1200651dddf3185f3cd2e76e7c21f21b",
@@ -7672,6 +7732,10 @@
        "size": 9343
       },
       {
+       "hash": "ef203b461c9a8bb406058d7f4f8994f78d27d6af",
+       "size": 9381
+      },
+      {
        "hash": "f1b785564e12a32db800ee99a1b6f92bf169d4e4",
        "size": 11275
       }
@@ -7701,8 +7765,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/lamp_matrix.py",
-     "size": 15571,
-     "hash": "1828801c482fe11938e0a0072b3b4c90fbb117be",
+     "size": 15574,
+     "hash": "96bd6d8e890bcab7d80771c3f35dccc0b8ea194d",
      "was": [
       {
        "hash": "0e985c8d03c18d21973187f365498018cc1b1aa1",
@@ -7711,6 +7775,10 @@
       {
        "hash": "12425b7638c55db3006bc5323646269841df9906",
        "size": 15716
+      },
+      {
+       "hash": "1828801c482fe11938e0a0072b3b4c90fbb117be",
+       "size": 15571
       },
       {
        "hash": "252353bb5f1d6631216aff578f1c36facd82cfa9",
@@ -7882,8 +7950,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/oscilloscope.py",
-     "size": 11452,
-     "hash": "67dce01dbbaf655324a3634afd27015a33dff945",
+     "size": 11453,
+     "hash": "542ebcec794ae2f0c7f0899ffbb1917e19d402a7",
      "was": [
       {
        "hash": "38c450f33ab6c9ab64071f40efb4dc6ce8521ec7",
@@ -7896,6 +7964,10 @@
       {
        "hash": "5a46c7db20ac75ee363a77b45c88da352a96e81a",
        "size": 11296
+      },
+      {
+       "hash": "67dce01dbbaf655324a3634afd27015a33dff945",
+       "size": 11452
       },
       {
        "hash": "ac45f263bf332273bf48212381ed8eac145374aa",
@@ -8135,8 +8207,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/status_panel.py",
-     "size": 18018,
-     "hash": "9f8143d769b6518d4df87a2b8bc10f8272e1b613",
+     "size": 18035,
+     "hash": "ddb9d587930d079b5b4bce204e8c41c65a6145c8",
      "was": [
       {
        "hash": "0b18b5de0224062d4bde340b220fe40103e9423e",
@@ -8173,6 +8245,10 @@
       {
        "hash": "8697bc54552d8adb10603ce9df0497945652716b",
        "size": 21190
+      },
+      {
+       "hash": "9f8143d769b6518d4df87a2b8bc10f8272e1b613",
+       "size": 18018
       },
       {
        "hash": "a4da4a13ca6fbc78cd96f1033f6409711bd42ecc",
@@ -8738,8 +8814,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/tram_stop_sign.py",
-     "size": 11826,
-     "hash": "77ef0f45c913a8961c1b7e34087457ceedc85ee1",
+     "size": 11831,
+     "hash": "c374774f83f2369171e21d2d330c86fedb2b9b6a",
      "was": [
       {
        "hash": "064ed07b3498f7c05f1c3a79f51dcdab2835cc93",
@@ -8752,6 +8828,10 @@
       {
        "hash": "69e27dfb3a95871c67017f75ba9541636515e4da",
        "size": 14735
+      },
+      {
+       "hash": "77ef0f45c913a8961c1b7e34087457ceedc85ee1",
+       "size": 11826
       },
       {
        "hash": "b17d14b69f6172c70c47cae9c39a72210e446802",
@@ -8891,9 +8971,13 @@
    "files": [
     {
      "path": "examples/programs/wireless/random.py",
-     "size": 2511,
-     "hash": "3e3cc63566d5832a855c3c362018e5c9cd754040",
+     "size": 2519,
+     "hash": "6890376126456bc8ac3a42a8c8aff094e514335d",
      "was": [
+      {
+       "hash": "3e3cc63566d5832a855c3c362018e5c9cd754040",
+       "size": 2511
+      },
       {
        "hash": "74c7892648f33a7b2e8f15ed378f7a243957a989",
        "size": 2366

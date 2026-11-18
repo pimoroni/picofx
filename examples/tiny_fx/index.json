@@ -21,9 +21,14 @@
    "files": [
     {
      "path": "examples/programs/audio/photon_sword.py",
-     "size": 4030,
-     "hash": "f7694190b784ba750b4f0c2a1e2e5cdc0fee1a2c",
-     "was": []
+     "size": 4056,
+     "hash": "d0c97f276655d93932a01d6fe853acd4d798cfd6",
+     "was": [
+      {
+       "hash": "f7694190b784ba750b4f0c2a1e2e5cdc0fee1a2c",
+       "size": 4030
+      }
+     ]
     }
    ]
   },
@@ -47,9 +52,14 @@
    "files": [
     {
      "path": "examples/programs/audio/wav_player.py",
-     "size": 1706,
-     "hash": "c18c3d287573dd45f1f6834a63ec3e5e404a2e14",
-     "was": []
+     "size": 1684,
+     "hash": "0bc1aff98bb78832aff8df668861f83a5b0d55e2",
+     "was": [
+      {
+       "hash": "c18c3d287573dd45f1f6834a63ec3e5e404a2e14",
+       "size": 1706
+      }
+     ]
     }
    ]
   },
@@ -73,9 +83,14 @@
    "files": [
     {
      "path": "examples/programs/comms/multi_fx.py",
-     "size": 4509,
-     "hash": "74ae560027d1be989511edef90daf5d4888145c6",
-     "was": []
+     "size": 4363,
+     "hash": "2ce7fbc420468b5f4f881a7ad76452236fe3f186",
+     "was": [
+      {
+       "hash": "74ae560027d1be989511edef90daf5d4888145c6",
+       "size": 4509
+      }
+     ]
     }
    ]
   },
@@ -320,9 +335,14 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/sweep_trail.py",
-     "size": 1832,
-     "hash": "8f01637f9ef6295dab05b5c6485a7cabeb1a7fe2",
-     "was": []
+     "size": 1821,
+     "hash": "a073f863399612031d6f0504b0454e121f0e130f",
+     "was": [
+      {
+       "hash": "8f01637f9ef6295dab05b5c6485a7cabeb1a7fe2",
+       "size": 1832
+      }
+     ]
     }
    ]
   },
@@ -333,9 +353,14 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/traffic_light.py",
-     "size": 1844,
-     "hash": "f5988011f6eab7e98b286ad54019803f4c552e48",
-     "was": []
+     "size": 1845,
+     "hash": "4ee65cd6ec4eac89629b7678c931f6fe3dd23854",
+     "was": [
+      {
+       "hash": "f5988011f6eab7e98b286ad54019803f4c552e48",
+       "size": 1844
+      }
+     ]
     }
    ]
   },
@@ -398,9 +423,14 @@
    "files": [
     {
      "path": "examples/programs/infrared/colour/control_hsv_direct.py",
-     "size": 3743,
-     "hash": "67884191a15bedd2383f9ca073c9386b12f1417c",
-     "was": []
+     "size": 3718,
+     "hash": "d0444440f4327a1979e2aa852bd77b6f662e14f9",
+     "was": [
+      {
+       "hash": "67884191a15bedd2383f9ca073c9386b12f1417c",
+       "size": 3743
+      }
+     ]
     }
    ]
   },
@@ -507,9 +537,14 @@
    "files": [
     {
      "path": "examples/programs/qwst/light_level.py",
-     "size": 2390,
-     "hash": "1272fdda4b6bdc667dc8d8a0ba55b25fed6d6c73",
-     "was": []
+     "size": 2410,
+     "hash": "88d95dbe6d3f4a83a1a595398371df85a1e1bedd",
+     "was": [
+      {
+       "hash": "1272fdda4b6bdc667dc8d8a0ba55b25fed6d6c73",
+       "size": 2390
+      }
+     ]
     }
    ]
   },
@@ -520,9 +555,14 @@
    "files": [
     {
      "path": "examples/programs/qwst/spirit_level.py",
-     "size": 3381,
-     "hash": "a6502add5b38253225152c8c64a4727753094c72",
-     "was": []
+     "size": 3387,
+     "hash": "54ce3901dc8d5ada116005ef8501f7e09ec7068d",
+     "was": [
+      {
+       "hash": "a6502add5b38253225152c8c64a4727753094c72",
+       "size": 3381
+      }
+     ]
     }
    ]
   },
@@ -559,9 +599,14 @@
    "files": [
     {
      "path": "examples/programs/showcase/sensor_wave.py",
-     "size": 2539,
-     "hash": "a50f8a108de7e5f79ff21feb0d4214438f19233f",
-     "was": []
+     "size": 2559,
+     "hash": "9f6d916718a90636be4accd7687a8a0e28442e9a",
+     "was": [
+      {
+       "hash": "a50f8a108de7e5f79ff21feb0d4214438f19233f",
+       "size": 2539
+      }
+     ]
     }
    ]
   },
