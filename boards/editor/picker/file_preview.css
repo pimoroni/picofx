@@ -1,14 +1,14 @@
 .s-target {
-  color: var(--strip);
+  color: var(--target);
 }
 
 .s-effect {
-  color: #0a7f78;
+  color: var(--effect);
   font-weight: 600;
 }
 
 .s-value {
-  color: #a8500a;
+  color: var(--value);
 }
 
 .s-name {
@@ -16,7 +16,7 @@
 }
 
 .s-punc {
-  color: var(--dim-strong);
+  color: var(--faint);
 }
 
 .s-colon {
@@ -30,7 +30,7 @@
 }
 
 .s-scene {
-  color: #7b3fb8;
+  color: var(--scene);
   font-weight: 600;
 }
 

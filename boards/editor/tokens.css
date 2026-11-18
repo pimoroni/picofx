@@ -1,0 +1,24 @@
+/* The colours the picker, the text editor and the manual share. Each page's build puts this at
+   the top of its stylesheet, and a page's own colours follow in its own :root */
+:root {
+  --bg: #f5f3ef;
+  --panel: #fff;
+  --ink: #26221e;
+  --dim: #8a8378;
+  --dim-strong: #6b655c;
+  --line: #e2ddd4;
+  --accent: #00857d;
+  --accent-ink: #fff;
+  --warn: #b33;
+  --warn-bg: #fbeaea;
+  --hold: #8a6415;
+  --hold-bg: #fdf3e0;
+
+  /* What is being driven, what drives it and the values given to either, as the manual's
+     Writing an entry names them, and the scenes and punctuation around them */
+  --target: #1f6feb;
+  --effect: #0a7f78;
+  --value: #a8500a;
+  --scene: #7b3fb8;
+  --faint: #5d656e;
+}

@@ -108,24 +108,39 @@
 }</script>
 <script src="catalogue.js"></script>
 <style>
+/* The colours the picker, the text editor and the manual share. Each page's build puts this at
+   the top of its stylesheet, and a page's own colours follow in its own :root */
 :root {
   --bg: #f5f3ef;
   --panel: #fff;
   --ink: #26221e;
   --dim: #8a8378;
+  --dim-strong: #6b655c;
   --line: #e2ddd4;
   --accent: #00857d;
   --accent-ink: #fff;
+  --warn: #b33;
+  --warn-bg: #fbeaea;
+  --hold: #8a6415;
+  --hold-bg: #fdf3e0;
+
+  /* What is being driven, what drives it and the values given to either, as the manual's
+     Writing an entry names them, and the scenes and punctuation around them */
+  --target: #1f6feb;
+  --effect: #0a7f78;
+  --value: #a8500a;
+  --scene: #7b3fb8;
+  --faint: #5d656e;
+}
+/* The picker's own colours and scales, after the shared ones in boards/editor/tokens.css */
+:root {
   --strip: #1f6feb;
   --dark: #191b1d;
   --surface: #fbfaf8;
   --surface-2: #f0eeea;
   --line-strong: #c9c3b9;
-  --dim-strong: #6b655c;
   --overlay: rgba(20, 20, 22, .72);
   --screenB: #a44ad0;
-  --hold: #8a6415;
-  --hold-bg: #fdf3e0;
   --accent-glow: rgba(15, 138, 114, .25);
   --unlit: #2a2d30;
   --dashed: #a9a49b;
@@ -2045,11 +2060,6 @@ select {
 }
 
 /* Saving in the header, the next thing to do filled in the page's colour */
-:root {
-  --warn: #b33;
-  --warn-bg: #fbeaea;
-}
-
 header #status {
   margin-left: auto;
 }
@@ -3928,16 +3938,16 @@ body.nolooks #looks {
   outline-offset: -1px;
 }
 .s-target {
-  color: var(--strip);
+  color: var(--target);
 }
 
 .s-effect {
-  color: #0a7f78;
+  color: var(--effect);
   font-weight: 600;
 }
 
 .s-value {
-  color: #a8500a;
+  color: var(--value);
 }
 
 .s-name {
@@ -3945,7 +3955,7 @@ body.nolooks #looks {
 }
 
 .s-punc {
-  color: var(--dim-strong);
+  color: var(--faint);
 }
 
 .s-colon {
@@ -3959,7 +3969,7 @@ body.nolooks #looks {
 }
 
 .s-scene {
-  color: #7b3fb8;
+  color: var(--scene);
   font-weight: 600;
 }
 

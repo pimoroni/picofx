@@ -129,6 +129,10 @@ SHARED_PARTS = os.path.join("boards", "editor", "picker")
 # The text editor every board shares, which takes the board's own parts from the catalogue
 SHARED_EDITOR = os.path.join("boards", "editor", "editor.html")
 
+# The colours the picker, the text editor and the manual share, which go at the top of each one's
+# stylesheet
+SHARED_TOKENS = os.path.join("boards", "editor", "tokens.css")
+
 # The folders of picker parts a board takes only where its description has the feature
 FEATURE_FOLDERS = {
     "screens": lambda board: bool(board["screens"]),
@@ -329,7 +333,8 @@ def picker(board_dir, repo_dir, version):
     left = sorted(set(re.findall(r"__[A-Z_]+__", page)) - {"__STYLES__"})
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))
-    page = page.replace("__STYLES__\n", styles(board_parts(folders, board, ".css"), order))
+    page = page.replace("__STYLES__\n", shared_tokens(repo_dir) +
+                        styles(board_parts(folders, board, ".css"), order))
     # Every part is kept in the readable page, as a part may be used only from the console
     kept = page + PICKER_START + bundled(repo_dir, order, "--format=esm", "--tree-shaking=false")
     drive = page + PICKER_START + bundled(repo_dir, order, "--format=iife")
@@ -338,6 +343,12 @@ def picker(board_dir, repo_dir, version):
                     for part in order)
     modules = page + '<script type="module">\n' + loads + PICKER_END
     return kept + PICKER_END, drive + PICKER_END, modules
+
+
+def shared_tokens(repo_dir):
+    """Read the colours every page shares, to go first in a page's stylesheet."""
+    with open(os.path.join(repo_dir, SHARED_TOKENS), encoding="utf-8") as f:
+        return f.read()
 
 
 def styles(sheets, order):
@@ -742,6 +753,7 @@ def main():
                "PICKER": minified(repo_dir, drive)}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = minified(repo_dir, f.read().replace("__BOARD_NAME__", board["name"])
+                                     .replace("__TOKENS__\n", shared_tokens(repo_dir))
                                      .replace("__VERSION__", version)
                                      .replace("__RESET_BUTTON__",
                                               board.get("release", {}).get("reset_button",

@@ -1,21 +1,12 @@
+/* The picker's own colours and scales, after the shared ones in boards/editor/tokens.css */
 :root {
-  --bg: #f5f3ef;
-  --panel: #fff;
-  --ink: #26221e;
-  --dim: #8a8378;
-  --line: #e2ddd4;
-  --accent: #00857d;
-  --accent-ink: #fff;
   --strip: #1f6feb;
   --dark: #191b1d;
   --surface: #fbfaf8;
   --surface-2: #f0eeea;
   --line-strong: #c9c3b9;
-  --dim-strong: #6b655c;
   --overlay: rgba(20, 20, 22, .72);
   --screenB: #a44ad0;
-  --hold: #8a6415;
-  --hold-bg: #fdf3e0;
   --accent-glow: rgba(15, 138, 114, .25);
   --unlit: #2a2d30;
   --dashed: #a9a49b;
@@ -1935,11 +1926,6 @@ select {
 }
 
 /* Saving in the header, the next thing to do filled in the page's colour */
-:root {
-  --warn: #b33;
-  --warn-bg: #fbeaea;
-}
-
 header #status {
   margin-left: auto;
 }
