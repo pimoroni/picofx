@@ -359,6 +359,8 @@ async function scanNamed(dir, text) {
     names.push(found[1] || found[2]);
   }
   if (!names.length || scanBusy) return;
+  // Held as a walk is, so a rescan does not start one that lands on the same lists meanwhile
+  scanBusy = true;
   driveParts.forEach(function (part) { if (part.begin) part.begin(); });
   var homes = Object.create(null);
   async function offerIn(folder, file, name) {
@@ -373,18 +375,22 @@ async function scanNamed(dir, text) {
     }
     return false;
   }
-  for (var name of names) {
-    var parts = name.split("/");
-    var file = parts.pop();
-    var places = parts.length ? [parts] : [[mediaFolderFor(file) || "pictures"], []];
-    for (var place of places) {
-      var folder = await folderAt(dir, place);
-      if (!folder || !await offerIn(folder, file, name)) continue;
-      if (/\.py$/i.test(file)) {
-        await offerIn(folder, file.replace(/\.py$/i, ".png"), name.replace(/\.py$/i, ".png"));
+  try {
+    for (var name of names) {
+      var parts = name.split("/");
+      var file = parts.pop();
+      var places = parts.length ? [parts] : [[mediaFolderFor(file) || "pictures"], []];
+      for (var place of places) {
+        var folder = await folderAt(dir, place);
+        if (!folder || !await offerIn(folder, file, name)) continue;
+        if (/\.py$/i.test(file)) {
+          await offerIn(folder, file.replace(/\.py$/i, ".png"), name.replace(/\.py$/i, ".png"));
+        }
+        break;
       }
-      break;
     }
+  } finally {
+    scanBusy = false;
   }
   mediaHome = homes;
   driveParts.forEach(function (part) { if (part.land) part.land(); });
