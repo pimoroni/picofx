@@ -556,6 +556,7 @@ function selectorStart(word) {
   var lowered = word.toLowerCase();
   if (lowered.slice(0, 5) === "board") return true;
   if (TRIGGERS[lowered]) return true;
+  if (OWN.sound && lowered === CATALOGUE.audio) return true;
   if (NUMBERED.length && /^out[0-9]/.test(lowered)) return true;
   if (OWN.hub && /^hub[a-f]/.test(lowered)) return true;
   return ownPart(lowered, OWN.screens.concat(OWN.strips, NAMED), /^/);
@@ -732,9 +733,10 @@ function offers(found) {
     } else if (ownPart(found.prefix, NAMED, /^$/)) {
       offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
-    } else if (/^(board|audio)$/i.test(found.prefix) || TRIGGERS[found.prefix.toLowerCase()] ||
+    } else if (/^board$/i.test(found.prefix) || TRIGGERS[found.prefix.toLowerCase()] ||
+               (OWN.sound && found.prefix.toLowerCase() === CATALOGUE.audio) ||
                ownPart(found.prefix, OWN.screens.concat(OWN.strips), /^$/) ||
-               HUB_PLACES.test(found.prefix.toLowerCase())) {
+               (OWN.hub && HUB_PLACES.test(found.prefix.toLowerCase()))) {
       offer(found.prefix + ": ", "then the effect");
     }
   }
