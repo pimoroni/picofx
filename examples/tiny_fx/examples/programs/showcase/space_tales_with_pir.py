@@ -11,7 +11,8 @@ A PIR sensor is used to activate the effect, which will turn off after a certain
 
 Press "Boot" to exit the program.
 
-Section: With a sensor
+Program: Space tales (PIR)
+Section: Model lighting
 Thumbnail: outputs mono
 """
 

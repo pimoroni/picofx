@@ -1,0 +1,18 @@
+# The example programs Tiny FX's FX drive carries, one per line from examples/programs/.
+# The rest are left off with their thumbnails, and Discover offers any that name a section.
+# The Tiny FX W's wireless examples are copied after these, so they need no line here.
+audio/fair_use_encounters.py
+audio/race_start.py
+function/sensor_meter.py
+function/sensor_wave.py
+infrared/colour/control_hsv_fx.py
+infrared/colour/control_rainbow.py
+infrared/mono/control_channels.py
+infrared/mono/control_pulse_wave.py
+infrared/mono/toggle_effects.py
+qwst/light_level.py
+qwst/spirit_level.py
+qwst/temperature_reading.py
+showcase/rescue_vehicle.py
+showcase/ship_thrusters.py
+showcase/space_tales.py

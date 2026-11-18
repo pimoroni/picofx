@@ -6,6 +6,7 @@ These are micropython examples for Tiny FX's onboard functions, being its Boot b
   - [Read Button](#read-button)
   - [Count Taps](#count-taps)
   - [Sensor Meter](#sensor-meter)
+  - [Sensor Wave](#sensor-wave)
   - [Voltage Meter](#voltage-meter)
 
 
@@ -25,6 +26,11 @@ Count taps of Tiny FX's Boot button and show the count on its mono outputs, incl
 [sensor_meter.py](sensor_meter.py)
 
 Use Tiny FX's mono outputs as a bargraph to show the voltage measured from a sensor attached to the sensor connector.
+
+### Sensor Wave
+[sensor_wave.py](sensor_wave.py)
+
+Play a wave of pulses on Tiny FX's outputs at a speed set by an analog sensor on the sensor connector.
 
 ### Voltage Meter
 [voltage_meter.py](voltage_meter.py)
