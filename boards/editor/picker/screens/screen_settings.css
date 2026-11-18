@@ -61,6 +61,14 @@
   margin-right: var(--space-1);
 }
 
+/* A label and what it names, such as y and its box or a tiling side's arrow and its buttons, which
+   wrap as one */
+.spair {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 /* A drawing's style choices, a row each, stacked beside the one label */
 .sstylerows {
   display: inline-flex;

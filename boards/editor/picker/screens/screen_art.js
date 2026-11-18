@@ -277,7 +277,7 @@ document.getElementById(LED_PANELS[LED_PANELS.length - 1]).after(
   h("details", {className: "panel", id: "screensPanel", open: true},
     h("summary", {}, "Screens"),
     h("p", {className: "says screenssays", id: "screensSays"}),
-    h("div", {className: "screens-head", id: "screensHead"}),
+    h("div", {className: "screens-head" + (SCREENS.length > 1 ? "" : " single"), id: "screensHead"}),
     h("div", {className: "assets", id: "assets"})));
 
 // Check if the board has screen ports, or else hide the panel, kept for the parts that draw into it

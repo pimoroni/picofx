@@ -5669,6 +5669,11 @@ body.setupall .lightrow {
   gap: var(--space-6);
   margin-bottom: var(--space-6);
 
+  /* A board with one screen port gives its box the whole width */
+  &.single {
+    grid-template-columns: 1fr;
+  }
+
   /* On a phone the two screens' boxes stack, each the page's width */
   @media (max-width: 40rem) {
     grid-template-columns: 1fr;
@@ -5748,6 +5753,14 @@ body.setupall .lightrow {
   font-size: var(--text-m);
   color: var(--dim);
   margin-right: var(--space-1);
+}
+
+/* A label and what it names, such as y and its box or a tiling side's arrow and its buttons, which
+   wrap as one */
+.spair {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 /* A drawing's style choices, a row each, stacked beside the one label */
@@ -17922,7 +17935,7 @@ document.getElementById(LED_PANELS[LED_PANELS.length - 1]).after(
     { className: "panel", id: "screensPanel", open: true },
     h("summary", {}, "Screens"),
     h("p", { className: "says screenssays", id: "screensSays" }),
-    h("div", { className: "screens-head", id: "screensHead" }),
+    h("div", { className: "screens-head" + (SCREENS.length > 1 ? "" : " single"), id: "screensHead" }),
     h("div", { className: "assets", id: "assets" })
   )
 );
@@ -18785,17 +18798,28 @@ function placementFold(key, held, size) {
     },
     "Draw each pixel at double size"
   );
+  function tilingSide(down) {
+    return h(
+      "span",
+      { className: "spair" },
+      h(
+        "span",
+        { className: "snamed", title: down ? "Down" : "Across" },
+        down ? "\u2195" : "\u2194"
+      ),
+      tiling(down)
+    );
+  }
   var body = h(
     "div",
     { className: "ssplit" },
-    sline(anchor, named("x"), x, named("y"), y, double),
     sline(
-      named("Tiling"),
-      h("span", { className: "snamed", title: "Across" }, "\u2194"),
-      tiling(false),
-      h("span", { className: "snamed", title: "Down" }, "\u2195"),
-      tiling(true)
-    )
+      anchor,
+      h("span", { className: "spair" }, named("x"), x),
+      h("span", { className: "spair" }, named("y"), y),
+      double
+    ),
+    sline(named("Tiling"), tilingSide(false), tilingSide(true))
   );
   return foldSection(key, "Placement", placementSaid(look, where), body);
 }

@@ -11,6 +11,11 @@
   gap: var(--space-6);
   margin-bottom: var(--space-6);
 
+  /* A board with one screen port gives its box the whole width */
+  &.single {
+    grid-template-columns: 1fr;
+  }
+
   /* On a phone the two screens' boxes stack, each the page's width */
   @media (max-width: 40rem) {
     grid-template-columns: 1fr;

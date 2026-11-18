@@ -214,12 +214,18 @@ function placementFold(key, held, size) {
   var double = toggle(DOUBLE_GLYPH, "Pixel double", look.double,
                       function (on) { look.double = on; },
                       "Draw each pixel at double size");
+  // Each side's arrow and its buttons, kept together where the line wraps
+  function tilingSide(down) {
+    return h("span", {className: "spair"},
+             h("span", {className: "snamed", title: down ? "Down" : "Across"},
+               down ? "\u2195" : "\u2194"),
+             tiling(down));
+  }
   // Where it sits, then how it fills, in a line each or two halves where the section is wide
   var body = h("div", {className: "ssplit"},
-               sline(anchor, named("x"), x, named("y"), y, double),
-               sline(named("Tiling"), h("span", {className: "snamed", title: "Across"}, "\u2194"),
-                     tiling(false), h("span", {className: "snamed", title: "Down"}, "\u2195"),
-                     tiling(true)));
+               sline(anchor, h("span", {className: "spair"}, named("x"), x),
+                     h("span", {className: "spair"}, named("y"), y), double),
+               sline(named("Tiling"), tilingSide(false), tilingSide(true)));
   return foldSection(key, "Placement", placementSaid(look, where), body);
 }
 
