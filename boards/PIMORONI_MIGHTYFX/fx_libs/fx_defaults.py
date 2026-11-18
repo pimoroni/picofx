@@ -82,6 +82,11 @@ The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
 helps with that, and the manual describes every line. Deleting effects.txt
 restores the default, and emptying it leaves the board dark.
 
+For help, ask in the Support section of the Pimoroni forum:
+  https://forums.pimoroni.com/c/support/5
+To report a problem with the picker, the editor or the board's software:
+  https://github.com/pimoroni/picofx/issues
+
 This README is rebuilt by the board, so edits to it will not stick.
 """
 
