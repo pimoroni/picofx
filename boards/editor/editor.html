@@ -1131,9 +1131,10 @@ function rememberedDrive() {
   });
 }
 
-async function pickDrive() {
+async function pickDrive(fresh) {
   var kept = await rememberedDrive();
-  if (kept) {
+  // Check if the remembered drive can be reopened without a dialog, which Change drive skips
+  if (kept && !fresh) {
     try {
       if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
         await kept.getFileHandle("effects.txt");
@@ -1178,9 +1179,9 @@ function loadFromDrive(onBoard, drive) {
   save.disabled = false;
 }
 
-async function connect() {
+async function connect(fresh) {
   if (!CAN_REACH_A_DRIVE) return connectByInput();
-  var dir = await pickDrive();
+  var dir = await pickDrive(fresh);
   try {
     state.fileHandle = await dir.getFileHandle("effects.txt");
   } catch (e) {
@@ -1218,7 +1219,8 @@ async function checkRelease() {
 
 document.getElementById("open").onclick = async function () {
   try {
-    await connect();
+    // Once a drive is open the button is Change drive, which always asks for a folder
+    await connect(!!state.dirHandle);
     banner("");
     // Check once a drive is open, since only then is the page known to be the one the board carries
     checkRelease();
