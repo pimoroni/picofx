@@ -9,6 +9,7 @@ Billboards and panels | posters and signs that change on screen
 Animated scenes | drawn in code
 Patterns | moving rainbows, tiles and logos
 Multi-screen | pictures spread across two screens or a Screen Hub
+Pictures and GIFs | showing pictures and playing animated GIFs
 With the remote | effects controlled with the IR remote
 With a sensor | lights that respond to a sensor
 Sound | sound effects and melodies with lights
@@ -16,7 +17,6 @@ Over WiFi | lights controlled from the internet
 Moving things | robots and a motor melody
 Graphics | shapes, colours, text, sprites and filters | folded
 Layout | tiling, doubling and turning the picture | folded
-Pictures and GIFs | showing pictures and playing animated GIFs | folded
 Two screens | driving two screens together | folded
 Motors and servos | driving motors and servos | folded
 Screen checks | which screen or panel is where | folded

@@ -167,38 +167,38 @@ out1-7 colour=warm: pulse
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/programs/effects/mono` | one output at a time, and the effects that travel across several |
-| `examples/programs/effects/colour` | the same in colour, with traffic lights and crossings |
-| `examples/programs/function` | the Boot button, the sensor connector and the supply voltage |
+| `examples/programs/showcase` | larger builds: transport signs, billboards, animated scenes and a robot's route |
+| `examples/programs/screens/graphics` | a colour wheel, an LED matrix and a starfield |
+| `examples/programs/screens/layout` | a bouncing logo and a kaleidoscope |
+| `examples/programs/screens/images` | a ticker of posters |
+| `examples/programs/screens/playback` | a recoloured GIF, a ping-pong slideshow, and an animated pattern scrolling on one screen or playing across a hub |
+| `examples/programs/screens/pair` | two screens working together |
+| `examples/programs/screens/hub` | more than two through a hub, and finding which are attached |
+| `examples/programs/screens/single` | finding which screens are attached |
 | `examples/programs/infrared/mono` | effects chosen with an infrared remote |
 | `examples/programs/infrared/colour` | the same in colour |
+| `examples/programs/function` | a meter for the sensor connector |
 | `examples/programs/qwst` | light, tilt and temperature from Qw/ST breakouts |
-| `examples/programs/screens/single` | one screen, its backlight, and finding what is attached |
-| `examples/programs/screens/playback` | animated GIFs and slideshows |
-| `examples/programs/screens/graphics` | drawing from code: text, colour wheels, a starfield |
-| `examples/programs/screens/images` | still pictures |
-| `examples/programs/screens/layout` | placing a picture on the screen |
-| `examples/programs/screens/pair` | two screens working together |
-| `examples/programs/screens/hub` | more than two, through a hub |
-| `examples/programs/audio` | playing a WAV file |
-| `examples/programs/motors` | driving a pair of motors |
-| `examples/programs/servos` | servos on the L and R connectors, alone, in a pair and steered by remote |
-| `examples/programs/strips` | a rainbow along an LED strip, and filling one an LED at a time |
-| `examples/programs/gpio` | using SP/CE pins as plain inputs and outputs, and fading LEDs on them |
+| `examples/programs/audio` | sound effects alongside the lights |
+| `examples/programs/motors` | a motor melody and a robot steered by remote |
+| `examples/programs/servos` | a robot steered by remote |
 | `examples/programs/wireless` | colours fetched over WiFi |
-| `examples/programs/comms` | several boards working together |
-| `examples/programs/showcase` | larger builds that put several of these together |
-| `examples/drawings` | drawings for the screens, each beside a picture of it, to show with a `drawing` entry |
+| `examples/drawings` | the showcase signs, retro displays and scenes as drawings, each beside a picture of it, to show with a `drawing` entry |
+
+The drive carries the examples worth running as demos. Most showcases come as
+drawings, and their programs are on GitHub. So are the examples showing how to
+use each part of the board from Python, such as the effects on their own, the
+LED strips, the SP/CE pins and a second board. Discover can download the
+programs the picker lists.
 
 Three to start with:
 
 ```entry
-board: program=examples/programs/effects/colour/sweep_trail.py
-board: program=examples/programs/screens/playback/animated_gif.py
-board: program=examples/programs/showcase/retro_displays/flip_dot_sign.py
+board: program=examples/programs/screens/graphics/starfield.py
+board: program=examples/programs/showcase/animated_scenes/isometric_flight.py
+board: program=examples/programs/screens/layout/kaleidoscope.py
 ```
 
-Examples under `screens`, `audio`, `motors`, `servos`, `strips`, `gpio`,
-`infrared` or `qwst` need that hardware attached. `wireless` needs a WiFi
-network, `comms` needs a second board, and some showcase examples need their
-own pictures or network.
+Examples under `screens`, `audio`, `motors`, `servos`, `infrared` or `qwst`
+need that hardware attached. `wireless` needs a WiFi network, and some
+showcase examples need their own pictures or network.
