@@ -294,19 +294,19 @@ def withdraw():
     return True
 
 
-def mount(wireless=False):
+def mount(screens=True, wireless=False, sound=True):
     """
     Mount the drive read-write at /fx. Returns whether the drive ended up mounted.
 
     A soft reset or a stopped program can leave the drive with the computer. It is then
     taken back first, which drops the serial console once.
 
-    `wireless` is True for a board with a wireless module, which is given the WiFi
-    credentials.
+    `screens`, `wireless` and `sound` say which parts the board has, and decide the
+    shipped files and folders the drive is given.
     """
     if __take_from_computer() or __exposed:
         __forget_shown()
-    return __mount_for_board(wireless)
+    return __mount_for_board(screens, wireless, sound)
 
 
 def service(pressed):

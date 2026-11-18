@@ -15,6 +15,9 @@ An image offers more filters than these, among them c64, cga, chromatic, contras
 glitch, grid, noise, onebit, palette_dither, saturation, vignette, wave and zoom.
 
 Press "Boot" to exit the program.
+
+Section: Graphics
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

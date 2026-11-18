@@ -10,6 +10,9 @@ subset() names some of a group's panels, and is bound once here and reused. Ever
 a bank shows the same chevrons, so a bank is one write however many panels it holds.
 
 Press "Boot" to exit the program.
+
+Section: Multi-screen
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

@@ -18,6 +18,9 @@ with its depth, its nearest line and the far light on it. Each frame then moves 
 the quarter's colours up in a palette, and mirrors them into the other three quarters.
 
 Press "Boot" for the next scheme, and hold it to exit the program.
+
+Section: Animated scenes
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

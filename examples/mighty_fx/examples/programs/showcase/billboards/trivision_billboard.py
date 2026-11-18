@@ -9,6 +9,9 @@ from picovector import color, image, rect
 Draw a trivision billboard on a 2.8" screen whose three-sided slats turn to change the poster.
 
 Press "Boot" to exit the program.
+
+Section: Billboards and panels
+Args: Rotation = 90 or 270
 """
 
 # Constants for drawing

@@ -16,6 +16,9 @@ A stroke is sized in the shape's own units, so a unit-sized shape takes a thickn
 A stroke needs even-odd to stay hollow, so put a changed fill rule back.
 
 Press "Boot" to exit the program.
+
+Section: Graphics
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

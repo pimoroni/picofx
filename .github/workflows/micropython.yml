@@ -68,6 +68,30 @@ jobs:
         submodules: true
         path: ${{ env.CI_PROJECT_ROOT }}
 
+    # The picker's parts are bundled, and the drive's pages minified, by the esbuild pinned in
+    # tools/picker
+    - name: "Release: Install Node"
+      if: github.event_name == 'release'
+      uses: actions/setup-node@v7
+      with:
+        node-version: '22'
+
+    - name: "Release: Install esbuild"
+      if: github.event_name == 'release'
+      shell: bash
+      run: npm ci --prefix $CI_PROJECT_ROOT/tools/picker
+
+    # A release rebuilds the editor pages and manual, dropping the "preview" the committed pages show
+    # after the version
+    - name: "Release: Editor pages and manual"
+      if: github.event_name == 'release'
+      shell: bash
+      run: |
+        python3 $CI_PROJECT_ROOT/tools/build_editor.py --release ${{ github.event.release.tag_name }} $CI_PROJECT_ROOT/boards/${{ matrix.board }}
+        if [ -f $CI_PROJECT_ROOT/boards/${{ matrix.board }}/manual/manual.json ]; then
+          python3 $CI_PROJECT_ROOT/tools/build_manual.py --release ${{ github.event.release.tag_name }} $CI_PROJECT_ROOT/boards/${{ matrix.board }}
+        fi
+
     - name: "Install Arm GNU Toolchain (arm-none-eabi-gcc)"
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:

@@ -14,6 +14,9 @@ The lamps come on below LUX_LOW and go off above LUX_HIGH, so a reading that sit
 level does not switch them back and forth.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs dusk
 """
 
 # Constants

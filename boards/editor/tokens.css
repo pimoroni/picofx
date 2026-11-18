@@ -1,0 +1,46 @@
+/* The colours and scales the picker, the text editor and the manual share. Each page's build puts
+   this at the top of its stylesheet, and a page's own colours follow in its own :root */
+:root {
+  --bg: #f5f3ef;
+  --panel: #fff;
+  --ink: #26221e;
+  --dim: #8a8378;
+  --dim-strong: #6b655c;
+  --line: #e2ddd4;
+  --accent: #00857d;
+  --accent-ink: #fff;
+  --warn: #b33;
+  --warn-bg: #fbeaea;
+  --hold: #8a6415;
+  --hold-bg: #fdf3e0;
+
+  /* What is being driven, what drives it and the values given to either, as the manual's
+     Writing an entry names them, and the scenes and punctuation around them */
+  --target: #1f6feb;
+  --effect: #0a7f78;
+  --value: #a8500a;
+  --scene: #7b3fb8;
+  --faint: #5d656e;
+
+  --space-1: .125rem;
+  --space-2: .25rem;
+  --space-3: .375rem;
+  --space-4: .5rem;
+  --space-5: .75rem;
+  --space-6: 1rem;
+  --space-7: 1.5rem;
+  --radius-xs: 4px;
+  --radius-s: 6px;
+  --radius: 8px;
+  --radius-l: 12px;
+  --radius-xl: 16px;
+  --radius-round: 999px;
+  --font: system-ui, sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+  --text-xs: .75rem;
+  --text-s: .8125rem;
+  --text-m: .875rem;
+  --text-l: 1rem;
+  --text-xl: 1.25rem;
+  --text-display: 3rem;
+}

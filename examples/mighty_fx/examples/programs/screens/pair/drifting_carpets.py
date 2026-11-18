@@ -15,6 +15,9 @@ The two tiles together are about a ninth of the two full-panel images they repla
 panels, and the drift is only the offset.
 
 Press "Boot" to exit the program.
+
+Section: Multi-screen
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants

@@ -15,6 +15,9 @@ The pane is drawn once into an image of its own and blitted over each poster, it
 brush.erase(). The case is opaque, as a translucent one reads only over flat or dark art.
 
 Press "Boot" to exit the program.
+
+Section: Billboards and panels
+Args: Rotation = 0 or 180
 """
 
 # Constants

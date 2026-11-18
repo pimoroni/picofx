@@ -1,0 +1,649 @@
+/* A picture of part of the picker, drawn by manual_mockups.py from simplified copies of its
+   parts. The sizes and colours follow the picker's own, so a change to the picker's appearance
+   needs the matching change here */
+.mockup {
+  --board: #3a4b56;
+  --screenA: #1f6feb;
+  --screenB: #a44ad0;
+  --hatch: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+  background: #f7f5f1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.1rem;
+  margin: 0 0 1.3rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.mockup .seticon, .mockup .round svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mockup .hatch { background: var(--hatch); }
+.mockup .dim { color: var(--dim); }
+.mockup .small { font-size: 0.75rem; }
+
+.mockup .button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.mockup .button.off { opacity: 0.45; }
+.mockup .button.arrow { padding: 0.08rem 0.4rem; font-size: 0.7rem; }
+.mockup .button.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.mockup .button.small { font-size: 0.72rem; padding: 0 0.45rem; }
+
+.mockup .field {
+  display: inline-block;
+  min-width: 2.6rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.mockup .field.wide { min-width: 9rem; }
+
+/* The header and its save menu */
+.mockup .pickerhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: -1rem -1.1rem 0.9rem;
+  padding: 0.6rem 1.1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+.mockup .pickerhead b { margin-right: auto; font-size: 0.95rem; }
+.mockup .savesplit { display: inline-flex; }
+.mockup .savesplit .button:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.mockup .savesplit .arrow { margin-left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* The Effects and Programs tabs hang from the header's foot, the chosen one open onto the page */
+.mockup .pickerhead:has(+ .toptabs) { margin-bottom: 0; padding-bottom: 0.5rem; border-bottom: 0; }
+.mockup .pickerhead + .toptabs {
+  margin: 0 -1.1rem 0.9rem;
+  padding: 0 1.1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.mockup .pickerhead + .toptabs .toptab { margin-bottom: -1px; }
+.mockup .status { color: var(--dim); font-size: 0.78rem; }
+
+.mockup .savemenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: max-content;
+  margin: -0.4rem 0 0.2rem auto;
+  padding: 0.6rem 0.8rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.mockup .savemenu > span { display: flex; align-items: flex-start; }
+.mockup .savemenu > span .tick { flex: none; margin-top: 0.2rem; }
+.mockup .savemenu small { display: block; color: var(--dim); font-size: 0.75rem; }
+
+.mockup .tick {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.45rem;
+  vertical-align: -2px;
+  border: 1.5px solid var(--dim);
+  border-radius: 3px;
+}
+
+.mockup .tick.on { background: var(--accent); border-color: var(--accent); }
+
+/* The Effects and Programs tabs */
+.mockup .toptabs { display: flex; gap: 0.4rem; margin-bottom: 0.2rem; }
+
+.mockup .toptab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: #ebe7e0;
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.mockup .toptab.picked { background: #f7f5f1; color: var(--ink); border-top: 3px solid var(--accent); }
+.mockup .toptab small { font-weight: 400; font-size: 0.75rem; color: var(--dim); }
+
+.mockup .thumb { flex: none; width: 2.3rem; height: 1.7rem; border-radius: 5px; background: #191b1d; }
+
+.mockup .thumb.effects {
+  background: linear-gradient(90deg, #2ee62e, #1ae6e6, #1a5cff, #9b1aff, #ff1a8c, #ff1a1a)
+              center / 75% 0.3rem no-repeat, #191b1d;
+}
+
+.mockup .thumb.programs {
+  background: radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1.5px),
+              radial-gradient(circle at 70% 60%, #fff 0 1px, transparent 1.5px),
+              radial-gradient(circle at 45% 80%, #cfd6ff 0 1px, transparent 1.5px), #0a0c18;
+}
+
+.mockup .splitscenes {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: #e6f3f1;
+  border-color: #b5dcd6;
+}
+
+/* The tabs for each part of the board, each with a picture of what it plays. Every tab's name
+   sits at the top of the row, as the picker lines them up */
+.mockup .tabrow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem 1rem;
+  padding-top: 0.6rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.mockup .tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.15rem 0.1rem 0.5rem;
+  border-bottom: 2px solid transparent;
+}
+
+.mockup .tab .tabname { font-weight: 600; color: var(--dim); white-space: nowrap; }
+.mockup .tab.picked { border-bottom-color: var(--accent); }
+.mockup .tab.picked .tabname { color: var(--ink); }
+.mockup .tab.greyed { opacity: 0.45; }
+/* A lights tab's picture, a cell for each light in what it plays. The pictures narrow to keep the
+   row on one line, never past the names above them */
+.mockup .tab:not(.boxed) { flex: 0 1 6.5rem; }
+.mockup .tab.boxed { flex: none; }
+.mockup .tabswatch { display: flex; width: 100%; height: 0.55rem; border-radius: 3px; overflow: hidden; }
+.mockup .tabswatch i { flex: 1; }
+.mockup .tabsays { font-size: 0.66rem; line-height: 0.55rem; color: var(--dim); white-space: nowrap; }
+/* The Screens and Sound tabs show their picture beside the name, at the tab's full height */
+.mockup .tab.boxed { display: grid; grid-template-columns: auto auto; column-gap: 0.55rem; align-items: start; }
+.mockup .tab.boxed .tabname, .mockup .tab.boxed .tabsays { grid-column: 1; }
+.mockup .tabscreens, .mockup .tabsound { grid-column: 2; grid-row: 1 / 3; }
+.mockup .tabscreens { display: flex; gap: 0.3rem; }
+.mockup .tabscreens i { width: 1.8rem; height: 1.8rem; border-radius: 3px; background: #fff; border: 1px solid var(--line); box-sizing: border-box; }
+.mockup .tabsound { display: block; width: 3.4rem; height: 1.8rem; border-radius: 3px; }
+
+/* The scenes, a grey tray that is Always on with its own card as the first column and a card for
+   each scene in its colour. The folder tab under them holds the selected scene's settings */
+.mockup .scenetray {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border: 1px solid #cfc9bf;
+  border-radius: 12px;
+  background: #e6e3de;
+}
+
+.mockup .scenetray.picked { border-color: #6f6a62; box-shadow: 0 0 0 1px #6f6a62; }
+
+.mockup .alwayscard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 8.4rem;
+  flex: none;
+  padding: 0.4rem 0.55rem 0.4rem 0.3rem;
+  border-right: 1px dashed #bdb7ad;
+  font-size: 0.78rem;
+  color: #8f8a82;
+}
+
+.mockup .alwayscard b { color: var(--ink); }
+.mockup .scenecards { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr)); gap: 0.45rem; }
+
+.mockup .scenecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 4.6rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-top-color: transparent;
+  border-radius: 9px;
+  background: linear-gradient(var(--scene), var(--scene)) 0 0 / 100% 4px no-repeat border-box,
+              color-mix(in srgb, var(--scene) 16%, #fbfaf8);
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--scene) 65%, #2b2a28);
+}
+
+.mockup .scenecard.picked {
+  background: linear-gradient(var(--scene), var(--scene)) 0 0 / 100% 4px no-repeat border-box,
+              color-mix(in srgb, var(--scene) 7%, #fff);
+  border-color: var(--scene);
+  border-top-color: transparent;
+  box-shadow: 0 0 0 1px var(--scene);
+}
+
+.mockup .scenecard b { display: flex; align-items: center; color: var(--ink); }
+.mockup .scenecard small, .mockup .alwayscard small { font-size: 0.68rem; color: var(--dim); }
+.mockup .scenecard .grip { width: 8px; height: 12px; margin-left: auto; fill: var(--dim); opacity: 0.55; }
+.mockup .parts { display: flex; min-height: 18px; }
+.mockup .partsicon { width: 18px; height: 18px; fill: currentColor; }
+
+.mockup .scenecard.add {
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  border-top-color: rgba(15, 138, 114, 0.4);
+  background: #e6f3f1;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mockup .scenefold { display: flex; align-items: flex-end; gap: 0.8rem; margin-top: 0.6rem; border-bottom: 1.5px solid var(--scene); }
+.mockup .scenefold > .button { margin-left: auto; margin-bottom: 0.3rem; }
+.mockup .scenefold > .small { margin-bottom: 0.45rem; }
+
+.mockup .scenetab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: -1.5px;
+  padding: 0.45rem 0.9rem 0.35rem;
+  border: 1.5px solid var(--scene);
+  border-bottom: 0;
+  border-top-color: transparent;
+  border-radius: 9px 9px 0 0;
+  background: linear-gradient(var(--scene), var(--scene)) 0 0 / 100% 4px no-repeat border-box, #fff;
+}
+
+/* The board settings, each marked with the chip, on one line whose hint is cut short */
+.mockup .badgerow { display: flex; align-items: center; gap: 0.6rem; margin: 0.9rem 0 0.6rem; }
+
+.mockup .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 7px;
+  background: var(--board);
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.mockup .badge b { font-size: 0.82rem; }
+.mockup .badge.strip { background: #c2570f; }
+.mockup .badge .field { border-color: rgba(255, 255, 255, 0.5); background: transparent; color: #fff; }
+/* A fitted part's remove button, in its coloured chip or band, or plain under a hub position */
+.mockup .remove { padding: 0 0.35rem; border: 1px solid var(--line); border-radius: 6px; font-size: 0.68rem; }
+.mockup .badge .remove, .mockup .screenhead .remove { border-color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.15); }
+.mockup .screenhead .remove { margin-left: auto; }
+.mockup .place .remove { align-self: center; background: #fff; }
+.mockup .badgerow .badge { flex: none; white-space: nowrap; }
+.mockup .badgerow .hint { min-width: 0; font-size: 0.75rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mockup .badgerow .hint.back { opacity: 0.35; }
+
+/* The steps at the right of a run's chip row, which stand back while the board is set up */
+.mockup .headsteps { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; white-space: nowrap; }
+.mockup .headsteps.back { opacity: 0.35; }
+.mockup .joinall { padding: 0.2rem 0.5rem; border: 1px solid var(--line); border-radius: 7px; background: #fff; font-weight: 600; }
+.mockup .joinall.off { opacity: 0.4; }
+
+.mockup .round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--dim);
+}
+.mockup .round.off { opacity: 0.4; }
+
+/* A run of lights, a card for each stretch holding its lights over a band of what it plays */
+.mockup .runs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0 1rem; margin-top: 0.8rem; }
+.mockup .run { min-width: 10rem; }
+.mockup .bar { display: flex; gap: 2px; position: relative; }
+
+.mockup .sec {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* The settings' notch, drawn by the stretch they point at so it sits under its middle whatever
+   the cards' widths. It is centred on the settings' top edge, 0.9rem below the card */
+.mockup .sec.pointed::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 2px + 0.9rem + 1px - 7px);
+  left: calc(50% - 7px);
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  border-top-left-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.mockup .sec.picked { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 133, 125, 0.16); }
+.mockup .sec .lit { display: block; height: 0.45rem; }
+.mockup .sec .says { display: block; font-size: 0.68rem; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mockup .says em { font-style: normal; font-weight: 400; color: var(--dim); }
+
+/* An output's light in its card, on a hatched tile where it plays nothing */
+.mockup .cardlamps { display: flex; padding: 0.5rem 0 0.3rem; }
+.mockup .cardlamp { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; margin: 0 3px; padding: 0.25rem 0 0.05rem; border: 1px solid transparent; border-radius: 8px; }
+.mockup .cardlamp i { display: block; width: min(1.7rem, 100%); aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2); }
+.mockup .cardlamp b { font-size: 0.64rem; font-weight: 400; line-height: 1.5; color: var(--dim); }
+.mockup .cardlamp.unset { border: 1px dashed #a9a49b; background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px); }
+
+/* A strip's LEDs as beads on a wire, closed up by --apart, from 1 for beads apart to 0 for one
+   continuous strip, and the wire's two ends outside the cards */
+.mockup .stripbeads {
+  display: flex;
+  margin: 0.45rem 3px 0.3rem;
+  padding: 3px 0;
+  border-radius: 6px;
+  background: linear-gradient(#c9c3b9, #c9c3b9) center / 100% 3px no-repeat;
+}
+
+.mockup .stripbeads.unset { outline: 1.4px dashed #a9a49b; outline-offset: -1px; background: linear-gradient(#c9c3b9, #c9c3b9) center / 100% 3px no-repeat, repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px); }
+.mockup .stripbeads i { flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
+.mockup .stripbeads b { display: block; width: min(1.15rem, calc(100% - 4px * var(--apart))); height: 1.15rem; border-radius: calc(4px * var(--apart)); }
+.mockup .bar.strip::before { content: ""; position: absolute; left: 6px; right: 6px; top: calc(0.45rem + 2px + 3px + 0.575rem - 1.5px); height: 3px; background: #c9c3b9; }
+.mockup .wireend { flex: 0 0 14px; position: relative; z-index: 1; }
+.mockup .wireend i { position: absolute; top: calc(0.45rem + 2px + 3px + 0.575rem); }
+.mockup .wireend .lead { left: 2px; width: 6px; height: 10px; margin-top: -5px; border-radius: 2px; background: #8f8a81; }
+.mockup .wireend .tail { right: 2px; width: 10px; height: 10px; margin-top: -5px; box-sizing: border-box; border: 2.5px solid #a9a49b; border-radius: 50%; background: #fff; }
+.mockup .bar.strip .sec { z-index: 1; }
+
+/* While the board is set up, every light is a tile and its card stands back around it */
+.mockup .runs.setup .cardlamp { background: #fff; border: 1px solid var(--line); }
+.mockup .runs.setup .sec { border-color: var(--line); box-shadow: none; }
+.mockup .runs.setup .sec > :not(.cardlamps):not(.stripbeads) { opacity: 0.3; }
+
+/* The wires from the connectors up to the lights, faint as the picker draws them, kept to one
+   width as the picture scales them across */
+.mockup .wiring { position: relative; }
+.mockup .wiring .run { min-width: 0; }
+.mockup .wirelines { position: absolute; left: 0; width: 100%; z-index: 2; overflow: visible; }
+.mockup .wirelines path { fill: none; stroke: #3f5a6b; stroke-width: 1.6; opacity: 0.16; vector-effect: non-scaling-stroke; }
+
+/* The board's edge under the lights while it is set up, its connectors, and what its wiring says */
+.mockup .wireboard { margin: 1.6rem 0 0.5rem; padding: 0.3rem 0.6rem 0.15rem; border-radius: 6px; background: #2a2d30; }
+.mockup .connectors { display: flex; justify-content: space-between; }
+.mockup .plug { width: 2.2rem; text-align: center; }
+.mockup .plug::before { content: ""; display: block; height: 0.3rem; border-radius: 2px; background: #e4e0d9; }
+.mockup .plug b { font-size: 0.66rem; font-weight: 400; color: #e4e0d9; }
+.mockup .wirefoot { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.25rem; padding: 0.3rem 0.2rem 0.15rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.72rem; color: #a7a197; }
+.mockup .wirefoot > span:first-child { flex: 1; }
+.mockup .wirereset { flex: none; padding: 0.1rem 0.5rem; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 6px; color: #fff; font-weight: 600; }
+.mockup .wirereset.off { opacity: 0.35; }
+
+/* Split into beside Reverse on a strip's stretch, kept together */
+.mockup .setbuttons { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; }
+
+.mockup .toolset {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.mockup .toolsays { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.22rem 0.45rem 0.22rem 0.55rem; color: var(--dim); }
+.mockup .toolsays .field { min-width: 2.2rem; padding: 0 0.3rem; font-weight: 400; color: var(--ink); }
+.mockup .toolact { display: inline-flex; align-items: center; padding: 0 0.55rem; border-left: 1px solid var(--line); color: var(--ink); }
+
+/* The selected stretch's settings */
+.mockup .settings { margin-top: 0.9rem; padding: 0.6rem 0.8rem; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+
+/* Pointing up at its stretch, in the colour the stretch is picked in. The stretch draws the notch */
+.mockup .settings.pointing { position: relative; border: 2px solid var(--accent); padding: calc(0.6rem - 1px) calc(0.8rem - 1px); }
+
+/* The stretch's name, then its buttons, which move under the name whole rather than squeeze it */
+.mockup .sethead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.35rem; margin-bottom: 0.4rem; }
+.mockup .sethead .toolset, .mockup .sethead .reverse, .mockup .toolsays, .mockup .toolact { white-space: nowrap; }
+.mockup .sethead b { font-size: 0.95rem; }
+.mockup .sethead .reverse { margin-left: auto; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; }
+.mockup .reverse.off { opacity: 0.4; }
+.mockup .sliders { display: flex; gap: 0.6rem; align-items: stretch; }
+.mockup .setgrid { flex: 1; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.25rem 0.9rem; }
+.mockup .setname { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--dim); }
+.mockup .seticon { width: 13px; height: 13px; stroke-width: 1.4; }
+.mockup .slider { position: relative; display: block; height: 4px; border-radius: 2px; background: #dcd8d1; }
+.mockup .slider i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--accent); }
+.mockup .slider i::after { content: ""; position: absolute; right: -6px; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+
+.mockup .drawer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--dim);
+}
+
+.mockup .swatches { display: flex; flex-wrap: wrap; gap: 0.35rem 0.5rem; margin: 0.3rem 0 0.8rem; }
+.mockup .swatch { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 0.58rem; color: var(--dim); }
+.mockup .swatch i { width: 1.9rem; height: 1.9rem; border: 2px solid var(--line); border-radius: 8px; }
+.mockup .swatch.chosen i { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 133, 125, 0.2); }
+.mockup .swatch i.custom { background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+
+/* The gallery of looks */
+.mockup .galleryhead { display: flex; align-items: baseline; gap: 0.55rem; margin: 1rem 0 0.45rem; font-size: 0.92rem; font-weight: 600; }
+.mockup .galleryhead .dim { font-size: 0.78rem; font-weight: 400; }
+.mockup .fold { font-size: 0.7rem; color: var(--dim); }
+
+.mockup .nothingcard {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mockup .nothingcard { padding-right: 0.6rem; gap: 0.55rem; align-items: center; }
+.mockup .nothingcard i { align-self: stretch; width: 2.2rem; min-height: 1.5rem; }
+.mockup .nothingcard.picked { border-color: var(--accent); color: var(--accent); }
+
+.mockup .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 0.6rem; }
+.mockup .card { border: 2px solid var(--line); border-radius: 11px; overflow: hidden; background: #fff; }
+.mockup .card.picked { border-color: var(--accent); }
+.mockup .card .face { display: flex; height: 2.9rem; background: #191b1d; }
+.mockup .card.nothing .face { background: var(--hatch); }
+.mockup .card .face span { flex: 1; }
+.mockup .card .name { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 0.6rem 0.45rem; font-weight: 600; }
+.mockup .card.picked .name { color: var(--accent); }
+.mockup .palette { width: 15px; height: 15px; color: #c7c1b8; }
+
+/* The screens */
+.mockup .segment { display: inline-flex; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: #fff; font-size: 0.75rem; }
+.mockup .segment span { padding: 0.15rem 0.55rem; color: var(--dim); }
+.mockup .segment span + span { border-left: 1px solid var(--line); }
+.mockup .segment .on { background: var(--screenA); color: #fff; }
+.mockup .segment .chipicon { margin-right: 0.3rem; }
+.mockup .segment.small span { padding: 0 0.4rem; font-size: 0.7rem; }
+
+.mockup .screens { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.7rem; }
+
+.mockup .screen {
+  flex: 1;
+  min-width: 13rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding-bottom: 0.7rem;
+  border: 2px solid var(--screenA);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.mockup .screenB { border-color: var(--screenB); }
+.mockup .screenhead { align-self: stretch; display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.8rem; background: var(--screenA); color: #fff; }
+.mockup .screenB .screenhead { background: var(--screenB); }
+.mockup .screenhead .field { border-color: rgba(255, 255, 255, 0.55); background: transparent; color: #fff; font-size: 0.72rem; }
+.mockup .backlight { align-self: stretch; display: flex; align-items: center; gap: 0.6rem; padding: 0 0.8rem; font-size: 0.75rem; }
+.mockup .backlight .slider { flex: 1; }
+.mockup .screen .slider i, .mockup .screen .slider i::after { background: var(--screenA); }
+.mockup .screenB .slider i, .mockup .screenB .slider i::after { background: var(--screenB); }
+
+.mockup .breakout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 5.6rem;
+  padding: 0.25rem 0;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+}
+
+.mockup .breakout small { font-size: 0.5rem; font-weight: 700; }
+.mockup .holes { width: 80%; height: 0.55rem; background: radial-gradient(circle, #fff 0 0.2rem, transparent 0.22rem) 0 0 / 20% 100% repeat-x; }
+
+.mockup .lcd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 6.4rem;
+  margin: 0.2rem 0;
+  border: 3px solid #000;
+  background: #2a2d30;
+}
+
+.mockup .lcd small { font-size: 0.55rem; font-weight: 400; color: #8a8378; }
+.mockup .showing { font-size: 0.78rem; color: var(--dim); }
+.mockup .orientation { display: flex; align-items: center; gap: 0.45rem; font-size: 0.72rem; }
+.mockup .screenB .segment .on { background: var(--screenB); }
+
+.mockup .button.paired { background: linear-gradient(90deg, var(--screenA), var(--screenB)); border-color: transparent; color: #fff; }
+
+/* A Screen Hub, its positions side by side under one backlight */
+.mockup .screen.hub { flex-basis: 100%; }
+.mockup .places { align-self: stretch; display: grid; grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr)); gap: 0.4rem; padding: 0 0.6rem; }
+
+.mockup .place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.2rem 0.4rem;
+  border: 2px solid transparent;
+  border-radius: 9px;
+}
+
+.mockup .place.grouped { border-color: var(--group); background: color-mix(in srgb, var(--group) 10%, #fff); }
+.mockup .placehead { align-self: stretch; display: flex; gap: 0.5rem; padding: 0 0.3rem; font-size: 0.72rem; color: var(--screenA); }
+.mockup .place.grouped .placehead b { color: var(--group); }
+.mockup .placehead span { color: var(--dim); }
+.mockup .breakout.small { width: 3.6rem; }
+.mockup .lcd.small { width: 3.2rem; height: 4.1rem; }
+.mockup .groups .on { color: #fff; }
+.mockup .groupsaid { font-size: 0.68rem; color: var(--dim); }
+.mockup .place.grouped .groupsaid { color: var(--group); }
+.mockup .hubnote { align-self: stretch; margin: 0 0.8rem; padding: 0.35rem 0.7rem; border-left: 3px solid var(--screenA); border-radius: 6px; background: #eef3fd; font-size: 0.78rem; }
+.mockup .pickbar span.on { color: #fff; }
+.mockup .pickbar span.on:not([style]):not(.screenB) { background: var(--screenA); }
+
+/* The pictures, sounds and programs on the drive */
+.mockup .pictures, .mockup .programs, .mockup .sounds { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: 0.6rem; }
+.mockup .sounds { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+.mockup .picture, .mockup .progcard, .mockup .sound { position: relative; overflow: hidden; border: 2px solid var(--line); border-radius: 10px; background: #fff; }
+.mockup .picture .face { display: block; height: 6.4rem; }
+.mockup .picture .tag { position: absolute; top: 4px; left: 4px; padding: 0 0.3rem; border-radius: 4px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.6rem; }
+.mockup .pickbar { display: flex; border-top: 1px solid var(--line); font-size: 0.72rem; font-weight: 600; color: var(--dim); }
+.mockup .pickbar span { flex: 1; padding: 0.1rem 0; text-align: center; }
+.mockup .pickbar span + span { border-left: 1px solid var(--line); }
+.mockup .pickbar .on.screenA { background: var(--screenA); color: #fff; }
+.mockup .pickbar .on.screenB { background: var(--screenB); color: #fff; }
+
+.mockup .addtile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 5.5rem;
+  padding: 0.5rem;
+  border: 1.5px dashed #9ccfc8;
+  border-radius: 10px;
+  background: #eef6f4;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mockup .addtile b { font-size: 1.1rem; line-height: 1; }
+
+.mockup .soundhead { display: flex; align-items: center; gap: 0.9rem; }
+.mockup .soundhead .button.off { color: var(--dim); }
+.mockup .soundhead .nothingcard { margin-left: 0; }
+.mockup .soundvolume { flex: 1; display: flex; align-items: center; gap: 0.7rem; font-size: 0.8rem; }
+.mockup .soundvolume .slider { flex: 1; }
+.mockup .wave { display: flex; align-items: center; height: 3rem; }
+.mockup .wave i { flex: 2; background: #e2453c; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.mockup .wave b { flex: 1; height: 16%; background: #6a5cdf; }
+.mockup .sound .name { display: block; padding: 0.25rem 0.5rem 0; font-size: 0.74rem; font-weight: 600; }
+.mockup .soundfoot { display: flex; align-items: center; justify-content: space-between; padding: 0 0.4rem 0.3rem 0.5rem; font-size: 0.68rem; }
+.mockup .play { display: inline-flex; align-items: center; justify-content: center; width: 1.2rem; height: 1.2rem; border: 1px solid var(--line); border-radius: 50%; font-size: 0.5rem; color: var(--dim); }
+.mockup .sound.picked { border-color: var(--accent); }
+.mockup .sound.picked .name { color: var(--accent); }
+
+.mockup .prognote {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding: 0.45rem 0.7rem;
+  border: 1.5px dashed #9fb3c0;
+  border-radius: 10px;
+  background: #eef2f5;
+  color: #4d6170;
+  font-size: 0.78rem;
+}
+
+.mockup .prognote span { flex: 1; }
+.mockup .prognote .button { flex: none; }
+.mockup .proghero { display: flex; gap: 1rem; align-items: center; padding: 0.8rem; background: #fff; border: 1.5px dashed #9fb3c0; border-top: 0; border-radius: 0 0 10px 10px; margin-top: -0.2rem; }
+.mockup .proghero > span:last-child { display: flex; flex-direction: column; gap: 0.2rem; }
+.mockup .proghero b { font-size: 1rem; }
+.mockup .herothumb { flex: none; width: 8rem; height: 5.5rem; border: 6px solid #111; border-radius: 6px; }
+.mockup .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-top: 0.8rem; font-size: 0.75rem; }
+.mockup .filters u { color: #4d6170; }
+.mockup .chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.12rem 0.6rem; border-radius: 999px; background: #4d6170; color: #fff; font-weight: 600; }
+.mockup .featureicon { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mockup .featureicon .f { fill: currentColor; stroke: none; }
+.mockup .featureicon .fs { fill: currentColor; }
+.mockup .progcard .face { display: block; height: 5.5rem; }
+.mockup .progcard .name { display: block; padding: 0.35rem 0.5rem 0.45rem; font-size: 0.78rem; font-weight: 600; }
+.mockup .progcard.picked { border-color: #4d6170; box-shadow: 0 0 0 2px rgba(77, 97, 112, 0.25); }

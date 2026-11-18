@@ -15,6 +15,9 @@ drum on screen then copies the row of the strip that faces it on the curve, whic
 together towards the top and bottom, as a real drum does.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

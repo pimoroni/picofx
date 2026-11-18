@@ -13,6 +13,9 @@ drawn over, where image.load() would hand back a palettised image nothing can dr
 Each frame copies the band the message crosses back from it, then lays the message on.
 
 Press "Boot" to exit the program.
+
+Section: Billboards and panels
+Args: Rotation = 0 or 180
 """
 
 # Constants

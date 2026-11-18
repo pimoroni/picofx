@@ -18,6 +18,9 @@ Every frame is drawn at startup at a quarter of the panel's pixels each, so X4 a
 costs a few seconds once and nothing per frame.
 
 Press "Boot" to exit the program.
+
+Section: Patterns
+Args: Screen size = 2.8
 """
 
 # Constants

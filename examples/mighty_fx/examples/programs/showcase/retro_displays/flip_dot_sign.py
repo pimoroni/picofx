@@ -10,6 +10,9 @@ Draw a flip-dot sign on a 2.8" screen that spells its message in a sweep, each c
 dots starting to flip just after the one before.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Rotation = 90 or 270
 """
 
 # Constants for drawing

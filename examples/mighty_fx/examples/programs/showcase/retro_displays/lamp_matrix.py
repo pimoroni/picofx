@@ -17,6 +17,9 @@ Every stage of a lamp's glow is drawn once when the program starts, before anyth
 from then on a frame only copies those drawings into place.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

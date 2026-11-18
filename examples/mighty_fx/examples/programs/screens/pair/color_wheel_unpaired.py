@@ -8,6 +8,10 @@ Spin a rainbow wheel on two screens that are redrawn one after the other. Run
 color_wheel_paired.py to see what a pair does differently.
 
 Press "Boot" to exit the program.
+
+Program: Colour wheel (unpaired)
+Section: Two screens
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

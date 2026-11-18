@@ -9,6 +9,9 @@
 # A drive build ships no main.py or secrets.py, so these are its only copies. The build without
 # the drive ships the examples' secrets.py, which holds the same settings as SECRETS. Only a
 # literal triple quote needs escaping inside these.
+#
+# The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
+# fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
 # In single quotes, as the program it holds has a docstring in double quotes
 MAIN = '''\
@@ -34,32 +37,39 @@ it brings this one back, and an empty one leaves the board quiet.
 autofx.run(MightyFX, volume=fx_drive)
 '''
 
-# What a fresh board plays
+# Exactly what the picker writes for its Rainbow look on the outputs, so a fresh board's
+# file opens in the picker as that look. Replace it only with the picker's own output, or
+# the picker reads it as a file written by hand
 EFFECTS = """\
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
 out1-7: rainbow_wave speed=-0.39 length=9
 """
 
 README = """\
 Mighty FX
 =========
-Edit effects.txt to change what the lights do and save it, and the board plays
-the change a few seconds later. One line per set of outputs:
+Open PICKER.html on this drive in Chrome or Edge to choose what the lights,
+screens and sound play. Press "Open FX drive" and choose this drive, pick a look
+from the cards, then press "Save to board". The board plays it a few seconds
+later.
 
-  out1-7: rainbow_wave speed=0.3
+MANUAL.html on this drive shows you around the picker and everything else the
+board can do, and opens in any browser.
 
 If a save does not seem to take, press "Boot" once or eject this drive, since a
-computer does not always write the file out straight away. Press "Boot" twice to
-hide the drive, and twice again to bring it back.
-
-Deleting effects.txt restores the default; emptying it leaves the board dark.
+computer does not always finish writing to a drive straight away. Press "Boot"
+twice to hide the drive, and twice again to bring it back.
 
 When something is wrong, the lights flash:
 
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
-  blue, twice         something in effects.txt could not be read, or a drawing
-                      failed. errors.txt says which line. For a drawing it says
-                      so once "Boot" is pressed or this drive is ejected
+  blue, twice         something saved could not be read, or a drawing failed.
+                      "Check board" in the picker, or errors.txt on this drive,
+                      says what. For a drawing it says so once "Boot" is pressed
+                      or this drive is ejected
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
@@ -67,6 +77,15 @@ While the computer is copying to this drive, a dim white light travels along the
 outputs in place of the effects, which come back a moment after it finishes.
 While the board starts up or loads a save, a dim white bar fills and empties
 along the outputs until the effects begin.
+
+The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
+helps with that, and the manual describes every line. Deleting effects.txt
+restores the default, and emptying it leaves the board dark.
+
+For help, ask in the Support section of the Pimoroni forum:
+  https://forums.pimoroni.com/c/support/5
+To report a problem with the picker, the editor or the board's software:
+  https://github.com/pimoroni/picofx/issues
 
 This README is rebuilt by the board, so edits to it will not stick.
 """

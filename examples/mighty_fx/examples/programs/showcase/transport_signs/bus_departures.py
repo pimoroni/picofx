@@ -9,6 +9,9 @@ Draw a bus departure board as shown on a TV screen at a bus station. A second pa
 lengthens the board, with one listing across both.
 
 Press "Boot" to exit the program.
+
+Section: Transport signs
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

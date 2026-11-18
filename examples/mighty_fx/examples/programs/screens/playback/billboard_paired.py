@@ -12,6 +12,10 @@ Two SP/CE ports are two streams, so a pair shows a different poster on each for 
 One player feeds both. image_at() reads a frame without moving the player, so the second panel runs ahead.
 
 Press "Boot" to exit the program.
+
+Program: Billboard (paired)
+Section: Two screens
+Args: Rotation = 0 or 180
 """
 
 # Constants

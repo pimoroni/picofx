@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Pimoroni forum, Support section
+    url: https://forums.pimoroni.com/c/support/5
+    about: Questions about using Mighty FX, Tiny FX or Plasma 2350, the picker or the editor. The best place to start.
+  - name: Pimoroni customer support
+    url: https://shop.pimoroni.com/pages/contact-us
+    about: Problems with the hardware itself or with an order.

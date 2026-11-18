@@ -21,6 +21,9 @@ and its LED lit on the board below. One level per output, read by both, so the t
 apart. The interface is built once and blitted as the background, so a frame draws only what moves.
 
 Press "Boot" to exit the program.
+
+Section: Billboards and panels
+Args: Rotation = 90 or 270
 """
 
 # Constants for drawing

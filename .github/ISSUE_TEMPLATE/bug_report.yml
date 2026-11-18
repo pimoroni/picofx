@@ -1,0 +1,66 @@
+name: Problem report
+description: Something in the picker, the editor, the manual or a board's effects not working as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to tell us. The more detail you can give, the quicker we can find and fix it.
+
+        * A question about how to do something is best asked in the [Support section of the Pimoroni forum](https://forums.pimoroni.com/c/support/5).
+        * Please search the [existing issues](https://github.com/pimoroni/picofx/issues) first, in case someone has reported it already.
+  - type: input
+    id: board
+    attributes:
+      label: Board
+      description: The "Report a problem" link in the picker, editor or manual fills this in.
+      placeholder: Mighty FX, Tiny FX, Tiny FX W or Plasma 2350
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Firmware version
+      description: Shown beside the page's name at the top of the picker or the editor.
+      placeholder: 1.1.3
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Where it happened
+      placeholder: Picker, Editor, Manual or the board itself
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, including any message the page showed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to make it happen
+      description: What you did, in order, so we can try it ourselves.
+      placeholder: |
+        1. Opened the picker and chose the FX drive
+        2. Picked Rainbow for outputs 1 to 3
+        3. Pressed Save to board
+  - type: textarea
+    id: effects
+    attributes:
+      label: effects.txt
+      description: If you can, paste the effects.txt from the FX drive. It is often the quickest way for us to see the problem.
+      render: text
+  - type: textarea
+    id: errors
+    attributes:
+      label: errors.txt
+      description: If the FX drive has an errors.txt, paste it here too.
+      render: text

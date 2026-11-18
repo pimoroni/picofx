@@ -9,6 +9,7 @@ import vfs
 import fx_defaults
 
 from .fat import ENOTDIR, S_IFDIR
+from .pages import pages, write_page
 
 MOUNT_POINT = "/fx"
 FILE_PATH = MOUNT_POINT + "/effects.txt"
@@ -20,6 +21,12 @@ EXAMPLES_DIR = MOUNT_POINT + "/examples"
 EXAMPLES_MOUNT_POINT = "/examples"
 
 VOLUME_LABEL = "FX"
+
+# A shipped text no longer than this is compared whole, and a longer one only at its ends
+__READ_TO_END = 4096
+
+# How many characters of each end of a longer text are compared
+__EDGE = 512
 
 # FAT attribute bits, per VfsFat.chmod.
 __ATTR_READ_ONLY = 0x01
@@ -40,17 +47,32 @@ __MAC_BIN = ".Trashes"
 # asks Spotlight not to index the drive, which it otherwise does after a save
 __MAC_MARKERS = (".metadata_never_index", __MAC_LOG_FOLDER + "/no_log", __MAC_BIN)
 
+__screens = True
 __wireless = False
+__sound = True
 
 
-def __holds(path, text):
-    # Whether the file holds exactly the text. Size first, so a missing or half-written file
-    # answers without a read. Every document is ASCII, so its length in characters is in bytes
+def __ends(text):
+    # A document's length and the two ends __holds() compares, the whole of a short one
+    if len(text) <= __READ_TO_END:
+        return len(text), text, ""
+    return len(text), text[:__EDGE], text[-__EDGE:]
+
+
+def __holds(path, size, head, tail):
+    # Whether the file is `size` bytes long, starting with `head` and ending with `tail`. Size
+    # first, so a missing or half-written file answers without a read. Only a long document's
+    # ends are read, which keeps every mount quick, and each page ends with a hash of its
+    # content, so a change anywhere reaches the tail. Every document is ASCII, so its length
+    # in characters is its size in bytes
     try:
-        if os.stat(path)[6] != len(text):
+        if os.stat(path)[6] != size:
             return False
         with open(path) as f:
-            return f.read() == text
+            if f.read(len(head)) != head:
+                return False
+            f.seek(size - len(tail))
+            return f.read(len(tail)) == tail
     except OSError:
         return False
 
@@ -69,9 +91,15 @@ def unhealed():
 
 
 def __heal(fs, name, document):
-    # Put a shipped file back on the drive, unless it is already there
+    # Put a shipped file back on the drive, unless it is already there. The document is its
+    # text, or a packed page from fx_editor or fx_manual, whose first three items are the
+    # length and two ends of the page as the drive holds it
     path = MOUNT_POINT + "/" + name
-    if __holds(path, document):
+    if isinstance(document, str):
+        size, head, tail = __ends(document)
+    else:
+        size, head, tail = document[:3]
+    if __holds(path, size, head, tail):
         return
     # Check if the document fits. One that does not is left stale and whole, since opening
     # it for write would truncate it before failing
@@ -82,7 +110,7 @@ def __heal(fs, name, document):
             room += os.stat(path)[6]
         except OSError:
             pass
-        if room < len(document):
+        if room < size:
             print("the FX drive is full, so {} was left as it was".format(name))
             __unhealed.append(name)
             return
@@ -94,8 +122,11 @@ def __heal(fs, name, document):
     except OSError:
         pass
     try:
-        with open(path, "w") as f:
-            f.write(document)
+        with open(path, "w" if isinstance(document, str) else "wb") as f:
+            if isinstance(document, str):
+                f.write(document)
+            else:
+                write_page(document, f)
         fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
@@ -228,17 +259,21 @@ def __has_boot_signature(bdev):
     return sector[510] == 0x55 and sector[511] == 0xAA
 
 
-def mount(wireless=False):
+def mount(screens=True, wireless=False, sound=True):
     """
-    Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
-    effects.txt is missing, or any shipped document differs from the text the board
-    carries. Returns whether the drive ended up mounted.
+    Mount the drive read-write at /fx, formatting it when the volume is blank. Returns
+    whether the drive ended up mounted.
 
-    `wireless` is True for a board with a wireless module, which is given the WiFi
-    credentials.
+    A missing effects.txt is restored, and a shipped document that differs from the text
+    the board carries is rewritten.
+
+    `screens` is False for a board found to have no screen ports, and `sound` False for one
+    that cannot play sound, and each goes without the folders for those files. `wireless` is
+    True for a board with a wireless module, which is given an empty secrets.py for its WiFi
+    credentials. pages() chooses the catalogue from `screens` and `wireless`.
     """
-    global __wireless
-    __wireless = wireless
+    global __screens, __wireless, __sound
+    __screens, __wireless, __sound = screens, wireless, sound
     bdev = rp2.Flash(msc=True)
     fs = vfs.VfsFat(bdev)
     try:
@@ -283,8 +318,11 @@ def mount(wireless=False):
                 pass
     if wireless:
         __restore_secrets()
+    __make_folders(screens, sound)
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
+    for name, document in pages(screens, wireless):
+        __heal(fs, name, document)
     __sweep_host_litter()
     __mark_for_mac(fs)
     return True
@@ -292,7 +330,7 @@ def mount(wireless=False):
 
 def remount():
     """Mount again with what the board last told mount()."""
-    return mount(__wireless)
+    return mount(__screens, __wireless, __sound)
 
 
 class Examples:
@@ -367,6 +405,22 @@ def __restore_secrets():
                 os.remove(SECRETS_PATH)
             except OSError:
                 pass
+
+
+def __make_folders(screens, sound):
+    # Make the folders the user's own files go in where the drive has none, so it shows where
+    # each kind belongs. A board without screens or sound goes without their folders
+    folders = ["programs"]
+    if screens:
+        folders += ["pictures", "drawings"]
+    if sound:
+        folders.append("sounds")
+    for folder in folders:
+        try:
+            os.mkdir(MOUNT_POINT + "/" + folder)
+        except OSError:
+            # Already there, or a full drive
+            pass
 
 
 def __mount_examples():

@@ -1,7 +1,9 @@
 include("manifest.py")
 
-# The FX drive: the module every board carrying one shares, and this board's own defaults
+# The FX drive's module, shared by every board carrying one
 freeze("../fx_libs/")
+
+# This board's own FX drive pages, manual and defaults
 freeze("./fx_libs/")
 
 # autofx and the screen libraries are frozen in, since the drive leaves the

@@ -13,6 +13,8 @@ next. The notice is longer than the sign, so it scrolls horizontally.
 Each band is drawn into its own pane, which clips a sliding row and lets one band redraw alone.
 
 Press "Boot" to exit the program.
+
+Section: Transport signs
 """
 
 # Constants for drawing

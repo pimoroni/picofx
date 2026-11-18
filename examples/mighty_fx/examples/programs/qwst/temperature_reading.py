@@ -15,6 +15,9 @@ moves smoothly. The hue runs from blue at the bottom through purple to red at th
 Hold the sensor between your fingers to watch it climb. Pressure and humidity are printed too.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs temperature
 """
 
 # Constants

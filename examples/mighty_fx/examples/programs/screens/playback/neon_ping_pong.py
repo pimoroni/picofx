@@ -15,6 +15,10 @@ ping_pong plays them forward then back, so three files give four steps. hold dwe
 Every frame decodes when the player is made. Truecolour takes four times an indexed frame's memory.
 
 Press "Boot" to exit the program.
+
+Program: Neon Rosie
+Section: Pictures and GIFs
+Args: Screen size = 2.8, Rotation = 90 or 270
 """
 
 # Constants

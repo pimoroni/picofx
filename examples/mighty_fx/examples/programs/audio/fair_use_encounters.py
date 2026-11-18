@@ -12,6 +12,9 @@ Any resemblance to music you might have heard elsewhere is purely coincidental.
 Each tone lights one output in a colour of its own.
 
 Press "Boot" to exit the program.
+
+Section: Sound
+Thumbnail: outputs melody
 """
 
 # Constants

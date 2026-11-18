@@ -18,6 +18,9 @@ output shows how far off level it is, green when level and redder as it tilts. R
 sensor on something and lift one edge.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs level
 """
 
 # Constants

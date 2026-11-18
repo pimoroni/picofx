@@ -234,4 +234,4 @@ import autofx
 
 `out1-4: breathe speed=0.5 brightness=80%` then plays it, and a value the effect cannot use is reported in `errors.txt` the way any other is.
 
-Settings are named rather than invented: `TAKES` may only hold names the effects file already reads, `speed`, `duty`, `interval`, `brightness`, `hue` and the rest of `autofx.SETTINGS`. If an entry writes a name the effects file cannot read, `errors.txt` says so and the effect keeps its own value for it.
+Settings are named rather than invented: `TAKES` may only hold names the effects file already reads, `speed`, `duty`, `interval`, `brightness`, `hue` and the rest of `autofx.SETTINGS`, each described in `MANUAL.html` on the FX drive. If an entry writes a name the effects file cannot read, `errors.txt` says so and the effect keeps its own value for it.

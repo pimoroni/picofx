@@ -6,6 +6,9 @@
 # rebuilds EFFECTS, README and SECRETS on the FX drive, SECRETS only on a board with a wireless
 # module, and boot.py rebuilds MAIN in the filesystem root. Nothing ships main.py or secrets.py
 # in the image, so these are the only copies.
+#
+# The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
+# fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
 # In single quotes, as the program it holds has a docstring
 MAIN = '''\
@@ -31,34 +34,39 @@ it brings this one back, and an empty one leaves the board dark.
 autofx.run(PlasmaFX, volume=fx_drive)
 '''
 
-# What a fresh board plays
+# Exactly what the picker writes for its Rainbow look on the board's LED, so a fresh
+# board's file opens in the picker as that look. Replace it only with the picker's own
+# output, or the picker reads it as a file written by hand
 EFFECTS = """\
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
 rgb: rainbow speed=0.39
 """
 
 README = """\
 Plasma 2350
 ===========
-Edit effects.txt to change what the lights do and save it, and the board plays
-the change a few seconds later. One line per strip, or for the board's own LED:
+Open PICKER.html on this drive in Chrome or Edge to choose what the strips, the
+board's LED and the screen play. Press "Open FX drive" and choose this drive,
+pick a look from the cards, then press "Save to board". The board plays it a few
+seconds later.
 
-  board: stripDat=60
-  stripDat: rainbow_wave speed=0.3
-  rgb: rainbow speed=0.3
+MANUAL.html on this drive shows you around the picker and everything else the
+board can do, and opens in any browser.
 
 If a save does not seem to take, press "Boot" once or eject this drive, since a
-computer does not always write the file out straight away. Press "Boot" twice to
-hide the drive, and twice again to bring it back.
-
-Deleting effects.txt restores the default; emptying it leaves the board dark.
+computer does not always finish writing to a drive straight away. Press "Boot"
+twice to hide the drive, and twice again to bring it back.
 
 When something is wrong, the board's LED flashes:
 
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
-  blue, twice         something in effects.txt could not be read, or a drawing
-                      failed. errors.txt says which line. For a drawing it says
-                      so once "Boot" is pressed or this drive is ejected
+  blue, twice         something saved could not be read, or a drawing failed.
+                      "Check board" in the picker, or errors.txt on this drive,
+                      says what. For a drawing it says so once "Boot" is pressed
+                      or this drive is ejected
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
@@ -66,6 +74,15 @@ While the computer is copying to this drive, the board's LED glows a dim white
 with a brighter blink in place of the effects, which come back a moment after it
 finishes. While the board starts up or loads a save, its LED blinks slowly
 between dim and bright white until the effects begin.
+
+The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
+helps with that, and the manual describes every line. Deleting effects.txt
+restores the default, and emptying it leaves the board dark.
+
+For help, ask in the Support section of the Pimoroni forum:
+  https://forums.pimoroni.com/c/support/5
+To report a problem with the picker, the editor or the board's software:
+  https://github.com/pimoroni/picofx/issues
 
 This README is rebuilt by the board, so edits to it will not stick.
 """

@@ -34,12 +34,16 @@ freeze("$(BOARD_DIR)/../../../qwstpad-micropython/src", "qwstpad.py")
 # The SP/CE connector's pins and the classes for its breakouts, from the pimoroni-pico clone
 freeze("$(PORT_DIR)/../../../pimoroni-pico/micropython/modules_py", "spce.py")
 
-# The FX drive: the module every board carrying one shares, and this board's own defaults
+# The FX drive's module, shared by every board carrying one
 freeze("../fx_libs/")
+
+# This board's own FX drive pages, manual and defaults
 freeze("./fx_libs/")
 
-# autofx and the screen library are frozen on this board. Its heap is the
-# chip's SRAM alone, and compiling either from /lib at import would take most of it.
-# The screen library is the spidisplay repository's own, cloned beside this one.
+# autofx is frozen, since this board's heap is the chip's SRAM alone and compiling it
+# from /lib at import would take most of it
 freeze("../visible_libs/", "autofx")
+
+# The screen library, frozen for the same reason, from the spidisplay repository cloned
+# beside this one
 freeze("$(BOARD_DIR)/../../../spidisplay/src")

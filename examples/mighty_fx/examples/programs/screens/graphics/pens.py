@@ -18,6 +18,9 @@ Erase needs an opaque surface to punch through, so that one is drawn in a small 
 its own and blitted over the panel. Erasing on the panel would only take the backdrop out.
 
 Press "Boot" to exit the program.
+
+Section: Graphics
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

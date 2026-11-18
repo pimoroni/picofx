@@ -20,6 +20,10 @@ The field moves every frame, so nothing waits on has_advanced(). The pattern ani
 player's clock and the scroll on the frame count.
 
 Press "Boot" to exit the program.
+
+Program: Circuit traces
+Section: Patterns
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

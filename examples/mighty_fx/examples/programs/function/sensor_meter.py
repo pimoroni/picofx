@@ -10,6 +10,9 @@ The top output of the bar is lit as far into its step as the reading has gone, s
 moves smoothly. The hue runs from blue at the bottom through green to red at the top.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs bar
 """
 
 # Constants

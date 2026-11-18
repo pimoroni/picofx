@@ -8,6 +8,9 @@ from picofx.mono import FlickerFX
 Play a set of flickering thruster effects on a model spaceship, with an RGB light used for planetshine underglow.
 
 Press "Boot" to exit the program.
+
+Section: Model lighting
+Thumbnail: outputs warm
 """
 
 # Constants

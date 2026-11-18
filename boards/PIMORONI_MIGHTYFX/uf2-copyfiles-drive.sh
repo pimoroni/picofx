@@ -14,3 +14,9 @@ rm -v "$TARGET/main.py"
 # The libraries the firmware freezes
 rm -v "$TARGET/lib/logging.py" "$TARGET/lib/spce.py" "$TARGET/lib/st7789.py"
 rm -r -v "$TARGET/lib/screens" "$TARGET/lib/aye_arr"
+
+# The examples and their art go on the FX drive instead, by drive-copyfiles.sh
+rm -r -v "$TARGET/examples"
+
+# The board writes the WiFi credentials to the FX drive, for a text editor to fill in
+rm -v "$TARGET/secrets.py"

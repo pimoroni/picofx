@@ -10,6 +10,9 @@ Show random colours and patterns obtained from the internet on Tiny FX W's outpu
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.
 
 Press "Boot" to exit the program.
+
+Section: Over WiFi
+Thumbnail: outputs random
 """
 
 try:

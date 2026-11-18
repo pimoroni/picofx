@@ -8,6 +8,9 @@ from picovector import color, font, image, rect, shape
 Draw a split-flap clock with each digit flipping through to the next.
 
 Press "Boot" to exit the program.
+
+Section: Retro displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

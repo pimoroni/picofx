@@ -10,6 +10,9 @@ Bounce a logo around the screen and change its colour at each edge.
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Section: Patterns
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

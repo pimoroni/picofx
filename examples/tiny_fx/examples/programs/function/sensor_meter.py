@@ -10,6 +10,9 @@ The top output of the bar is lit as far into its step as the
 reading has gone, so the bar moves smoothly.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs bar
 """
 
 # Constants

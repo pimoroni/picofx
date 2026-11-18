@@ -14,6 +14,9 @@ own, so it is the one for checking a chassis is wired and scaled correctly.
 Give it room, or hold it off the ground.
 
 Press "Boot" to exit the program.
+
+Section: Motors and servos
+Thumbnail: motor
 """
 
 # Constants

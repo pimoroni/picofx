@@ -10,6 +10,9 @@ from picovector import image, rect
 Draw a scrolling billboard on a 2.8" screen that rolls its posters past one at a time.
 
 Press "Boot" to exit the program.
+
+Section: Billboards and panels
+Args: Rotation = 0 or 180
 """
 
 POSTERS = "/examples/pictures/billboards/portrait"   # Shared with the billboard showcases

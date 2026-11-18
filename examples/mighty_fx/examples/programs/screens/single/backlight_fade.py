@@ -10,6 +10,8 @@ Fade a screen's backlight up and down over a still frame.
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

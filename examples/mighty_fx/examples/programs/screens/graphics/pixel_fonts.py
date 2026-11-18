@@ -12,6 +12,9 @@ A pixel font draws at whole multiples of its designed size, set by font_size=. d
 every face and font.<name> loads one.
 
 Press "Boot" to exit the program.
+
+Section: Graphics
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants

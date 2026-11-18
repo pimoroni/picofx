@@ -18,6 +18,9 @@ The screens drive the panel at 12 bit, so a channel has 16 levels in steps of 17
 on a whole step shows as it was written, and two colours less than a step apart can show as one.
 
 Press "Boot" to exit the program.
+
+Section: Graphics
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

@@ -8,6 +8,9 @@ from picovector import image
 Switch between two PNG pictures shown for different lengths of time.
 
 Press "Boot" to exit the program.
+
+Section: Pictures and GIFs
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants
