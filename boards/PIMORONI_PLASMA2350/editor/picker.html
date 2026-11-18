@@ -11460,6 +11460,9 @@ document.getElementById("save").onclick = async function() {
     }
     drive.fileHandle = null;
     drive.dirHandle = null;
+    state.fileHandle = null;
+    state.dirHandle = null;
+    draw();
     if (e.name === "NotWhatWasSaved")
       banner("The file on the drive did not match what was saved. Check the FX drive is showing, then try again.", true);
     else

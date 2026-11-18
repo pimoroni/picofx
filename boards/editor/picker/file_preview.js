@@ -1,11 +1,12 @@
 import {banner, reportedSave, saving, setReportedSave} from "./banner.js";
-import {DRAW_AFTER, addStep, drawParts, drawSteps} from "./draw.js";
+import {DRAW_AFTER, addStep, draw, drawParts, drawSteps} from "./draw.js";
 import {
   CAN_REACH_A_DRIVE, CHECKING, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking, openDrive,
   overwriteQuestion, playsItself, readErrors, sayWhatHappened, uncommented, waitForBoard,
   waitForReturn
 } from "./drive.js";
 import {BOARD} from "./looks.js";
+import {state} from "./scenes.js";
 import {NOTHING_PLAYING, currentText} from "./writing.js";
 
 // ---- the file, painted, and saving it --------------------------------------------------------
@@ -194,8 +195,12 @@ document.getElementById("save").onclick = async function () {
       banner("The FX drive is full. Delete a picture, sound or program and try again.", true);
       return;
     }
+    // The drive is let go everywhere, so no tab offers to copy onto it and no rescan reads it
     drive.fileHandle = null;
     drive.dirHandle = null;
+    state.fileHandle = null;
+    state.dirHandle = null;
+    draw();
     if (e.name === "NotWhatWasSaved")
       banner("The file on the drive did not match what was saved. Check the FX drive is " +
              "showing, then try again.", true);
