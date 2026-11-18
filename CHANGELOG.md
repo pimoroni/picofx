@@ -51,6 +51,11 @@
 * A board that fails partway through being built hands back what it had claimed
 * The uf2s and the libraries and examples zips attach to a GitHub release, named for its tag as release files have been
 * Fixed WAV files with tags before their audio not playing
+* The examples move into `examples/programs/`
+* The examples using the sensor connector take what it holds from `sensor=`
+* The sensor and voltage meters and the sensor wave keep their rate with `Pacer`
+* The examples gain PelicanCrossingFX, SweepFX with and without a trail, a WAV player, counting taps, and light, temperature and spirit level readings from Qw/ST sensors
+* Fixed the I2C target example raising as it ends, and answering at an address the multi board example does not look for
 
 **Mighty FX**
 
