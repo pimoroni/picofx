@@ -5,7 +5,7 @@ import {
 } from "../board_settings.js";
 import {h} from "../dom.js";
 import {DRAW_AFTER, addStep, draw, drawFromLoad, drawSteps} from "../draw.js";
-import {drive, driveTrouble, nameShown} from "../drive.js";
+import {drive, driveTrouble, isHiddenName, nameShown} from "../drive.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../drive_files.js";
 import {
   EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, driveHasCredentials, folderAt,
@@ -1190,8 +1190,9 @@ function discoverChips(offers) {
 
 // ---- deleting an example ------------------------------------------------------------------------
 // An example can be downloaded again, so each on the drive has a bin as the user's own do. A
-// Python file goes with the thumbnails named after it, and a slideshow with its folder. Any picture
-// it shares with others is left. The galleries are read again so it is offered at once
+// Python file goes with the thumbnails named after it and the folders it names beside it, and a
+// slideshow with its folder. Any picture it shares with others is left.
+// The galleries are read again so it is offered at once
 
 export function discoverBin(path, kind) {
   return h("span", {
@@ -1206,13 +1207,17 @@ export function discoverBin(path, kind) {
 async function discoverDelete(path, kind) {
   var name = nameShown(path);
   var tab = kind === "program" || kind === "sound" ? kind : "drawing";
-  if (!confirm("Delete " + name + " from the FX drive? You can download it again later.")) return;
+  var parts = path.split("/");
+  var leaf = parts.pop();
+  var folder = await folderAt(drive.dirHandle, parts);
+  var companions = folder && kind === "program" ? await discoverCompanions(folder, parts, leaf) : [];
+  var folders = !companions.length ? ""
+    : " and its " + companions.join(" and ") + (companions.length > 1 ? " folders" : " folder");
+  if (!confirm("Delete " + name + folders + " from the FX drive? You can download " +
+               (companions.length ? "them" : "it") + " again later.")) return;
   try {
-    var parts = path.split("/");
-    var leaf = parts.pop();
-    var folder = await folderAt(drive.dirHandle, parts);
     if (!folder) throw {name: "NotFoundError", message: path};
-    var gone = [leaf];
+    var gone = [leaf].concat(companions);
     if (/\.py$/i.test(leaf)) {
       var stem = leaf.replace(/\.py$/i, "");
       for await (var entry of folder.keys()) {
@@ -1221,6 +1226,20 @@ async function discoverDelete(path, kind) {
       }
     }
     for (var one of gone) await folder.removeEntry(one, {recursive: true});
+    // Check if the program had a folder of its own, which goes too once nothing else is left in it
+    if (companions.length) {
+      // A hidden file a computer leaves behind does not keep the folder
+      for await (entry of folder.keys()) {
+        if (isHiddenName(entry)) await folder.removeEntry(entry, {recursive: true});
+      }
+      var above = await folderAt(drive.dirHandle, parts.slice(0, -1));
+      try {
+        // Without recursive=, so only an empty folder goes
+        if (above) await above.removeEntry(parts[parts.length - 1]);
+      } catch (e) {
+        // A folder still holding other files is left
+      }
+    }
   } catch (e) {
     discoverSay(tab, "Could not delete " + name + ". " + await driveTrouble(e, path), true);
     draw();
@@ -1247,6 +1266,43 @@ async function discoverDelete(path, kind) {
   discoverSay(tab, "Deleted " + name + ".");
   if (discover[tab].status === "done") discoverCheck(tab, true);
   draw();
+}
+
+// The folders beside a program that its source names by their path on the drive, such as one of the
+// modules it imports. The examples index brings their files with the program, so they go with it too.
+// A folder another Python file beside it also names is left, as that one needs it still
+async function discoverCompanions(folder, parts, leaf) {
+  async function named(file) {
+    try {
+      var source = await (await (await folder.getFileHandle(file)).getFile()).text();
+    } catch (e) {
+      return [];
+    }
+    var names = [];
+    var path = /["']\/(examples\/[^"'{}]+?)\/?["']/g;
+    for (var match = path.exec(source); match; match = path.exec(source)) {
+      var inside = match[1].indexOf(beside) === 0 ? match[1].slice(beside.length) : "";
+      if (inside && inside.indexOf("/") < 0 && names.indexOf(inside) < 0) names.push(inside);
+    }
+    return names;
+  }
+  var beside = parts.join("/") + "/";
+  var found = [];
+  for (var inside of await named(leaf)) {
+    try {
+      await folder.getDirectoryHandle(inside);
+      found.push(inside);
+    } catch (e) {
+      // A name that is not a folder beside the program is something else it reads
+    }
+  }
+  if (!found.length) return found;
+  for await (var entry of folder.keys()) {
+    if (entry === leaf || !/\.py$/i.test(entry)) continue;
+    var shared = await named(entry);
+    found = found.filter(function (one) { return shared.indexOf(one) < 0; });
+  }
+  return found;
 }
 
 // Add a bin to an example's card, moving its copy tile out of the bin's place to beside it

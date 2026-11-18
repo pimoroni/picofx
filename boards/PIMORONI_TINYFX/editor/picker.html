@@ -14949,13 +14949,15 @@ function discoverBin(path, kind) {
 async function discoverDelete(path, kind) {
   var name = nameShown(path);
   var tab = kind === "program" || kind === "sound" ? kind : "drawing";
-  if (!confirm("Delete " + name + " from the FX drive? You can download it again later.")) return;
+  var parts = path.split("/");
+  var leaf = parts.pop();
+  var folder = await folderAt(drive.dirHandle, parts);
+  var companions = folder && kind === "program" ? await discoverCompanions(folder, parts, leaf) : [];
+  var folders = !companions.length ? "" : " and its " + companions.join(" and ") + (companions.length > 1 ? " folders" : " folder");
+  if (!confirm("Delete " + name + folders + " from the FX drive? You can download " + (companions.length ? "them" : "it") + " again later.")) return;
   try {
-    var parts = path.split("/");
-    var leaf = parts.pop();
-    var folder = await folderAt(drive.dirHandle, parts);
     if (!folder) throw { name: "NotFoundError", message: path };
-    var gone = [leaf];
+    var gone = [leaf].concat(companions);
     if (/\.py$/i.test(leaf)) {
       var stem = leaf.replace(/\.py$/i, "");
       for await (var entry of folder.keys()) {
@@ -14964,6 +14966,16 @@ async function discoverDelete(path, kind) {
       }
     }
     for (var one of gone) await folder.removeEntry(one, { recursive: true });
+    if (companions.length) {
+      for await (entry of folder.keys()) {
+        if (isHiddenName(entry)) await folder.removeEntry(entry, { recursive: true });
+      }
+      var above = await folderAt(drive.dirHandle, parts.slice(0, -1));
+      try {
+        if (above) await above.removeEntry(parts[parts.length - 1]);
+      } catch (e) {
+      }
+    }
   } catch (e) {
     discoverSay(tab, "Could not delete " + name + ". " + await driveTrouble(e, path), true);
     draw();
@@ -14993,6 +15005,40 @@ async function discoverDelete(path, kind) {
   discoverSay(tab, "Deleted " + name + ".");
   if (discover[tab].status === "done") discoverCheck(tab, true);
   draw();
+}
+async function discoverCompanions(folder, parts, leaf) {
+  async function named(file) {
+    try {
+      var source = await (await (await folder.getFileHandle(file)).getFile()).text();
+    } catch (e) {
+      return [];
+    }
+    var names = [];
+    var path = /["']\/(examples\/[^"'{}]+?)\/?["']/g;
+    for (var match = path.exec(source); match; match = path.exec(source)) {
+      var inside2 = match[1].indexOf(beside) === 0 ? match[1].slice(beside.length) : "";
+      if (inside2 && inside2.indexOf("/") < 0 && names.indexOf(inside2) < 0) names.push(inside2);
+    }
+    return names;
+  }
+  var beside = parts.join("/") + "/";
+  var found = [];
+  for (var inside of await named(leaf)) {
+    try {
+      await folder.getDirectoryHandle(inside);
+      found.push(inside);
+    } catch (e) {
+    }
+  }
+  if (!found.length) return found;
+  for await (var entry of folder.keys()) {
+    if (entry === leaf || !/\.py$/i.test(entry)) continue;
+    var shared = await named(entry);
+    found = found.filter(function(one) {
+      return shared.indexOf(one) < 0;
+    });
+  }
+  return found;
 }
 function discoverBinBeside(card, bin) {
   var copy = card.querySelector(".copytile");
