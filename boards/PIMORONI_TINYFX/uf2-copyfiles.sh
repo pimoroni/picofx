@@ -23,5 +23,8 @@ cp -r -v "$CI_BUILD_ROOT/aye_arr/aye_arr" "$TARGET/lib"
 # autofx plays the FX drive, which only the drive variants carry, frozen into their firmware
 rm -rv "$TARGET/lib/autofx"
 
+# Only Tiny FX W reads the time over WiFi, so the time zones go with it
+rm -v "$TARGET/lib/timezones.py"
+
 # Remove any markdown files
 find "$TARGET" -type f -name '*.md' -exec rm -v {} \;
