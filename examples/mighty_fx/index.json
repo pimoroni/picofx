@@ -103,72 +103,10 @@
   {"path": "examples/programs/audio/fair_use_encounters.py", "size": 2592, "hash": "734324f33f78448d02620d699085abecfbfbc8cd", "was": []}]},
  {"path": "examples/programs/audio/race_start.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/audio/race_start.py", "size": 2201, "hash": "625ff286eab6cf5e118f8de713afbbfb5ddef72e", "was": []}]},
- {"path": "examples/programs/audio/wav_player.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/audio/wav_player.py", "size": 1704, "hash": "a02e2f1f662ce4cc016cbb44177001de8fee4917", "was": []}]},
- {"path": "examples/programs/comms/dual_mighty_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/comms/dual_mighty_fx.py", "size": 2700, "hash": "0ed36f85f3e9ad0a5183a36e6fca2aae6cfa972a", "was": []}]},
- {"path": "examples/programs/comms/mighty_and_tiny_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/comms/mighty_and_tiny_fx.py", "size": 3194, "hash": "1f9a3eb0eb164638e5296bdbb5953d7ea3748413", "was": []}]},
- {"path": "examples/programs/effects/colour/blink.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/blink.py", "size": 1560, "hash": "c543ea2c1c934da907e5f7130a8fe7adf0819481", "was": []}]},
- {"path": "examples/programs/effects/colour/hue_step.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/hue_step.py", "size": 1526, "hash": "ba98aa4699385ea8088c532e2995c3099b310116", "was": []}]},
- {"path": "examples/programs/effects/colour/pelican_crossing.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/pelican_crossing.py", "size": 2592, "hash": "fea937a410313c32710c7da903184aade30c66c2", "was": []}]},
- {"path": "examples/programs/effects/colour/rainbow.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/rainbow.py", "size": 1397, "hash": "e4b200fc7632cd725570f9dc4c8a6f70b14fa93e", "was": []}]},
- {"path": "examples/programs/effects/colour/rainbow_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/rainbow_wave.py", "size": 1656, "hash": "0ccf6628ecfd004db251e622c86d61bcc5e0a87f", "was": []}]},
- {"path": "examples/programs/effects/colour/static_hsv.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/static_hsv.py", "size": 1154, "hash": "b5f92fe70acfa9ec7f2e82f25d7a810529c4366b", "was": []}]},
- {"path": "examples/programs/effects/colour/static_rgb.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/static_rgb.py", "size": 1105, "hash": "062e466052ca92c8eb504bf25d7df4ab1cf63d57", "was": []}]},
- {"path": "examples/programs/effects/colour/sweep_trail.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/sweep_trail.py", "size": 2212, "hash": "3661b6b3886b5ba14a1429cbe841239712ce12e3", "was": []}]},
- {"path": "examples/programs/effects/colour/traffic_light.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/colour/traffic_light.py", "size": 2143, "hash": "8258ac6f338a611b99da28c055d804b6016ccbb3", "was": []}]},
- {"path": "examples/programs/effects/mono/binary_counter.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/binary_counter.py", "size": 1279, "hash": "61ee4a974bdafbcd39812bc8e89e59141e054912", "was": []}]},
- {"path": "examples/programs/effects/mono/blink_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/blink_wave.py", "size": 1627, "hash": "878d8d23bf60e3dab458076aa19df817ddc419ce", "was": []}]},
- {"path": "examples/programs/effects/mono/flashing_sequence.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/flashing_sequence.py", "size": 1895, "hash": "d40b14654259bdccbb7126d425c5487a4b090176", "was": []}]},
- {"path": "examples/programs/effects/mono/pulse_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/pulse_wave.py", "size": 1528, "hash": "a9acf561eb250df09030bbc185e43fd04fdb8e3f", "was": []}]},
- {"path": "examples/programs/effects/mono/random.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/random.py", "size": 1453, "hash": "9aa7f3af4c1e4a220eac237ad978894560d14b8b", "was": []}]},
- {"path": "examples/programs/effects/mono/single_blink.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/single_blink.py", "size": 1246, "hash": "8b6dfcefff7c3ad08fcef60b5478f79aaf32bc9a", "was": []}]},
- {"path": "examples/programs/effects/mono/single_flashing.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/single_flashing.py", "size": 1449, "hash": "9484c5a3b00e60bd4d1c8cb5788e8d437d741d0f", "was": []}]},
- {"path": "examples/programs/effects/mono/single_flicker.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/single_flicker.py", "size": 1554, "hash": "7bd24c2dcc696485182636fe3a842d0480c2c933", "was": []}]},
- {"path": "examples/programs/effects/mono/single_pulse.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/single_pulse.py", "size": 1160, "hash": "bab5e9e4bac9a8cf75a453dd5c25a088c8d85d51", "was": []}]},
- {"path": "examples/programs/effects/mono/single_random.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/single_random.py", "size": 1275, "hash": "361c010b8a30a51d12125d04940505a233c4d24d", "was": []}]},
- {"path": "examples/programs/effects/mono/static_brightness.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/static_brightness.py", "size": 1071, "hash": "9b09c50b0602fbc7d1eb7a07d9daa39c973c7c08", "was": []}]},
- {"path": "examples/programs/effects/mono/sweep.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/sweep.py", "size": 1448, "hash": "26b35ec13f756c6bb4fab8bc231f435ac5516e0b", "was": []}]},
- {"path": "examples/programs/effects/mono/traffic_light.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/effects/mono/traffic_light.py", "size": 1877, "hash": "3fc98d01248dec396c8a74572b4a3f6dd52aea8c", "was": []}]},
- {"path": "examples/programs/function/count_taps.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/function/count_taps.py", "size": 1448, "hash": "5b1521ced08073beeb944a2c50b2d09d043c8e0c", "was": []}]},
  {"path": "examples/programs/function/motion_light.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/function/motion_light.py", "size": 1835, "hash": "e93e26139679819e0e39a1e69b7f756aac81c9e3", "was": []}]},
- {"path": "examples/programs/function/read_button.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/function/read_button.py", "size": 754, "hash": "0cb557719937b67d4aba8df50ae91aa0ec664e63", "was": []}]},
  {"path": "examples/programs/function/sensor_meter.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/function/sensor_meter.py", "size": 2396, "hash": "38aca70a5ba1d5ea7f8beceffc8cbf2772a754ba", "was": []}]},
- {"path": "examples/programs/function/voltage_meter.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/function/voltage_meter.py", "size": 2500, "hash": "0ca18821611f2720a23f24bae1221d039954703f", "was": []}]},
- {"path": "examples/programs/gpio/spce_buttons.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/gpio/spce_buttons.py", "size": 1959, "hash": "fdf0d0b3c2671a3bd0f6cbfb2c172e7ae25ccff2", "was": []}]},
- {"path": "examples/programs/gpio/spce_gpio.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/gpio/spce_gpio.py", "size": 1329, "hash": "b6e9a1385eaf62ef6fe944c9fee6fc54654c3112", "was": []}]},
- {"path": "examples/programs/gpio/spce_pwm_fade.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/gpio/spce_pwm_fade.py", "size": 2292, "hash": "7a7334cd1f6c0d7d01804ede6261a45e9a87d14c", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "size": 3960, "hash": "195903cbf7d2570f83d132f54ceb5ea3f7dd7276", "was": []}]},
  {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
@@ -191,8 +129,6 @@
   {"path": "examples/programs/motors/motor_movements.py", "size": 2522, "hash": "badbd4dc32ca12f6f479cc8a3ae347e4a57c690e", "was": []}]},
  {"path": "examples/programs/motors/motor_pair.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/motors/motor_pair.py", "size": 1198, "hash": "71ea0fc1c420244c7004fd756b2a61a93616987d", "was": []}]},
- {"path": "examples/programs/motors/motor_settings.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/motors/motor_settings.py", "size": 3105, "hash": "7b354aa3bb6cd671dddfdb9be0fd483c8d0e9735", "was": []}]},
  {"path": "examples/programs/motors/motor_song.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/motors/motor_song.py", "size": 2424, "hash": "755295f61fa02d37b09eb81dad168d26bef67826", "was": []}]},
  {"path": "examples/programs/motors/remote_robot.py", "kind": "program", "firmware": "1.1.3", "files": [
@@ -422,21 +358,12 @@
   {"path": "examples/pictures/traces/traces6.png", "size": 25260, "hash": "5946e124872df85815e83acdbc643f61f115696e", "was": []},
   {"path": "examples/pictures/traces/traces7.png", "size": 24576, "hash": "9ba3afd9124b81e4805464605db5bceeffef69f7", "was": []},
   {"path": "examples/pictures/traces/traces8.png", "size": 23555, "hash": "a011656635f7fb35dea5559cc277ce74def5a647", "was": []}]},
- {"path": "examples/programs/screens/single/backlight_fade.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/screens/single/backlight_fade.py", "size": 2300, "hash": "2dd5ef87416bb33396ed82391bef83d7b884b15b", "was": []},
-  {"path": "examples/programs/screens/single/backlight_fade.png", "size": 3401, "hash": "153c2b63b4088bbdf5056279c964a23317033e00", "was": []}]},
  {"path": "examples/programs/screens/single/detect_screens.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/screens/single/detect_screens.py", "size": 3625, "hash": "c96166841875cebdca7da1638f8842b1ca528f2c", "was": []},
   {"path": "examples/programs/screens/single/detect_screens-2.png", "size": 1440, "hash": "1392abc2cef1ba1d98b8e06efefd65fa6faf11c7", "was": []},
   {"path": "examples/programs/screens/single/detect_screens.png", "size": 1495, "hash": "1d7965eeae46b56a94bdf15258766e43550ccbac", "was": []}]},
- {"path": "examples/programs/screens/single/screen_sizes.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/screens/single/screen_sizes.py", "size": 3350, "hash": "5942b45b88e088cbc4af017a180df0436dc7e41f", "was": []},
-  {"path": "examples/programs/screens/single/screen_sizes-2.png", "size": 4228, "hash": "f2c7c292e4bf581c0de28420b039559b9f2261c4", "was": []},
-  {"path": "examples/programs/screens/single/screen_sizes.png", "size": 4673, "hash": "28a289fb0eed9d64e995c845db7a231122888276", "was": []}]},
  {"path": "examples/programs/servos/remote_robot.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/servos/remote_robot.py", "size": 4083, "hash": "afc890868b52f77f71be09669955b8e9e4aae5c2", "was": []}]},
- {"path": "examples/programs/servos/servo_calibration.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/servos/servo_calibration.py", "size": 1976, "hash": "28d56dc8630028e71efad4a55d57f263a839f46f", "was": []}]},
  {"path": "examples/programs/servos/servo_easing.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/servos/servo_easing.py", "size": 2569, "hash": "487bd1cb4e76452f1133deeaca4a906bb9e94c66", "was": []}]},
  {"path": "examples/programs/servos/servo_pair.py", "kind": "program", "firmware": "1.1.3", "files": [
@@ -564,10 +491,6 @@
   {"path": "examples/programs/showcase/transport_signs/tram_stop_sign.py", "size": 11831, "hash": "c374774f83f2369171e21d2d330c86fedb2b9b6a", "was": []},
   {"path": "examples/programs/showcase/transport_signs/tram_stop_sign-2.png", "size": 3670, "hash": "d36b3e49ffe797097bb14ff878129b8066975550", "was": []},
   {"path": "examples/programs/showcase/transport_signs/tram_stop_sign.png", "size": 4261, "hash": "9e2ae0403cdfb62f84543b9cd34d2bafd540529d", "was": []}]},
- {"path": "examples/programs/strips/strip_colour_fill.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/strips/strip_colour_fill.py", "size": 2047, "hash": "7fb82b8e15f3e2e1612fc6b933b505be7d960bf8", "was": []}]},
- {"path": "examples/programs/strips/strip_rainbow.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/strips/strip_rainbow.py", "size": 1539, "hash": "cb0fbd2ba1a2f08c815670c8fda17a70d1acf3b8", "was": []}]},
  {"path": "examples/programs/wireless/cheerlights.py", "kind": "program", "firmware": "1.1.3", "files": [
   {"path": "examples/programs/wireless/cheerlights.py", "size": 2557, "hash": "b62b1d0c3ca864e582d21ae70ae540a660619914", "was": []}]},
  {"path": "examples/programs/wireless/random.py", "kind": "program", "firmware": "1.1.3", "files": [

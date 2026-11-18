@@ -3,7 +3,9 @@
 
 The picker fetches the index from GitHub when asked, and offers the examples the drive lacks, or
 holds an older version of, to download. The index lists every example program, drawing, picture
-and sound the repository holds for the board, each with the files it brings: a program's or
+and sound the repository holds for the board. A description with "examples_listed_only" lists
+only the programs that name a section, as only those appear on the picker's Programs tab. Each
+comes with the files it brings: a program's or
 drawing's Python file, its thumbnails, a picture its Picture: line names and the pictures its
 source names by their path on the drive; a slideshow's pictures; a picture or sound itself.
 
@@ -55,6 +57,7 @@ OPENING_STRING = re.compile(r"(\"\"\"|''')([\s\S]*?)\1")
 DRAWING_LINE = re.compile(r"^\s*Drawing:", re.MULTILINE)
 PICTURE_LINE = re.compile(r"^\s*Picture:\s*(.+?)\s*$", re.MULTILINE)
 FIRMWARE_LINE = re.compile(r"^\s*Firmware:\s*(.+?)\s*$", re.MULTILINE)
+SECTION_LINE = re.compile(r"^\s*Section:\s*\S", re.MULTILINE)
 
 # A path on the drive written out in a source, such as "/examples/pictures/billboards/portrait"
 DRIVE_PATH = re.compile(r"[\"'](/examples/[^\"'{}]+?)/?[\"']")
@@ -143,7 +146,7 @@ def section_of(sections, member):
     return ""
 
 
-def code_examples(files, version):
+def code_examples(files, version, listed_only=False):
     """The example programs and drawings, as index entries less their files' entries."""
     found = []
     for path in sorted(files):
@@ -154,6 +157,9 @@ def code_examples(files, version):
         said = opening_string(source)
         drawing = bool(DRAWING_LINE.search(said))
         if drawing != top_drawing:
+            continue
+        # Check if this is a program naming no section, which the picker never lists
+        if listed_only and not drawing and not SECTION_LINE.search(said):
             continue
         firmware = FIRMWARE_LINE.search(said)
         found.append(({"path": path, "kind": "drawing" if drawing else "program",
@@ -223,7 +229,7 @@ def carried(name, hashed, size, before, gone):
     return entry
 
 
-def build(repo_dir, bases, previous, left_out=()):
+def build(repo_dir, bases, previous, left_out=(), listed_only=False):
     """The index, as text, for the examples under each of bases, carrying forward the previous
     index."""
     with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as handle:
@@ -241,7 +247,7 @@ def build(repo_dir, bases, previous, left_out=()):
         if name not in files:
             gone.setdefault(file["hash"], name)
     examples = []
-    for entry, names in code_examples(files, version) + pictures(files, version) + \
+    for entry, names in code_examples(files, version, listed_only) + pictures(files, version) + \
             sounds(files, version):
         entry["files"] = [carried(name, files[name][0], files[name][1], before, gone)
                           for name in names]
@@ -301,7 +307,8 @@ def main():
     else:
         previous = released_index(repo_dir, board["examples_index"])
     bases = [base] + ([board["wireless_examples"]] if "wireless_examples" in board else [])
-    text = build(repo_dir, bases, previous, board.get("examples_left_out", ()))
+    text = build(repo_dir, bases, previous, board.get("examples_left_out", ()),
+                 board.get("examples_listed_only", False))
     if args.check:
         with open(index_path, encoding="utf-8") as handle:
             if handle.read().replace("\r\n", "\n") != text:
