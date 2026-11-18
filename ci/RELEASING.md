@@ -23,7 +23,13 @@ How the picker decides, in brief:
 2. **Point Discover at main.** `DISCOVER_BRANCH` in
    `boards/editor/picker/discover/discover.js` must be `main`. The release build stops
    otherwise.
-3. **Check the file names still match.** The picker looks for the `-with-libs.uf2` image that
+3. **Rebuild the examples indexes after setting the version.** Run
+   `python3 tools/build_examples_index.py boards/<BOARD>` for each board whose `fx_board.json`
+   names an `examples_index`, so each example's lowest firmware reads the new version, and commit
+   the result before tagging. Each file's earlier versions are carried from the index at the
+   previous release tag, so the index the tag holds becomes the next release's history. The picker
+   needs that history to tell an older copy of an example from one the user changed.
+4. **Check the file names still match.** The picker looks for the `-with-libs.uf2` image that
    `ci/micropython.sh` names for a drive build. If CI's file names or matrix shortnames change,
    update the `release` entries in each `fx_board.json` to match.
 

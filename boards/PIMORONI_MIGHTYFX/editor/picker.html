@@ -16,6 +16,8 @@
    "bootloader_drive": "RP2350",
    "reset_button": "Reset"
   },
+  "examples_index": "examples/mighty_fx/index.json",
+  "examples_listed_only": true,
   "outputs": [
    {
     "name": "out1",
@@ -4596,6 +4598,487 @@ body.scenesintab #looks > .tabs.sides:empty {
     height: .5rem;
   }
 }
+/* Examples to discover, with the line where a tab's examples start, the gallery over the page and
+   the marks and bins on the examples on the drive. --discover is the tab's own colour */
+.discoverbar {
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+#assets > .discoverbar,
+#assets > .discoverdivide {
+  grid-column: 1/-1;
+  width: 100%;
+  flex-basis: 100%;
+}
+
+.sounds > .discoverbar {
+  grid-column: 1/-1;
+  flex-basis: 100%;
+  width: 100%;
+}
+
+.discoverprimary {
+  background: var(--discover, var(--accent));
+  border-color: var(--discover, var(--accent));
+  color: var(--accent-ink);
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.discoverprogress {
+  height: 4px;
+  border-radius: var(--radius-xs);
+  background: rgba(0, 0, 0, .09);
+  overflow: hidden;
+  margin: var(--space-4) 0 var(--space-1);
+  max-width: 22rem;
+
+  > span {
+    display: block;
+    height: 100%;
+    background: var(--discover, var(--accent));
+    transition: width .3s ease;
+  }
+}
+
+.discovernotice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--text-m);
+  color: var(--accent);
+
+  &.hold {
+    color: #a8740f;
+  }
+}
+
+.discovernotice.warn,
+.discoverwarn {
+  color: var(--warn);
+}
+
+.discovermark {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* A rule with words in it, "Examples" in its middle where a tab's examples start and a kind's
+   name at its left, lighter, where the drawings or the pictures start within them */
+.discoverdivide {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin: var(--space-5) 0 var(--space-1);
+  color: var(--dim);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--line);
+  }
+
+  &.minor {
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    opacity: .8;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+.discoverbar > .discoverdivide {
+  margin: 0 0 var(--space-5);
+}
+
+/* The Discover button the width of the tab, and the one line under it, one height whatever it
+   says, the words cut short rather than wrapped, the bar's place kept while it is hidden */
+.discoverwide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-5) var(--space-6);
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--discover, var(--accent));
+  color: #fff;
+  font-size: var(--text-l);
+  font-weight: 600;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+
+.discoverwideicon {
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.35rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.discovercountchip {
+  background: rgba(255, 255, 255, .25);
+  border-radius: var(--radius-round);
+  padding: 0 var(--space-4);
+  font-size: var(--text-m);
+}
+
+.discoverupdaterow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(6rem, 12rem) auto auto;
+  align-items: center;
+  gap: var(--space-5);
+  height: 2.4rem;
+  margin-top: var(--space-4);
+  font-size: var(--text-m);
+  color: var(--dim);
+
+  /* On a phone what the row says takes a line of its own above its buttons */
+  @media (max-width: 40rem) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    height: auto;
+
+    > :first-child {
+      flex-basis: 100%;
+    }
+  }
+}
+
+.discoverrowsaid {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discoverupdaterow > .discovernotice {
+  margin: 0;
+}
+
+.discoverupdaterow > .discoverprogress {
+  margin: 0;
+  max-width: none;
+
+  &.discoveridle {
+    visibility: hidden;
+  }
+}
+
+.discoverupdaterow button {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-m);
+  white-space: nowrap;
+}
+
+/* An example being downloaded, faded until it is done */
+.discoverbusy {
+  opacity: .6;
+}
+
+/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
+   the bin and copy tile shown there */
+.discoverpill {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-round);
+  background: var(--overlay);
+  color: #fff;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  pointer-events: none;
+  transition: right .12s;
+
+  &.update {
+    background: var(--accent);
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  &.newer {
+    background: var(--dim);
+  }
+}
+
+.progcard:hover > .discoverpill,
+.asset:hover > .discoverpill {
+  right: 2.9rem;
+}
+
+.sound:hover > .discoverpill {
+  right: 1.6rem;
+}
+
+.discovershade .discoveroffer:hover > .discoverpill {
+  right: 4px;
+}
+
+/* The gallery over the page, its head and foot kept in view while its cards scroll */
+body.discovermodal {
+  overflow: hidden;
+}
+
+.discovershade {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(25, 27, 29, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2vh var(--space-6);
+}
+
+.discoversheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 60rem;
+  height: 100%;
+  max-height: 56rem;
+  background: var(--bg);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+}
+
+.discoversheethead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-6);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: var(--text-xl);
+    margin: 0 auto 0 0;
+  }
+}
+
+.discoverfilter {
+  font: inherit;
+  font-size: var(--text-m);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  min-width: 13rem;
+}
+
+.discoverchips {
+  padding: var(--space-4) var(--space-6);
+  margin: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.discoverscroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-3) var(--space-6) var(--space-6);
+}
+
+.discoverwaiting {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--dim);
+  font-size: var(--text-l);
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+
+  .discoverprogress {
+    width: 18rem;
+    max-width: 80%;
+  }
+}
+
+.discoverhead {
+  font-size: var(--text-l);
+  margin: var(--space-6) 0 var(--space-4);
+  color: var(--ink);
+}
+
+.discovergrid {
+  margin-top: var(--space-5);
+}
+
+.discoverhead + .discovergrid {
+  margin-top: 0;
+}
+
+.discoveroffer {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--discover);
+    outline-offset: 2px;
+  }
+
+  &.picked {
+    border-color: var(--discover);
+    box-shadow: 0 0 0 2px var(--discover);
+  }
+
+  &.newer {
+    opacity: .5;
+    cursor: default;
+  }
+}
+
+.discovertick {
+  position: absolute;
+  top: .4rem;
+  left: .4rem;
+  z-index: 4;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--discover);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.discoveroffer:hover .discovertick,
+.discoveroffer.picked .discovertick,
+.discovertick:focus-visible {
+  opacity: 1;
+}
+
+/* A program's icons sit along its thumbnail's foot, whatever follows the thumbnail */
+.discoverthumbwrap {
+  position: relative;
+
+  .proguses {
+    top: auto;
+    bottom: 4px;
+  }
+}
+
+/* A drawing's face is a program thumbnail's shape, a tall picture shown whole on dark either side.
+   Every card there is a picture or drawing, so none needs the tag, and its name is under it */
+.discoverdrawings .asset .face {
+  height: auto;
+  aspect-ratio: 4/3;
+  background: var(--dark);
+
+  img {
+    object-fit: contain;
+  }
+}
+
+.discovershade .asset .kind,
+.discovershade .asset .label,
+.discovershade .asset .drawingtitle {
+  display: none;
+}
+
+.discovershade .asset .progname {
+  display: block;
+}
+
+.discoversounds .sound {
+  width: auto;
+}
+
+/* What an example does, two lines kept for it so every card in a row is one height */
+.discoverdoes {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.6em;
+  line-height: 1.3;
+  margin: calc(-1 * var(--space-2)) var(--space-4) var(--space-4);
+  font-size: var(--text-s);
+  color: var(--dim);
+}
+
+.discoverhint {
+  color: var(--dim);
+  font-size: var(--text-m);
+}
+
+.discoverneeds {
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.discoversheetfoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.discoverfootsays {
+  flex: 1;
+  min-width: 0;
+
+  b {
+    font-weight: 600;
+  }
+
+  .discovernotice {
+    margin: 0;
+  }
+}
+
+.discoversheetfoot .discoverprimary {
+  padding: var(--space-4) var(--space-7);
+  font-size: var(--text-l);
+}
 .cardlamps {
   display: flex;
   padding: var(--space-4) 0 var(--space-3);
@@ -5503,6 +5986,17 @@ body.setupall .lightrow {
 .assets.wholeassets,
 .assets.wholeassets.hubbed {
   grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+}
+.discoverkind {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  z-index: 2;
+  font-size: var(--text-xs);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-xs);
+  background: var(--overlay);
+  color: #fff;
 }
 .hublead .boardicon {
   color: var(--screenA);
@@ -14051,6 +14545,1180 @@ function scenesInTheTab() {
   into.appendChild(plus);
 }
 
+// boards/editor/picker/discover/discover.js
+var DISCOVER_BRANCH = "main";
+var DISCOVER_SOURCE = "https://raw.githubusercontent.com/pimoroni/picofx/refs/heads/" + DISCOVER_BRANCH + "/";
+function discoverFileUrl(path) {
+  var index = BOARD.examples_index;
+  return DISCOVER_SOURCE + index.slice(0, index.lastIndexOf("/") + 1) + path;
+}
+var DISCOVER_FIRMWARE = VERSION.split(" ")[0];
+function discoverFreshCheck() {
+  return {
+    status: "idle",
+    progress: null,
+    refreshing: null,
+    updating: null,
+    error: null,
+    index: null,
+    notice: null
+  };
+}
+var DISCOVER_OFFLINE = "Could not connect. Check this computer is online.";
+async function discoverTrouble(e) {
+  if (e.name === "TypeError") return DISCOVER_OFFLINE;
+  if (e.name === "Error") return e.message;
+  return await driveTrouble(e);
+}
+function discoverSay(kind, text, warn) {
+  var notice = discover[kind].notice = [text, warn];
+  banner(text, warn);
+  if (warn) return;
+  setTimeout(function() {
+    if (discover[kind].notice !== notice) return;
+    discover[kind].notice = null;
+    drawFromLoad();
+  }, DISCOVER_NOTICE_MS);
+}
+var DISCOVER_NOTICE_MS = 8e3;
+var discover = {
+  program: discoverFreshCheck(),
+  sound: discoverFreshCheck(),
+  drawing: discoverFreshCheck(),
+  // Each example's state by path: missing, current, update, changed or moved
+  states: {},
+  // Each file's state by path, as {state: missing, same, old or changed, at: where the drive has it}
+  files: {},
+  // The examples needing newer firmware than the board's, by path
+  newer: {},
+  // The examples being downloaded, by path
+  busy: {},
+  // The path a moved example has now, by the path the drive has it at
+  movedTo: {}
+};
+var discoverPrograms = {};
+var discoverDrawings = {};
+var discoverSounds = {};
+var discoverKinds = {};
+var discoverThumbs = {};
+var discoverSecondThumbs = {};
+function discoverOlder(a, b) {
+  var x = a.split("."), y = b.split(".");
+  for (var at = 0; at < Math.max(x.length, y.length); at++) {
+    var difference = (parseInt(x[at], 10) || 0) - (parseInt(y[at], 10) || 0);
+    if (difference) return difference < 0;
+  }
+  return false;
+}
+async function discoverHash(bytes) {
+  var head = new TextEncoder().encode("blob " + bytes.length + "\0");
+  var whole = new Uint8Array(head.length + bytes.length);
+  whole.set(head);
+  whole.set(bytes, head.length);
+  var digest = new Uint8Array(await crypto.subtle.digest("SHA-1", whole));
+  return Array.from(digest, function(byte) {
+    return byte.toString(16).padStart(2, "0");
+  }).join("");
+}
+function discoverFinder() {
+  var folders = {};
+  function folder(path) {
+    if (path in folders) return folders[path];
+    folders[path] = (async function() {
+      var parts = path ? path.split("/") : [];
+      var handle = drive.dirHandle;
+      if (parts.length) {
+        var parent = await folder(parts.slice(0, -1).join("/"));
+        if (!parent || !parent.folders[parts[parts.length - 1]]) return null;
+        handle = parent.folders[parts[parts.length - 1]];
+      }
+      var listed = { files: {}, folders: {} };
+      for await (var pair of handle.entries())
+        listed[pair[1].kind === "file" ? "files" : "folders"][pair[0]] = pair[1];
+      return listed;
+    })();
+    return folders[path];
+  }
+  return async function(path) {
+    var listed = await folder(path.slice(0, Math.max(0, path.lastIndexOf("/"))));
+    return listed ? listed.files[path.slice(path.lastIndexOf("/") + 1)] || null : null;
+  };
+}
+async function discoverCompare(file, handle) {
+  var got = await handle.getFile();
+  if (!/\.(py|txt)$/i.test(file.path)) {
+    if (got.size === file.size) return "same";
+    return file.was.some(function(one) {
+      return one.size === got.size;
+    }) ? "old" : "changed";
+  }
+  var bytes = new Uint8Array(await got.arrayBuffer());
+  var hashes = [await discoverHash(bytes)];
+  if (bytes.indexOf(13) >= 0) {
+    hashes.push(await discoverHash(new TextEncoder().encode(
+      new TextDecoder().decode(bytes).replace(/\r\n/g, "\n")
+    )));
+  }
+  if (hashes.indexOf(file.hash) >= 0) return "same";
+  return file.was.some(function(one) {
+    return hashes.indexOf(one.hash) >= 0;
+  }) ? "old" : "changed";
+}
+async function discoverFileState(file, find) {
+  var places = [file.path].concat(file.moved_from || []);
+  for (var place of places) {
+    var handle = await find(place);
+    if (handle) return { state: await discoverCompare(file, handle), at: place };
+  }
+  return { state: "missing", at: null };
+}
+async function discoverIndex() {
+  var answer;
+  try {
+    answer = await fetch(discoverFileUrl("index.json"), { cache: "no-store" });
+  } catch (e) {
+    throw new Error(DISCOVER_OFFLINE);
+  }
+  if (!answer.ok) throw new Error("Could not find the list of examples.");
+  return await answer.json();
+}
+async function discoverCheck(kind, quiet) {
+  var check = discover[kind];
+  if (check.status === "checking" || check.refreshing || !drive.dirHandle) return;
+  if (kind === "program" ? !EXAMPLES_ROOT : kind === "sound" ? !BOARD.sound : !SCREEN_PORTS.length)
+    return;
+  quiet = quiet && check.status === "done" && check.index;
+  if (quiet) {
+    check.refreshing = [0, 1];
+  } else {
+    check.status = "checking";
+    check.progress = null;
+    check.notice = null;
+  }
+  draw();
+  try {
+    var index = quiet ? check.index : await discoverIndex();
+    var offered = index.examples.filter(function(entry) {
+      return discoverTab(entry) === kind;
+    });
+    var files = [];
+    offered.forEach(function(entry) {
+      entry.files.forEach(function(file) {
+        if (!files.some(function(one) {
+          return one.path === file.path;
+        })) files.push(file);
+      });
+    });
+    var find = discoverFinder();
+    var reading = [0, files.length];
+    if (quiet) check.refreshing = reading;
+    else check.progress = reading;
+    for (var at = 0; at < files.length; at++) {
+      discover.files[files[at].path] = await discoverFileState(files[at], find);
+      reading[0] = at + 1;
+      if (at % 20 === 19) drawFromLoad();
+    }
+    Object.keys(discover.movedTo).forEach(function(old) {
+      var moved = discoverEntry(discover.movedTo[old]);
+      if (moved && discoverTab(moved) === kind) delete discover.movedTo[old];
+    });
+    offered.forEach(function(entry) {
+      discover.states[entry.path] = discoverStateOf(entry);
+      var own = discover.files[entry.files[0].path];
+      if (discover.states[entry.path] === "moved") discover.movedTo[own.at] = entry.path;
+      if (discoverOlder(DISCOVER_FIRMWARE, entry.firmware)) discover.newer[entry.path] = true;
+      else delete discover.newer[entry.path];
+    });
+    var same = check.index === index;
+    check.index = index;
+    await discoverFetchMissing(kind, offered, same);
+    check.status = "done";
+  } catch (e) {
+    check.status = "failed";
+    check.error = await discoverTrouble(e);
+  }
+  check.progress = null;
+  check.refreshing = null;
+  draw();
+}
+function discoverStateOf(entry) {
+  var own = discover.files[entry.files[0].path];
+  if (own.state === "missing") return "missing";
+  if (own.at !== entry.files[0].path) return "moved";
+  var states = entry.files.map(function(file) {
+    return discover.files[file.path];
+  });
+  if (states.some(function(one) {
+    return one.state === "changed";
+  })) return "changed";
+  return entry.files.every(function(file, at) {
+    return states[at].state === "same" && states[at].at === file.path;
+  }) ? "current" : "update";
+}
+async function discoverFetchMissing(kind, offered, same) {
+  var missing = offered.filter(function(entry) {
+    return discover.states[entry.path] === "missing";
+  });
+  var listed = {};
+  var before = same ? discoverListedOn(kind) : {};
+  async function one(entry) {
+    if (before[entry.path]) {
+      listed[entry.path] = before[entry.path];
+      return;
+    }
+    try {
+      if (entry.kind === "picture") {
+        if (!discoverThumbs[entry.path]) {
+          discoverThumbs[entry.path] = URL.createObjectURL(
+            await (await fetch(discoverFileUrl(entry.files[0].path))).blob()
+          );
+        }
+        listed[entry.path] = {
+          name: entry.path,
+          kind: "picture",
+          offered: true,
+          picture: {
+            title: entry.name,
+            section: entry.section,
+            slideshow: entry.slideshow,
+            count: entry.files.length
+          }
+        };
+        return;
+      }
+      if (entry.kind === "sound") {
+        var head = await (await fetch(
+          discoverFileUrl(entry.path),
+          { headers: { Range: "bytes=0-4095" } }
+        )).arrayBuffer();
+        listed[entry.path] = {
+          name: entry.path,
+          kind: "sound",
+          offered: true,
+          sound: {
+            title: entry.name,
+            section: entry.section,
+            seconds: discoverWavSeconds(head, entry.files[0].size),
+            url: discoverFileUrl(entry.path)
+          }
+        };
+        return;
+      }
+      var source = await (await fetch(discoverFileUrl(entry.path))).text();
+      var stem = entry.path.replace(/\.py$/i, "");
+      for (var suffix of [".png", "-2.png"]) {
+        var held = suffix === ".png" ? discoverThumbs : discoverSecondThumbs;
+        var thumb = entry.files.filter(function(file) {
+          return file.path === stem + suffix;
+        })[0];
+        if (thumb && !held[entry.path]) {
+          var blob = await (await fetch(discoverFileUrl(thumb.path))).blob();
+          held[entry.path] = URL.createObjectURL(blob);
+        }
+      }
+      if (kind === "program") {
+        var folder = entry.path.slice(EXAMPLES_ROOT.length, entry.path.lastIndexOf("/"));
+        var program = programFrom(entry.path, folder, source);
+        if (program) {
+          program.offered = true;
+          listed[entry.path] = program;
+        }
+      } else {
+        var drawing = discoverKinds.drawing && discoverKinds.drawing.said(source);
+        if (drawing) listed[entry.path] = {
+          name: entry.path,
+          kind: "drawing",
+          drawing,
+          offered: true
+        };
+      }
+    } catch (e) {
+    }
+  }
+  for (var at = 0; at < missing.length; at += 4) await Promise.all(missing.slice(at, at + 4).map(one));
+  if (kind === "program") {
+    discoverPrograms = listed;
+    var urls = [];
+    Object.keys(listed).forEach(function(path) {
+      urls = urls.concat(discoverPicturesOf(path));
+    });
+    loadThumbs(urls);
+  } else if (kind === "sound") {
+    discoverSounds = listed;
+  } else {
+    discoverDrawings = listed;
+  }
+}
+function discoverPicturesOf(path) {
+  return discoverThumbs[path] ? [discoverThumbs[path]].concat(discoverSecondThumbs[path] || []) : [];
+}
+function discoverWavSeconds(head, size) {
+  var view = new DataView(head);
+  if (view.byteLength < 12 || view.getUint32(0) !== 1380533830 || view.getUint32(8) !== 1463899717)
+    return 0;
+  var at = 12, byteRate = 0;
+  while (at + 8 <= view.byteLength) {
+    var id = view.getUint32(at), length = view.getUint32(at + 4, true);
+    if (id === 1718449184) byteRate = view.getUint32(at + 16, true);
+    else if (id === 1684108385)
+      return byteRate ? Math.max(1, Math.round(Math.min(length, size - at - 8) / byteRate)) : 0;
+    at += 8 + length + length % 2;
+  }
+  return 0;
+}
+function discoverTab(entry) {
+  return entry.kind === "program" || entry.kind === "sound" ? entry.kind : "drawing";
+}
+var DISCOVER_TABS = ["program", "drawing", "sound"];
+var DISCOVER_WORDS = { program: "programs", drawing: "pictures and drawings", sound: "sounds" };
+function discoverAsked(kind) {
+  var held = kind === "program" ? PROGRAMS.some(function(program) {
+    return program.example;
+  }) : kind === "sound" ? state.sounds.some(isExampleMedia) : state.media.some(function(media) {
+    return !media.offered && isExampleMedia(media.name);
+  });
+  return (held ? "more example " : "example ") + DISCOVER_WORDS[kind];
+}
+function discoverListedOn(kind) {
+  return kind === "program" ? discoverPrograms : kind === "sound" ? discoverSounds : discoverDrawings;
+}
+function discoverEntry(path) {
+  var found = null;
+  DISCOVER_TABS.forEach(function(kind) {
+    var index = discover[kind].index;
+    if (!found && index) found = index.examples.filter(function(entry) {
+      return discoverTab(entry) === kind && entry.path === path;
+    })[0] || null;
+  });
+  return found;
+}
+function discoverTarget(path) {
+  return discover.movedTo[path] || path;
+}
+async function discoverWrite(path, blob) {
+  var parts = path.split("/");
+  var name = parts.pop();
+  var folder = drive.dirHandle;
+  for (var at = 0; at < parts.length; at++)
+    folder = await folder.getDirectoryHandle(parts[at], { create: true });
+  var writable = await (await folder.getFileHandle(name, { create: true })).createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
+async function discoverRemove(path) {
+  var parts = path.split("/");
+  var name = parts.pop();
+  var folder = await folderAt(drive.dirHandle, parts);
+  if (folder) await folder.removeEntry(name);
+}
+async function discoverDownload(path, quiet) {
+  var entry = discoverEntry(path);
+  if (!entry || discover.busy[path] || discover.newer[path]) return false;
+  var tab = discoverTab(entry);
+  discover.busy[path] = true;
+  if (!quiet) discoverSay(tab, "Downloading " + nameShown(path) + "...", "hold");
+  draw();
+  var fresh = discover.states[path] === "missing";
+  var own = discover.files[entry.files[0].path];
+  var was = own.at;
+  var kept = null;
+  try {
+    if (own.state === "changed" && (entry.kind === "program" || entry.kind === "drawing"))
+      kept = entry.kind === "program" ? await copyProgram(was) : "drawings/" + await discoverKinds.drawing.copy(was);
+    var written = {};
+    for (var file of entry.files) {
+      var held = discover.files[file.path];
+      if (held.state === "same" && held.at === file.path) continue;
+      var blob = await (await fetch(discoverFileUrl(file.path))).blob();
+      if (await discoverHash(new Uint8Array(await blob.arrayBuffer())) !== file.hash)
+        throw new Error("The downloaded file did not match. Try again.");
+      await discoverWrite(file.path, blob);
+      written[file.path] = blob;
+    }
+    for (file of entry.files) {
+      held = discover.files[file.path];
+      if (held.at && held.at !== file.path) await discoverRemove(held.at);
+      discover.files[file.path] = { state: "same", at: file.path };
+    }
+    if (was && was !== path) delete discover.movedTo[was];
+    discover.states[path] = "current";
+    await discoverListed(entry, written, fresh && !quiet, was);
+    if (!quiet) {
+      discoverSay(tab, (fresh ? "Downloaded " : "Updated ") + nameShown(path) + "." + (kept ? " Your changed copy is kept as " + kept + "." : ""));
+    }
+    var done = kept || true;
+  } catch (e) {
+    discoverSay(
+      tab,
+      "Could not download " + nameShown(path) + ". " + await discoverTrouble(e),
+      true
+    );
+    done = false;
+  }
+  delete discover.busy[path];
+  draw();
+  return done;
+}
+async function discoverListed(entry, written, fresh, was) {
+  var path = entry.path;
+  if (entry.kind === "program") {
+    var stem = path.replace(/\.py$/i, "");
+    var source = written[path] ? await written[path].text() : await (await (await (await folderAt(drive.dirHandle, path.split("/").slice(0, -1))).getFileHandle(nameShown(path))).getFile()).text();
+    var folder = path.slice(EXAMPLES_ROOT.length, path.lastIndexOf("/"));
+    var program = programFrom(path, folder, source);
+    setPrograms(PROGRAMS.filter(function(one) {
+      return one.path !== path && one.path !== was;
+    }));
+    if (program) PROGRAMS.push(program);
+    delete discoverPrograms[path];
+    var shown = [stem + ".png", stem + "-2.png"].filter(function(name) {
+      return written[name];
+    }).map(function(name) {
+      return URL.createObjectURL(written[name]);
+    });
+    if (shown.length) {
+      PICTURES[path] = shown;
+      loadThumbs(shown);
+    } else if (was && PICTURES[was]) {
+      PICTURES[path] = PICTURES[was];
+    }
+    if (was && was !== path) {
+      delete PICTURES[was];
+      if (boardSet.program === was) boardSet.program = path;
+      if (boardSet.args[was]) {
+        boardSet.args[path] = boardSet.args[was];
+        delete boardSet.args[was];
+      }
+    }
+    if (fresh && program) boardSet.program = path;
+    return;
+  }
+  delete discoverDrawings[path];
+  delete discoverSounds[path];
+  delete state.art[path];
+  for (var tries = 0; tries < 20; tries++) {
+    await scanMedia(state.dirHandle);
+    if (discoverKinds[entry.kind].onDrive(path)) return;
+    await new Promise(function(settle2) {
+      setTimeout(settle2, 100);
+    });
+  }
+}
+async function discoverUpdateAll(kind) {
+  var paths = discoverUpdates(kind);
+  var kept = [];
+  for (var at = 0; at < paths.length; at++) {
+    discover[kind].updating = [at, paths.length];
+    discoverSay(kind, "Updating " + (at + 1) + " of " + paths.length + "...", "hold");
+    var done = await discoverDownload(paths[at], true);
+    if (!done) {
+      discover[kind].updating = null;
+      draw();
+      return;
+    }
+    if (done !== true) kept.push(done);
+  }
+  discover[kind].updating = null;
+  discoverSay(kind, "Updated " + paths.length + (paths.length === 1 ? " example." : " examples.") + (kept.length === 1 ? " Your changed copy is kept as " + kept[0] + "." : kept.length ? " Your changed copies are kept as " + kept.join(", ") + "." : ""));
+  draw();
+}
+var DISCOVER_UPDATES = ["update", "changed", "moved"];
+function discoverUpdates(kind) {
+  return Object.keys(discover.states).filter(function(path) {
+    var entry = discoverEntry(path);
+    return entry && discoverTab(entry) === kind && !discover.newer[path] && DISCOVER_UPDATES.indexOf(discover.states[path]) >= 0;
+  });
+}
+var DISCOVER_ICONS = {
+  get: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M7 18.5h-.5a4.5 4.5 0 0 1-.6-8.96 6 6 0 0 1 11.6-1.3A5 5 0 0 1 17.5 18.5H17 M12 11v8 M9 16l3 3 3-3' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+  done: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+  warn: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 4v10 M12 19v.5' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round'/></svg>"
+};
+function discoverIcon(name, className) {
+  return h("span", { className, html: DISCOVER_ICONS[name] });
+}
+function discoverFound(kind) {
+  var listed = discoverListedOn(kind);
+  return {
+    waiting: Object.keys(listed).filter(function(path) {
+      return !discover.newer[path] && discoverCanRun(kind, path);
+    }),
+    updates: discoverUpdates(kind),
+    newer: Object.keys(discover.newer).filter(function(path) {
+      var entry = discoverEntry(path);
+      return entry && discoverTab(entry) === kind && discover.states[path] !== "current";
+    }).length
+  };
+}
+function discoverCount(count, one, many) {
+  return count + " " + (count === 1 ? one : many);
+}
+function discoverProgress(at, idle) {
+  return h(
+    "div",
+    { className: "discoverprogress" + (idle ? " discoveridle" : "") },
+    h("span", { style: { width: (at ? Math.round(100 * at[0] / Math.max(1, at[1])) : 8) + "%" } })
+  );
+}
+function discoverNotice(check) {
+  if (!check.notice) return null;
+  var warn = check.notice[1];
+  return h(
+    "div",
+    { className: "discovernotice" + (warn === "hold" ? " hold" : warn ? " warn" : "") },
+    warn === "hold" ? null : discoverIcon(warn ? "warn" : "done", "discovermark"),
+    check.notice[0]
+  );
+}
+function discoverThumbImage(path) {
+  var img = h("img", { alt: "", onerror: function() {
+    img.remove();
+  }, src: discoverThumbs[path] });
+  return img;
+}
+function discoverBar(kind) {
+  return h("div", { className: "discoverbar" }, discoverDivider("Examples"), discoverPanel(kind));
+}
+function discoverPlaceBar(box, kind) {
+  var bar = discoverBar(kind);
+  var heads = box.querySelectorAll(".foldhead");
+  if (heads.length > 1) box.insertBefore(bar, heads[1]);
+  else box.appendChild(bar);
+}
+var discoverBrowsing = null;
+var discoverChosen = [];
+var discoverAnchor = null;
+var discoverSection = "";
+var discoverFetching = null;
+var DISCOVER_INK = { program: "var(--board)", drawing: "var(--accent)", sound: "var(--accent)" };
+function discoverPanel(kind) {
+  var check = discover[kind];
+  var found = check.status === "done" ? discoverFound(kind) : null;
+  return h(
+    "div",
+    { className: "discoverpanel", style: { "--discover": DISCOVER_INK[kind] } },
+    h(
+      "button",
+      {
+        type: "button",
+        className: "discoverwide",
+        onclick: function() {
+          discoverOpenBrowser(kind);
+        }
+      },
+      discoverIcon("get", "discoverwideicon"),
+      "Discover " + discoverAsked(kind),
+      found && found.waiting.length ? h("span", { className: "discovercountchip" }, String(found.waiting.length)) : null
+    ),
+    discoverUpdateRow(kind, check, found)
+  );
+}
+function discoverUpdateRow(kind, check, found) {
+  var running = check.status === "checking" ? check.progress || [0, 1] : check.updating || discoverFetching || check.refreshing;
+  var busy = check.status === "checking" || running || check.notice && check.notice[1] === "hold";
+  var said = check.status === "done" && discoverNotice(check);
+  if (said) said.classList.add("discoverrowsaid");
+  else {
+    said = h(
+      "span",
+      { className: "discoverrowsaid" + (check.status === "failed" ? " discoverwarn" : "") },
+      check.status === "idle" ? "Check the examples on the drive for newer versions." : check.status === "checking" ? "Checking for updates..." : check.status === "failed" ? check.error || DISCOVER_OFFLINE : found.updates.length ? discoverCount(found.updates.length, "update", "updates") + " for examples on the drive." : "The examples on the drive are up to date."
+    );
+  }
+  return h(
+    "div",
+    { className: "discoverupdaterow" },
+    said,
+    discoverProgress(running || null, !running),
+    h("button", {
+      type: "button",
+      className: "discoverprimary",
+      disabled: busy || !found || !found.updates.length,
+      onclick: function() {
+        discoverUpdateAll(kind);
+      }
+    }, "Update all"),
+    h("button", {
+      type: "button",
+      disabled: !!busy,
+      onclick: function() {
+        discoverCheck(kind);
+      }
+    }, "Check for updates")
+  );
+}
+function discoverOpenBrowser(kind) {
+  discoverBrowsing = kind;
+  discoverChosen = [];
+  discoverAnchor = null;
+  discoverSection = "";
+  discoverCheck(kind, true);
+  draw();
+}
+function discoverCloseBrowser() {
+  discoverBrowsing = null;
+  draw();
+}
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape" && discoverBrowsing) discoverCloseBrowser();
+});
+function discoverCanRun(kind, path) {
+  return kind !== "program" || driveHasCredentials || usesOf(path).indexOf("wifi") < 0;
+}
+function discoverOffers(kind) {
+  var listed = discoverListedOn(kind);
+  return Object.keys(listed).filter(function(path) {
+    return discoverCanRun(kind, path);
+  }).map(function(path) {
+    var held = listed[path];
+    if (kind === "program")
+      return [path, programTitle(path), held.does || "", held.section || "", "program"];
+    if (kind === "sound") {
+      return [
+        path,
+        held.sound.title,
+        held.sound.seconds ? held.sound.seconds + "s" : "",
+        held.sound.section || OTHER_EXAMPLES.sounds,
+        "sound"
+      ];
+    }
+    if (held.kind === "picture") {
+      return [
+        path,
+        held.picture.title,
+        discoverPictureSaid(held.picture),
+        held.picture.section || OTHER_EXAMPLES.pictures,
+        "picture"
+      ];
+    }
+    return [
+      path,
+      held.drawing.title,
+      held.drawing.description || "",
+      held.drawing.section || OTHER_EXAMPLES.drawings,
+      "drawing"
+    ];
+  }).sort(function(a, b) {
+    return a[1].localeCompare(b[1], void 0, { numeric: true });
+  });
+}
+function discoverDivider(words, minor) {
+  return h("div", { className: "discoverdivide" + (minor ? " minor" : "") }, h("span", {}, words));
+}
+function discoverSectionKind(offers, section) {
+  return offers.some(function(offer) {
+    return offer[3] === section && offer[4] === "picture";
+  }) ? "picture" : "drawing";
+}
+function discoverShows(offers, section) {
+  if (!discoverSection) return true;
+  if (discoverSection.indexOf("kind:") === 0)
+    return discoverSectionKind(offers, section) === discoverSection.slice(5);
+  return section === discoverSection;
+}
+function discoverPictureSaid(picture) {
+  if (picture.slideshow) return "A slideshow of " + picture.count + " pictures.";
+  return "A " + picture.title.slice(picture.title.lastIndexOf(".") + 1).toUpperCase() + " picture.";
+}
+function discoverSections(kind, offers) {
+  function names(sections) {
+    return (sections || []).map(function(one) {
+      return one[0];
+    });
+  }
+  var listed = kind === "program" ? names(SECTIONS) : kind === "sound" ? names(exampleSections.sounds).concat([OTHER_EXAMPLES.sounds]) : names(exampleSections.drawings).concat(
+    [OTHER_EXAMPLES.drawings],
+    names(exampleSections.pictures),
+    [OTHER_EXAMPLES.pictures]
+  );
+  var named2 = [];
+  offers.forEach(function(offer) {
+    if (named2.indexOf(offer[3]) < 0) named2.push(offer[3]);
+  });
+  function pictured(section) {
+    return offers.some(function(offer) {
+      return offer[3] === section && offer[4] === "picture";
+    });
+  }
+  return named2.sort(function(a, b) {
+    if (pictured(a) !== pictured(b)) return pictured(a) ? 1 : -1;
+    if (!a || !b) return a ? -1 : b ? 1 : 0;
+    var x = listed.indexOf(a), y = listed.indexOf(b);
+    if (x < 0 || y < 0) return x < 0 && y < 0 ? a.localeCompare(b) : x < 0 ? 1 : -1;
+    return x - y;
+  });
+}
+function discoverChoose(path, e, toggle2, shown) {
+  e = e || {};
+  if (e.shiftKey && discoverAnchor && shown.indexOf(discoverAnchor) >= 0) {
+    var from = shown.indexOf(discoverAnchor), to = shown.indexOf(path);
+    shown.slice(Math.min(from, to), Math.max(from, to) + 1).forEach(function(one) {
+      if (discoverChosen.indexOf(one) < 0 && !discover.newer[one]) discoverChosen.push(one);
+    });
+    draw();
+    return;
+  }
+  if (toggle2 || e.ctrlKey || e.metaKey) {
+    var at = discoverChosen.indexOf(path);
+    if (at < 0) discoverChosen.push(path);
+    else discoverChosen.splice(at, 1);
+  } else {
+    discoverChosen = discoverChosen.length === 1 && discoverChosen[0] === path ? [] : [path];
+  }
+  discoverAnchor = path;
+  draw();
+}
+async function discoverDownloadChosen(kind) {
+  var paths = discoverChosen.slice();
+  if (paths.length === 1) {
+    await discoverDownload(paths[0]);
+    discoverChosen = [];
+    draw();
+    return;
+  }
+  for (var at = 0; at < paths.length; at++) {
+    discoverFetching = [at, paths.length];
+    discoverSay(kind, "Downloading " + (at + 1) + " of " + paths.length + "...", "hold");
+    var done = await discoverDownload(paths[at], true);
+    discoverChosen = discoverChosen.filter(function(one) {
+      return one !== paths[at];
+    });
+    if (!done) {
+      discoverFetching = null;
+      draw();
+      return;
+    }
+  }
+  discoverFetching = null;
+  discoverSay(kind, "Downloaded " + discoverCount(paths.length, "example.", "examples."));
+  draw();
+}
+addStep(drawSteps.after, DRAW_AFTER, "discover", discoverRenderBrowser);
+function discoverRenderBrowser() {
+  var old = document.getElementById("discoverbrowser");
+  var scrolled = old ? old.querySelector(".discoverscroll").scrollTop : 0;
+  if (old) old.remove();
+  document.body.classList.toggle("discovermodal", !!discoverBrowsing);
+  if (!discoverBrowsing) return;
+  var kind = discoverBrowsing;
+  var check = discover[kind];
+  var asked = discoverAsked(kind);
+  var every = check.status === "done" ? discoverOffers(kind) : [];
+  var offers = kind === "program" ? every.filter(function(offer) {
+    return passesFilter(offer[0]);
+  }) : every;
+  var chips = kind === "program" ? discoverChips(every) : null;
+  var sections = discoverSections(kind, offers).filter(Boolean);
+  var kinds = kind === "program" ? [] : ["drawing", "picture"].filter(function(one) {
+    return sections.some(function(section) {
+      return discoverSectionKind(offers, section) === one;
+    });
+  });
+  var grouped = kinds.length > 1;
+  var choices = grouped ? kinds.map(function(one) {
+    return "kind:" + one;
+  }) : [];
+  if (discoverSection && sections.indexOf(discoverSection) < 0 && choices.indexOf(discoverSection) < 0)
+    discoverSection = "";
+  discoverChosen = discoverChosen.filter(function(path) {
+    return offers.some(function(offer) {
+      return offer[0] === path;
+    });
+  });
+  function choice(value, words) {
+    return h(
+      "option",
+      { value, selected: value === discoverSection },
+      words + " (" + offers.filter(function(offer) {
+        return !value || (value.indexOf("kind:") === 0 ? discoverSectionKind(offers, offer[3]) === value.slice(5) : offer[3] === value);
+      }).length + ")"
+    );
+  }
+  var choose2 = offers.length ? h("select", {
+    className: "discoverfilter",
+    name: "discoverSection",
+    "aria-label": "Examples shown",
+    onchange: function() {
+      discoverSection = choose2.value;
+      draw();
+    }
+  }, choice("", "All"), grouped ? kinds.map(function(one) {
+    return h(
+      "optgroup",
+      { label: one === "picture" ? "Pictures" : "Drawings" },
+      choice("kind:" + one, one === "picture" ? "All pictures" : "All drawings"),
+      sections.filter(function(section) {
+        return discoverSectionKind(offers, section) === one;
+      }).map(function(section) {
+        return choice(section, section);
+      })
+    );
+  }) : sections.map(function(section) {
+    return choice(section, section);
+  })) : null;
+  var scrolling = [];
+  if (check.status !== "done") {
+    scrolling.push(h(
+      "div",
+      { className: "discoverwaiting", role: "status" },
+      h("p", {}, check.status === "failed" ? check.error || DISCOVER_OFFLINE : "Checking for examples..."),
+      check.status === "failed" ? null : discoverProgress(check.progress)
+    ));
+  } else if (!offers.length) {
+    var any = check.index.examples.some(function(entry) {
+      return discoverTab(entry) === kind;
+    });
+    scrolling.push(h("div", { className: "discoverwaiting", role: "status" }, every.length ? "Every example here needs hardware that is not selected." : any ? "The drive has every example." : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
+  } else {
+    var updatable = offers.filter(function(offer) {
+      return discover.newer[offer[0]] && discoverReleased(discoverEntry(offer[0]).firmware) === true;
+    }).length;
+    if (updatable) {
+      scrolling.push(h(
+        "p",
+        { className: "discoverhint discoverneeds" },
+        discoverCount(updatable, "example here needs", "examples here need") + " newer firmware. To update, go back and press Update available beside the version."
+      ));
+    }
+  }
+  var shown = [];
+  var listed = discoverSections(kind, offers).filter(function(section) {
+    return discoverShows(offers, section);
+  });
+  var named2 = kind !== "program" && listed.some(function(section) {
+    return discoverSectionKind(offers, section) === "picture";
+  }) && listed.some(function(section) {
+    return discoverSectionKind(offers, section) !== "picture";
+  });
+  var lastKind = null;
+  listed.forEach(function(section) {
+    var held = offers.filter(function(offer) {
+      return offer[3] === section;
+    });
+    var sectionKind = discoverSectionKind(offers, section);
+    if (named2 && sectionKind !== lastKind)
+      scrolling.push(discoverDivider(sectionKind === "picture" ? "Pictures" : "Drawings", true));
+    lastKind = sectionKind;
+    if (listed.length > 1)
+      scrolling.push(h("h3", { className: "discoverhead" }, section || "Other examples"));
+    scrolling.push(h(
+      "div",
+      { className: "discovergrid proggrid" + (kind === "program" ? "" : kind === "sound" ? " discoversounds" : " discoverdrawings") },
+      held.map(function(offer) {
+        shown.push(offer[0]);
+        return discoverOfferCard(offer, shown);
+      })
+    ));
+  });
+  var scroll = h("div", { className: "discoverscroll" }, scrolling);
+  var chosen = offers.filter(function(offer) {
+    return discoverChosen.indexOf(offer[0]) >= 0;
+  });
+  var busy = discoverFetching || check.refreshing || chosen.some(function(offer) {
+    return discover.busy[offer[0]];
+  });
+  var notice = discoverNotice(check);
+  var downloading = busy && !check.refreshing;
+  var foot = h(
+    "div",
+    { className: "discoversheetfoot" },
+    h(
+      "div",
+      { className: "discoverfootsays" },
+      notice && (!chosen.length || busy) ? notice : chosen.length === 1 ? h("b", {}, chosen[0][1]) : chosen.length ? h("b", {}, discoverCount(chosen.length, "example", "examples") + " chosen") : check.refreshing ? h(
+        "span",
+        { className: "discoverhint" },
+        "Checking the drive for changes..."
+      ) : offers.length ? h(
+        "span",
+        { className: "discoverhint" },
+        "Choose an example to download. Tick its box to choose more than one."
+      ) : null,
+      discoverFetching || check.refreshing ? discoverProgress(discoverFetching || check.refreshing) : null
+    ),
+    chosen.length > 1 && !busy ? h("button", {
+      type: "button",
+      onclick: function() {
+        discoverChosen = [];
+        draw();
+      }
+    }, "Clear") : null,
+    h("button", {
+      type: "button",
+      className: "discoverprimary",
+      disabled: !chosen.length || !!busy,
+      onclick: function() {
+        discoverDownloadChosen(kind);
+      }
+    }, downloading ? "Downloading..." : chosen.length > 1 ? "Download " + chosen.length : "Download")
+  );
+  var shade = h("div", {
+    className: "discovershade",
+    id: "discoverbrowser",
+    style: { "--discover": DISCOVER_INK[kind] },
+    onclick: function(e) {
+      if (e.target === shade) discoverCloseBrowser();
+    }
+  }, h(
+    "div",
+    { className: "discoversheet" },
+    h(
+      "div",
+      { className: "discoversheethead" },
+      h("button", { type: "button", onclick: discoverCloseBrowser }, "\u2039 Back"),
+      h("h2", {}, asked.charAt(0).toUpperCase() + asked.slice(1)),
+      choose2
+    ),
+    chips,
+    scroll,
+    foot
+  ));
+  document.body.appendChild(shade);
+  scroll.scrollTop = scrolled;
+}
+function discoverProgramFace(path) {
+  PICTURES[path] = discoverPicturesOf(path);
+  var tabCard = programCard(path);
+  delete PICTURES[path];
+  var parts = Array.from(tabCard.children).filter(function(part) {
+    return !part.classList.contains("copytile") && !part.classList.contains("bin");
+  });
+  function named2(part) {
+    return part.classList.contains("progname");
+  }
+  return h(
+    "div",
+    { className: "progcard discoveroffer", title: tabCard.title },
+    h(
+      "div",
+      { className: "discoverthumbwrap" },
+      parts.filter(function(part) {
+        return !named2(part);
+      })
+    ),
+    parts.filter(named2),
+    h("span", { className: "discoverdoes" }, (programNamed(path) || {}).does || null)
+  );
+}
+function discoverOfferCard(offer, shown) {
+  var path = offer[0];
+  var chosen = discoverChosen.indexOf(path) >= 0;
+  var card = discoverBrowsing === "program" ? discoverProgramFace(path) : discoverKinds[discoverBrowsing].face(path);
+  if (chosen) card.classList.add("picked");
+  if (discover.newer[path]) card.classList.add("newer");
+  card.dataset.path = path;
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-pressed", chosen);
+  var firmware2 = discover.newer[path] ? discoverEntry(path).firmware : null;
+  card.append(firmware2 ? h(
+    "span",
+    { className: "discoverpill newer", title: discoverNeedsSays(firmware2) },
+    "Needs " + firmware2
+  ) : h("input", {
+    type: "checkbox",
+    className: "discovertick",
+    checked: chosen,
+    title: "Choose " + offer[1],
+    name: "discoverChosen",
+    "aria-label": "Choose " + offer[1],
+    onclick: function(e) {
+      e.stopPropagation();
+      discoverChoose(path, e, true, shown);
+    }
+  }));
+  card.onclick = function(e) {
+    if (!discover.newer[path]) discoverChoose(path, e, false, shown);
+  };
+  card.onkeydown = function(e) {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      card.onclick(e);
+    }
+  };
+  return card;
+}
+function discoverReleased(version) {
+  return firmwareHooks.covers(version);
+}
+function discoverNeedsSays(version) {
+  var needs = "Needs " + BOARD.name + " firmware " + version + " or newer";
+  var released = discoverReleased(version);
+  if (released === true) return needs + ", from Update available beside the version.";
+  if (released === false) return needs + ", not yet released.";
+  return needs + ".";
+}
+function discoverPill(cardPath) {
+  var path = discoverTarget(cardPath);
+  var entry = discoverEntry(path);
+  if (!entry || discover[discoverTab(entry)].status !== "done") return null;
+  if (discover.busy[path]) return h("span", { className: "discoverpill", title: "Downloading" }, "...");
+  if (discover.newer[path] && discover.states[path] !== "current") {
+    return h(
+      "span",
+      { className: "discoverpill newer", title: discoverNeedsSays(entry.firmware) },
+      "Needs " + entry.firmware
+    );
+  }
+  if (discover.states[path] === "missing") {
+    return h("span", {
+      className: "discoverpill",
+      title: "Download",
+      html: "<svg width='11' height='11' viewBox='0 0 11 11' aria-hidden='true'><path d='M5.5 1 L5.5 7.5 M2.5 4.8 L5.5 7.8 L8.5 4.8 M1.5 9.8 L9.5 9.8' stroke='currentColor' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    });
+  }
+  if (DISCOVER_UPDATES.indexOf(discover.states[path]) >= 0) {
+    return h("span", {
+      className: "discoverpill update",
+      title: discover.files[entry.files[0].path].state === "changed" ? "Download the newer version. Your changed copy is kept." : "Download the newer version.",
+      onclick: function(e) {
+        e.stopPropagation();
+        discoverDownload(path);
+      }
+    }, "Update");
+  }
+  return null;
+}
+programsElsewhere.push(function(path) {
+  return discoverPrograms[path] || null;
+});
+programCardSteps.push(function(card, path) {
+  var own = PROGRAMS.filter(function(one) {
+    return one.path === path;
+  })[0];
+  if (!own) return;
+  if (discover.busy[discoverTarget(path)]) card.classList.add("discoverbusy");
+  if (own.example && drive.dirHandle) discoverBinBeside(card, discoverBin(path, "program"));
+  var pill = discoverPill(path);
+  if (pill) card.appendChild(pill);
+});
+programViewSteps.push(function() {
+  if (EXAMPLES_ROOT) discoverPlaceBar(programView, "program");
+});
+function discoverChips(offers) {
+  var used = FEATURES.filter(function(feature) {
+    return CHIPLESS.indexOf(feature[0]) < 0 && offers.some(function(offer) {
+      return usesOf(offer[0]).indexOf(feature[0]) >= 0;
+    });
+  });
+  if (!used.length) return null;
+  return h(
+    "div",
+    {
+      className: "featurefilter discoverchips",
+      role: "group",
+      "aria-label": "Show examples using"
+    },
+    h("span", {}, "With:"),
+    used.map(function(feature) {
+      return h("button", {
+        type: "button",
+        className: "featurechip" + (had(feature[0]) ? " on" : ""),
+        "aria-pressed": String(had(feature[0])),
+        "data-feature": feature[0],
+        title: had(feature[0]) ? "Showing programs that use " + feature[1] : "Hiding programs that need " + feature[1],
+        onclick: function() {
+          var at = unhad.indexOf(feature[0]);
+          if (at >= 0) unhad.splice(at, 1);
+          else unhad.push(feature[0]);
+          draw();
+        }
+      }, featureIcon(feature[0]), feature[2]);
+    }),
+    h(
+      "div",
+      { className: "featureclears" },
+      [
+        ["all", function() {
+          return unhad.filter(function(key) {
+            return !used.some(function(feature) {
+              return feature[0] === key;
+            });
+          });
+        }],
+        ["none", function() {
+          return unhad.concat(used.map(function(feature) {
+            return feature[0];
+          }));
+        }]
+      ].map(function(one) {
+        return h("button", {
+          type: "button",
+          className: "featureclear",
+          onclick: function() {
+            setUnhad(one[1]());
+            draw();
+          }
+        }, one[0]);
+      })
+    )
+  );
+}
+function discoverBin(path, kind) {
+  return h("span", {
+    className: "bin",
+    role: "button",
+    title: "Delete " + nameShown(path) + " from the FX drive",
+    onclick: function(e) {
+      e.stopPropagation();
+      discoverDelete(path, kind);
+    }
+  }, "\xD7");
+}
+async function discoverDelete(path, kind) {
+  var name = nameShown(path);
+  var tab = kind === "program" || kind === "sound" ? kind : "drawing";
+  if (!confirm("Delete " + name + " from the FX drive? You can download it again later.")) return;
+  try {
+    var parts = path.split("/");
+    var leaf = parts.pop();
+    var folder = await folderAt(drive.dirHandle, parts);
+    if (!folder) throw { name: "NotFoundError", message: path };
+    var gone = [leaf];
+    if (/\.py$/i.test(leaf)) {
+      var stem = leaf.replace(/\.py$/i, "");
+      for await (var entry of folder.keys()) {
+        if (entry === stem + ".png" || entry.indexOf(stem + "-") === 0 && /\.png$/i.test(entry))
+          gone.push(entry);
+      }
+    }
+    for (var one of gone) await folder.removeEntry(one, { recursive: true });
+  } catch (e) {
+    discoverSay(tab, "Could not delete " + name + ". " + await driveTrouble(e, path), true);
+    draw();
+    return;
+  }
+  if (kind === "program") {
+    setPrograms(PROGRAMS.filter(function(program) {
+      return program.path !== path;
+    }));
+    delete PICTURES[path];
+    forgetMissingPrograms();
+  } else {
+    store();
+    driveParts.forEach(function(part) {
+      if (!part.forget) return;
+      part.forget(path);
+      apply(slotAt(state.at).body);
+    });
+    for (var tries = 0; tries < 20; tries++) {
+      await scanMedia(state.dirHandle);
+      if (!discoverKinds[kind].onDrive(path)) break;
+      await new Promise(function(settle2) {
+        setTimeout(settle2, 100);
+      });
+    }
+  }
+  discoverSay(tab, "Deleted " + name + ".");
+  if (discover[tab].status === "done") discoverCheck(tab, true);
+  draw();
+}
+function discoverBinBeside(card, bin) {
+  var copy = card.querySelector(".copytile");
+  if (copy) copy.classList.remove("alone");
+  card.appendChild(bin);
+}
+
 // boards/editor/picker/gallery.js
 function lookCard(isMono, look, on) {
   var cells = [];
@@ -17716,6 +19384,83 @@ function speedLine(speed, every, look) {
   return line;
 }
 
+// boards/editor/picker/discover/screens/discover_screens.js
+addStep(assetSteps, ASSET_ORDER, "discover", function() {
+  var box = document.getElementById("assets");
+  if (!state.fileHandle) return;
+  discoverPlaceBar(box, "drawing");
+  var heads = Array.from(box.querySelectorAll(".foldhead")).slice(1);
+  function firstOf(kind) {
+    var groups = (exampleSections[kind] || []).map(function(one) {
+      return one[0];
+    }).concat([OTHER_EXAMPLES[kind]]);
+    return heads.filter(function(head) {
+      return groups.indexOf(head.firstChild.textContent) >= 0;
+    })[0];
+  }
+  var drawings = firstOf("drawings"), pictures = firstOf("pictures");
+  if (drawings && pictures) {
+    box.insertBefore(discoverDivider("Drawings", true), drawings);
+    box.insertBefore(discoverDivider("Pictures", true), pictures);
+  }
+  box.querySelectorAll(".asset").forEach(function(cell) {
+    var name = cell.dataset.name;
+    var media = mediaNamed(name);
+    if (media && isExampleMedia(name))
+      discoverBinBeside(cell, discoverBin(name, media.kind === "drawing" ? "drawing" : "picture"));
+    var pill = discoverPill(name);
+    if (pill) cell.appendChild(pill);
+  });
+});
+function discoverDrawingFace(path) {
+  if (discoverDrawings[path].kind === "picture") return discoverPictureFace(path);
+  var drawing = discoverDrawings[path].drawing;
+  var face = h("div", { className: "face" });
+  function made() {
+    face.className = "face drawingface";
+    face.style.background = drawingInk(drawing, path);
+    replace(face, drawing.icon ? h("span", { className: "drawingicon" }, drawing.icon) : h("span", { className: "drawingletter" }, drawing.title[0]));
+  }
+  if (discoverThumbs[path]) {
+    var picture = discoverThumbImage(path);
+    picture.onerror = made;
+    face.appendChild(picture);
+  } else {
+    made();
+  }
+  return h(
+    "div",
+    { className: "asset discoveroffer", title: drawing.description || "" },
+    face,
+    h("span", { className: "progname" }, drawing.title),
+    h("span", { className: "discoverdoes" }, drawing.description || null)
+  );
+}
+function discoverPictureFace(path) {
+  var picture = discoverDrawings[path].picture;
+  return h(
+    "div",
+    { className: "asset discoveroffer" },
+    h(
+      "div",
+      { className: "face" },
+      discoverThumbs[path] ? discoverThumbImage(path) : null,
+      picture.slideshow ? h("span", { className: "discoverkind" }, "slideshow") : null
+    ),
+    h("span", { className: "progname" }, picture.title),
+    h("span", { className: "discoverdoes" }, discoverPictureSaid(picture))
+  );
+}
+discoverKinds.drawing = {
+  said: function(source) {
+    return drawingSaid(openingString(source));
+  },
+  copy: copyDrawing,
+  onDrive: mediaNamed,
+  face: discoverDrawingFace
+};
+discoverKinds.picture = discoverKinds.drawing;
+
 // boards/editor/picker/hub/hub.js
 var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 state.hub = { on: false, port: "A", sizes: {}, was: {} };
@@ -20674,6 +22419,74 @@ document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
 TAB_NAMES.soundPanel = "Sound";
 addStep(TAB_PANELS, FEATURE_TABS, "sound", "soundPanel");
 keptOpen("soundPanel");
+
+// boards/editor/picker/discover/sound/discover_sound.js
+soundTileSteps.push(function(tile, name) {
+  if (!name) return;
+  tile.dataset.name = name;
+  if (isExampleMedia(name) && state.sounds.indexOf(name) >= 0)
+    tile.appendChild(discoverBin(name, "sound"));
+  var pill = discoverPill(name);
+  if (pill) tile.appendChild(pill);
+});
+soundSteps.push(function() {
+  var row = document.querySelector("#sound .sounds");
+  if (row && state.fileHandle) discoverPlaceBar(row, "sound");
+});
+function discoverSoundFace(path) {
+  var sound = discoverSounds[path].sound;
+  var playing = hearing.name === path;
+  return h(
+    "div",
+    { className: "sound discoveroffer" },
+    h("svg:svg", {
+      viewBox: "0 0 104 30",
+      preserveAspectRatio: "none",
+      "aria-hidden": "true",
+      html: "<path d='M0 15 Q6.5 3 13 15 T26 15 T39 15 T52 15 T65 15 T78 15 T91 15 T104 15' fill='none' stroke='#c9c3b9' stroke-width='2'/>"
+    }),
+    h("b", {}, sound.title),
+    h("small", {}, sound.seconds ? sound.seconds + "s" : "WAV file"),
+    h("span", {
+      className: "hear" + (playing ? " playing" : ""),
+      role: "button",
+      "aria-pressed": String(!!playing),
+      title: (playing ? "Stop " : "Play ") + sound.title + " here",
+      onclick: function(e) {
+        e.stopPropagation();
+        discoverHear(path, sound.url);
+      }
+    }, playing ? "\u25A0" : "\u25B6")
+  );
+}
+async function discoverHear(path, url) {
+  var was = hearing.name;
+  stopHearing();
+  if (was === path) {
+    draw();
+    return;
+  }
+  var audio = new Audio(url);
+  setHearing(path, audio, null);
+  audio.onended = function() {
+    if (hearing.audio === audio) stopHearing();
+    draw();
+  };
+  draw();
+  try {
+    await audio.play();
+  } catch (e) {
+    if (hearing.audio === audio) stopHearing();
+    if (e.name !== "AbortError") discoverSay("sound", "Could not play " + nameShown(path) + ".", true);
+    draw();
+  }
+}
+discoverKinds.sound = {
+  onDrive: function(path) {
+    return state.sounds.indexOf(path) >= 0;
+  },
+  face: discoverSoundFace
+};
 
 // boards/editor/picker/stretch_editor.js
 function renderColourPick(box, run) {
