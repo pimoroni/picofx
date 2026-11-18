@@ -15,24 +15,6 @@
    ]
   },
   {
-   "path": "examples/programs/audio/photon_sword.py",
-   "kind": "program",
-   "firmware": "1.1.3",
-   "files": [
-    {
-     "path": "examples/programs/audio/photon_sword.py",
-     "size": 4056,
-     "hash": "d0c97f276655d93932a01d6fe853acd4d798cfd6",
-     "was": [
-      {
-       "hash": "f7694190b784ba750b4f0c2a1e2e5cdc0fee1a2c",
-       "size": 4030
-      }
-     ]
-    }
-   ]
-  },
-  {
    "path": "examples/programs/audio/race_start.py",
    "kind": "program",
    "firmware": "1.1.3",

@@ -23,7 +23,9 @@ indexed, so an example still being written is left out until it is committed.
 
 --check writes nothing and fails if the index is stale. --fresh writes the index with no earlier
 versions or paths, for a release whose examples no drive has held before. A board whose
-description names no "examples_index" has none, and is passed over.
+description names no "examples_index" has none, and is passed over. A description's
+"examples_left_out" lists the drive paths of examples, and of their folders, that the board's drive
+build does not copy, so the index leaves them out too.
 """
 
 import argparse
@@ -69,18 +71,22 @@ def hash_of(data):
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
 
 
-def read_files(repo_dir, base):
+def read_files(repo_dir, base, left_out=()):
     """Every tracked file under the board's examples folder, as {drive path: (hash, size, data)},
-    a drive path being one from the top of the FX drive, such as examples/drawings/x.py."""
+    a drive path being one from the top of the FX drive, such as examples/drawings/x.py. A file
+    left_out names, or one inside a folder it names, is skipped."""
     files = {}
     for name in tracked(repo_dir, base + "examples/"):
         if name.endswith(".md"):
+            continue
+        drive_path = name[len(base):]
+        if any(drive_path == one or drive_path.startswith(one + "/") for one in left_out):
             continue
         with open(os.path.join(repo_dir, name), "rb") as handle:
             data = handle.read()
         if TEXT_FILE.search(name):
             data = data.replace(b"\r\n", b"\n")
-        files[name[len(base):]] = (hash_of(data), len(data), data)
+        files[drive_path] = (hash_of(data), len(data), data)
     return files
 
 
@@ -216,11 +222,11 @@ def carried(name, hashed, size, before, gone):
     return entry
 
 
-def build(repo_dir, base, previous):
+def build(repo_dir, base, previous, left_out=()):
     """The index, as text, for the examples under base, carrying forward the previous index."""
     with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as handle:
         version = re.search(r'^PICOFX_VERSION = "([^"]+)"', handle.read(), re.MULTILINE).group(1)
-    files = read_files(repo_dir, base)
+    files = read_files(repo_dir, base, left_out)
     before = {}
     for example in (previous or {}).get("examples", []):
         for file in example["files"]:
@@ -265,7 +271,7 @@ def main():
     if os.path.exists(seed) and not args.fresh:
         with open(seed, encoding="utf-8") as handle:
             previous = json.load(handle)
-    text = build(repo_dir, base, previous)
+    text = build(repo_dir, base, previous, board.get("examples_left_out", ()))
     if args.check:
         with open(index_path, encoding="utf-8") as handle:
             if handle.read().replace("\r\n", "\n") != text:

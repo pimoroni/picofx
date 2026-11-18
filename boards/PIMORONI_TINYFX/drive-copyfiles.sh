@@ -10,3 +10,8 @@ cp -r -v "$SCRIPT_PATH/../../examples/tiny_fx/examples" "$TARGET/"
 
 # Remove any markdown files, and the sounds, which are not shipped on the board
 find "$TARGET" -type f \( -name '*.md' -o -name '*.wav' \) -exec rm -v {} \;
+
+# Remove photon_sword, which needs the sounds removed above. fx_board.json's examples_left_out
+# names the same paths, which keeps them out of the examples index
+rm -rf -v "$TARGET/examples/programs/audio/photon_sword.py" \
+    "$TARGET/examples/programs/audio/photon_sword"
