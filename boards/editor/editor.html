@@ -1159,8 +1159,15 @@ function loadFromDrive(onBoard, drive) {
 async function connect() {
   if (!CAN_REACH_A_DRIVE) return connectByInput();
   var dir = await pickDrive();
+  try {
+    state.fileHandle = await dir.getFileHandle("effects.txt");
+  } catch (e) {
+    if (e.name !== "NotFoundError") throw e;
+    var refused = new Error("no effects.txt");
+    refused.name = "NotAnFxDrive";
+    throw refused;
+  }
   state.dirHandle = dir;
-  state.fileHandle = await dir.getFileHandle("effects.txt");
   var onBoard = await (await state.fileHandle.getFile()).text();
   loadFromDrive(onBoard, dir.name && dir.name.length > 1 ? dir.name : "the FX drive");
 }
