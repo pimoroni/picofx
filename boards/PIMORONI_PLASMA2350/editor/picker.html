@@ -15656,21 +15656,22 @@ function artImage(art) {
   loadedArt[art.url] = image;
   return null;
 }
-var composed = {};
+var composed = /* @__PURE__ */ new WeakMap();
 function composedArt(screen, look, art) {
   var panel = PANEL_PX[screen.size] || PANEL_PX["2.8"];
   var quarter = Number(screen.turn || 0) % 180 === 90;
   var wide = quarter ? panel[1] : panel[0];
   var high = quarter ? panel[0] : panel[1];
-  var key = [art.url.length, screen.shows, wide, high, JSON.stringify(look)].join("|");
-  if (composed[key]) return composed[key];
+  var key = [screen.shows, wide, high, JSON.stringify(look)].join("|");
+  var made = composed.get(art);
+  if (!made) composed.set(art, made = {});
+  if (made[key]) return made[key];
   var image = artImage(art);
   if (!image) return null;
   var canvas = h("canvas", { width: wide, height: high });
   composeOnto(canvas.getContext("2d"), screen, look, art, image, wide, high);
-  var made = { url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high };
-  composed[key] = made;
-  return made;
+  made[key] = { url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high };
+  return made[key];
 }
 function composeOnto(g, screen, look, art, image, wide, high) {
   g.imageSmoothingEnabled = false;

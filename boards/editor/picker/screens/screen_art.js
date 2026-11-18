@@ -425,7 +425,9 @@ function artImage(art) {
   return null;
 }
 
-var composed = {};
+// The composed pictures made from each picture as read, by the screen and look they were made for. A
+// picture read again is a new object, so a replaced one is composed afresh and the old ones go with it
+var composed = new WeakMap();
 
 // The panel as the board would draw it, with the background, then the picture where the look puts
 // it, doubled, flipped or tiled, under the light's dimming. Sized to the panel as it is turned,
@@ -435,16 +437,17 @@ function composedArt(screen, look, art) {
   var quarter = Number(screen.turn || 0) % 180 === 90;
   var wide = quarter ? panel[1] : panel[0];
   var high = quarter ? panel[0] : panel[1];
-  var key = [art.url.length, screen.shows, wide, high, JSON.stringify(look)].join("|");
-  if (composed[key]) return composed[key];
+  var key = [screen.shows, wide, high, JSON.stringify(look)].join("|");
+  var made = composed.get(art);
+  if (!made) composed.set(art, made = {});
+  if (made[key]) return made[key];
   var image = artImage(art);
   if (!image) return null;
 
   var canvas = h("canvas", {width: wide, height: high});
   composeOnto(canvas.getContext("2d"), screen, look, art, image, wide, high);
-  var made = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
-  composed[key] = made;
-  return made;
+  made[key] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
+  return made[key];
 }
 
 // Draw the picture onto a panel's canvas as the board draws it, from the image's frame now
