@@ -719,9 +719,13 @@ function offers(found) {
     if (/[-.,]$/.test(found.prefix)) return;
     if (numbered || ownPart(found.prefix, OWN.strips, /^[0-9]/)) {
       var tail = found.prefix.split(",").pop();
-      offer(found.prefix + ",", "another output, such as " + JOINED_EXAMPLE);
+      // A strip's numbers are its LEDs, so its example joins LEDs on the strip being written
+      var strip = numbered ? null : found.prefix.match(/^[a-z]+/i)[0];
+      offer(found.prefix + ",", strip ? "another LED, such as " + strip + "1,5-8"
+                                      : "another output, such as " + JOINED_EXAMPLE);
       if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
-        offer(found.prefix + "-", "a range of outputs, in either direction");
+        offer(found.prefix + "-", "a range of " + (strip ? "LEDs" : "outputs") +
+                                  ", in either direction");
       if (numbered && NUMBERED_COLOUR && tail.indexOf(".") < 0)
         offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
