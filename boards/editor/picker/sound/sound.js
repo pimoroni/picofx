@@ -336,6 +336,8 @@ async function profileSound(name, handle) {
     var at = 12;
     var byteRate = 0;
     var bits = 16;
+    // The bytes of one frame, a sample for each channel
+    var frame = 2;
     var dataAt = 0;
     var dataSize = 0;
     while (at + 8 <= head.byteLength) {
@@ -343,6 +345,7 @@ async function profileSound(name, handle) {
       var size = head.getUint32(at + 4, true);
       if (id === 0x666d7420) {                       // "fmt "
         byteRate = head.getUint32(at + 16, true);
+        frame = head.getUint16(at + 20, true) || 1;
         bits = head.getUint16(at + 22, true);
       } else if (id === 0x64617461) {                // "data"
         dataAt = at + 8;
@@ -355,11 +358,16 @@ async function profileSound(name, handle) {
 
     var bars = [];
     for (var b = 0; b < SOUND_SAMPLES; b++) {
-      var from = dataAt + Math.floor(dataSize * b / SOUND_SAMPLES);
+      // Each read starts on a whole frame, so its samples are read from their first byte
+      var from = dataAt + Math.floor(dataSize * b / SOUND_SAMPLES / frame) * frame;
       var take = Math.min(1024, dataAt + dataSize - from);
       var slice = await file.slice(from, from + take).arrayBuffer();
       var peak = 0;
-      if (bits === 16) {
+      if (bits === 32) {
+        var widest = new Int32Array(slice, 0, Math.floor(slice.byteLength / 4));
+        for (var k = 0; k < widest.length; k++) peak = Math.max(peak, Math.abs(widest[k]));
+        peak /= 2147483648;
+      } else if (bits === 16) {
         var wide = new Int16Array(slice, 0, Math.floor(slice.byteLength / 2));
         for (var i = 0; i < wide.length; i++) peak = Math.max(peak, Math.abs(wide[i]));
         peak /= 32768;
