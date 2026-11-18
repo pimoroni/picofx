@@ -21,7 +21,7 @@ How the picker decides, in brief:
    no leading "v", such as `1.2.0`. CI's release build runs `tools/build_editor.py --release <tag>`,
    which stops if the two differ.
 2. **Point Discover at main.** `DISCOVER_BRANCH` in
-   `boards/editor/picker/discover/28_discover.js` must be `main`. The release build stops
+   `boards/editor/picker/discover/discover.js` must be `main`. The release build stops
    otherwise.
 3. **On the first release with Discover, start the examples' history again.** Run
    `python3 tools/build_examples_index.py --fresh boards/<BOARD>` for each board whose
