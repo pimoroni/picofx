@@ -8,9 +8,10 @@ from pimoroni import NORMAL_DIR, REVERSED_DIR
 """
 Show what a motor can be told beyond its speed, on a driver on SP/CE port A.
 
-Every setting here is one a real machine needs, being which way the motor counts as
-forwards, how much of the speed range does nothing because the motor cannot overcome its
-own friction, how it behaves when asked to stop, and how fast it is switched.
+Each setting here is one a real machine needs, being which way the motor counts as
+forwards, how much of the speed range is too slow to overcome its own friction, how it
+behaves between the pulses that drive it, and how fast it is switched. It ends by
+stopping the motor and then letting it coast.
 
 The motor turns throughout, so give it room.
 

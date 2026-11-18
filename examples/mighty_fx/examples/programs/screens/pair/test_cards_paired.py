@@ -7,15 +7,15 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 """
 Step a test card through each rotation on two screens that mirror each other.
 
-Every placement setting a screen takes, a pair takes one of per screen, so mirror=(False, True)
-is one call that leaves one panel as drawn and flips the other. Set the panels beside each other
-and the pair reads as a thing and its reflection.
+A pair takes each placement setting once for both screens, or once per screen, so
+mirror=(False, True) leaves one panel as drawn and flips the other while rotation= is shared.
+Set the panels beside each other and the pair reads as a thing and its reflection.
 
 The caption is drawn onto a copy of each card, so the assets are untouched. On the mirrored panel
 it reads backwards, which is the plainest proof the setting reached that panel and not the other.
 
 Two full-size sources at once is the one case that cannot keep up otherwise, so both screens are
-built with Reserve.FULL_SIZE_IMAGES, a pair needing the same reserve on both.
+built with Reserve.FULL_SIZE_IMAGES, since a pair needs the same reserve on both.
 
 Press "Boot" to exit the program.
 
@@ -27,7 +27,7 @@ Args: Screen size = 2.8
 FIRST_CARD = "/examples/pictures/gold_macaw_card.png"
 SECOND_CARD = "/examples/pictures/red_macaw_card.png"
 MIRRORED = True             # Whether the second panel mirrors the first, or matches it
-HOLD = 44                   # Frames each turn is held for, a little under two seconds
+HOLD = 44                   # Frames each turn is held for
 CAPTION_FACE = font.winds   # The narrowest ROM pixel face, so the plate can be small
 PLATE_TALL = 16             # The plate the caption sits on
 PLATE_PAD = 5               # And how far it reaches past the lettering
@@ -38,7 +38,7 @@ CAPTION = color.rgb(240, 242, 248)
 TURNS = (0, 90, 180, 270)
 
 # Which screens are on the ports, "2.8" or "1.54", or what the effects file passes in args.
-# A pair wants two of the same size, each panel holding its own card
+# Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 

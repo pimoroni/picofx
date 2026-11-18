@@ -1,8 +1,8 @@
-<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild; edits here are lost. -->
+<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild, since edits here are lost. -->
 
 # Plasma 2350
 
-Two LED terminals, a screen connector on the 2350, and a page on this drive that sets them all up for you. Open the
+Two LED strip terminals, an RGB LED, a screen connector on the Plasma 2350 but not the Plasma 2350 W, and a page on this drive that sets them all up for you. Open the
 picker, choose your looks and save, and you'll see them play a few seconds
 later. No code is needed, though you can write your own programs whenever you
 want to.
@@ -113,8 +113,8 @@ strip.
 
 ### Board: Setting up your hardware
 
-Each tab holds the settings for its own hardware, such as the order your lights
-are wired in. Look out for the chip icon, which the picker puts on every board
+Each tab holds the settings for its own hardware, such as how your lights are
+wired or how many LEDs a strip has. Look out for the chip icon, which the picker puts on every board
 setting. These settings describe your hardware, so they're shared by every
 scene.
 
@@ -127,8 +127,8 @@ tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
 stripsetup: 66
 ```
 
-On each strip's tab, set how many LEDs it has and its colour order, which needs
-changing if red shows as another colour. [[remove]] takes off a strip you haven't
+On each strip's tab, set how many LEDs it has and its colour order. Change the
+order if red shows as another colour. [[remove]] takes off a strip you haven't
 fitted, and [[add this strip]] puts it back. An APA102 strip uses both terminals,
 so it replaces the other two. On **Screens**, set the size of
 the screen.
@@ -164,9 +164,8 @@ pages: *Effects, Programs
 scenes: Always on, *Scene 1 10s
 ```
 
-Each scene takes the colour of its place, matching the number buttons on the
-Aye Arr Remote, so the first scene is red like button 1 and the tenth takes the
-rainbow of button 0. A scene you move takes the colour of its new place.
+Each scene takes the colour of its place, and a scene you move takes the colour
+of its new place.
 
 Everything below the tray sits in a frame of the chosen scene's colour, with the
 scene's settings on a tab at its top left: its name, whether it "shows for" a
@@ -409,7 +408,7 @@ These bring their own colour, and work for any LED.
 ### Effects that travel
 
 Effects ending in `_wave`, `_sequence` and `_counter`, and `sweep`, travel
-across the LEDs you name. The others do the same thing on each one.
+across the LEDs you name. Most of the others do the same thing on each one.
 
 Effects ending in `_each` treat each LED separately: `flicker_each` dips
 each one at its own moments, like flames, and `random_each` gives each its own
@@ -419,11 +418,11 @@ brightness. `flicker` and `random` affect them all together, like a single light
 stripDat colour=ff5a00: flicker_each dimness=0.6
 ```
 
-`traffic_light` and `pelican_crossing` use their LEDs in the order given
-below. With fewer, they light only the first ones. Naming more is an error,
-reported in `errors.txt`.
-
 ### Traffic lights and crossings
+
+`traffic_light` and `pelican_crossing` use their LEDs in the order listed
+here. With fewer, they light only the first ones. Naming more is an error,
+reported in `errors.txt`.
 
 `traffic_light` needs three LEDs, lit red, amber and green in that order.
 It switches instantly, so add `ease` to look like a real signal's lamps:
@@ -450,9 +449,8 @@ stripDat1-3: pelican_crossing
 ### Sweep
 
 `sweep` is a light that travels across the LEDs and turns back at each end,
-like a scanner. `extent` sets how far its glow reaches either side, in LEDs,
-and `speed` counts one crossing as one cycle, as the other travelling effects count
-one pass. `hold` pauses at each end, in seconds, giving the trail time to fade
+like a scanner. `extent` sets how far its glow reaches either side, in LEDs.
+`speed` counts one crossing as one cycle. `hold` pauses at each end, in seconds, giving the trail time to fade
 before the light returns:
 
 ```entry
@@ -465,8 +463,8 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in sequence separated by `|`. A comma
-instead would give each LED its own colour. Without a colour it blinks red:
+`rgb_blink` blinks one colour, or several in sequence separated by `|`. Without a
+colour it blinks red:
 
 ```entry
 rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -482,8 +480,8 @@ The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
 `step` are whole numbers, and a negative `step` counts down.
 
-`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written as
-0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
+`red`, `green` and `blue` run from 0 to 255, and `extent` is a number of
+LEDs. The rest run from 0 to 1, written as 0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
 `hue` also takes degrees, such as 180deg, as a colour picker shows them.
 
 **If you write Python**, you can add your own effect to this list and use it like
@@ -591,7 +589,8 @@ screen: sequence folder=photos interval=30
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
-the picker adds pictures, then directly on the drive.
+the picker adds pictures, then directly on the drive, then on the board itself.
+The name can include folders.
 
 `fps` is frames per second and `interval` is seconds per frame, so use whichever
 suits: `fps=12` for an animation, `interval=30` for a slideshow. Either replaces
@@ -617,9 +616,6 @@ screen: gif file="wave.gif" ping_pong=yes hold=1
 screen: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 ```
 
-The board looks for a file on this drive first, then on the board itself, and
-the name can include folders.
-
 The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker
 offers none.
 
@@ -631,7 +627,7 @@ picture is cropped at the sides unless the line rotates it with
 
 **This section is for Python writers.** A screen can play a drawing instead of
 a picture: a Python file with one function in it, drawn alongside everything
-else in this file, so the lights keep their effects,
+else in `effects.txt`, so the lights keep their effects,
 and a scene shows and hides the drawing along with everything else in
 it.
 
@@ -658,7 +654,7 @@ def draw():
 ```
 
 `draw` is called for each frame, and the screen shows whatever it has drawn
-when it returns. It can use three names the board provides. `canvas` is the
+when it returns. It can use these names the board provides. `canvas` is the
 image to draw on, the size of the screen and kept between frames. `ticks` is
 the milliseconds since the drawing started, so `ticks / 1000` is the time in
 seconds, and `ticks_delta` is the milliseconds since the last frame. `fps` or
@@ -681,9 +677,9 @@ setting. A small canvas draws faster and is placed like a small picture, so
 
 `style` passes a word to the drawing, which finds it as `style`, or `None`
 where the entry sets none. A drawing drawn in several styles lists them in a
-`Styles` line of its opening string, such as `Styles: cat, owl, goat`, the
-first being the one it takes where none is set, and the picker offers them as
-a choice. A drawing with more than one choice to make gives a `Styles` line
+`Styles` line of its opening string, such as `Styles: cat, owl, goat`, and the
+picker offers them as a choice. The first is the one used where none is set. A
+drawing with more than one choice to make gives a `Styles` line
 for each, and the entry joins its choices with a dash, such as
 `style=ember-bare`.
 
@@ -730,12 +726,12 @@ chosen from its name.
 A `Defaults` line gives the screen settings the drawing is made for, written as
 a program's `Args` line is, such as `Defaults: Rotation = 90 or 270, Pixel
 double = true`. One rotation is where the drawing starts, and a list is the
-only rotations it suits, the first being where it starts. When the drawing is
+only rotations it suits. The first is where it starts. When the drawing is
 chosen, the picker turns the screen that way unless the drawing has been turned
 on that screen before, and doubles its pixels on a half-size canvas only where
 the line asks. `Pixel double = false` marks a drawing that needs the screen's
-full resolution. While the drawing is turned or doubled otherwise than the line
-says it suits, its Drawing settings say so, with a button to set it back.
+full resolution. If you turn or double the drawing in a way the line does not
+list, its Drawing settings say so and offer a button to set it back.
 
 ## Scenes
 
@@ -778,12 +774,12 @@ rgb: none
 ```
 
 Screens behave the same way. A screen the scene does not name shows its
-always-on picture, even where the always-on entry names both screens, as
-`screenA,B`, and the scene takes only one. Where there is none, the picture
-stays but the backlight turns off while another scene plays, and comes back
-when its own scene returns.
-`none` turns a screen off for a scene, showing black, or its `background`
-colour, at the backlight set before the colon:
+always-on picture. This holds even where the always-on entry names both screens,
+as `screenA,B`, and the scene takes only one. A screen with no always-on entry
+keeps its picture, but its backlight turns off while another scene plays and
+comes back when its own scene returns.
+`none` shows only the screen's `background` colour, black unless set, at the
+backlight set before the colon. With `backlight=0%` the screen is off:
 
 ```entry
 [Night: 10m]
@@ -808,9 +804,9 @@ all, and `restart` goes before it:
 ```
 
 A scene can also go back to itself, to begin its effects again each time its
-time is up. That needs `restart`, as does a file's only scene when it has a
-time, since otherwise nothing changes when the time is up, and `errors.txt`
-says so:
+time is up. That needs `restart`, or nothing changes when the time is up. A
+file's only scene needs it too when it has a time. `errors.txt` reports either
+one without it:
 
 ```entry
 [Storm: 30s restart then Storm]
@@ -818,7 +814,8 @@ says so:
 
 The board entry goes before any scene heading. A scene with no time, such as
 `[Welcome]`, waits, and the board stays on it. Put one last to play the scenes
-before it once and then hold, such as an opening effect after the board starts.
+before it once and then stay on it, such as an opening sequence that settles
+into a steady look.
 A scene that no other scene goes on to never shows, and `errors.txt` says so.
 Every reload, whether from a save, an eject or a press of **Boot**, starts again
 from the first scene.
@@ -848,7 +845,7 @@ is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual
 Saving `effects.txt` is all it takes: the board detects the save, briefly takes
 the drive back, and plays the new effects, just as a single press of **Boot**
 would. Only saving `effects.txt` triggers this, so copying pictures onto
-the drive never interrupts anything. With `reload=manual`, a save waits for an
+the drive does not reload the effects. With `reload=manual`, a save waits for an
 eject or a press of **Boot** instead.
 
 ### Running your own program
@@ -892,6 +889,8 @@ program, starting at `sys.argv[1]`. Thonny passes none when you run the file
 from there, so give each one a default and the file works either way:
 
 ```python
+import sys
+
 args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"
 ```
@@ -930,8 +929,8 @@ A value after `=` in `Args` is the program's default, so the box starts with it,
 and `args=` is left out while every argument keeps its default. An argument
 named `Screen size` offers the sizes the firmware knows, and one named
 `Rotation` offers 0, 90, 180 and 270, or the values it lists, such as `Rotation
-= 90 or 270`, the first being the default. The picture always shows the program
-at its defaults.
+= 90 or 270`. The first is the default. The picture always shows the program at
+its defaults.
 
 To delete one of your own programs from the drive, press the cross in the
 corner of its card. One in `programs` takes its pictures with it.

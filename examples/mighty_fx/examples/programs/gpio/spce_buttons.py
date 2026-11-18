@@ -6,15 +6,15 @@ from timing import Pacer
 Read buttons wired to a SP/CE port's five pins, brightening an RGB output while each is held.
 
 Wire up to five buttons, each between one of SP/CE A's BL, DC, MOSI, SCK and CS lines and
-ground. Each pin pulls itself high, so no resistors are needed, and a held button reads low.
-The first five outputs glow dim in a colour each, and brighten while their buttons are held,
-in the pins' order along the connector from its GND end, so no screen is needed.
+ground. Each pin pulls itself high, so no resistors are needed and a held button reads low.
+The first five outputs glow dim in a colour each, in the pins' order along the connector
+from its GND end, and each brightens while its button is held.
 
 Press "Boot" to exit the program.
 """
 
 # Constants
-# The colour of each output in turn, one for each pin along the connector
+# The colour of each output in turn, one for each pin along the connector, named for the cable's wires
 COLOURS = (
     (255, 64, 0),       # Brown
     (160, 0, 255),      # Purple

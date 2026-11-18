@@ -41,7 +41,7 @@ mighty = MightyFX(sensor=IR)        # Create a new MightyFX object, with the inf
 player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
-# Create and set up a rainbow effect to "play"
+# Create and set up a rainbow effect to play
 rainbow = RainbowFX(speed=STARTING_SPEED,
                     sat=STARTING_SATURATION,
                     val=STARTING_VALUE)

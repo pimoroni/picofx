@@ -43,7 +43,8 @@ print(f"{player.frames} posters, {DWELL}s each, the second panel {AHEAD} along")
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # One call sends both panels, so neither is ever left showing what the other has moved on from
+        # Check if the posters have changed. One call sends both, so neither panel shows what the
+        # other has moved on from
         if player.has_advanced():
             pair.update(player.image, player.image_at((player.frame + AHEAD) % player.frames))
 

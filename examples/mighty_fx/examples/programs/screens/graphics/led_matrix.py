@@ -30,11 +30,11 @@ SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE A set up for a screen
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn as the panel is turned
+# Create a canvas to draw to, sized as the screen is turned
 canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
@@ -106,7 +106,7 @@ def bake_rainbow():
 
 rainbow = bake_rainbow()
 
-# Every rect a frame needs, built once so the loop never stalls the wave for a garbage collection
+# Every rect a frame needs, built once so the loop never stalls the rainbow for a garbage collection
 SCALE_FROM = rect(0, 0, COLUMNS, ROWS)
 SCALE_TO = rect(LEFT, TOP, COLUMNS * PIXEL, ROWS * PIXEL)
 ROW_TO = [rect(0, row, COLUMNS, 1) for row in range(ROWS)]

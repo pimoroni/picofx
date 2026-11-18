@@ -30,7 +30,7 @@ explains.
 Saving `effects.txt` is all it takes: the board detects the save, briefly takes
 the drive back, and plays the new effects, just as a single press of **Boot**
 would. Only saving `effects.txt` triggers this, so copying __COPIED_FILES__ onto
-the drive never interrupts anything. With `reload=manual`, a save waits for an
+the drive does not reload the effects. With `reload=manual`, a save waits for an
 eject or a press of **Boot** instead.
 
 ### Running your own program
@@ -82,6 +82,8 @@ program, starting at `sys.argv[1]`. Thonny passes none when you run the file
 from there, so give each one a default and the file works either way:
 
 ```python
+import sys
+
 args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"
 ```
@@ -123,11 +125,12 @@ A value after `=` in `Args` is the program's default, so the box starts with it,
 and `args=` is left out while every argument keeps its default. An argument
 named `Screen size` offers the sizes the firmware knows, and one named
 `Rotation` offers 0, 90, 180 and 270, or the values it lists, such as `Rotation
-= 90 or 270`, the first being the default. The picture always shows the program
-at its defaults.
+= 90 or 270`. The first is the default. The picture always shows the program at
+its defaults.
 <!-- if examples -->
 
-To change an example, choose it and press **Customise**. The picker copies it
+To change an example, choose it and press the copy button in the corner of its
+card. The picker copies it
 and its pictures into `programs`, under a new name if that one is taken, and
 chooses the copy. Open the copy from the drive in Thonny or another editor, then
 press **Save to board** to run it.

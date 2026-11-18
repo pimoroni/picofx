@@ -13,10 +13,9 @@ set(MICROPY_C_HEAP_SIZE 4096)
 list(APPEND MICROPY_DEF_BOARD "PICO_FLOAT_IN_RAM=1")
 
 # Firmware, then the filesystem, then the FX drive's volume to the end of flash where the variant
-# has one, so a uf2 rewriting the filesystem never reaches the volume. That matters on RP2040, where
-# dir2uf2 cannot build a sparse uf2 and fills every block up to the filesystem. The port reads this split
-# from here, so mpconfigboard.h sets none of it. FLASH_SIZE_BYTES must match PICO_FLASH_SIZE_BYTES
-# in pimoroni_tinyfx.h, which the SDK has not read into cmake by this point
+# has one, since a uf2 for RP2040 cannot be sparse and fills every block up to the filesystem.
+# The port reads this split from here, so mpconfigboard.h sets none of it. FLASH_SIZE_BYTES must
+# match PICO_FLASH_SIZE_BYTES in pimoroni_tinyfx.h, which the SDK has not read into cmake by this point
 math(EXPR FLASH_SIZE_BYTES "4 * 1024 * 1024")
 
 # The W variants reserve another half megabyte for the networking firmware, and the drive variants

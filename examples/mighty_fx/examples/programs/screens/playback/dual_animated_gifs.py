@@ -27,7 +27,7 @@ GIF_PATH_A = "/examples/pictures/pirate_coin.gif"     # The GIF to play on the s
 GIF_PATH_B = "/examples/pictures/medscan.gif"         # The GIF to play on the screen on SP/CE port B
 
 # Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair wants two of the same size
+# or what the effects file passes in args, the size first. Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
@@ -43,9 +43,9 @@ pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, ro
 try:
     player_a = GIFPlayer(GIF_PATH_A)
     player_b = GIFPlayer(GIF_PATH_B, ping_pong=True)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{GIF_PATH_A}' or '{GIF_PATH_B}' is missing! Check both are on the board") from None
+    raise RuntimeError(f"'{GIF_PATH_A}' or '{GIF_PATH_B}' is missing or corrupt! Check both are on the board") from None
 
 # The background each file was authored over as read from its own corner, one per screen
 backgrounds = player_a.image.get(0, 0), player_b.image.get(0, 0)

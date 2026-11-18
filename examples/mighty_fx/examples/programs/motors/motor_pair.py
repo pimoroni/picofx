@@ -24,7 +24,7 @@ mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
 driver = mighty.spce_a.driver   # The driver on port A, and the two motors it holds
 i = 0
 
-driver.enable()             # Power it, which the board leaves off until asked
+driver.enable()             # Power the driver, which the board leaves off until asked
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:

@@ -36,17 +36,17 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 # A player walks the frames at the file's own delays, or at a rate given as fps=
 try:
     player = GIFPlayer(GIF_PATH)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{GIF_PATH}' is missing! Check it is on the board") from None
+    raise RuntimeError(f"'{GIF_PATH}' is missing or corrupt! Check it is on the board") from None
 
-# A decoded frame is palettised, and get() resolves that and hands back a colour
+# The background the file was authored over, read from its own corner
 background = player.image.get(0, 0)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The screen refreshes faster than the GIF changes, so only send a new frame
+        # Check if the player has moved on, as the screen refreshes faster than the GIF changes
         if player.has_advanced():
             screen.update(player.image, bg_color=background)
 

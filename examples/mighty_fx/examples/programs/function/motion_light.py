@@ -18,7 +18,7 @@ Thumbnail: outputs warm
 
 # Constants
 COLOUR = WARM       # The colour to light the outputs
-RISE = 0.5          # How long the outputs take to fade up, in seconds, under the 2s a PIR Stick holds for
+RISE = 0.5          # How long the outputs take to fade up, in seconds, shorter than a PIR Stick holds its signal
 FADE = 0.5          # How long the outputs take to fade out, in seconds
 INTERVAL = 0.02     # How often to read the sensor and update the outputs, in seconds
 

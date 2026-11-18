@@ -35,8 +35,7 @@ HEADINGS_ROW = 1                    # Where the column headings sit in the stack
 FIRST_ROW = 2                       # And where the listing starts, the module below them
 CLOCK_START = (14, 5, 0)            # The time the board counts on from, Mighty FX having no clock to read
 
-# Made up but for the stations. A service takes a row, and its via, its calling points and each note line
-# one more
+# Made up but for the stations. A service takes a row, and its via, its calling points and each note line one more
 ENTRIES = (
     {"departs": "14:02", "destination": "Leeds", "platform": "4A", "status": "Exp 14:07"},
     {"departs": "14:10", "destination": "Manchester Piccadilly", "platform": "2A", "status": "On time"},
@@ -55,7 +54,7 @@ ENTRIES = (
 )
 
 # Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair wants two of the same size
+# or what the effects file passes in args, the size first. Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]

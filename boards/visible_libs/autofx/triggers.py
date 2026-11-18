@@ -11,7 +11,7 @@ import time
 from .vocabulary import REMOTE, TRIGGERS
 from .loader import trigger_delay, trigger_does, trigger_given
 
-# How many scenes back Previous can go
+# How many of the scenes shown Previous remembers
 HISTORY = 10
 
 
@@ -27,10 +27,9 @@ class Triggers:
     back two scenes rather than to and fro.
 
     A motion trigger can wait before it acts. The opposite edge coming first cancels the wait,
-    or, where the file says cancel=no, waits for it: when the wait is over, the trigger acts,
-    and if the Stick has changed since, the opposite trigger's row starts from then, with its
-    own wait. A wait is dropped when the scenes move on for another reason to one that does
-    not use the row that started it.
+    unless the file says cancel=no. In that case the trigger acts when its wait is over, and if
+    the Stick has changed since, the opposite trigger's row starts from then with its own wait.
+    A wait is dropped when the scenes move on to one that does not use the row it came from.
     """
     def __init__(self, fx, settings, scenes, clock=None):
         # Looked up here, not as the default, so the module loads where time has no ticks_ms
@@ -39,6 +38,9 @@ class Triggers:
         self.__pin = None
         self.__pressed = []         # Buttons pressed since the last pass, oldest first
         sensor = settings.get("sensor")
+        # Check if the board has no sensor connector, which setting the board up has reported
+        if getattr(fx, "SENSOR_PIN", None) is None:
+            sensor = None
         # A board that could not take the sensor has none to hand back
         try:
             if sensor == "ir":
@@ -108,20 +110,20 @@ class Triggers:
         self.__back = None
         self.__at = at
 
-        # A wait from a row this scene does not use is dropped, the scene having moved on
+        # A wait from a row this scene does not use is dropped, since the scene has moved on
         if self.__waiting is not None and self.__row(self.__waiting[0]) != self.__waiting[3]:
             self.__waiting = None
 
     def __row(self, trigger):
-        # Where a trigger's choice comes from in the scene showing: its place for the scene's
-        # own, or None for Always on's or the default
+        # Where a trigger's choice comes from in the scene showing, as the scene's place for its
+        # own choice or None for Always on's or the default
         scenes = self.__scenes
         if scenes and trigger in scenes[self.__at].triggers:
             return self.__at
         return None
 
     def __does(self, trigger):
-        # What a trigger does in the scene showing, Previous going back through the history
+        # What a trigger does in the scene showing. Previous goes back through the history
         scenes = self.__scenes
         if scenes and trigger_given(scenes, self.__settings, self.__at, trigger)[0] == "previous":
             if self.__history:
@@ -153,7 +155,7 @@ class Triggers:
         return []
 
     def __due(self, now):
-        # A wait that is over, acting now. One that held the opposite edge back hands it on
+        # Act on a wait that is over. One that held the opposite edge back hands it on
         # where the Stick has changed since
         waiting = self.__waiting
         if waiting is None or time.ticks_diff(now, waiting[1]) < 0:

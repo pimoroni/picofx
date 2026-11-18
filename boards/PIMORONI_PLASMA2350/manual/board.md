@@ -43,8 +43,8 @@ tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
 stripsetup: 66
 ```
 
-On each strip's tab, set how many LEDs it has and its colour order, which needs
-changing if red shows as another colour. [[remove]] takes off a strip you haven't
+On each strip's tab, set how many LEDs it has and its colour order. Change the
+order if red shows as another colour. [[remove]] takes off a strip you haven't
 fitted, and [[add this strip]] puts it back. An APA102 strip uses both terminals,
 so it replaces the other two. On **Screens**, set the size of
 the screen.

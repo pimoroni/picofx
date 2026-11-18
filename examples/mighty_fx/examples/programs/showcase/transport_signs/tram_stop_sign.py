@@ -119,7 +119,7 @@ panes = [image(BAND_W, height) for height in BAND_H]
 for pane in panes:
     pane.font = SIGN_FONT
 
-# Where each pane goes and the mask over it, built once so a frame allocates nothing
+# Where each pane goes and the mask over it, built once
 PANE_FROM = [rect(0, 0, BAND_W, height) for height in BAND_H]
 PANE_TO = [rect(MARGIN * LAMP, y * LAMP, BAND_W * LAMP, height * LAMP)
            for y, height in zip(BAND_Y, BAND_H)]
@@ -158,7 +158,7 @@ def bake_band(height):
 
 def bake_mask():
     """
-    Bake the sign's face, clear to begin with, a band laid in per line, then the rest filled.
+    Bake the sign's face, a band laid in per line, then the rest filled.
 
     It starts clear, as a transparent pen cannot clear an opaque background back.
     """

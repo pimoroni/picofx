@@ -30,26 +30,17 @@ INDICATOR_LEVEL = 0.75
 # One length for all of them, so the count is the only thing carrying the scale
 FLASH_MS = 150
 
-# What the indicators say where a file cannot, as (colour, level, times, period). A
-# board carries indicator LEDs shadowing its outputs, or one LED of its own where it
-# has no outputs, so colour reaches a user whatever they have wired in and is what
-# they read first. The count reaches anyone whose indicators are removed. Both climb
-# with how much trouble the reader is in, and red lands on the one condition with
-# nothing else to say it, errors.txt speaking for the blue and the drive itself for
-# the white. Never red against green, the pair most often confused by eye.
-#
-# White lights three channels and still reads dimmer than one channel does at the
-# same level, so its own is set by eye.
+# What the indicators say where a file cannot, as (colour, level, times, period). Colour
+# reaches a user whatever is wired in, and the count anyone whose indicators are removed.
+# Both climb with the trouble, red is kept for the one condition nothing else reports, and
+# red never meets green, the pair most often confused. White's level is set by eye.
 
 BLOCKED = (WHITE, 0.5, 1, FLASH_MS)              # The computer was mid-write, nothing happened
 PROBLEM = (BLUE, INDICATOR_LEVEL, 2, FLASH_MS)   # Written down as well, in errors.txt
 UNREPORTED = (RED, INDICATOR_LEVEL, 3, FLASH_MS)  # Nowhere to write it, so this is all there is
 
-# Shown while the computer is copying, as (colour, resting level, travelling level).
-# White is the computer's colour here, a spot travelling the outputs while it works
-# and one bright flash of every output where it refused a press, so the flash reads
-# on top. The spot stays below BLOCKED's level for that reason, and the floor stays
-# above the point an output stops being visibly lit.
+# Shown while the computer copies, as (colour, resting level, travelling level). The spot
+# stays below BLOCKED's flash so that reads on top, and the floor stays visibly lit.
 TRANSFER = (WHITE, 0.1, 0.35)
 
 # How long the spot spends on each output, and how long the whole thing is held on
@@ -88,7 +79,7 @@ BAR_FRAME = [-1]
 BAR_STARTED_MS = [0]
 BAR_MOVED_MS = [0]
 
-# The timer moving the bar, held from the board being built until the effects start
+# The timer moving the bar, held from the board being built until the load ends
 BAR_TIMER = []
 
 
@@ -108,8 +99,8 @@ def report(problems, path, running=True):
             pass                # Nothing to clear, or nowhere to clear it from
         return False
 
-    # In file order, since the reader has the file open beside this. load() has
-    # ordered its own already, but run() appends a program's troubles afterwards
+    # In file order, since the reader has the file open beside this. load() has ordered
+    # its own already, but more are added after it, such as a program's troubles
     problems = in_line_order(problems)
 
     for problem in problems:
@@ -149,7 +140,7 @@ def __indicators(fx):
 def __flashed(fx):
     # The LEDs a flash shows on, the indicators and the board's own LED beside its outputs,
     # since mono outputs alone would show the count and not the colour. That LED takes no
-    # part in the spot, sitting outside the line the outputs make
+    # part in the spot, since it sits outside the line the outputs make
     lights = __indicators(fx)
     rgb = getattr(fx, "rgb", None)
     return lights if rgb is None or rgb in lights else lights + [rgb]
@@ -157,9 +148,8 @@ def __flashed(fx):
 
 def indicate(fx, pattern=PROBLEM):
     """
-    Flash every indicator together in the pattern's colour, or plain where one shows
-    no colour. Nothing an effect does starts like this, so it reads as a signal
-    rather than as the show.
+    Flash every indicator together in the pattern's colour, or plain where one shows no
+    colour. Nothing an effect does starts like this, so it reads as a signal.
     """
     colour, level, times, period_ms = pattern
     red, green, blue = (part * level for part in colour)
@@ -187,11 +177,8 @@ def __tell(fx, problems, errors, running):
 
 
 def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None):
-    # Stop what is playing, read the file again, and play what it now says.
-    #
-    # Takes a board or something that makes one, and hands the board back, since the file
-    # is what declares a strip and on the first read nothing is built yet. `maker` is
-    # passed through to load(), which rebuilds the board where its entry changed
+    # Stop what is playing, read the file again, and play what it now says. Takes a board or
+    # something that makes one, since the file declares the strips, and hands the board back
     __stop(playing)
     # The players held the strips. A board rebuilt below for a changed entry claims
     # their state machines again, which a strip still referenced would refuse
@@ -248,22 +235,22 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
         try:
             fx, players, shows, sounds, scenes, settings, problems = load(
                 text, fx, maker, volume, __run_loading_bar)
-        # A file a user typed must never be able to take the board down. Anything
-        # load does not report itself costs the whole file, where its own reporting
-        # costs one entry, but the drive and the button survive to be edited again
+        # A file a user typed must never be able to take the board down. Anything load
+        # does not report itself costs the whole file, where its own reporting costs one
+        # entry, but the drive and the button survive, so the file can be edited again
         except Exception as e:      # noqa: BLE001
             problems.append("the board failed reading the effects file: {}. The "
                             "fault is in the board, not the file.".format(repr(e)))
 
-        # A program never returns, so nothing would be left to watch the button.
-        # The drive has to go up or there would be no way to change either setting
+        # A program that works never returns, so nothing would be left to watch the
+        # button. The drive has to go up or there would be no way to change either setting
         if settings.get("program") and settings.get("drive") == "manual":
             problems.append(
                 "the drive is shown anyway, since a program is named and hiding it "
                 "would leave no way to edit the file")
 
-    # Nothing declared anything, the file being unreadable or its loading having
-    # failed, and the board still has to come up, being what answers on the lights
+    # Check if nothing has built the board, as when the file could not be read or its loading
+    # failed. The board still has to come up, since its lights are what answer
     if callable(fx):
         fx = fx()
 
@@ -273,15 +260,14 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
         shows = build_deferred_shows(problems)
 
     if volume is not None:
-        # A shipped document the mount left stale is said here too, errors.txt being
+        # A shipped document the mount left stale is said here too, since errors.txt is
         # where a reader with only the drive in front of them will look
         for name in volume.unhealed():
             problems.append("the FX drive is full, so {} is out of date. Delete a "
                             "picture or sound from the drive to let it "
                             "rebuild".format(name))
 
-    # A drawing that stopped while the computer held the drive is said now, the board
-    # having it back
+    # What stopped while the computer held the drive is said now that the board has it back
     problems.extend(UNWRITTEN)
     del UNWRITTEN[:]
 
@@ -298,7 +284,7 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
 
 # How long each of a hub's groups is given to measure its panels in, while the effects are
 # held or the board is asleep. A group only measures a panel where the call has a refresh to
-# spare, so the loop's own pause is too short, and a press waits up to this long to be read.
+# spare, so the loop's own pause is too short, and a press waits up to this long per group.
 IDLE_MS = 100
 
 
@@ -314,15 +300,14 @@ def __wait(ms, idle):
         group.idle(max(ms, IDLE_MS))
 
 
-# What the players are ticked at. picofx defaults to 100, which a board driving
-# screens as well cannot afford, the timer running on the same core as the frames
-# and taking most of their time. Effects tick by elapsed time, so the rate is
-# smoothness alone.
+# What the players are ticked at. picofx defaults to 100, which a board driving screens as
+# well cannot afford, since the timer runs on the same core as the frames and takes most of
+# their time. Effects tick by elapsed time, so the rate is smoothness alone.
 PLAYER_FPS = 50
 
 
 def __stop(players):
-    # Every player stopped, each writing nothing more until it is started again
+    # Stop every player, so none writes anything more until it is started again
     for player in players:
         player.stop()
 
@@ -341,20 +326,16 @@ def __start(players, fx):
 
 
 def __resume(players, fx):
-    # Start the players again after a pass of the spot, over dark outputs.
-    #
-    # The spot leaves every output it did not carry at its resting floor, and a
-    # player writes only the outputs an effect drives, so one the file never names
-    # would keep that floor for good. Darkening first costs the driven outputs one
-    # frame, which the players paint over. The outputs only, since clear() would
-    # take a strip's player with it
+    # Start the players again after a pass of the spot, over dark outputs. A player writes only
+    # the outputs an effect drives, so an unnamed one would keep the spot's floor for good. Only
+    # the outputs are darkened, as clear() would also blink every strip dark for a frame
     for output in __indicators(fx):
         output.off()
     __start(players, fx)
 
 
 def __spot(fx, lit):
-    # The indicator at lit at the travelling level, the rest at the resting floor
+    # Light the indicator in place `lit` at the travelling level, and the rest at the resting floor
     colour, floor, spot = TRANSFER
     for index, output in enumerate(__indicators(fx)):
         level = spot if index == lit else floor
@@ -365,14 +346,9 @@ def __spot(fx, lit):
 
 
 def __handover(fx, to_board):
-    # The drive changing hands, said with one pass of the spot a transfer travels.
-    #
-    # A double press reloads the board exactly as a single press does, so without
-    # this nothing on the outputs tells the two apart. Which way the spot runs says
-    # which way the drive went, reading the outputs as a line from the USB connector
-    # to the far end. A pass towards the end is the board taking the drive, the way
-    # a transfer travels since the drive reports only writes, and one towards the
-    # connector is the computer taking it
+    # The drive changing hands, said with one pass of the spot, since nothing else on the
+    # outputs says which way a double press went. Towards the far end is the board taking the
+    # drive, the way a transfer travels, and towards the USB connector is the computer taking it
     count = len(__indicators(fx))
     order = range(count) if to_board else range(count - 1, -1, -1)
     for lit in order:
@@ -381,19 +357,10 @@ def __handover(fx, to_board):
 
 
 def __transfer_frame(fx, at):
-    # One frame of the wait shown while the computer is copying, a spot travelling the
-    # indicators over a resting floor, so a transfer reads as something happening rather
-    # than as the board having stopped.
-    #
-    # Driven from the caller's own loop rather than a player, since the players are
-    # stopped for the duration, and stepped from the clock so a frame the transfer
-    # delays does not slow the travel down.
-    #
-    # Nothing is sent to a strip meanwhile. A frame reaches one as a single timed
-    # run of bits, and a flash write pauses the transfer sending it partway, which
-    # breaks it apart into the wrong colours or into a run that overruns the LEDs
-    # declared into one nothing addresses afterwards. Every frame sent is another
-    # that can be torn, so the strips are left holding what they have
+    # One frame of the spot shown while the computer copies, stepped from the clock so a
+    # delayed frame does not slow it. Nothing is sent to a strip meanwhile, as a flash write
+    # that pauses a strip's frame partway tears it into the wrong colours or onto LEDs
+    # nothing addresses, so the strips keep what they have
     lights = __indicators(fx)
     if len(lights) == 1:
         __spot(fx, 0 if at % TRANSFER_PERIOD_MS >= TRANSFER_PERIOD_MS - TRANSFER_STEP_MS else -1)
@@ -506,14 +473,9 @@ def __read_program(name, problems):
 
 
 def __run_program(name, source, args, problems):
-    # Run what was read, and say so if it stops rather than letting it take the board.
-    #
-    # The file's arguments arrive the way a program receives them anywhere, so the same
-    # file runs unchanged from an editor, where sys.argv is empty and a program falls
-    # back to its own constants. sys.argv cannot be rebound, so it is filled in place and
-    # emptied after, or a reload would inherit the last program's arguments. The name
-    # sits at [0] as it does everywhere, and a program reads argv[1:], since no editor
-    # supplies one
+    # Run what was read, and say so if it stops rather than let it take the board. sys.argv
+    # carries the file's arguments as a program receives them anywhere. It is filled in place,
+    # since it cannot be rebound, and emptied after so a reload does not inherit them
     sys.argv[:] = [name] + list(args)
 
     try:
@@ -534,22 +496,21 @@ def __run_program(name, source, args, problems):
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     """
     Play the effects file. Without a volume this reads it once and returns the board,
-    players, shows, sounds, scenes and problems, leaving the servicing and the
+    players, shows, sounds, scenes and problems, and leaves the servicing and the
     rotation to the caller. Scenes take turns on their own times, and everything
     before the first heading stays on throughout.
 
-    `fx` is a board or something that makes one, a board class being the usual thing,
-    since a strip's length is declared at construction and the file is what names it.
+    `fx` is a board or something that makes one, usually a board class, since a
+    strip's length is declared at construction and the file is what names it.
 
-    With one, the drive is shown at boot and the button is watched from then on. A
-    double press shows or hides it, a single press re-reads the file and puts the
+    With a volume, the drive is shown at boot and the button is watched from then on.
+    A double press shows or hides it, a single press re-reads the file and puts the
     drive back, and hiding or ejecting re-reads it and leaves it away, since a user
     who ejected is done with it. This does not return.
 
-    The effects stand aside while the computer is copying, and the outputs answer for
-    themselves where there is no file to answer in, for a problem written down, a
-    problem with nowhere to write it and a press refused mid-write. A bar runs along
-    them while the file loads.
+    The effects stand aside while the computer is copying. The outputs flash for a
+    problem written down, a problem with nowhere to write it and a press refused
+    mid-write, and a bar runs along them while the file loads.
 
     A board entry can name a program to run instead, and can keep the drive hidden
     until the button asks for it. A screen entry is serviced from this loop, so
@@ -563,7 +524,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # its own, and this is how it knows where they go
     REPORTING_TO[0] = errors
 
-    # A board that asks its hardware which of its parts it has does so once, before any is read
+    # A board that asks its hardware which of its parts it has does so once, before the file is read
     board = fx if isinstance(fx, type) else type(fx)
     if hasattr(board, "detect"):
         board.detect()
@@ -579,10 +540,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     scene_deadline = None
 
     def begin_scenes():
-        """
-        Enter the first scene, set its clock and start the players, for a boot and every
-        reload.
-        """
+        """Enter the first scene, set its clock and start the players, at boot and each reload."""
         nonlocal scene_at, scene_deadline
         scene_at = 0
         scene_deadline = None
@@ -623,8 +581,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     drive_up = program or settings.get("drive") != "manual"
 
     # A program runs instead of the effects, as the file's own setting says, so they
-    # are never started, since reading the program and showing the drive both take long
-    # enough for a flash of them to be seen
+    # wait for it to end. Reading the program and showing the drive both take long
+    # enough for a flash of the effects to be seen
     if not program:
         begin_scenes()
 
@@ -637,9 +595,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     if program:
         if source is not None:
-            # Nothing here looks at the drive until the program ends, so a save that
-            # would reload the file resets the board instead, which then reads it as at
-            # power on
+            # Nothing here looks at the drive until the program ends, so a save that would reload
+            # the file resets the board instead, which then reads it as it does at power on
             volume.reset_on_save(True)
             __end_loading(fx)
             try:
@@ -666,10 +623,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     sounds_aside = False
     idle_since = None
 
-    # What the sensor connector's remote or PIR Stick asks for, set up once the board is the
-    # effects' own, a program having had it until now. held is the remote's Play / Pause
-    # holding the effects where they stand, and standby its OK / Stop putting the board
-    # dark, each until pressed again. held_left is the scene's time still to run
+    # What the sensor connector's remote or PIR Stick asks for, set up here so a program that
+    # ran has given the board back first. held= is the remote's Play / Pause holding the
+    # effects where they stand, and standby= its OK / Stop putting the board dark, each until
+    # pressed again. held_left is the scene's time still to run
     triggers = Triggers(fx, settings, scenes)
     triggers_of = fx
     held = False
@@ -678,8 +635,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     def go_to(at, again=None):
         """
-        Show the scene in place `at`, from its start: its time, and its effects too where it
-        restarts or `again` says so. Going to the scene showing starts it again the same way.
+        Show the scene in place `at` from its start. Its time begins again, and so do its
+        effects where it restarts or `again` says so, even for the scene already showing.
         """
         nonlocal scene_at, scene_deadline
         scene_at = at
@@ -712,7 +669,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             scene_deadline = time.ticks_add(time.ticks_ms(), max(0, held_left))
 
     def sleep(on):
-        """Put the board dark until woken, or wake it into the scene it left, from its start."""
+        """Put the board dark, or wake it into the scene it left, whose time begins again."""
         nonlocal standby
         standby = on
         if on:
@@ -737,7 +694,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             settle_hub(shows)
 
     def act(what, place):
-        """Do what a trigger asks. Asleep, only OK / Stop is answered, waking the board."""
+        """Do what a trigger asks. Asleep, the board answers only OK / Stop, which wakes it."""
         if what == "standby":
             if held:
                 hold_effects(False)
@@ -855,10 +812,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     triggers.reload(settings, scenes)
                 volume.watch(settings.get("reload") != "manual")
                 if event == volume.RELOADED:
-                    # A single press asks to try an edit without putting the drive
-                    # away, so it goes back once the file has been read, and before
-                    # anything starts, so the lights and the screens come up together
-                    # behind it
+                    # A single press asks to try an edit without putting the drive away, so
+                    # it goes back once the file has been read and before anything starts.
+                    # The lights and the screens then come up together behind it
                     volume.expose()
                 begin_scenes()
                 # A frame each as the lights start, so the panels come back with them
@@ -868,8 +824,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             for what, place in triggers.service():
                 act(what, place)
 
-            # The rotation, standing aside with everything else while a transfer runs, the
-            # effects are held or the board is asleep
+            # Check if the scene's time is up. The rotation stands aside with everything else
+            # while a transfer runs, the effects are held or the board is asleep
             if scene_deadline is not None and not (paused or held or standby) and \
                     time.ticks_diff(time.ticks_ms(), scene_deadline) >= 0:
                 # The scene its heading names after 'then', or the next in order
@@ -902,7 +858,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     sounds_aside = False
                     paused = False
                     # Effects held or asleep stay as the remote left them. The sound goes
-                    # first again, its ring filling before the screens' first frames can
+                    # first again, so its ring fills before the screens' first frames can
                     # hold up its refills
                     if standby:
                         fx.clear()
@@ -917,7 +873,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             drew = False
             if paused:
                 __transfer_frame(fx, time.ticks_ms())
-            # Asleep, nothing is sent, as a screen sent its frame would light again
+            # Check if the board is awake. A screen sent a frame while it sleeps would light again
             elif not standby:
                 for sound in sounds:
                     sound.service()
@@ -926,9 +882,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # button is answered between the screens rather than after them all
                 drew = service_shows(shows, interrupted)
 
-                # Has a drawing or a sound stopped? Nothing else on the board shows it, so
-                # the outputs flash while the effects stand aside, as they do for the drive
-                # changing hands
+                # Has a drawing or sound stopped? Nothing else shows it, so the outputs flash while
+                # the effects stand aside, as they do when the drive changes hands
                 if STOPPED:
                     del STOPPED[:]
                     __stop(players)
@@ -943,19 +898,16 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # and the next frame paints over it
                 indicate(fx, BLOCKED)
 
-            # A pass that drew goes straight round, since the next frame may
-            # already be due and a wait would then be added to every frame the
-            # screens send. Nothing here needs answering sooner than the wait, as
-            # the lights run from a timer and a press is latched until it is read
+            # Check if this pass drew. One that did goes straight round, since the next frame
+            # may already be due and a wait would then be added to every frame the screens
+            # send. Nothing needs answering sooner than the wait, as the lights run from a
+            # timer and a board catching presses by interrupt keeps them until they are read
             if not drew:
                 __wait(interval_ms, held or standby)
     finally:
-        # Darkening the board comes first and nothing fallible stands in front of it.
-        # A stop from the REPL arrives as an interrupt and the next one lands wherever
-        # this has reached, so a step that waits would otherwise leave the outputs lit.
-        # shutdown() releases the screen ports and the header's rail, so neither
-        # record of what is running may outlive them, and anything a program put off
-        # is never going to be built now
+        # Darkening comes first with nothing fallible before it, since a second interrupt from
+        # the REPL lands wherever this has reached. shutdown() releases the screen ports and the
+        # rail, so no record of what is running outlives it, and nothing a program put off is built
         __stop(players)
         __stop_loading_bar()
         forget_built()

@@ -43,7 +43,7 @@ class SPCEPort(ScreenPort):
 
 
 class PlasmaFX:
-    """The Plasma 2350 board, with its two LED terminals, its RGB LED and, on the 2350, its SP/CE connector."""
+    """The Plasma 2350 board, with its two LED terminals, its RGB LED and its SP/CE connector, which a Plasma 2350 W does not have."""
 
     LED_DATA_PIN = 15
     LED_CLK_PIN = 14
@@ -74,35 +74,36 @@ class PlasmaFX:
     # partway through a frame, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
-    # The order a WS2812 strip takes its red, green and blue in where its declaration names
-    # none, which is most WS2812 strips'
+    # The colour order of a WS2812 strip declared without one, which most WS2812 strips take
     STRIP_ORDER = "grb"
 
     # The top of an APA102's brightness, which each LED holds in five bits. Where a
     # declaration names none the plasma module's own 15 stands, about half
     APA102_BRIGHTEST = 31
 
-    # The strips in order, each by the name it is written as and the property handing its strip
-    # back. The APA102 takes a brightness after its length where a WS2812 takes a colour order,
-    # and takes both terminals, so it cannot play beside either WS2812
+    # The strips in order, each by the name it is written as and the property handing it back
     STRIPS = (("stripDat", "strip_dat"), ("stripClk", "strip_clk"), ("stripApa", "strip_apa"))
+
+    # The strips taking a brightness after their length, where a WS2812 takes a colour order
     STRIP_BRIGHTNESS = ("stripApa",)
+
+    # The APA102 takes both terminals, so it cannot play beside either WS2812
     STRIP_TAKES = (("stripApa", ("stripDat", "stripClk")),)
 
     # The screen port, by the name it is written as and the attribute holding its SPCEPort.
-    # Emptied by detect() on a 2350 W, which has no SP/CE connector
+    # Emptied by detect() on a Plasma 2350 W, which has no SP/CE connector
     SCREENS = (("screen", "spce_a"),)
 
-    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
-    # the programs that go online. Set by detect() on a 2350 W
+    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials.
+    # Set by detect() on a Plasma 2350 W
     WIRELESS = False
 
-    # The 2350 W's wireless module's power enable, data, chip select and clock pins, none
-    # of them connected on the 2350
+    # The Plasma 2350 W's wireless module's power enable, data, chip select and clock pins,
+    # none of them connected on the Plasma 2350
     WIRELESS_PINS = (23, 24, 25, 29)
 
     # How long the module has to answer after power-up. Its driver allows 250ms, which every
-    # 2350 would wait out
+    # Plasma 2350 would wait out
     WIRELESS_START_MS = 100
 
     # What the module's test register reads once it has started, 0xFEEDBEAD with its halves
@@ -121,7 +122,7 @@ class PlasmaFX:
     def __init__(self, spce_a=None, strip_dat=None, strip_clk=None, strip_apa=None,
                  init_i2c=True, i2c_freq=100000):
         # What a build claims starts empty, so one that raises partway hands back what it
-        # took before the error reaches the caller. Left to the collector, the boot button's
+        # took before the error reaches the caller. Left to the collector, the Boot button's
         # handler would hold the board, and with it every state machine the board took
         self.spce_a = None
         self.__switch = None
@@ -138,7 +139,7 @@ class PlasmaFX:
         # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
 
-        # No outputs, so the board's RGB LED, active low, is its one light
+        # No outputs, so the board's active-low RGB LED is its one light
         self.outputs = []
         self.rgb = RGBLED(*self.RGB_PINS, invert=True, gamma=self.RGB_GAMMA)
 
@@ -150,18 +151,19 @@ class PlasmaFX:
         if init_i2c:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
-        # A press is caught by interrupt as well as read, so a tap inside a long frame is not missed.
         # The board pulls the pin up itself. The internal pull-up stays off, since on an RP2350 A2
-        # its erratum E9 would keep a press from ever reading low
+        # erratum E9 would keep a press from ever reading low
         self.__switch = Pin(self.USER_SW_PIN, Pin.IN)
         self.__taps = 0
         self.__tapped_at = 0
+
+        # A press is caught by interrupt as well as read, so a tap inside a long frame is not missed
         self.__switch.irq(trigger=Pin.IRQ_FALLING, handler=self.__switch_pressed)
 
         self.__button_a = Pin(self.SW_A_PIN, Pin.IN, Pin.PULL_UP)
 
-        # A strip is sent a frame only by update(). A refresh of its own would resend it
-        # through every flash write, and a frame sent during one is torn
+        # Check if an APA102 is declared. A strip is sent a frame only by update(). A refresh
+        # of its own would resend it through every flash write, and a frame sent during one is torn
         if strip_apa is not None:
             if strip_dat is not None or strip_clk is not None:
                 raise ValueError("An APA102 strip takes both terminals, data and clock, so "
@@ -217,7 +219,7 @@ class PlasmaFX:
 
     @classmethod
     def detect(cls):
-        """Narrow the declared parts to this board's, before anything reads them. A 2350 W carries its wireless module where the 2350 has its SP/CE connector, so it has no screen port."""
+        """Narrow the declared parts to this board's, before anything reads them. A Plasma 2350 W carries its wireless module where the Plasma 2350 has its SP/CE connector, so it has no screen port."""
         if cls.__wireless_fitted():
             cls.SCREENS = ()
             cls.WIRELESS = True
@@ -237,8 +239,8 @@ class PlasmaFX:
 
     @classmethod
     def __wireless_answers(cls):
-        # Driven from plain pins, so no state machine or DMA channel is claimed, and powered
-        # down after for its driver to start afresh
+        # Check if the module answers a test read. It is driven from plain pins, so no state
+        # machine or DMA channel is claimed, and powered down after for its driver to start afresh
         power_pin, data_pin, select_pin, clock_pin = cls.WIRELESS_PINS
         power = Pin(power_pin, Pin.OUT, value=0)
         select = Pin(select_pin, Pin.OUT, value=1)
@@ -258,8 +260,8 @@ class PlasmaFX:
 
     @classmethod
     def __wireless_test_read(cls, data, select, clock):
-        # The command out on the data line, then the line turned round and the reply read in,
-        # a bit to each clock pulse
+        # Send the command out on the data line a bit to each clock pulse, then turn the line round
+        # and read the reply in the same way
         select.value(0)
         data.init(Pin.OUT, value=0)
         for bit in range(31, -1, -1):

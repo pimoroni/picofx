@@ -76,7 +76,7 @@ for _ in range(BEADS):
 
 
 def draw_window(canvas, turn):
-    """Draw the window with the beads this far round, skipping beads the reflections already show."""
+    """Draw the window with the beads this far round, skipping beads outside it."""
     canvas.pen = BACKGROUND
     canvas.clear()
     for radius, angle, half, colour, jewel, spin in STRING:

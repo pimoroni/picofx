@@ -6,7 +6,7 @@ from picofx.mono import TrafficLightFX
 """
 Play a traffic light sequence on three of Mighty FX's RGB outputs.
 
-TrafficLightFX brings no colour of its own, so the board supplies each light's colour and
+TrafficLightFX brings no colour of its own, so the player gives each light its colour and
 the signal needs no coloured lamps.
 
 The lights ease on and off like the filament lamps of a real signal. The easing is set on the
@@ -16,7 +16,7 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-RED = (255, 0, 0)                       # The three a UK traffic light shows
+RED = (255, 0, 0)                       # A UK traffic light's red
 AMBER = (255, 120, 0)                   # Nearer orange than yellow
 GREEN = (0, 210, 140)                   # A blue-green rather than a pure one
 

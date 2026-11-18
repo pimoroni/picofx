@@ -31,7 +31,7 @@ WORDMARK_FACE = "/rom/fonts/PoppinsBlack.af"  # A vector face, drawn large and r
 # Poppins Black's measured lettering, its height and where it starts below the drawn y, as fractions of the size
 LETTERING_TALL = 0.309
 LETTERING_DOWN = 0.697
-BODY_FACE = font.winds                  # The narrowest pixel face, which is what the statuses need
+BODY_FACE = font.winds                  # A narrow pixel face, which is what the statuses need
 REDUCE = 2                              # The render is drawn this much larger and reduced onto the canvas
 ROW_INSET = 4                           # Nudges the lamps if the panel and the connectors do not line up
 
@@ -54,7 +54,7 @@ RIBBON_SPREAD = 70                      # How far apart the two hues sit on it, 
 RIBBON_SAT = 255
 RIBBON_VALUE = 210                      # Short of full, a hue at 255 having little to give against white type
 RIBBON_STEP = 2                         # Pixels a band, the gradient being drawn band by band
-RIBBON_DITHER = 8                       # Jitter on every other band, which scatters the panel's own banding
+RIBBON_DITHER = 8                       # Jitter up and down on alternate bands, which scatters the panel's own banding
 
 # The statuses, each a label, its value and the colour it carries. A count stays in the text colour
 STATE_GOOD = color.rgb(0, 136, 0)       # Whole levels of the 16 the screens drive a channel at, and both
@@ -315,7 +315,7 @@ def draw_ribbon(elapsed):
     """
     Draw the ribbon band by band, two hues cycling together.
 
-    Every other band is nudged half a level, which stipples the banding.
+    Alternate bands are nudged half a level up and down, which stipples the banding.
     """
     turn = (elapsed % RIBBON_MS) * 255 // RIBBON_MS     # How far round the wheel the ribbon has turned, of 255
     for band in range(0, WIDTH, RIBBON_STEP):

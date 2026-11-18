@@ -924,8 +924,8 @@
    "files": [
     {
      "path": "examples/programs/audio/fair_use_encounters.py",
-     "size": 2624,
-     "hash": "7d3e2759187ed79b7ec1f90928b5c86e8c8d96eb",
+     "size": 2592,
+     "hash": "734324f33f78448d02620d699085abecfbfbc8cd",
      "was": [
       {
        "hash": "0650c04d244b6dfda965d537feb80b4a25677963",
@@ -934,6 +934,10 @@
       {
        "hash": "43b80f5122cb4bdc026b456a586508533495e927",
        "size": 2784
+      },
+      {
+       "hash": "7d3e2759187ed79b7ec1f90928b5c86e8c8d96eb",
+       "size": 2624
       },
       {
        "hash": "bdb3703294654c5d3259925f6a8f2e9e0c46ef51",
@@ -1084,8 +1088,12 @@
     {
      "path": "examples/programs/effects/colour/blink.py",
      "size": 1560,
-     "hash": "0bd895d855289d10b9584ea45f5fb3b679f8d18d",
+     "hash": "c543ea2c1c934da907e5f7130a8fe7adf0819481",
      "was": [
+      {
+       "hash": "0bd895d855289d10b9584ea45f5fb3b679f8d18d",
+       "size": 1560
+      },
       {
        "hash": "dde70906bbb75e5cd23bb1c88662dfcf739b43cf",
        "size": 1558
@@ -1127,8 +1135,8 @@
    "files": [
     {
      "path": "examples/programs/effects/colour/pelican_crossing.py",
-     "size": 2509,
-     "hash": "641e976c4d99d62f9b6b48db594b8d1014c25328",
+     "size": 2592,
+     "hash": "fea937a410313c32710c7da903184aade30c66c2",
      "was": [
       {
        "hash": "579147887b7f803c7207bc38868aa891b3d0734d",
@@ -1137,6 +1145,10 @@
       {
        "hash": "584426712625cc6b4fba4a374b9d64d5d03ddb2c",
        "size": 2460
+      },
+      {
+       "hash": "641e976c4d99d62f9b6b48db594b8d1014c25328",
+       "size": 2509
       }
      ],
      "moved_from": [
@@ -1271,8 +1283,8 @@
    "files": [
     {
      "path": "examples/programs/effects/colour/traffic_light.py",
-     "size": 2152,
-     "hash": "e5ab9ecf9f63acb701845efba67bb416342d6a19",
+     "size": 2142,
+     "hash": "7dac5e1a3f18997866853a15c55171b23575386f",
      "was": [
       {
        "hash": "4c22b74a1c38eb63425539e2481a23151f719515",
@@ -1285,6 +1297,10 @@
       {
        "hash": "d927e46a288e00759b345e8ef1390268c7ddb7b7",
        "size": 2097
+      },
+      {
+       "hash": "e5ab9ecf9f63acb701845efba67bb416342d6a19",
+       "size": 2152
       }
      ],
      "moved_from": [
@@ -1301,12 +1317,16 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/binary_counter.py",
-     "size": 1265,
-     "hash": "487386b6e27d5cf562de5ebba3e76db4f3829d13",
+     "size": 1279,
+     "hash": "61ee4a974bdafbcd39812bc8e89e59141e054912",
      "was": [
       {
        "hash": "269b8437237075bdf595d68525e019ae6bac506c",
        "size": 1263
+      },
+      {
+       "hash": "487386b6e27d5cf562de5ebba3e76db4f3829d13",
+       "size": 1265
       }
      ],
      "moved_from": [
@@ -1323,8 +1343,8 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/blink_wave.py",
-     "size": 1624,
-     "hash": "c86ccad71e428aee10a73f805bbd8981eeb08c9a",
+     "size": 1627,
+     "hash": "878d8d23bf60e3dab458076aa19df817ddc419ce",
      "was": [
       {
        "hash": "1c9b6d639b6616d67c704a65f1abc57320a6435a",
@@ -1337,6 +1357,10 @@
       {
        "hash": "7c4cae80004f64fd8db56607b047ddfebc18b200",
        "size": 1747
+      },
+      {
+       "hash": "c86ccad71e428aee10a73f805bbd8981eeb08c9a",
+       "size": 1624
       }
      ],
      "moved_from": [
@@ -1353,8 +1377,8 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/flashing_sequence.py",
-     "size": 1892,
-     "hash": "c3d105f60a9fca7a2eb85cb9da18c136b240241e",
+     "size": 1895,
+     "hash": "d40b14654259bdccbb7126d425c5487a4b090176",
      "was": [
       {
        "hash": "85bf48af45aa6046c21ae305fb6dc59bb70911c7",
@@ -1363,6 +1387,10 @@
       {
        "hash": "c0860e51485380f48bbc9babd805f5d975b74308",
        "size": 1889
+      },
+      {
+       "hash": "c3d105f60a9fca7a2eb85cb9da18c136b240241e",
+       "size": 1892
       }
      ],
      "moved_from": [
@@ -1379,9 +1407,13 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/pulse_wave.py",
-     "size": 1555,
-     "hash": "2a1d7e6b858bf0cd27664624679e1140f1535383",
+     "size": 1528,
+     "hash": "a9acf561eb250df09030bbc185e43fd04fdb8e3f",
      "was": [
+      {
+       "hash": "2a1d7e6b858bf0cd27664624679e1140f1535383",
+       "size": 1555
+      },
       {
        "hash": "4f6da50aea88e270dd9f1b5756cea360e17e08d9",
        "size": 1646
@@ -1405,9 +1437,13 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/random.py",
-     "size": 1498,
-     "hash": "0ae57fd13fcf121d04134da3083ff7743a8c59c8",
+     "size": 1453,
+     "hash": "9aa7f3af4c1e4a220eac237ad978894560d14b8b",
      "was": [
+      {
+       "hash": "0ae57fd13fcf121d04134da3083ff7743a8c59c8",
+       "size": 1498
+      },
       {
        "hash": "25135a252ac9370b4cbb64a3e041c1c1c325efa1",
        "size": 1562
@@ -1559,8 +1595,8 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/sweep.py",
-     "size": 1480,
-     "hash": "db213c8b397d58cf43f9af0d1498dc28f0dc3dd9",
+     "size": 1448,
+     "hash": "26b35ec13f756c6bb4fab8bc231f435ac5516e0b",
      "was": [
       {
        "hash": "66ead4223708a9f0ea02046b31f8ba50fc16fab9",
@@ -1569,6 +1605,10 @@
       {
        "hash": "93f4792a4190f8536b43ff73af578f626dcbf923",
        "size": 1537
+      },
+      {
+       "hash": "db213c8b397d58cf43f9af0d1498dc28f0dc3dd9",
+       "size": 1480
       }
      ],
      "moved_from": [
@@ -1585,9 +1625,13 @@
    "files": [
     {
      "path": "examples/programs/effects/mono/traffic_light.py",
-     "size": 1875,
-     "hash": "dcfb67dd1ffc5d5cd30758864d6ea6e72e63c443",
+     "size": 1876,
+     "hash": "fadbab67636feff7e0b963649d316c7173483b2e",
      "was": [
+      {
+       "hash": "dcfb67dd1ffc5d5cd30758864d6ea6e72e63c443",
+       "size": 1875
+      },
       {
        "hash": "df8a20c1239f1db2c542e108d5fa770e9e2d04fc",
        "size": 2091
@@ -1637,9 +1681,14 @@
    "files": [
     {
      "path": "examples/programs/function/motion_light.py",
-     "size": 1828,
-     "hash": "34e7b0237d6bcac0b19de204b0d4413a885f4af6",
-     "was": [],
+     "size": 1835,
+     "hash": "e93e26139679819e0e39a1e69b7f756aac81c9e3",
+     "was": [
+      {
+       "hash": "34e7b0237d6bcac0b19de204b0d4413a885f4af6",
+       "size": 1828
+      }
+     ],
      "moved_from": [
       "examples/python/function/motion_light.py"
      ]
@@ -1717,8 +1766,8 @@
    "files": [
     {
      "path": "examples/programs/function/voltage_meter.py",
-     "size": 2503,
-     "hash": "9f023f45dd486fa30fb7277268d645a1513409bd",
+     "size": 2500,
+     "hash": "0ca18821611f2720a23f24bae1221d039954703f",
      "was": [
       {
        "hash": "1a4448174b495a68395760f54f16b26cbf1548b9",
@@ -1741,6 +1790,10 @@
        "size": 2685
       },
       {
+       "hash": "9f023f45dd486fa30fb7277268d645a1513409bd",
+       "size": 2503
+      },
+      {
        "hash": "e0f0e4ee0c2470055155b0cc2441f18a1d7bd774",
        "size": 2863
       }
@@ -1759,9 +1812,14 @@
    "files": [
     {
      "path": "examples/programs/gpio/spce_buttons.py",
-     "size": 1953,
-     "hash": "bb4b4ce2f09b6b42323509fe975393b4cbece8d2",
-     "was": [],
+     "size": 1959,
+     "hash": "fdf0d0b3c2671a3bd0f6cbfb2c172e7ae25ccff2",
+     "was": [
+      {
+       "hash": "bb4b4ce2f09b6b42323509fe975393b4cbece8d2",
+       "size": 1953
+      }
+     ],
      "moved_from": [
       "examples/python/gpio/spce_buttons.py"
      ]
@@ -1801,9 +1859,13 @@
    "files": [
     {
      "path": "examples/programs/gpio/spce_pwm_fade.py",
-     "size": 2330,
-     "hash": "08549236681cd5a00bf02383c450a30a7088b3d2",
+     "size": 2292,
+     "hash": "7a7334cd1f6c0d7d01804ede6261a45e9a87d14c",
      "was": [
+      {
+       "hash": "08549236681cd5a00bf02383c450a30a7088b3d2",
+       "size": 2330
+      },
       {
        "hash": "ac5deca0b04fde8e8f78ce1f97a7c58527e927fd",
        "size": 2330
@@ -1902,12 +1964,16 @@
    "files": [
     {
      "path": "examples/programs/infrared/colour/control_rainbow.py",
-     "size": 3585,
-     "hash": "97a2a9a5339adf298362b02434bf3d3eb1cfa744",
+     "size": 3583,
+     "hash": "e08c9aeb29f6206a3a0ad4be8e5082dc0a14ff39",
      "was": [
       {
        "hash": "8bc825bd007c92dabdf26051103299f4cc0445d8",
        "size": 3513
+      },
+      {
+       "hash": "97a2a9a5339adf298362b02434bf3d3eb1cfa744",
+       "size": 3585
       },
       {
        "hash": "9acbae704b7cd132b0d898789cb8ab0c7caa3511",
@@ -2118,12 +2184,16 @@
    "files": [
     {
      "path": "examples/programs/infrared/mono/toggle_effects.py",
-     "size": 3078,
-     "hash": "5ebe9a141a3e4764fe1b97c83195bb059941abf1",
+     "size": 3111,
+     "hash": "d8d7fafda1d904787680962541c4ba3feb3fcf1d",
      "was": [
       {
        "hash": "1963e0db00d4aa08512c71cf54cbaab86df4d7c7",
        "size": 3139
+      },
+      {
+       "hash": "5ebe9a141a3e4764fe1b97c83195bb059941abf1",
+       "size": 3078
       },
       {
        "hash": "907257934c0f9d0fbc5a0aa52d39bf70eeb451dd",
@@ -2152,8 +2222,8 @@
    "files": [
     {
      "path": "examples/programs/motors/motor_movements.py",
-     "size": 2512,
-     "hash": "6d64843bfe2cf0514e3f1683cad6ff82240178a9",
+     "size": 2522,
+     "hash": "badbd4dc32ca12f6f479cc8a3ae347e4a57c690e",
      "was": [
       {
        "hash": "14bf31f92068f5480e8170ddf9d3cf756b2172b3",
@@ -2170,6 +2240,10 @@
       {
        "hash": "4f3b686e9797f49007495c992ea3d8585913d153",
        "size": 2749
+      },
+      {
+       "hash": "6d64843bfe2cf0514e3f1683cad6ff82240178a9",
+       "size": 2512
       },
       {
        "hash": "79df9f77049aa2a64e7008a67ef1dabb146453bb",
@@ -2194,8 +2268,8 @@
    "files": [
     {
      "path": "examples/programs/motors/motor_pair.py",
-     "size": 1190,
-     "hash": "87e42e864d510c8b80880792d86b2bf1e7dee673",
+     "size": 1198,
+     "hash": "71ea0fc1c420244c7004fd756b2a61a93616987d",
      "was": [
       {
        "hash": "33af6943ac4c21436cf583471ddb730ca1eff69e",
@@ -2234,6 +2308,10 @@
        "size": 1186
       },
       {
+       "hash": "87e42e864d510c8b80880792d86b2bf1e7dee673",
+       "size": 1190
+      },
+      {
        "hash": "95b412d1b3e01c68c28dfc71e27f85530a31bbb2",
        "size": 1355
       }
@@ -2252,8 +2330,8 @@
    "files": [
     {
      "path": "examples/programs/motors/motor_settings.py",
-     "size": 3058,
-     "hash": "ce7dbe47d11e0c354d4f7b77151b1846122e0f67",
+     "size": 3105,
+     "hash": "7b354aa3bb6cd671dddfdb9be0fd483c8d0e9735",
      "was": [
       {
        "hash": "1cdada892baf16ddae4da6ddcf64dac84f1cc037",
@@ -2262,6 +2340,10 @@
       {
        "hash": "269bb47cb335707f15051cdbb69d92a0d5073d17",
        "size": 3064
+      },
+      {
+       "hash": "ce7dbe47d11e0c354d4f7b77151b1846122e0f67",
+       "size": 3058
       },
       {
        "hash": "ed2e7d91670476ea4ec5cd3dc5a0f7f6cc85ec42",
@@ -2328,8 +2410,8 @@
    "files": [
     {
      "path": "examples/programs/motors/remote_robot.py",
-     "size": 4130,
-     "hash": "541ea2350a497dc70c57daed271346ec91d47e11",
+     "size": 4143,
+     "hash": "2ce53444832d03903d18e7a7fd8eb5ad0455b7b0",
      "was": [
       {
        "hash": "14fb90bd872570ba2325cd834455a2bca80518ae",
@@ -2338,6 +2420,10 @@
       {
        "hash": "2a40380d261c7cbe0e62d64d908017b38d1c1e63",
        "size": 4166
+      },
+      {
+       "hash": "541ea2350a497dc70c57daed271346ec91d47e11",
+       "size": 4130
       },
       {
        "hash": "92bebb795aa23c3dccd0259b46ab64c1375b83da",
@@ -2470,8 +2556,8 @@
    "files": [
     {
      "path": "examples/programs/qwst/temperature_reading.py",
-     "size": 2969,
-     "hash": "822768624b1527173391c828b02efc3a25316dbd",
+     "size": 3013,
+     "hash": "f3648b202478ea0a614d7fb77345cc7a061f5f49",
      "was": [
       {
        "hash": "09e191c3fc8da3c24df615f17395531bbe8da188",
@@ -2496,6 +2582,10 @@
       {
        "hash": "7af0f1fa5a2ad97a906abbf8c16f4fc56ebccec0",
        "size": 3565
+      },
+      {
+       "hash": "822768624b1527173391c828b02efc3a25316dbd",
+       "size": 2969
       },
       {
        "hash": "9cb2c70301ea328301d1837a504869675c01e57a",
@@ -2593,12 +2683,16 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/colours.py",
-     "size": 5762,
-     "hash": "4456b1ceb1daa41ffd6070b60079f6751b32f38c",
+     "size": 5743,
+     "hash": "0b78e952186936019f67781d259dd3adc8aa3144",
      "was": [
       {
        "hash": "2bef3e10337bb09ff0b3e2e01dcc03fdcf0dde4a",
        "size": 5309
+      },
+      {
+       "hash": "4456b1ceb1daa41ffd6070b60079f6751b32f38c",
+       "size": 5762
       },
       {
        "hash": "861867d368dd07bc9c018a5a7de80f4b8f863d25",
@@ -2726,7 +2820,7 @@
     {
      "path": "examples/programs/screens/graphics/filters.py",
      "size": 4002,
-     "hash": "c6ad954084cb078d032731519b674f7cc67135cd",
+     "hash": "53ef0e3b982b2988050b41648ca2d49951d013b2",
      "was": [
       {
        "hash": "1edc1dd5569484aedbf458949ad67aa6ee2da826",
@@ -2755,6 +2849,10 @@
       {
        "hash": "c2975172e47ccf2f9a4fdde8976aafdfa24258c6",
        "size": 4050
+      },
+      {
+       "hash": "c6ad954084cb078d032731519b674f7cc67135cd",
+       "size": 4002
       },
       {
        "hash": "cd3e1eecc26c7c36b7aafbeb281c02c5634d5160",
@@ -2790,8 +2888,8 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/led_matrix.py",
-     "size": 5083,
-     "hash": "f22c530e94d88bee3d4aebf83d1545bec1c420be",
+     "size": 5141,
+     "hash": "dfdbf02b9c703fe33a76edec523dda05e1ad5e32",
      "was": [
       {
        "hash": "181a2bc970211b3d282a25821f2d4edc70aa8191",
@@ -2840,6 +2938,10 @@
       {
        "hash": "e46b516f9f8843bf29528816690b5db266451799",
        "size": 7101
+      },
+      {
+       "hash": "f22c530e94d88bee3d4aebf83d1545bec1c420be",
+       "size": 5083
       }
      ],
      "moved_from": [
@@ -2916,8 +3018,8 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/pens.py",
-     "size": 6680,
-     "hash": "e38c7785ae0d44d365bb80871c4c720b20fadf93",
+     "size": 6685,
+     "hash": "c7607bbab6f88af6184bad161481a73ae185d9bb",
      "was": [
       {
        "hash": "088caeed65d8cdc6c39030ac283aa8258341bf17",
@@ -2950,6 +3052,10 @@
       {
        "hash": "c48c129bc22bd2db4abf6119b5d4e32c0ccfbacd",
        "size": 6338
+      },
+      {
+       "hash": "e38c7785ae0d44d365bb80871c4c720b20fadf93",
+       "size": 6680
       },
       {
        "hash": "fdfc69d2f88ee5dd5da4d16520e2883d6ee44052",
@@ -2996,12 +3102,16 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/pixel_fonts.py",
-     "size": 4792,
-     "hash": "3d112a2b8ed6f698f862931b7f7709c7af975d40",
+     "size": 4830,
+     "hash": "896c1b2c5f7f4ac095381b6aa04a77ca7441b5a1",
      "was": [
       {
        "hash": "18685c02e9eb916feda8c40c47dca4bec4cd14cf",
        "size": 5746
+      },
+      {
+       "hash": "3d112a2b8ed6f698f862931b7f7709c7af975d40",
+       "size": 4792
       },
       {
        "hash": "51b3084972e379f5ec09421b2ba3b093f4e3a7f5",
@@ -3055,8 +3165,8 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/shapes.py",
-     "size": 3726,
-     "hash": "f92793342dc8a78aa25d8cfdb9bf290600b1e45a",
+     "size": 3566,
+     "hash": "feb6c0da3fa4068c4d4fe9caa09c579af73f6507",
      "was": [
       {
        "hash": "324fe7900af873614307e27c007fea87d9c77006",
@@ -3085,6 +3195,10 @@
       {
        "hash": "ef5f01abc0750b66a2867d335c066ab138afaacc",
        "size": 3767
+      },
+      {
+       "hash": "f92793342dc8a78aa25d8cfdb9bf290600b1e45a",
+       "size": 3726
       }
      ],
      "moved_from": [
@@ -3110,8 +3224,8 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/sprites.py",
-     "size": 4047,
-     "hash": "b9546323a23eb714640f2f582d6c2ffdae741380",
+     "size": 4076,
+     "hash": "9c8f74dadb88535d5ebea7f25b3c2e9c88308fdf",
      "was": [
       {
        "hash": "0fa2c06e5b3f6f0459a111b6ceea306e8f22f379",
@@ -3136,6 +3250,10 @@
       {
        "hash": "b77c53a96ea25aa5a07ce5cce5acd5870ae37360",
        "size": 4054
+      },
+      {
+       "hash": "b9546323a23eb714640f2f582d6c2ffdae741380",
+       "size": 4047
       }
      ],
      "moved_from": [
@@ -3316,8 +3434,8 @@
    "files": [
     {
      "path": "examples/programs/screens/graphics/vector_fonts.py",
-     "size": 3634,
-     "hash": "675b574e5851da202e2a32d8acd40c1f25f96486",
+     "size": 3673,
+     "hash": "d2f66ff7f51945583472d3ea14d662b830f0a385",
      "was": [
       {
        "hash": "15757896f49ca6aab58b06c11baddd65e7290a3d",
@@ -3338,6 +3456,10 @@
       {
        "hash": "53501f666d3f7729bf1c46c437f5e7f87989011e",
        "size": 3676
+      },
+      {
+       "hash": "675b574e5851da202e2a32d8acd40c1f25f96486",
+       "size": 3634
       },
       {
        "hash": "93df62955ba87fd11676d1fa7be62efa8f709555",
@@ -3371,8 +3493,8 @@
    "files": [
     {
      "path": "examples/programs/screens/hub/chevron_banks.py",
-     "size": 4537,
-     "hash": "fdb6715ea0e37e212a96393f31805256e797cb77",
+     "size": 4298,
+     "hash": "2a53fa349cd5783dab77de175f0e62aac36ec648",
      "was": [
       {
        "hash": "07a2b55d5bd5601efb59d61f2e2c848cc4a47f0d",
@@ -3405,6 +3527,10 @@
       {
        "hash": "eaf90ee244e7626a4b1399f1ed29e750ad5417ca",
        "size": 4156
+      },
+      {
+       "hash": "fdb6715ea0e37e212a96393f31805256e797cb77",
+       "size": 4537
       }
      ],
      "moved_from": [
@@ -3443,7 +3569,7 @@
     {
      "path": "examples/programs/screens/hub/detect_hub.py",
      "size": 4220,
-     "hash": "e0659775ce18553ec0e595304cba4dec3cb67893",
+     "hash": "dd0aa429951fd560d15cfc8fd3d083a5c1fa1bc7",
      "was": [
       {
        "hash": "2c35e1cdfbaa2b0b50cd3f0bffc87f0d9a98d817",
@@ -3464,6 +3590,10 @@
       {
        "hash": "756b0aa02047a245322547a1c86fbb33f8bbbfae",
        "size": 4017
+      },
+      {
+       "hash": "e0659775ce18553ec0e595304cba4dec3cb67893",
+       "size": 4220
       }
      ],
      "moved_from": [
@@ -3489,11 +3619,15 @@
     {
      "path": "examples/programs/screens/hub/starfield_wall.py",
      "size": 3271,
-     "hash": "1824b10518826539e6e9e1b57610d742c4d38096",
+     "hash": "75e4b0bb4867c2d3025a3c6390aa51e604ac6dec",
      "was": [
       {
        "hash": "0f4b639123b391c52c41242ed802101d9518276f",
        "size": 3777
+      },
+      {
+       "hash": "1824b10518826539e6e9e1b57610d742c4d38096",
+       "size": 3271
       },
       {
        "hash": "2390835d91545679dd030ab658d2e9c21f28c828",
@@ -3691,8 +3825,8 @@
    "files": [
     {
      "path": "examples/programs/screens/images/poster_ticker.py",
-     "size": 4548,
-     "hash": "f6fb49a908787c12d40bd59aa99c9bf90a702bd4",
+     "size": 4588,
+     "hash": "6b9cae3f96e49bde02fc61374d0854a177fa9b2d",
      "was": [
       {
        "hash": "234d4f512476fe80f986f4e1d26d90682082d2a2",
@@ -3712,6 +3846,10 @@
       },
       {
        "hash": "d0ef700b3e4a43879015e56e1271945526d311b2",
+       "size": 4548
+      },
+      {
+       "hash": "f6fb49a908787c12d40bd59aa99c9bf90a702bd4",
        "size": 4548
       }
      ],
@@ -3743,8 +3881,8 @@
    "files": [
     {
      "path": "examples/programs/screens/layout/bouncing_logo.py",
-     "size": 3983,
-     "hash": "20e5ded3ea53a4174b79f9c513fb69c39aefa164",
+     "size": 4008,
+     "hash": "fbd839d2d76748c16003ecc5c86703815e85b38f",
      "was": [
       {
        "hash": "01416fb152802788b2f9db8d1f590ef324629900",
@@ -3761,6 +3899,10 @@
       {
        "hash": "14a4a96b425cf07416ce5b3e8d3fdcfd37847386",
        "size": 4039
+      },
+      {
+       "hash": "20e5ded3ea53a4174b79f9c513fb69c39aefa164",
+       "size": 3983
       },
       {
        "hash": "263b206095ae881b7f63bb58d65ab9ca0126e99b",
@@ -3832,8 +3974,8 @@
    "files": [
     {
      "path": "examples/programs/screens/layout/kaleidoscope.py",
-     "size": 5283,
-     "hash": "6d78930fc760166c5fbcbca9df1c20f88c55215e",
+     "size": 5265,
+     "hash": "fcdafc2f9c3710de8468813f30fd82a44537bc6a",
      "was": [
       {
        "hash": "175d749e74633f1c580ea6707e900ece32ea8507",
@@ -3862,6 +4004,10 @@
       {
        "hash": "40bd566aba0b86f1c58d986a0d75e39385e4075b",
        "size": 7922
+      },
+      {
+       "hash": "6d78930fc760166c5fbcbca9df1c20f88c55215e",
+       "size": 5283
       },
       {
        "hash": "73e0eb0b19535f2e14a2047991b05144e49a1b78",
@@ -3911,8 +4057,8 @@
    "files": [
     {
      "path": "examples/programs/screens/layout/orientations.py",
-     "size": 5739,
-     "hash": "71fd32d45a20e76b0cb818b0a8fcb9b840925a03",
+     "size": 5628,
+     "hash": "d83e5c1eed2d5fc2112caed63b78d8bb058071ab",
      "was": [
       {
        "hash": "31baa70b65634dfc1edf16416fa355b017566708",
@@ -3925,6 +4071,10 @@
       {
        "hash": "7117c0b2fac0e94a21bc513193846622eadf7cdc",
        "size": 5722
+      },
+      {
+       "hash": "71fd32d45a20e76b0cb818b0a8fcb9b840925a03",
+       "size": 5739
       },
       {
        "hash": "891df6a40bac6d2aa1548884cdfdc8dce79df130",
@@ -3958,12 +4108,16 @@
    "files": [
     {
      "path": "examples/programs/screens/layout/pixel_doubled.py",
-     "size": 5665,
-     "hash": "1469af1c713375f3e6db198d77f4adc48aa7d055",
+     "size": 5656,
+     "hash": "6125d81534cbe7387b788656edbec0e38d1d6666",
      "was": [
       {
        "hash": "0c3aba9d1df967fb6a503c2a0c73d0190a0843a3",
        "size": 7239
+      },
+      {
+       "hash": "1469af1c713375f3e6db198d77f4adc48aa7d055",
+       "size": 5665
       },
       {
        "hash": "2cd99784d396ff5c91986a65dd2b04d94ea17980",
@@ -4013,8 +4167,8 @@
    "files": [
     {
      "path": "examples/programs/screens/layout/tiled_arrows.py",
-     "size": 2884,
-     "hash": "c029ccf6073007f84763a1ee09e023b1333b7ebe",
+     "size": 2858,
+     "hash": "16c3323472f994d74f026f650bb7fd1a8136b2cd",
      "was": [
       {
        "hash": "316400a23ed390e80fafe6971de68253f7d480e4",
@@ -4031,6 +4185,10 @@
       {
        "hash": "ac8f0334bb4bdf6abbe44b0f58ac36aaaf491fc4",
        "size": 3369
+      },
+      {
+       "hash": "c029ccf6073007f84763a1ee09e023b1333b7ebe",
+       "size": 2884
       },
       {
        "hash": "ee4d3714c4e1a3339c14a85a49c886a8ee7785ee",
@@ -4064,8 +4222,8 @@
    "files": [
     {
      "path": "examples/programs/screens/layout/tiled_bricks.py",
-     "size": 3049,
-     "hash": "a934179a9b4a870b1dbd16874135babe18ba9ae5",
+     "size": 3056,
+     "hash": "7dbdb2b205d675d9c2185da203c96f2d70a41762",
      "was": [
       {
        "hash": "262e64398308c4d899c4f5f6ed52956d60a81a45",
@@ -4086,6 +4244,10 @@
       {
        "hash": "a1b453108a5a2cfb9dac0210eafa506da7bc947b",
        "size": 3559
+      },
+      {
+       "hash": "a934179a9b4a870b1dbd16874135babe18ba9ae5",
+       "size": 3049
       },
       {
        "hash": "ab2f6d8802f7a566788343f4c258bbfedf5eb0d0",
@@ -4124,8 +4286,8 @@
    "files": [
     {
      "path": "examples/programs/screens/pair/color_wheel_facing.py",
-     "size": 3015,
-     "hash": "5768e16c95437c78ae278c0ca08488958616c158",
+     "size": 3011,
+     "hash": "b928c83b38ebbad1916506f5f2a177f3f2c0aeaa",
      "was": [
       {
        "hash": "028796bf02a52991e8835ac3509851556a3c961d",
@@ -4138,6 +4300,10 @@
       {
        "hash": "312ae19f167e54f1cbfea8d8dbfa6e284ce42970",
        "size": 2975
+      },
+      {
+       "hash": "5768e16c95437c78ae278c0ca08488958616c158",
+       "size": 3015
       },
       {
        "hash": "578e5d04b28fdbd6f0ea1a9314324c086c340674",
@@ -4213,12 +4379,16 @@
    "files": [
     {
      "path": "examples/programs/screens/pair/color_wheel_paired.py",
-     "size": 3319,
-     "hash": "128f9f2d40eb0f1066cde068f0fd3817a673f18c",
+     "size": 3176,
+     "hash": "f89c26530d916ac6846a2a55b1653b5337979445",
      "was": [
       {
        "hash": "0b26e28d506bcf323ea854430028f5260ffd64b9",
        "size": 3260
+      },
+      {
+       "hash": "128f9f2d40eb0f1066cde068f0fd3817a673f18c",
+       "size": 3319
       },
       {
        "hash": "357d7dabd4a19c2119e11bfd20688d21fba2b6eb",
@@ -4289,8 +4459,8 @@
    "files": [
     {
      "path": "examples/programs/screens/pair/color_wheel_unpaired.py",
-     "size": 3216,
-     "hash": "37b5ed97b5efbc5360fb00f165dddb923f65db3e",
+     "size": 2996,
+     "hash": "dbe254a15d459e76155b59aeb9707987f50418da",
      "was": [
       {
        "hash": "0274df3bdbb781d65421dc2632ae7855f7f7767c",
@@ -4315,6 +4485,10 @@
       {
        "hash": "34e2c3e0c2744e6ad18fa968a30ec03b6b97b776",
        "size": 3205
+      },
+      {
+       "hash": "37b5ed97b5efbc5360fb00f165dddb923f65db3e",
+       "size": 3216
       },
       {
        "hash": "876f97e5c1b4bb1681ed7522bf9ed7a00eb4ab61",
@@ -4373,8 +4547,8 @@
    "files": [
     {
      "path": "examples/programs/screens/pair/drifting_carpets.py",
-     "size": 6491,
-     "hash": "4078c20dd771e317f4a57e8a492a33d1245f7fae",
+     "size": 6542,
+     "hash": "e41ee4d878ba0c4879e4d7d357d5d047007afd72",
      "was": [
       {
        "hash": "14da69e5ddcacc7b0463e986bf9c14c0b4cde8e3",
@@ -4391,6 +4565,10 @@
       {
        "hash": "37b64a5d1dffefc177c03a533aca9b176a0c6bd7",
        "size": 8234
+      },
+      {
+       "hash": "4078c20dd771e317f4a57e8a492a33d1245f7fae",
+       "size": 6491
       },
       {
        "hash": "4ff037511b50d23119071126237bac9cd0ae6611",
@@ -4464,12 +4642,16 @@
    "files": [
     {
      "path": "examples/programs/screens/pair/test_cards_paired.py",
-     "size": 4495,
-     "hash": "134adf137d37c63879519e7092b62ec8d414d849",
+     "size": 4455,
+     "hash": "a488a3c32afbfd7c2ded7c02e8fb3dafc4afcef0",
      "was": [
       {
        "hash": "0a0634cdf7ac2301a2f7d8b8e3160e89ac7b9614",
        "size": 4503
+      },
+      {
+       "hash": "134adf137d37c63879519e7092b62ec8d414d849",
+       "size": 4495
       },
       {
        "hash": "164eedd1ab356fee40032bd338359ba7afff790b",
@@ -4540,8 +4722,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/animated_gif.py",
-     "size": 1955,
-     "hash": "406153438d6adf46c82b6f09d8f8e86df243be0e",
+     "size": 1980,
+     "hash": "418684850ea5159ccdd754b5e99f93fc80b36611",
      "was": [
       {
        "hash": "2e7875d0e36d72146d0a24ede2edbaef170a662f",
@@ -4554,6 +4736,10 @@
       {
        "hash": "38dcccf538f1ae2b1ef5afdf2b7665f9262b3dfe",
        "size": 1951
+      },
+      {
+       "hash": "406153438d6adf46c82b6f09d8f8e86df243be0e",
+       "size": 1955
       },
       {
        "hash": "49d442b0d8fb36393c7a1cb39e94558a020c6bbd",
@@ -4617,8 +4803,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/animated_gif_paired.py",
-     "size": 2072,
-     "hash": "b623c5c9288174cf053eac1ccff0c545244dc6bc",
+     "size": 2103,
+     "hash": "5c2db67979a7e47df9f82f48a96c372c132ad1f7",
      "was": [
       {
        "hash": "054951edc8e902875b6ec6368549639ecb66ab00",
@@ -4651,6 +4837,10 @@
       {
        "hash": "a7b7f7ae9b44911690e37503359ab83d4179cab1",
        "size": 1700
+      },
+      {
+       "hash": "b623c5c9288174cf053eac1ccff0c545244dc6bc",
+       "size": 2072
       },
       {
        "hash": "c7945ac727ce5ef277814aa13a0d7809ce8c04fc",
@@ -4707,8 +4897,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/animated_gif_ping_pong.py",
-     "size": 2093,
-     "hash": "848a8bc411194d728984796a3ab2ecb916c2e0a0",
+     "size": 2108,
+     "hash": "6a7c57c1f6c8dd65eb0df08c8c31197ba3d00a1f",
      "was": [
       {
        "hash": "3be0fd7ef333b262caad8cc8fc3b6f8150370204",
@@ -4733,6 +4923,10 @@
       {
        "hash": "80d293fbe8c29bb0eb7eec675059236f9d8cd52a",
        "size": 1923
+      },
+      {
+       "hash": "848a8bc411194d728984796a3ab2ecb916c2e0a0",
+       "size": 2093
       },
       {
        "hash": "8b5a97579f90ef4c329bce1cff61ae7fa878617d",
@@ -4788,8 +4982,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/animated_gif_recoloured.py",
-     "size": 3256,
-     "hash": "6e6211685a83c643bc334b45c23673a52bfe0980",
+     "size": 3193,
+     "hash": "8332efb0f8172e18b01396feadba67c8610b90b2",
      "was": [
       {
        "hash": "20a9f08b436ee09956c5857876ae8f00db594e15",
@@ -4806,6 +5000,10 @@
       {
        "hash": "67dc340661ead29e9039cc2207967df5c1924f01",
        "size": 3275
+      },
+      {
+       "hash": "6e6211685a83c643bc334b45c23673a52bfe0980",
+       "size": 3256
       },
       {
        "hash": "7355b2b339c8b54d172554638c46dce6082012b0",
@@ -5004,8 +5202,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/billboard_paired.py",
-     "size": 2077,
-     "hash": "5f2f54a6037b25366c8f4cf928413cfbc643a6cb",
+     "size": 2106,
+     "hash": "e210cf8aa11a642ba5756cb3304d98f4d3880b5b",
      "was": [
       {
        "hash": "03bf9018ffb287975002bdaf0b106eb791b0bf63",
@@ -5034,6 +5232,10 @@
       {
        "hash": "3e0ed5509110f33d18d82c94b4a44595cf977116",
        "size": 2136
+      },
+      {
+       "hash": "5f2f54a6037b25366c8f4cf928413cfbc643a6cb",
+       "size": 2077
       },
       {
        "hash": "616f2a6c7b79027746b0d4d8133462b99c321048",
@@ -5146,9 +5348,13 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/billboard_slideshow.py",
-     "size": 1796,
-     "hash": "0160343d8ecad33d41e3720da9eca1c654f30835",
+     "size": 1815,
+     "hash": "4f0391fc94fae08c7abf55aa35fefd8c1a376c89",
      "was": [
+      {
+       "hash": "0160343d8ecad33d41e3720da9eca1c654f30835",
+       "size": 1796
+      },
       {
        "hash": "11e05d843f3ec7673ef7e69403f5c2cea355203e",
        "size": 1718
@@ -5283,12 +5489,16 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/billboard_wall.py",
-     "size": 2640,
-     "hash": "2965340dc8150488e91c388e7d7e557c5c31800f",
+     "size": 2652,
+     "hash": "60ef3cb154ba8b86c9632561fc6b0291ef1733bb",
      "was": [
       {
        "hash": "225b29f7f75e7c4d8120cc149d4c2f3168a714a9",
        "size": 2560
+      },
+      {
+       "hash": "2965340dc8150488e91c388e7d7e557c5c31800f",
+       "size": 2640
       },
       {
        "hash": "4186b22e807dfaf21139c806a007f9461dbce1eb",
@@ -5420,8 +5630,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/dual_animated_gifs.py",
-     "size": 2834,
-     "hash": "748fe49adce5ed6cb7ae83e59eabefc73f96f17b",
+     "size": 2860,
+     "hash": "8a203604582cadb31dd736bae6c1ccc2063c4299",
      "was": [
       {
        "hash": "06c8535aa11926958f83588d7f31ef93481b1cd3",
@@ -5450,6 +5660,10 @@
       {
        "hash": "4c83d68ec31233a28acdf984523477dfebd02f49",
        "size": 2792
+      },
+      {
+       "hash": "748fe49adce5ed6cb7ae83e59eabefc73f96f17b",
+       "size": 2834
       },
       {
        "hash": "9a0ce4a58423be89a7a8697d7da365b43690ed83",
@@ -5504,8 +5718,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/neon_ping_pong.py",
-     "size": 2253,
-     "hash": "efbaf3bc2ac9b38ad936ee01fc6d09f0c236ae2a",
+     "size": 2284,
+     "hash": "77f1c3d0f41c5da1f5c60e8b6e270488d32f5f59",
      "was": [
       {
        "hash": "17ab3f855b37b5a0ebb4b41f9fcbca6768526fb8",
@@ -5546,6 +5760,10 @@
       {
        "hash": "d0d24eab64fd6da16fc39a47b0eb017b53c6ab32",
        "size": 2481
+      },
+      {
+       "hash": "efbaf3bc2ac9b38ad936ee01fc6d09f0c236ae2a",
+       "size": 2253
       },
       {
        "hash": "f0890cd7fa641568759c38c8a74d75f07e4c979e",
@@ -5608,8 +5826,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/traces_scroll.py",
-     "size": 3875,
-     "hash": "ceec784b6cdfc4df97e39979f97677528259227d",
+     "size": 3878,
+     "hash": "f6a674860c5e4d7a2d722b7b1920a3f0597d6387",
      "was": [
       {
        "hash": "00da608bb186c97852281e149edf3046277e95ab",
@@ -5666,6 +5884,10 @@
       {
        "hash": "c9b4343aeaf7b06ef95483f08f6e4adc0ced53f3",
        "size": 3869
+      },
+      {
+       "hash": "ceec784b6cdfc4df97e39979f97677528259227d",
+       "size": 3875
       },
       {
        "hash": "f7ee772a7ccf5029b870d4643551eab0a05dd1d9",
@@ -5783,8 +6005,8 @@
    "files": [
     {
      "path": "examples/programs/screens/playback/traces_wall.py",
-     "size": 2410,
-     "hash": "ee301023ca4fae2962f37fff78ee936955454485",
+     "size": 2425,
+     "hash": "d71d422073f5564d482725d5545c383663035b7a",
      "was": [
       {
        "hash": "076aba3b84b6c77c19ba778289583a3d9da3fdb7",
@@ -5837,6 +6059,10 @@
       {
        "hash": "cefbaa858b07bf9ea4e3db477e87586fc9fe800b",
        "size": 3649
+      },
+      {
+       "hash": "ee301023ca4fae2962f37fff78ee936955454485",
+       "size": 2410
       }
      ],
      "moved_from": [
@@ -5955,8 +6181,8 @@
    "files": [
     {
      "path": "examples/programs/screens/single/backlight_fade.py",
-     "size": 2323,
-     "hash": "b63fb6793fa3f569891d525625e5fee5b9f7e44a",
+     "size": 2300,
+     "hash": "2dd5ef87416bb33396ed82391bef83d7b884b15b",
      "was": [
       {
        "hash": "58dd29cfc44bd7dff619bf8a32c7deefb333c493",
@@ -5973,6 +6199,10 @@
       {
        "hash": "a7efe8b89cf279abf9621f7fb33536b41bf2de15",
        "size": 2187
+      },
+      {
+       "hash": "b63fb6793fa3f569891d525625e5fee5b9f7e44a",
+       "size": 2323
       },
       {
        "hash": "b86da9289c63a8bae39b4bdfeb1cbaafa54fad13",
@@ -6080,12 +6310,16 @@
    "files": [
     {
      "path": "examples/programs/screens/single/screen_sizes.py",
-     "size": 3444,
-     "hash": "e4eaba1d61829e45ece63f41cf49c3c788252175",
+     "size": 3350,
+     "hash": "5942b45b88e088cbc4af017a180df0436dc7e41f",
      "was": [
       {
        "hash": "5d8dc606c19fde0268148d1d0a66a4488878f51b",
        "size": 4778
+      },
+      {
+       "hash": "e4eaba1d61829e45ece63f41cf49c3c788252175",
+       "size": 3444
       }
      ],
      "moved_from": [
@@ -6120,8 +6354,8 @@
    "files": [
     {
      "path": "examples/programs/servos/remote_robot.py",
-     "size": 4070,
-     "hash": "cd0aed2bc20babdecec1a38b5909c2fe2bce6301",
+     "size": 4083,
+     "hash": "afc890868b52f77f71be09669955b8e9e4aae5c2",
      "was": [
       {
        "hash": "3c154d095c89499b4df07f0bfe4e29841ddf7b43",
@@ -6130,6 +6364,10 @@
       {
        "hash": "a2706ccb66281d4d8ae7fe5eeddcd9b9ec2d0213",
        "size": 4215
+      },
+      {
+       "hash": "cd0aed2bc20babdecec1a38b5909c2fe2bce6301",
+       "size": 4070
       },
       {
        "hash": "f6190171693a9e2c6f10137100e694e18843d2ee",
@@ -6248,8 +6486,8 @@
    "files": [
     {
      "path": "examples/programs/servos/servo_sweep.py",
-     "size": 1551,
-     "hash": "5152d59aed0cc121331c19d748dde5cfcf1f0be7",
+     "size": 1399,
+     "hash": "1a492d493f2944c622d368e3c67e4bc17548610c",
      "was": [
       {
        "hash": "22ed00655085a72b60f33379fbb33c2d6c0d591f",
@@ -6258,6 +6496,10 @@
       {
        "hash": "39b9f0694a94294ba250f549afe8f170f50ccdc6",
        "size": 1547
+      },
+      {
+       "hash": "5152d59aed0cc121331c19d748dde5cfcf1f0be7",
+       "size": 1551
       },
       {
        "hash": "97e68a1b74d4770cf44c8e1f64167944ea2e9484",
@@ -6282,12 +6524,16 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/creature_eyes.py",
-     "size": 22399,
-     "hash": "8a2a6b4f8f54e15e3fd4c5f95a63ed8e08839796",
+     "size": 22402,
+     "hash": "32d8f0d16f6ab0a94d6e98a51520e86bcfe4c8d0",
      "was": [
       {
        "hash": "1c26b7b15b3ac233184509c30cdcc03c1c0763ec",
        "size": 22480
+      },
+      {
+       "hash": "8a2a6b4f8f54e15e3fd4c5f95a63ed8e08839796",
+       "size": 22399
       },
       {
        "hash": "bb5cf198b01a98eeaac1ad0b2fd06dcbccc49ba0",
@@ -6380,8 +6626,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/isometric_flight.py",
-     "size": 13429,
-     "hash": "9274e2f9dcf2da2f33306e3ba94467466bc5450e",
+     "size": 13458,
+     "hash": "701db2cf1b49c601bfd968006f9c93f5f5192686",
      "was": [
       {
        "hash": "0c95da877e6299027e7eadd12b4ed38ea243e531",
@@ -6418,6 +6664,10 @@
       {
        "hash": "917125434932d530fd87e245adcb564f963dfd0c",
        "size": 14971
+      },
+      {
+       "hash": "9274e2f9dcf2da2f33306e3ba94467466bc5450e",
+       "size": 13429
       },
       {
        "hash": "b924f65076d85239550c7d93d24dceef601d2266",
@@ -6463,8 +6713,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/laser_show.py",
-     "size": 9385,
-     "hash": "3181e0f3462e88dc821a33fca6e180865516642f",
+     "size": 9369,
+     "hash": "98812a79b748d714667b2535beff3eab888beffb",
      "was": [
       {
        "hash": "133ca75810da23f93d12d65b6ae9ef671c3a94eb",
@@ -6473,6 +6723,10 @@
       {
        "hash": "2f6e61ebd939c0869eb25d22b231643ecbf719bb",
        "size": 9388
+      },
+      {
+       "hash": "3181e0f3462e88dc821a33fca6e180865516642f",
+       "size": 9385
       },
       {
        "hash": "39d3f86d1e0554f86f161617ac2f4f123605b326",
@@ -6515,12 +6769,16 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/neon_corridor.py",
-     "size": 15809,
-     "hash": "c42bb38bd415ed5a121d703b276b1078f312c53d",
+     "size": 15816,
+     "hash": "47c4f0ae032867e4261424afedeb2fa1fa6aa9d2",
      "was": [
       {
        "hash": "664f23fc8e8eb36abc36593ba4a421741e120e94",
        "size": 16098
+      },
+      {
+       "hash": "c42bb38bd415ed5a121d703b276b1078f312c53d",
+       "size": 15809
       }
      ]
     },
@@ -6595,8 +6853,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/portal.py",
-     "size": 15409,
-     "hash": "7e5dcdaa022ec3c7f801771430eeb27d5a52bc1f",
+     "size": 15427,
+     "hash": "5ee67016210a0100fd92d2e74b86d73ded0033bc",
      "was": [
       {
        "hash": "1cec786787befb94c5a89f3616cf0366e3d3605a",
@@ -6605,6 +6863,10 @@
       {
        "hash": "41766b1a0472ef5675ea9c794f4836edf4562f8b",
        "size": 14524
+      },
+      {
+       "hash": "7e5dcdaa022ec3c7f801771430eeb27d5a52bc1f",
+       "size": 15409
       },
       {
        "hash": "7e7fd13b1c5d065e1f84836504c1771432ac1f2f",
@@ -6659,8 +6921,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/animated_scenes/skyline.py",
-     "size": 5598,
-     "hash": "27f4f02469a2a17adec394ae0b413d3580f6f15b",
+     "size": 5594,
+     "hash": "326d9756c78796dfe807895ed7141bca615c49b3",
      "was": [
       {
        "hash": "0fb29739d9b15e9d48d5dba8ba4255143825ef88",
@@ -6669,6 +6931,10 @@
       {
        "hash": "269f05bfd150be5c31d829a5f56c0ae25a37f038",
        "size": 5477
+      },
+      {
+       "hash": "27f4f02469a2a17adec394ae0b413d3580f6f15b",
+       "size": 5598
       },
       {
        "hash": "3549533fc2564acb4755ff916368059dae4e4ad4",
@@ -6734,8 +7000,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/billboards/scrolling_billboard.py",
-     "size": 4278,
-     "hash": "bc4ff65c1a4db7f0dde20b60628dd1c5fdb3c8be",
+     "size": 4279,
+     "hash": "7e819b4a3d5cfd897c3392f4909d1dfa10579cef",
      "was": [
       {
        "hash": "049d7abecaa1771317ef68c6b6cd905fed0f6d32",
@@ -6764,6 +7030,10 @@
       {
        "hash": "7ee97aa2b2fa8538b495d6df10c810d04ef9149d",
        "size": 4303
+      },
+      {
+       "hash": "bc4ff65c1a4db7f0dde20b60628dd1c5fdb3c8be",
+       "size": 4278
       },
       {
        "hash": "cf0efec31adcc1fb7f3eec853a0e92cd20a30fa1",
@@ -6869,8 +7139,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/billboards/street_billboard.py",
-     "size": 4777,
-     "hash": "23160d4e2e735c960bf17a318992aea200d79599",
+     "size": 4796,
+     "hash": "a2aaf1a65b5e20eaa8183b65aa051c6e0003b301",
      "was": [
       {
        "hash": "082e532e3f37f37fa1820e6bba954aa2c489700b",
@@ -6883,6 +7153,10 @@
       {
        "hash": "1e75afd7b35c74e7376d5748f49075ae8d50b82d",
        "size": 4653
+      },
+      {
+       "hash": "23160d4e2e735c960bf17a318992aea200d79599",
+       "size": 4777
       },
       {
        "hash": "2c80461b29146d1e0eef9d32256035d626a3bdb2",
@@ -7018,8 +7292,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/billboards/trivision_billboard.py",
-     "size": 6890,
-     "hash": "f9e30a1024d46ee0692a1c5794605167493661f3",
+     "size": 6887,
+     "hash": "2993af23616bb75239d4dfa03f2175b0846c5565",
      "was": [
       {
        "hash": "00a286f7b8df206584e0067cac1061d3cfe7073e",
@@ -7084,6 +7358,10 @@
       {
        "hash": "f7b26b7727e0c1e9f68b0206bccc91fd993d8d9b",
        "size": 6876
+      },
+      {
+       "hash": "f9e30a1024d46ee0692a1c5794605167493661f3",
+       "size": 6890
       }
      ],
      "moved_from": [
@@ -7129,8 +7407,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/programmed_route.py",
-     "size": 10152,
-     "hash": "1f481d3a73c26dd3cdbae4091d612e6742dd7f19",
+     "size": 10211,
+     "hash": "7a44b7d9c205892eeb05311f3bca0f3b7d735c03",
      "was": [
       {
        "hash": "09b69468a2721ed61702e75f7d74bba4a1e1c9a1",
@@ -7139,6 +7417,10 @@
       {
        "hash": "1e15aa3b3469af60b7771cd316df92b161b87f3c",
        "size": 10173
+      },
+      {
+       "hash": "1f481d3a73c26dd3cdbae4091d612e6742dd7f19",
+       "size": 10152
       },
       {
        "hash": "3b2e4f3fde824e35022b1c8ea7dcff0f3b12768d",
@@ -7179,8 +7461,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/acrylic_lixie.py",
-     "size": 8367,
-     "hash": "6a6737f45a284156c109e6db46d2af6fafb73d57",
+     "size": 8401,
+     "hash": "b67d2c9f9914344edc85a6c97c7acd4652126b3b",
      "was": [
       {
        "hash": "415876869c855f607d8c345ccbd17c3138f8677a",
@@ -7213,6 +7495,10 @@
       {
        "hash": "6a1b81b37e655d380eec8b8c530092226b447148",
        "size": 8423
+      },
+      {
+       "hash": "6a6737f45a284156c109e6db46d2af6fafb73d57",
+       "size": 8367
       },
       {
        "hash": "9a9c229138feb4a9ea3ff51bb83dea86370a2499",
@@ -7256,12 +7542,16 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/crt_terminal.py",
-     "size": 13244,
-     "hash": "1354374d63b14c2bb6a0643aa25efe709a07df23",
+     "size": 13238,
+     "hash": "c043ae430cceb382c741151f2216d74c38ebd145",
      "was": [
       {
        "hash": "02c937749b6aab0e090aea8778b695f25daaabe3",
        "size": 12716
+      },
+      {
+       "hash": "1354374d63b14c2bb6a0643aa25efe709a07df23",
+       "size": 13244
       },
       {
        "hash": "28ddf6471fe4d15101e52dd5a4766ebf0c2fd61d",
@@ -7338,12 +7628,16 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/flip_dot_sign.py",
-     "size": 9347,
-     "hash": "0dd7c624bdb3ed7094b8c5634aa524264710fc9c",
+     "size": 9381,
+     "hash": "ef203b461c9a8bb406058d7f4f8994f78d27d6af",
      "was": [
       {
        "hash": "0319059e1200651dddf3185f3cd2e76e7c21f21b",
        "size": 11199
+      },
+      {
+       "hash": "0dd7c624bdb3ed7094b8c5634aa524264710fc9c",
+       "size": 9347
       },
       {
        "hash": "105a172162e847a82d829154804f9001e785b573",
@@ -7407,8 +7701,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/lamp_matrix.py",
-     "size": 15676,
-     "hash": "f265a9321dbf0531e2c6fbc3f7c08ba1b2bed07e",
+     "size": 15571,
+     "hash": "1828801c482fe11938e0a0072b3b4c90fbb117be",
      "was": [
       {
        "hash": "0e985c8d03c18d21973187f365498018cc1b1aa1",
@@ -7433,6 +7727,10 @@
       {
        "hash": "d8938fd818c870e626808cfdc1f5514325e3dec5",
        "size": 15733
+      },
+      {
+       "hash": "f265a9321dbf0531e2c6fbc3f7c08ba1b2bed07e",
+       "size": 15676
       }
      ],
      "moved_from": [
@@ -7459,8 +7757,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/nixie_tube.py",
-     "size": 14168,
-     "hash": "6b720fca64602cfc61726fd72127b691c3f155ac",
+     "size": 14148,
+     "hash": "e451a5018855588d2907cbc8b42e0294d6be755b",
      "was": [
       {
        "hash": "0389cd16e6fa5c353a81cd28975f06fabec05795",
@@ -7481,6 +7779,10 @@
       {
        "hash": "56ae2a27f41b96bcd8c4655f949553468eba40a0",
        "size": 14040
+      },
+      {
+       "hash": "6b720fca64602cfc61726fd72127b691c3f155ac",
+       "size": 14168
       },
       {
        "hash": "ac7642ea7d3a7500c9710b0e3899db9b4ba4055a",
@@ -7524,8 +7826,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/odometer.py",
-     "size": 13665,
-     "hash": "9dd3c01efd0d6cec504f7afc647feda6cfb0948b",
+     "size": 13666,
+     "hash": "74e0d96909d612b1d6c86eee1a20808a4401190a",
      "was": [
       {
        "hash": "0cba92399d86d4582bb723ef35c6e2344ff67e9e",
@@ -7546,6 +7848,10 @@
       {
        "hash": "850a4eebac2b01d746cc42e52664118320308741",
        "size": 13679
+      },
+      {
+       "hash": "9dd3c01efd0d6cec504f7afc647feda6cfb0948b",
+       "size": 13665
       },
       {
        "hash": "fbbce244ea34698c355bc60f5149d3a14de567bf",
@@ -7576,9 +7882,13 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/oscilloscope.py",
-     "size": 11447,
-     "hash": "38c450f33ab6c9ab64071f40efb4dc6ce8521ec7",
+     "size": 11452,
+     "hash": "67dce01dbbaf655324a3634afd27015a33dff945",
      "was": [
+      {
+       "hash": "38c450f33ab6c9ab64071f40efb4dc6ce8521ec7",
+       "size": 11447
+      },
       {
        "hash": "4b3680adc83d0311c0a4300dd177267474c59c13",
        "size": 10694
@@ -7628,8 +7938,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/segment_clock.py",
-     "size": 13493,
-     "hash": "fbcd7cb6fb54a829fab6f13e562b53f70d33ff95",
+     "size": 13500,
+     "hash": "e7e856e112d131543ebc64da98e4c30d45ccd54a",
      "was": [
       {
        "hash": "01a31584dfafbc3f8c237dbc5b268ce657ba8886",
@@ -7658,6 +7968,10 @@
       {
        "hash": "c7677db561f3d51e76c734d2fe011ff1257622de",
        "size": 13080
+      },
+      {
+       "hash": "fbcd7cb6fb54a829fab6f13e562b53f70d33ff95",
+       "size": 13493
       }
      ],
      "moved_from": [
@@ -7740,8 +8054,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/split_flap_clock.py",
-     "size": 11548,
-     "hash": "ea5c20a5c6864eec0a3ef8502fbced9ce292e5c4",
+     "size": 11569,
+     "hash": "be21df79b9da3f2521a408ae8adf68f72da11971",
      "was": [
       {
        "hash": "1551ad2c80f4b8249bb5da2d8bc2a6e4eda67266",
@@ -7784,6 +8098,10 @@
        "size": 12608
       },
       {
+       "hash": "ea5c20a5c6864eec0a3ef8502fbced9ce292e5c4",
+       "size": 11548
+      },
+      {
        "hash": "ed9dbbc949058dadd562c5eb2078e59b2da7904a",
        "size": 12621
       },
@@ -7817,8 +8135,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/status_panel.py",
-     "size": 18000,
-     "hash": "b864c2f12b39a4fca31f8401c5b2ce57a37f3865",
+     "size": 18018,
+     "hash": "9f8143d769b6518d4df87a2b8bc10f8272e1b613",
      "was": [
       {
        "hash": "0b18b5de0224062d4bde340b220fe40103e9423e",
@@ -7869,6 +8187,10 @@
        "size": 21222
       },
       {
+       "hash": "b864c2f12b39a4fca31f8401c5b2ce57a37f3865",
+       "size": 18000
+      },
+      {
        "hash": "c226c77c49cbd46393239b8799b0425d37db11c6",
        "size": 21310
       },
@@ -7910,8 +8232,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/bus_departures.py",
-     "size": 17902,
-     "hash": "7a49384758882d1d9de4bef0dc85cbc33b1452d4",
+     "size": 17903,
+     "hash": "8803b4195eb39f2a0296d393fd7aaabe87d4bffb",
      "was": [
       {
        "hash": "0da9fa8f11b9708421b837246e7b828c3ed4b772",
@@ -7928,6 +8250,10 @@
       {
        "hash": "6f538ebfe1357091f64517fdcfa368bbaa352c60",
        "size": 20317
+      },
+      {
+       "hash": "7a49384758882d1d9de4bef0dc85cbc33b1452d4",
+       "size": 17902
       },
       {
        "hash": "8b77be7adfeb746a1d492d768ef64c4141f60fe8",
@@ -7989,8 +8315,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/departure_board.py",
-     "size": 13014,
-     "hash": "914aba98eb19cc4308e695e731d9a2da070b79ee",
+     "size": 13004,
+     "hash": "63d180a307f5b9df29fea4cfd0f82e9e31f05c55",
      "was": [
       {
        "hash": "09e5635e6f02c90edf19abc6626a91d2ad3fe8c9",
@@ -8015,6 +8341,10 @@
       {
        "hash": "448977e6d9792306637de2e21c26b80dbed60916",
        "size": 15066
+      },
+      {
+       "hash": "914aba98eb19cc4308e695e731d9a2da070b79ee",
+       "size": 13014
       },
       {
        "hash": "a3f91ab2f43142b826ccffdb60d012356aaa0c86",
@@ -8055,8 +8385,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/departures_list.py",
-     "size": 16419,
-     "hash": "617e855adad83723fa30b4574b494855c794925c",
+     "size": 16418,
+     "hash": "1795df46eee469c1edc7745515c16eb662836aac",
      "was": [
       {
        "hash": "243931d6d1b9a7e91690323d7e8906715bb0e9e5",
@@ -8065,6 +8395,10 @@
       {
        "hash": "2dacf9469c44ec613ac5be28b0b909ac9ffed64d",
        "size": 16210
+      },
+      {
+       "hash": "617e855adad83723fa30b4574b494855c794925c",
+       "size": 16419
       },
       {
        "hash": "6fcf4f46670aee06cd8cf44c3e2dd8a7d9a704c1",
@@ -8148,8 +8482,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/lane_control_gantry.py",
-     "size": 20239,
-     "hash": "d9f1adab0867986a11bdfb09a420501f354b878b",
+     "size": 20268,
+     "hash": "ed3b971b4c3afe142c6408df39eb479919cc5320",
      "was": [
       {
        "hash": "1c398ef35d7a6149267061040b8d0c2aa2436042",
@@ -8212,6 +8546,10 @@
        "size": 22421
       },
       {
+       "hash": "d9f1adab0867986a11bdfb09a420501f354b878b",
+       "size": 20239
+      },
+      {
        "hash": "e34afc4167ae1fab38eae8fd3807df0a4b95645f",
        "size": 22390
       }
@@ -8246,8 +8584,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/roadworks_sign.py",
-     "size": 10288,
-     "hash": "e1fe55abcf28a86eafed50c526ccef93f0e061c2",
+     "size": 10241,
+     "hash": "979010e4c3a600bfa5254b5ddd206c722ee32905",
      "was": [
       {
        "hash": "02039210ffa835b30ebf59c0a6474e85e7901d7b",
@@ -8290,6 +8628,10 @@
        "size": 10083
       },
       {
+       "hash": "e1fe55abcf28a86eafed50c526ccef93f0e061c2",
+       "size": 10288
+      },
+      {
        "hash": "fba5d9f1e61001dc0c3dfd8d4ca967a201a9afa1",
        "size": 11424
       }
@@ -8319,8 +8661,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/split_flap_departures.py",
-     "size": 15638,
-     "hash": "8b3b1af5d031afc8a9cd289e8959aa7f01136a80",
+     "size": 15651,
+     "hash": "9e071a825cf21238b7d95572c8c99471e997e852",
      "was": [
       {
        "hash": "007835ddd9269647fdd28ad7d8fe8c548d5c9776",
@@ -8359,6 +8701,10 @@
        "size": 16053
       },
       {
+       "hash": "8b3b1af5d031afc8a9cd289e8959aa7f01136a80",
+       "size": 15638
+      },
+      {
        "hash": "d33dfc0febe5b23727450f2117853f842052b01d",
        "size": 15652
       },
@@ -8392,12 +8738,16 @@
    "files": [
     {
      "path": "examples/programs/showcase/transport_signs/tram_stop_sign.py",
-     "size": 11876,
-     "hash": "1243ca9336242da8b6894ccc0d1d606c51bc4a5f",
+     "size": 11826,
+     "hash": "77ef0f45c913a8961c1b7e34087457ceedc85ee1",
      "was": [
       {
        "hash": "064ed07b3498f7c05f1c3a79f51dcdab2835cc93",
        "size": 11947
+      },
+      {
+       "hash": "1243ca9336242da8b6894ccc0d1d606c51bc4a5f",
+       "size": 11876
       },
       {
        "hash": "69e27dfb3a95871c67017f75ba9541636515e4da",

@@ -109,13 +109,12 @@ BAYER = bytes((0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5))
 @micropython.viper
 def dither(pixels: ptr8, width: int, height: int, stride: int, pattern: ptr8):
     """
-    Set every pixel of an image onto the panel's levels, in place, by an ordered dither.
+    Set every pixel of an image onto the panel's levels in place, by an ordered dither.
 
-    A channel's part of the way to the next level rounds it up where it passes the pattern's
-    threshold for that pixel, the middle of one of sixteen steps. A channel already on a level has no
-    part, so it never moves. Every pixel is made opaque too. An antialiased edge can leave one just
-    short, and a colour rounded up past its pixel's alpha would wrap when blitted. Compiled by viper,
-    as this runs for every pixel of every drawing.
+    A channel rounds up where its part of the way to the next level passes the pattern's threshold
+    for that pixel, so a channel already on a level never moves. Every pixel is made opaque too, as
+    an antialiased edge rounded up past its alpha would wrap when blitted. Compiled by viper, as this
+    runs for every pixel of every drawing.
     """
     for y in range(height):
         for x in range(width):
@@ -124,7 +123,7 @@ def dither(pixels: ptr8, width: int, height: int, stride: int, pattern: ptr8):
             for channel in range(3):
                 value = pixels[at + channel]
                 level = value // 17
-                # Whether the part, of 17, passes the threshold's middle, (threshold + 0.5) of 16
+                # Check if the part, of 17, passes the threshold's middle, (threshold + 0.5) of 16
                 if (value - level * 17) * 32 > threshold * 34 + 17:
                     level += 1
                 pixels[at + channel] = level * 17
@@ -138,8 +137,7 @@ rim_line.antialias = ANTIALIAS
 rim_line.pen = RIM
 rim_line.shape(shape.circle(SIDE / 2, SIDE / 2, RADIUS - RIM_W / 2).stroke(RIM_W))
 
-# The background every lamp starts from, the black panel and every cup unlit, paler deep in around
-# the emitter
+# The background every lamp starts from, the black panel and every cup unlit, paler deep in around the emitter
 background = image(WIDTH, HEIGHT)
 background.antialias = ANTIALIAS
 background.pen = PANEL
@@ -275,7 +273,7 @@ stages = []
 for row in range(ROWS):
     for column in range(COLUMNS):
         opposite_column, opposite_row = min(column, COLUMNS - 1 - column), min(row, ROWS - 1 - row)
-        # Whether this lamp is past the panel's middle, the mirror image of the one opposite it
+        # Check if this lamp is past the panel's middle, the mirror image of the one opposite it
         if (opposite_column, opposite_row) != (column, row):
             opposite = stages[opposite_row * COLUMNS + opposite_column]
             stages.append([None] + [mirrored(patch, column != opposite_column, row != opposite_row)

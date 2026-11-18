@@ -8,8 +8,8 @@ from picofx.colour import RED, WHITE
 Drive a two wheeled robot through a fixed sequence of movements, on a driver on SP/CE
 port A.
 
-The remote_robot.py robot driving itself through forwards, back, spins and curves, which
-makes it the one for checking a chassis is wired and scaled correctly.
+It drives the remote_robot.py robot through forwards, backwards, spins and curves on its
+own, so it is the one for checking a chassis is wired and scaled correctly.
 
 Give it room, or hold it off the ground.
 
@@ -72,7 +72,7 @@ try:
         time.sleep(MOVE_TIME)
         pause()
 
-        # A curve drives both wheels forwards, the inside one slower
+        # A curve drives both wheels forwards, with the inside one slower
         print("Curving left")
         wheels(DRIVE_SPEED * CURVE_INNER, DRIVE_SPEED)
         time.sleep(MOVE_TIME)

@@ -4,8 +4,8 @@ from timing import Pacer
 """
 Use Mighty FX's RGB outputs as a bargraph to show the voltage that is powering the board.
 
-The board runs from USB or from a LiPo, whichever is higher, so the scale covers both.
-A full bar is USB, and a battery falls down the bar as it discharges.
+The board can run from USB or from a LiPo, so the scale covers both. USB sits near the top
+of the bar, and a battery falls down the bar as it discharges.
 
 The top output of the bar is lit as far into its step as the reading has gone, so the bar
 moves smoothly. The hue runs from red at the bottom through amber to green at the top.

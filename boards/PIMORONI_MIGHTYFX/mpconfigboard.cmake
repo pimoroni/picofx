@@ -1,4 +1,4 @@
-# cmake file for Raspberry Pi Pico
+# cmake file for Pimoroni Mighty FX
 set(PICO_BOARD "pimoroni_mightyfx")
 set(PICO_PLATFORM "rp2350")
 
@@ -7,8 +7,8 @@ set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR})
 # Board specific version of the frozen manifest
 set(MICROPY_FROZEN_MANIFEST ${MICROPY_BOARD_DIR}/manifest.py)
 
-# Where ci/micropython.sh fetched this board's hosted packages. It reaches the manifest as
-# $(LIB_DIR), every MICROPY_MANIFEST_* variable arriving there with the prefix stripped
+# Where ci/micropython.sh fetched this board's hosted packages. The port passes each
+# MICROPY_MANIFEST_* variable to the manifest without its prefix, so this one is $(LIB_DIR)
 set(MICROPY_MANIFEST_LIB_DIR ${CI_BUILD_ROOT}/lib)
 
 set(MICROPY_C_HEAP_SIZE 4096)
@@ -51,8 +51,7 @@ set(MICROPY_BLUETOOTH_BTSTACK ON)
 set(MICROPY_PY_BLUETOOTH_CYW43 ON)
 
 # Firmware, then a read-only ROMFS for the fonts, then the filesystem, then the FX drive's volume
-# to the end of flash where the variant has one. The filesystem starts in the same place either
-# way, so the variants differ only in its size. The port reads this split from here, so
+# to the end of flash where the variant has one. The port reads this split from here, so
 # mpconfigboard.h sets none of it. FLASH_SIZE_BYTES must match PICO_FLASH_SIZE_BYTES in
 # pimoroni_mightyfx.h, which the SDK has not read into cmake by this point
 math(EXPR FLASH_SIZE_BYTES "16 * 1024 * 1024")

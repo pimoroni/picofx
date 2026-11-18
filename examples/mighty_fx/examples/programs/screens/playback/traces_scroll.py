@@ -84,7 +84,7 @@ steps = moves()
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The tile fills the panel wherever the field has reached, the read wrapping on both axes
+        # The tile fills the panel wherever the field has reached, since the read wraps on both axes
         screen.update(player.image, offset=(-across, -down), tile=(True, True))
         step_across, step_down = next(steps)
         across += step_across

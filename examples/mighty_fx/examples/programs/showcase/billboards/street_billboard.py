@@ -23,7 +23,7 @@ Args: Rotation = 0 or 180
 # Constants
 POSTERS = "/examples/pictures/billboards/portrait"   # Shared with the billboard showcases
 DWELL = 3.0                      # Seconds a poster is up for
-LEVEL = 17                       # One of the 16 levels the screens drive a channel at, the least that shows
+LEVEL = 17                       # The step between the 16 levels the screens drive a channel at, the least change that shows
 CASE_WIDE = 4                    # How far the case reaches over the poster
 CASE_ROUND = 10                  # The window's corner, which hides the poster's square one
 GLASS = color.rgb(28, 44, 66)    # What a sheet of glass takes out of what is behind it
@@ -40,7 +40,7 @@ BANDS = ((30, 26, 10, 2.0, True), (96, 9, 6, 3.5, True), (150, 34, 14, 1.6, Fals
 # How far the screen is turned, 0 or 180 for portrait posters, or what the effects file passes in args
 ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Create a MightyFX object with SP/CE A set up for a screen, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, rotation=ROTATION)
 canvas = screen.canvas()
@@ -49,7 +49,7 @@ WIDE, TALL = canvas.width, canvas.height
 pane = image(WIDE, TALL)
 pane.antialias = image.X4
 
-# fps names the rate, the filenames carrying no delays of their own
+# fps= names the rate, as the filenames carry no delays of their own
 try:
     player = SequencePlayer(POSTERS, fps=1 / DWELL)
 except OSError:
@@ -61,7 +61,7 @@ print(f"{player.frames} posters, {DWELL}s each")
 
 def band(across, half, feather, levels, tone):
     """
-    A diagonal band whose edges fade, as a stack of narrower bands over one another.
+    Draw a diagonal band whose edges fade, as a stack of narrower bands over one another.
 
     Each band is translucent, so the middle, covered most often, comes out strongest.
     """

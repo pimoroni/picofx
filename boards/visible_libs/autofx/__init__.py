@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 # autofx plays the effects file a user edits, so a board needs no code written for it.
-# Each of its files imports only those before it, from vocabulary.py up to runner.py.
+# Its files import only those before them in the order vocabulary, hardware, parser, checks,
+# shows, sounds, loader, triggers and runner.
 # Only run() and the vocabulary's tables are public.
 
 from .vocabulary import (AUDIO, AUDIO_EFFECTS, BOARD_SETTINGS, CHANNEL_KINDS, COLOURS, EFFECTS, HUB,

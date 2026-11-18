@@ -13,7 +13,7 @@ from picofx import PWMLED, RGBLED
 from sensor import build_sensor
 
 
-# The PWM objects wake() lit, held here since one that is collected stops driving its pin
+# The PWM objects wake() lit
 __waking = []
 
 
@@ -61,8 +61,8 @@ class TinyFX:
     # What wake() lights the outputs to, dim enough to read as alive and not as an effect
     WAKE_LEVEL = 0.1
 
-    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
-    # the programs that go online. Only a W's firmware has networking
+    # Whether the board has a wireless module, so the FX drive is given the WiFi credentials file.
+    # Only a W's firmware has networking
     WIRELESS = __has_network()
 
     def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/", sensor=None):

@@ -431,7 +431,7 @@ TONE_FULL_WAVES = 2
 # mid-waveform would click
 FADE_MS = 40
 
-# How long a write to the FX drive waits while a sound fades out
+# The longest a write to the FX drive waits while a sound fades out
 WRITE_HOLD_MS = 500
 ```
 

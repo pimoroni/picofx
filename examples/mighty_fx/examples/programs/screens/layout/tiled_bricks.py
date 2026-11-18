@@ -7,10 +7,10 @@ from screens import SCREEN_TYPES
 """
 Fill the whole panel with a brick wall drawn from a tile of 32 by 32 pixels.
 
-That tile is a seventy-fifth of the full-size image a wall covering the panel would need, so
+That tile is a seventy-fifth of the full-size image a wall covering a 2.8" panel would need, so
 tiling is the difference between an asset that fits anywhere and one that has to be budgeted for.
 
-A running bond keeps the tile small, two courses being everything the pattern does. The brick
+A running bond keeps the tile small, since two courses are everything the pattern does. The brick
 starting halfway along the upper course is drawn at both ends of the tile, as a shape crossing an
 edge must appear at the opposite edge too.
 

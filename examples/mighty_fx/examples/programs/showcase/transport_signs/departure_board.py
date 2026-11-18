@@ -15,8 +15,8 @@ Args: Screen size = 2.8, Rotation = 0
 
 # Constants for drawing
 BOARD_FONT = font.nope          # A dot-matrix look. sins and winds suit as well, and dir(font) lists them all
-# The operator's name, doubled to stay a matrix unit. winds is one of two ROM faces narrow
-# enough for the longest name across a 240px panel
+# The operator's name, doubled to stay a matrix unit. winds is a ROM face narrow enough for
+# the longest name across a 240px panel
 OPERATOR_FONT = font.winds
 OPERATOR_SCALE = 2
 PRINTED_HEADING = True          # Show the calling points heading printed on the board's face, or lit on a module
@@ -142,12 +142,12 @@ def layout(canvas):
 canvas = image(*panels[0].canvas_size)
 places, rows = layout(canvas)
 
-# Printed lettering sits centred in the band between modules, so HEADING_FONT may be taller.
-# Each page digit keeps a module of its own, so nine pages is the most
+# Printed lettering sits centred in the band between modules, so HEADING_FONT may be taller
 band_top = places[CALLING_ROW - 1][0] + places[CALLING_ROW - 1][1]
 heading_y = band_top + (places[CALLING_ROW + 1][0] - band_top - HEADING_FONT.height) // 2
 
-# The page count's printed words and its two digit modules, measured once to set it against the right edge
+# The page count's printed words and its two digit modules, measured once to set it against the right edge.
+# Each page digit keeps a module of its own, so nine pages is the most
 canvas.font = HEADING_FONT
 page_label_width = int(canvas.measure_text("Page ")[0])
 of_label_width = int(canvas.measure_text(" of ")[0])

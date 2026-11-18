@@ -1,4 +1,4 @@
-# The board's own mount of the drive, and the shipped files it heals onto it
+# The board mounts the drive for itself here, and puts back the shipped files it carries
 
 import errno
 import os
@@ -22,9 +22,10 @@ EXAMPLES_MOUNT_POINT = "/examples"
 
 VOLUME_LABEL = "FX"
 
-# How much of a shipped document is compared. A shorter one is read to the end, and a
-# longer one is met at both ends
+# A shipped text no longer than this is compared whole, and a longer one only at its ends
 __READ_TO_END = 4096
+
+# How many characters of each end of a longer text are compared
 __EDGE = 512
 
 # FAT attribute bits, per VfsFat.chmod.
@@ -46,7 +47,6 @@ __MAC_BIN = ".Trashes"
 # asks Spotlight not to index the drive, which it otherwise does after a save
 __MAC_MARKERS = (".metadata_never_index", __MAC_LOG_FOLDER + "/no_log", __MAC_BIN)
 
-# What the board told mount() it has, for the remount when the computer hands the drive back
 __screens = True
 __wireless = False
 __sound = True
@@ -60,13 +60,11 @@ def __ends(text):
 
 
 def __holds(path, size, head, tail):
-    # Whether the file is size long, starting with head and ending with tail. Size first, so
-    # a missing or half-written file answers without a read. A long document is met at both
-    # ends, since reading the manual to the end took 424ms per mount on a Mighty FX against
-    # 40ms for its ends, and every mount and button press would pay it. A page that changed
-    # only in its middle at the same length would pass, so the build tools end every page
-    # with a hash of its content. Every document is ASCII, enforced by the build tools, so its
-    # length in characters is in bytes
+    # Whether the file is `size` bytes long, starting with `head` and ending with `tail`. Size
+    # first, so a missing or half-written file answers without a read. Only a long document's
+    # ends are read, which keeps every mount quick, and each page ends with a hash of its
+    # content, so a change anywhere reaches the tail. Every document is ASCII, so its length
+    # in characters is its size in bytes
     try:
         if os.stat(path)[6] != size:
             return False
@@ -94,8 +92,8 @@ def unhealed():
 
 def __heal(fs, name, document):
     # Put a shipped file back on the drive, unless it is already there. The document is its
-    # text, or a packed page from fx_editor or fx_manual, which opens with its length and
-    # its two ends, those of the page as written to the drive
+    # text, or a packed page from fx_editor or fx_manual, whose first three items are the
+    # length and two ends of the page as the drive holds it
     path = MOUNT_POINT + "/" + name
     if isinstance(document, str):
         size, head, tail = __ends(document)
@@ -103,8 +101,8 @@ def __heal(fs, name, document):
         size, head, tail = document[:3]
     if __holds(path, size, head, tail):
         return
-    # A document that will not fit is left as it stands: stale and whole beats
-    # part-written, and opening for write would truncate it before failing
+    # Check if the document fits. One that does not is left stale and whole, since opening
+    # it for write would truncate it before failing
     try:
         stats = os.statvfs(MOUNT_POINT)
         room = stats[0] * stats[3]
@@ -152,12 +150,10 @@ def __remove_tree(path):
 
 
 def __sweep_host_litter():
-    # Remove what a computer leaves on the drive that the board has no use for. Chromium
-    # saves through a .crswap and renames on close, so one still present is an unfinished
-    # save. macOS writes a ._ sidecar beside every file it touches, and its log folder and
-    # its bin each have a sweep of their own. Names are listed as bytes, since listed as str
-    # one name outside ASCII raises UnicodeError for the whole listing, and the drive would
-    # never be shown
+    # Remove what a computer leaves in the drive's root that the board has no use for, such
+    # as an unfinished Chromium save (.crswap) or a macOS ._ sidecar
+    #
+    # Names are listed as bytes, as one non-ASCII name makes a str listing raise UnicodeError
     root = MOUNT_POINT.encode()
     for name in os.listdir(root):
         lower = name.lower()
@@ -219,9 +215,8 @@ def __sweep_mac_bin(path):
 
 
 def __mark_for_mac(fs):
-    # Make the files that ask macOS not to write to the drive, where they are missing. Each
-    # write macOS makes after a save holds back the save watcher, so a save plays later on
-    # a Mac. A full drive goes without them, and macOS writes to it as it did before
+    # Make the files that ask macOS not to write to the drive, where they are missing. Its
+    # writes after a save hold up a reload. A full drive goes without them
     made = []
     try:
         os.mkdir(MOUNT_POINT + "/" + __MAC_LOG_FOLDER)
@@ -266,15 +261,16 @@ def __has_boot_signature(bdev):
 
 def mount(screens=True, wireless=False, sound=True):
     """
-    Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
-    effects.txt is missing, or any shipped document differs from the text the board
-    carries. Returns whether the drive ended up mounted.
+    Mount the drive read-write at /fx, formatting it when the volume is blank. Returns
+    whether the drive ended up mounted.
 
-    `screens` is False for a board found to have no screen ports, which is then given
-    the catalogue without them where its pages carry one, and no pictures or drawings
-    folder. `wireless` is True for a board with a wireless module, which is given the
-    WiFi credentials, and the wireless build's catalogue where its pages carry one.
-    `sound` is False for a board that cannot play sound, which is given no sounds folder.
+    A missing effects.txt is restored, and a shipped document that differs from the text
+    the board carries is rewritten.
+
+    `screens` is False for a board found to have no screen ports, and `sound` False for one
+    that cannot play sound, and each goes without the folders for those files. `wireless` is
+    True for a board with a wireless module, which is given an empty secrets.py for its WiFi
+    credentials. pages() chooses the catalogue from `screens` and `wireless`.
     """
     global __screens, __wireless, __sound
     __screens, __wireless, __sound = screens, wireless, sound
@@ -283,15 +279,14 @@ def mount(screens=True, wireless=False, sound=True):
     try:
         vfs.mount(fs, MOUNT_POINT)
     except OSError as e:
-        # Already mounted answers EPERM, and anything other than a blank volume is
-        # raised rather than papered over with a reformat
+        # Is the drive already mounted? That answers EPERM, and anything other than a blank
+        # volume is raised rather than papered over with a reformat
         if e.args[0] == errno.EPERM:
             return True
         if e.args[0] != errno.ENODEV:
             raise
-        # A volume that still carries a boot signature was formatted by someone, so it is
-        # damaged rather than blank. Formatting would take the user's files with it, so it
-        # is left alone for the computer to offer a repair
+        # Has the volume been formatted before? Then it is damaged, not blank, and is left for
+        # the computer to repair rather than formatted over the user's files
         if __has_boot_signature(bdev):
             print("the FX drive is damaged, so it has been left alone")
             print("connect a computer and let it repair or format the drive")
@@ -302,7 +297,7 @@ def mount(screens=True, wireless=False, sound=True):
         fs.label(VOLUME_LABEL)
     __mount_examples()
     if MOUNT_POINT not in sys.path:
-        # The drive's modules import after the board's own, the WiFi credentials among them
+        # The drive's modules, such as secrets.py, import after the board's own
         sys.path.append(MOUNT_POINT)
     try:
         os.stat(FILE_PATH)
@@ -341,9 +336,9 @@ def remount():
 class Examples:
     """
     The drive's examples folder, mounted at /examples so an example finds its files by
-    the same path on every board, those without a drive keeping the folder on their
-    own filesystem. Each call is passed on to whatever is mounted at the mount point,
-    the board's own mount or the view, and answers as that does
+    the same path on every board. A board without a drive keeps the folder on its own
+    filesystem. Each call is passed on to whatever is mounted at /fx, the board's own
+    mount or the view, and answers as that does.
     """
 
     def __init__(self):
@@ -354,10 +349,11 @@ class Examples:
         return (EXAMPLES_DIR + path).rstrip("/")
 
     def mount(self, readonly, mkfs):
-        # vfs.mount() and vfs.umount() call these, and there is nothing to set up
+        # vfs.mount() calls this, and there is nothing to set up
         pass
 
     def umount(self):
+        # vfs.umount() calls this, and there is nothing to release
         pass
 
     def open(self, path, mode):
@@ -403,8 +399,8 @@ def __restore_secrets():
             with open(SECRETS_PATH, "w") as f:
                 f.write(fx_defaults.SECRETS)
         except OSError:
-            # A full drive. The empty file the failed write leaves would stop the next mount
-            # restoring it
+            # A full drive. The empty file a failed write leaves would stop the next mount
+            # restoring the template, so it is removed
             try:
                 os.remove(SECRETS_PATH)
             except OSError:
@@ -413,7 +409,7 @@ def __restore_secrets():
 
 def __make_folders(screens, sound):
     # Make the folders the user's own files go in where the drive has none, so it shows where
-    # each belongs, only for parts the board has. One already there is left as it is
+    # each kind belongs. A board without screens or sound goes without their folders
     folders = ["programs"]
     if screens:
         folders += ["pictures", "drawings"]
@@ -423,7 +419,7 @@ def __make_folders(screens, sound):
         try:
             os.mkdir(MOUNT_POINT + "/" + folder)
         except OSError:
-            # Already there, or a full drive, where the picker makes it as a file is added
+            # Already there, or a full drive
             pass
 
 
@@ -432,6 +428,6 @@ def __mount_examples():
     try:
         vfs.mount(Examples(), EXAMPLES_MOUNT_POINT)
     except OSError as e:
-        # Already mounted answers EPERM
+        # Is it already mounted? That answers EPERM
         if e.args[0] != errno.EPERM:
             raise

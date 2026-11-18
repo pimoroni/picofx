@@ -23,7 +23,7 @@ Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants
-TILE_W, TILE_H = 320, 256   # The tile's repeat, a screenful of pixels
+TILE_W, TILE_H = 320, 256   # The tile's repeat, a little more than a screenful of pixels
 CELL_W, CELL_H = 32, 16     # One cell of ground, twice as wide as tall
 QUIT_MS = 1500              # Held at least this long, the button ends the example
 SPEED = 1.6                 # Pixels of ground a wandering view crosses each frame
@@ -250,7 +250,7 @@ def flown(land, place):
 
 
 # Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair wants two of the same size
+# or what the effects file passes in args, the size first. Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
@@ -259,7 +259,7 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # A screen refuses to be created where no panel answers, so one panel flies a world and a second
-# brings the other. The reserve lets a pair convert both
+# brings the other. The reserve lets a pair convert from the heap
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:

@@ -742,7 +742,10 @@ def main():
                "PICKER": minified(repo_dir, drive)}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = minified(repo_dir, f.read().replace("__BOARD_NAME__", board["name"])
-                                     .replace("__VERSION__", version))
+                                     .replace("__VERSION__", version)
+                                     .replace("__RESET_BUTTON__",
+                                              board.get("release", {}).get("reset_button",
+                                                                           "Reset")))
     declared = board_declares(args.board_dir)
     if declared and declared["detect"]:
         sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,

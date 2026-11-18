@@ -31,13 +31,9 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 # Create a MightyFX object with both SP/CE ports set up for screens, and one on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# Two screens held separately, with no pair between them. update() does not return until
-# its frame is on the glass, so the second panel only starts once the first has finished.
-# Each waits its own tearing-effect signal and comes out clean, but the two are never
-# showing the same frame and they drift as each runs to its own oscillator.
-#
-# What it buys is memory: each screen converts within a frame of its own, so the default
-# reserve keeps up where a pair needs a deeper stage.
+# Two screens held separately, with no pair between them. update() returns once its frame
+# is sent, so the second panel starts after the first and the two drift on their own
+# oscillators. Each screen converts within its own frame, so the default reserve keeps up.
 screens = ScreenType(mighty.spce_a, rotation=ROTATION), ScreenType(mighty.spce_b, rotation=ROTATION)
 
 # Create a canvas to draw to, the size of either screen as it is turned

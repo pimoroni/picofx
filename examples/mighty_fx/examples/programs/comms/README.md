@@ -12,9 +12,9 @@ These are micropython examples for controlling other boards from Mighty FX over 
 ### Dual Mighty FX
 [dual_mighty_fx.py](dual_mighty_fx.py)
 
-Play a rainbow wave across the RGB outputs of this Mighty FX and of a second Mighty FX connected by I2C and running as an I2CTarget.
+Play a rainbow wave across the RGB outputs of this Mighty FX and a second one connected by Qw/ST, which runs [i2c_target.py](../../../i2c_target.py). Disconnect or cut the cable's red power wire first.
 
 ### Mighty and Tiny FX
 [mighty_and_tiny_fx.py](mighty_and_tiny_fx.py)
 
-Play a rainbow wave across Mighty FX's RGB outputs and on to the RGB output of a Tiny FX connected by I2C and running as an I2CTarget, with a pulse wave on the Tiny FX's mono outputs.
+Play a rainbow wave across Mighty FX's RGB outputs and on to the RGB output of a Tiny FX connected by Qw/ST, with a pulse wave on its mono outputs. The Tiny FX runs [i2c_target.py](../../../../tiny_fx/i2c_target.py). Disconnect or cut the cable's red power wire first.

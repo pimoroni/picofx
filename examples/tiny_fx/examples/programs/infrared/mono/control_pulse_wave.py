@@ -51,7 +51,7 @@ player.effects = [
 ]
 
 
-# Function called to change the speed of the colour effect
+# Function called to change the speed of the wave
 def adjust_speed(amount):
     global wave
     wave.speed = max(min(wave.speed * amount, 10), 0.01)

@@ -3,18 +3,15 @@
 # SPDX-License-Identifier: MIT
 
 # The board's hardware as its class declares it and as built for the effects file. A reload
-# keeps it and compares the new file against it. The strips are built here and the screens
-# and hub are recorded here once built. A name goes back into a message as the board
-# declares it.
+# keeps it and compares the new file against it.
 #
 # A board class may declare STRIPS, STRIP_BRIGHTNESS, STRIP_TAKES, STRIP_FLUSH_LEDS, SCREENS
-# with a <PORT>_PINS for each port, OUT_PINS, RGB_PINS, hub, WIRELESS and detect(), and all of
-# them are optional. A board has outputs, clear(), shutdown() and boot_pressed() or
-# boot_taps(), and may have rgb, wav, enable_rail() and disable_rail(). One with screens
+# with a <PORT>_PINS for each port, OUT_PINS, RGB_PINS, SENSOR_PIN, hub, WIRELESS and detect(),
+# and all of them are optional. A board has outputs, clear(), shutdown() and boot_pressed() or
+# boot_taps(), and may have rgb, wav, sensor, enable_rail() and disable_rail(). One with screens
 # defines SPCE and SPCEPort in its own module.
 #
-# Its records are shared with the files that import them. Each is changed in place and
-# never rebound
+# Its records are shared with the files that import them, so each is changed in place
 
 import sys
 
@@ -22,12 +19,12 @@ from picofx import RGBLED
 
 from .vocabulary import BRIGHTNESS, COMPONENTS, HUB, HUB_POSITIONS, ORDER
 
-# The strips the board being loaded declares, as (kind, property, name as written), the kind
-# being the name in lower case. Each is a player of its own, so a strip is one kind of channel
+# The strips the board being loaded declares, as (kind, property, name as written). The kind
+# is the name in lower case. Each is a player of its own, so a strip is one kind of channel
 BOARD_STRIPS = []
 
-# The strips taking a brightness after their length where the rest take a colour order, as an
-# APA102 does, having one brightness for the whole strip and one colour order
+# The strips taking a brightness after their length where the rest take a colour order. An
+# APA102 does, since it has one brightness for the whole strip and a fixed colour order
 BOARD_BRIGHTNESS = []
 
 # Each strip taking other strips' terminals, as (kind, other kinds), so it cannot play beside
@@ -38,8 +35,8 @@ BOARD_TAKES = []
 # outputs, or else its own LED, or else its first strip
 BOARD_EXAMPLE = ["out4"]
 
-# The screen ports the board being loaded declares, as (kind, property, name as written), the
-# kind being the name in lower case
+# The screen ports the board being loaded declares, as (kind, property, name as written).
+# The kind is the name in lower case, as it is for the strips
 BOARD_SCREENS = []
 BOARD_HUB = [False]     # Whether the board can carry a Screen Hub
 
@@ -119,9 +116,8 @@ def learn_board(fx):
 
 def port_classes(fx):
     """
-    SPCE and SPCEPort as the board's own module defines them, each board naming what its
-    connectors can carry. Found by the module holding the board's class, since a MicroPython
-    class does not name its module.
+    SPCE and SPCEPort as the board's own module defines them, since each board names what
+    its connectors can carry. Found by searching the imported modules for the board's class.
     """
     board = fx if isinstance(fx, type) else type(fx)
     for module in sys.modules.values():
@@ -149,7 +145,7 @@ def screen_port(kind):
     """A screen port as (property, port letter), or None for one the board has not got."""
     for known, prop, _shown in BOARD_SCREENS:
         if known == kind:
-            # Lettered by its property, spce_a being A, since a board with one port names it bare
+            # Lettered by its property, as spce_a is A, since a board with one port names it bare
             return prop, prop[-1].upper()
     return None
 
@@ -173,7 +169,7 @@ def build_board(fx, settings, problems):
             after = settings.get(kind + after_length(kind))
             declared[prop] = count if after is None else (count, after)
 
-    # A hub is declared at construction, its panels on the connector named and its
+    # A hub is declared at construction, with its panels on the connector named and its
     # selects on the other, so the board builds the hub itself
     hub = hub_port(settings)
     if hub is not None:
@@ -181,9 +177,9 @@ def build_board(fx, settings, problems):
         for kind, prop, _shown in BOARD_SCREENS:
             declared[prop] = SPCE.SCREEN if kind == hub else SPCE.HUB_SELECTS
 
-    # The sensor connector's role is declared at construction too, the board building the
-    # receiver or the input itself. What was asked is kept, so a reload asking the same is
-    # no change, whether or not the board could take it
+    # The sensor connector's role is declared at construction too, so the board builds the
+    # receiver or the input itself. What was asked is kept, so a reload asking the same is no
+    # change, whether or not the board could take it
     sensor = settings.get("sensor")
     BUILT_SENSOR[:] = [sensor] if sensor else []
     if sensor:
@@ -205,9 +201,9 @@ def build_board(fx, settings, problems):
         return fx()
 
 
-# The strips already running, as (strip, count, after) per connector, after being the colour
-# order or brightness that followed the length, or None where the board chose it. A board is
-# built once, a reload keeping the one it has, so this is what a changed strip is answered against
+# The strips already running, as (strip, count, after) per connector. The after value is the
+# colour order or brightness that followed the length, or None where the board chose it. A board
+# is built once and a reload keeps it, so this is what a changed strip is answered against
 BUILT_STRIPS = {}
 
 # What the board entry's sensor= asked for when the board was built, or empty for nothing
@@ -295,12 +291,9 @@ PRESENCE_PROBE_MS = 40
 
 
 def __screen_gone(screen):
-    # Whether a panel that was brought up has stopped answering.
-    #
-    # One unplugged and put back has lost the TEON its bringup set, so it asserts
-    # nothing. Nothing is sent to find out, since a screen owning its line keeps TE on
-    # from bringup, so any edge at all is the panel still being there. One with no
-    # signal to read cannot be told about either way, so it counts as present
+    # Whether a panel that was brought up has stopped answering. One unplugged and put back
+    # has lost the TEON its bringup set, so any TE edge at all, with nothing sent, is the panel
+    # still there. One with no signal to read counts as present
     if not screen.__v_sync:
         return False
     try:
@@ -402,7 +395,7 @@ def resolve_strips(entries, lengths, problems, said=()):
     than as its selectors are parsed, since the board entry carrying the length is
     read in this pass.
 
-    said holds the strips already reported, such as one the board would not set up.
+    `said=` holds the strips already reported, such as one the board would not set up.
     """
     said = set(said)
 

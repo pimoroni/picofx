@@ -2,7 +2,7 @@ import sys
 from mighty_fx import MightyFX, SPCE
 from picovector import color
 from playback import GIFPlayer
-from screens import SCREEN_TYPES, Reserve
+from screens import SCREEN_TYPES
 
 """
 Change the colours of an animated GIF as it plays.
@@ -34,17 +34,16 @@ SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it with the
-# reserve a source larger than the panel needs
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # The scan runs body to skeleton, so it plays back and forth
 try:
     player = GIFPlayer(GIF_PATH, ping_pong=True)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{GIF_PATH}' is missing! Check it is on the board") from None
+    raise RuntimeError(f"'{GIF_PATH}' is missing or corrupt! Check it is on the board") from None
 
 # The frames share one colour table, so this is the whole animation's colours
 palette = player.palette
@@ -72,7 +71,7 @@ report(REPORTS[0])
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The screen refreshes faster than the GIF changes, so only send a new frame
+        # Check if the player has moved on, as the screen refreshes faster than the GIF changes
         if player.has_advanced():
             # Recoloured before the frame is sent, so the held end frame is already the new
             # colour and the sweep that follows stays in it

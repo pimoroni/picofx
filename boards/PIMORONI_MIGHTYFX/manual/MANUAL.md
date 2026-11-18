@@ -1,4 +1,4 @@
-<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild; edits here are lost. -->
+<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild, since edits here are lost. -->
 
 # Mighty FX
 
@@ -118,8 +118,8 @@ strip.
 
 ### Board: Setting up your hardware
 
-Each tab holds the settings for its own hardware, such as the order your lights
-are wired in. Look out for the chip icon, which the picker puts on every board
+Each tab holds the settings for its own hardware, such as how your lights are
+wired or how many LEDs a strip has. Look out for the chip icon, which the picker puts on every board
 setting. These settings describe your hardware, so they're shared by every
 scene.
 
@@ -140,7 +140,7 @@ an output into three mono lights, or join them back into one colour light.
 rejoins every output. Press the chip again when you're done.
 
 On **Left strip** and **Right strip**, set how many LEDs each strip has and its
-colour order, which needs changing if red shows as another colour. [[remove]]
+colour order. Change the order if red shows as another colour. [[remove]]
 takes off a strip you haven't fitted, and [[add this strip]] puts it back.
 
 ```picker
@@ -172,8 +172,8 @@ button to delete it from the drive.
 With two screens, each picture has an [[A]] and a [[B]] button, one for each
 screen. To show the same thing on both, press [[Paired]] on either screen. Screen
 B then shows whatever Screen A shows, in step and at the same speed, while each
-screen keeps its own rotation and position. This matters most for a drawing,
-which then runs once for both screens, so both show the same random choices.
+screen keeps its own rotation and position. This matters most for a drawing. It
+runs once for both screens, and both show the same random choices.
 Press [[Paired]] again to set them apart. Each scene can pair the screens or not.
 
 ### Screens: Using a Screen Hub
@@ -230,9 +230,10 @@ pages: *Effects, Programs
 scenes: Always on, *Scene 1 10s
 ```
 
-Each scene takes the colour of its place, matching the number buttons on the
-Aye Arr Remote, so the first scene is red like button 1 and the tenth takes the
-rainbow of button 0. A scene you move takes the colour of its new place.
+Each scene takes the colour of its place, and a scene you move takes the colour
+of its new place.
+The colours match the Aye Arr Remote's number buttons, so the first scene is red
+like button 1 and the tenth takes the rainbow of button 0.
 
 Everything below the tray sits in a frame of the chosen scene's colour, with the
 scene's settings on a tab at its top left: its name, whether it "shows for" a
@@ -331,7 +332,7 @@ drive doesn't have, and update the ones it does have. The computer needs to be
 online for this.
 
 Each tab that lists examples has a Discover button under its **Examples**
-heading. Pressing one, such as [[Discover example programs]] on **Programs**,
+heading. Pressing one, such as [[Discover more example programs]] on **Programs**,
 shows the examples this drive doesn't have. Click a card to choose it, or tick
 the boxes to choose several. Then press [[Download]] to copy them onto the drive. On
 **Programs**, the **With** buttons in the gallery hide examples that need
@@ -383,7 +384,7 @@ page.
 
 [[Update available]] shows what's new and offers the one file your board needs.
 Save to the board first, then download the file. Hold **Boot**, press
-**RST**, then let go of **Boot**, and drag the file onto the drive
+**Reset**, then let go of **Boot**, and drag the file onto the drive
 that appears. The
 board restarts by itself, and your FX drive and the files on it are kept. Open
 `PICKER.html` from the drive again afterwards, to use the picker that comes
@@ -468,9 +469,9 @@ driven separately, as three mono lights:
 | `out1-7.*` | all 21, from 1's red to 7's blue |
 | `out7-1.*` | all 21 in reverse order, from 7's blue to 1's red |
 
-Order matters for effects that travel: they move through the outputs in the
-order you write them, so list them in the order they appear in your build,
-which need not be number order.
+Effects that travel move through the outputs in the order you write them.
+List them in the order they sit in your build, even where that is not number
+order.
 
 ### Setting an output
 
@@ -558,7 +559,7 @@ These bring their own colour, so they work only for a whole output or a strip's 
 ### Effects that travel
 
 Effects ending in `_wave`, `_sequence` and `_counter`, and `sweep`, travel
-across the outputs you name. The others do the same thing on each one.
+across the outputs you name. Most of the others do the same thing on each one.
 
 Effects ending in `_each` treat each output separately: `flicker_each` dips
 each one at its own moments, like flames, and `random_each` gives each its own
@@ -568,11 +569,11 @@ brightness. `flicker` and `random` affect them all together, like a single light
 out1-7 colour=ff5a00: flicker_each dimness=0.6
 ```
 
-`traffic_light` and `pelican_crossing` use their outputs in the order given
-below. With fewer, they light only the first ones. Naming more is an error,
-reported in `errors.txt`.
-
 ### Traffic lights and crossings
+
+`traffic_light` and `pelican_crossing` use their outputs in the order listed
+here. With fewer, they light only the first ones. Naming more is an error,
+reported in `errors.txt`.
 
 `traffic_light` needs three outputs, lit red, amber and green in that order.
 It switches instantly, so add `ease` to look like a real signal's lamps:
@@ -599,9 +600,8 @@ out1-3: pelican_crossing
 ### Sweep
 
 `sweep` is a light that travels across the outputs and turns back at each end,
-like a scanner. `extent` sets how far its glow reaches either side, in outputs,
-and `speed` counts one crossing as one cycle, as the other travelling effects count
-one pass. `hold` pauses at each end, in seconds, giving the trail time to fade
+like a scanner. `extent` sets how far its glow reaches either side, in outputs.
+`speed` counts one crossing as one cycle. `hold` pauses at each end, in seconds, giving the trail time to fade
 before the light returns:
 
 ```entry
@@ -614,8 +614,8 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in sequence separated by `|`. A comma
-instead would give each output its own colour. Without a colour it blinks red:
+`rgb_blink` blinks one colour, or several in sequence separated by `|`. Without a
+colour it blinks red:
 
 ```entry
 out1: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -631,8 +631,8 @@ The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
 `step` are whole numbers, and a negative `step` counts down.
 
-`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written as
-0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
+`red`, `green` and `blue` run from 0 to 255, and `extent` is a number of
+outputs. The rest run from 0 to 1, written as 0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
 `hue` also takes degrees, such as 180deg, as a colour picker shows them.
 
 **If you write Python**, you can add your own effect to this list and use it like
@@ -759,9 +759,8 @@ screenA rotation=90 screenB rotation=270 mirror=true: drawing file=creature_eyes
 ```
 
 A drawing is drawn once for both screens, at the size of the larger, and the
-smaller screen shows it placed by its own settings. In a scene, the entry belongs to that scene like any other, so another
-scene can show something different on each screen. On the picker's Screens
-tab, Paired writes this entry, Screen B showing what Screen A shows. The picker
+smaller screen shows it placed by its own settings. On the picker's Screens tab,
+[[Paired]] writes this entry, so Screen B shows what Screen A shows. The picker
 also writes it for the same picture or slideshow on both screens, played the
 same way.
 
@@ -783,7 +782,8 @@ screenA: sequence folder=photos interval=30
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
-the picker adds pictures, then directly on the drive.
+the picker adds pictures, then directly on the drive, then on the board itself.
+The name can include folders.
 
 The example pictures are in the `examples/pictures` folder. To use one in an
 entry, include the folder in its name, such as
@@ -814,9 +814,6 @@ screenA: gif file="wave.gif" ping_pong=yes hold=1
 screenA: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 ```
 
-The board looks for a file on this drive first, then on the board itself, and
-the name can include folders.
-
 A screen updates less often than the lights, and effects on the outputs take
 time from it. If a file asks for more frames than the screen can draw, it drops
 frames to keep its timing.
@@ -825,7 +822,7 @@ frames to keep its timing.
 
 **This section is for Python writers.** A screen can play a drawing instead of
 a picture: a Python file with one function in it, drawn alongside everything
-else in this file, so the lights keep their effects,
+else in `effects.txt`, so the lights keep their effects,
 the other screen keeps its pictures,
 and a scene shows and hides the drawing along with everything else in
 it.
@@ -853,7 +850,7 @@ def draw():
 ```
 
 `draw` is called for each frame, and the screen shows whatever it has drawn
-when it returns. It can use three names the board provides. `canvas` is the
+when it returns. It can use these names the board provides. `canvas` is the
 image to draw on, the size of the screen and kept between frames. `ticks` is
 the milliseconds since the drawing started, so `ticks / 1000` is the time in
 seconds, and `ticks_delta` is the milliseconds since the last frame. `fps` or
@@ -876,9 +873,9 @@ setting. A small canvas draws faster and is placed like a small picture, so
 
 `style` passes a word to the drawing, which finds it as `style`, or `None`
 where the entry sets none. A drawing drawn in several styles lists them in a
-`Styles` line of its opening string, such as `Styles: cat, owl, goat`, the
-first being the one it takes where none is set, and the picker offers them as
-a choice. A drawing with more than one choice to make gives a `Styles` line
+`Styles` line of its opening string, such as `Styles: cat, owl, goat`, and the
+picker offers them as a choice. The first is the one used where none is set. A
+drawing with more than one choice to make gives a `Styles` line
 for each, and the entry joins its choices with a dash, such as
 `style=ember-bare`.
 
@@ -926,12 +923,12 @@ chosen from its name.
 A `Defaults` line gives the screen settings the drawing is made for, written as
 a program's `Args` line is, such as `Defaults: Rotation = 90 or 270, Pixel
 double = true`. One rotation is where the drawing starts, and a list is the
-only rotations it suits, the first being where it starts. When the drawing is
+only rotations it suits. The first is where it starts. When the drawing is
 chosen, the picker turns the screen that way unless the drawing has been turned
 on that screen before, and doubles its pixels on a half-size canvas only where
 the line asks. `Pixel double = false` marks a drawing that needs the screen's
-full resolution. While the drawing is turned or doubled otherwise than the line
-says it suits, its Drawing settings say so, with a button to set it back.
+full resolution. If you turn or double the drawing in a way the line does not
+list, its Drawing settings say so and offer a button to set it back.
 
 ## Sound
 
@@ -960,7 +957,7 @@ until the next reload.
 
 Use an uncompressed 16-bit or 32-bit WAV file, mono or stereo. MP3 is not
 supported, and nor are 8-bit or 24-bit WAV files. This drive
-holds nearly 13MB, so a lower sample rate fits more. A minute of 16-bit mono
+holds 12.5MB, so a lower sample rate fits more. A minute of 16-bit mono
 takes about 2.6MB at 22kHz and under 1MB at 8kHz.
 
 The board plays one sound at a time, so each scene takes one `audio` entry, and
@@ -1012,12 +1009,12 @@ out1: none
 ```
 
 Screens behave the same way. A screen the scene does not name shows its
-always-on picture, even where the always-on entry names both screens, as
-`screenA,B`, and the scene takes only one. Where there is none, the picture
-stays but the backlight turns off while another scene plays, and comes back
-when its own scene returns.
-`none` turns a screen off for a scene, showing black, or its `background`
-colour, at the backlight set before the colon:
+always-on picture. This holds even where the always-on entry names both screens,
+as `screenA,B`, and the scene takes only one. A screen with no always-on entry
+keeps its picture, but its backlight turns off while another scene plays and
+comes back when its own scene returns.
+`none` shows only the screen's `background` colour, black unless set, at the
+backlight set before the colon. With `backlight=0%` the screen is off:
 
 ```entry
 [Night: 10m]
@@ -1049,9 +1046,9 @@ all, and `restart` goes before it:
 ```
 
 A scene can also go back to itself, to begin its effects again each time its
-time is up. That needs `restart`, as does a file's only scene when it has a
-time, since otherwise nothing changes when the time is up, and `errors.txt`
-says so:
+time is up. That needs `restart`, or nothing changes when the time is up. A
+file's only scene needs it too when it has a time. `errors.txt` reports either
+one without it:
 
 ```entry
 [Storm: 30s restart then Storm]
@@ -1059,7 +1056,8 @@ says so:
 
 The board entry goes before any scene heading. A scene with no time, such as
 `[Welcome]`, waits, and the board stays on it. Put one last to play the scenes
-before it once and then hold, such as an opening effect after the board starts.
+before it once and then stay on it, such as an opening sequence that settles
+into a steady look.
 A scene that no other scene goes on to never shows, and `errors.txt` says so.
 Every reload, whether from a save, an eject or a press of **Boot**, starts again
 from the first scene.
@@ -1143,7 +1141,7 @@ explains.
 Saving `effects.txt` is all it takes: the board detects the save, briefly takes
 the drive back, and plays the new effects, just as a single press of **Boot**
 would. Only saving `effects.txt` triggers this, so copying pictures onto
-the drive never interrupts anything. With `reload=manual`, a save waits for an
+the drive does not reload the effects. With `reload=manual`, a save waits for an
 eject or a press of **Boot** instead.
 
 ### Running your own program
@@ -1165,7 +1163,7 @@ board, which then runs the program as it would at power-on.
 The effects stop while a program runs, and **Boot** and ejecting do nothing. The
 drive is always shown, even with `drive=manual`, so you can still edit
 `effects.txt`. Saving it restarts the board with the new file. With
-`reload=manual`, press **RST** to apply the change. A program can read files
+`reload=manual`, press **Reset** to apply the change. A program can read files
 from this drive while it is shown, so its pictures and sounds can sit beside it
 here.
 
@@ -1188,6 +1186,8 @@ program, starting at `sys.argv[1]`. Thonny passes none when you run the file
 from there, so give each one a default and the file works either way:
 
 ```python
+import sys
+
 args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"
 ```
@@ -1227,10 +1227,11 @@ A value after `=` in `Args` is the program's default, so the box starts with it,
 and `args=` is left out while every argument keeps its default. An argument
 named `Screen size` offers the sizes the firmware knows, and one named
 `Rotation` offers 0, 90, 180 and 270, or the values it lists, such as `Rotation
-= 90 or 270`, the first being the default. The picture always shows the program
-at its defaults.
+= 90 or 270`. The first is the default. The picture always shows the program at
+its defaults.
 
-To change an example, choose it and press **Customise**. The picker copies it
+To change an example, choose it and press the copy button in the corner of its
+card. The picker copies it
 and its pictures into `programs`, under a new name if that one is taken, and
 chooses the copy. Open the copy from the drive in Thonny or another editor, then
 press **Save to board** to run it.

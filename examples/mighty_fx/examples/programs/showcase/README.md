@@ -2,7 +2,7 @@
 
 This folder contains a collection of *Showcase* examples, that bring together concepts presented by individual board and screen examples to create functional projects.
 
-The posters the billboards show live with the other example art in [pictures/billboards](../../pictures/billboards), portrait and landscape in a folder each: the scrolling and street ones walk the portrait ones, the trivision one turns the three landscape.
+The billboards' posters are kept with the other example pictures in [pictures/billboards](../../pictures/billboards), in a portrait folder and a landscape folder. The scrolling and street billboards show the portrait posters, and the trivision billboard turns between the three landscape ones.
 
 - [Transport Signs](#transport-signs)
   - [Roadworks Sign](#roadworks-sign)
@@ -113,7 +113,7 @@ Draw a bus departure board as shown on a TV screen at a bus station. A second pa
 
 [transport_signs/tram_stop_sign.py](transport_signs/tram_stop_sign.py)
 
-Draw a tram stop sign across two screens with the next tram at the top and later ones cycling below.
+Draw a tram stop sign across two 2.8" screens with the next tram at the top and later ones cycling below.
 
 <br clear="left">
 
@@ -127,7 +127,7 @@ Mechanical, glowing and segment displays.
 
 [retro_displays/flip_dot_sign.py](retro_displays/flip_dot_sign.py)
 
-Draw a flip-dot sign that spells its message by flipping one column of dots at a time.
+Draw a flip-dot sign on a 2.8" screen that spells its message in a sweep, each column of dots starting to flip just after the one before.
 
 <br clear="left">
 
@@ -231,7 +231,7 @@ Posters and signs that change on screen.
 
 [billboards/trivision_billboard.py](billboards/trivision_billboard.py)
 
-Draw a trivision billboard whose three-sided slats turn to change the poster.
+Draw a trivision billboard on a 2.8" screen whose three-sided slats turn to change the poster.
 
 <br clear="left">
 
@@ -241,7 +241,7 @@ Draw a trivision billboard whose three-sided slats turn to change the poster.
 
 [billboards/scrolling_billboard.py](billboards/scrolling_billboard.py)
 
-Draw a scrolling billboard that rolls its posters past one at a time.
+Draw a scrolling billboard on a 2.8" screen that rolls its posters past one at a time.
 
 <br clear="left">
 
@@ -251,7 +251,7 @@ Draw a scrolling billboard that rolls its posters past one at a time.
 
 [billboards/street_billboard.py](billboards/street_billboard.py)
 
-Show a folder of posters as if each stood in a case behind glass.
+Show a folder of posters on a 2.8" screen as if each stood in a case behind glass.
 
 <br clear="left">
 
@@ -261,7 +261,7 @@ Show a folder of posters as if each stood in a case behind glass.
 
 [status_panel.py](status_panel.py)
 
-Draw a Pimoroni status panel with the RGB outputs lighting in step with its production line.
+Draw a Pimoroni status panel on a 2.8" screen with the RGB outputs lighting in step with its production line.
 
 <br clear="left">
 
@@ -316,7 +316,7 @@ Draw a fire and flicker the RGB outputs with it like firelight in a room. The fi
 
 [animated_scenes/portal.py](animated_scenes/portal.py)
 
-Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in. Each arm dims to black before the opening, so it seems to fall away without end. STONES = True sets it into a stone wall, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
+Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in. Each arm dims to black before the opening, so it seems to fall away without end. SCHEME chooses its colours, violet, ember, ice or emerald, STONES = False leaves it on black, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
 
 <br clear="left">
 
@@ -326,7 +326,7 @@ Draw a glowing portal with arms spiralling into a dark opening and specks of lig
 
 [animated_scenes/pool.py](animated_scenes/pool.py)
 
-Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
+Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other. Holding "Boot" exits.
 
 <br clear="left">
 
@@ -336,7 +336,7 @@ Draw the floor of a pool through rippling water that throws bright lines of ligh
 
 [animated_scenes/neon_corridor.py](animated_scenes/neon_corridor.py)
 
-Walk without end down a corridor of neon, as rings of light come out of the haze towards you and a bright light shines at the far end. SCHEME sets its colours to neon, plaid, emerald, magenta or blueprint, and "Boot" steps to the next. SPEED sets a slow, normal, fast or ludicrous pace, and OBLONG = True stretches the corridor to the panel's shape.
+Walk without end down a corridor of neon, as rings of light come out of the haze towards you and a bright light shines at the far end. SCHEME sets its colours to neon, plaid, emerald, magenta or blueprint, and "Boot" steps to the next. SPEED sets a slow, normal, fast or ludicrous pace, and OBLONG = True stretches the corridor to the panel's shape. Holding "Boot" exits.
 
 <br clear="left">
 
@@ -347,7 +347,7 @@ Walk without end down a corridor of neon, as rings of light come out of the haze
 
 [animated_scenes/creature_eyes.py](animated_scenes/creature_eyes.py)
 
-Draw a creature's eyes on two screens as they look around and blink. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next.
+Draw a creature's eyes on two screens as they look around and blink. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next. Holding "Boot" exits.
 
 <br clear="left">
 
@@ -359,4 +359,4 @@ Servos and motors.
 ### Programmed Route
 [programmed_route.py](programmed_route.py)
 
-Program a route into a two-wheeled robot with the IR remote and watch it drive.
+Program a route into a two-wheeled robot with a Pimoroni Aye Arr Remote and watch it drive.

@@ -6,7 +6,8 @@ from screens import Screen280
 from picovector import color, font, image, mat3, shape
 
 """
-Draw a flip-dot sign that spells its message by flipping one column of dots at a time.
+Draw a flip-dot sign that spells its message in a sweep, each column of dots starting to flip just
+after the one before.
 
 Press "Boot" to exit the program.
 

@@ -92,13 +92,13 @@ There are three types of .uf2 file to pick from, depending on what should happen
 
 * `<board>_drive-vX.X.X-pimoroni-micropython-full.uf2`
 
-  Writes the whole board, including the FX drive with its starting `effects.txt` and examples. Use it to install the FX drive firmware, or to return the drive to how it shipped.
+  Writes the whole board, including the FX drive with its starting `effects.txt` and any examples for that board. Use it to install the FX drive firmware, or to return the drive to how it shipped.
 
   :warning: **This option will replace everything on the FX drive! Be sure to copy `effects.txt` and any files you added to your PC before installing!**
 
 * `<board>_drive-vX.X.X-pimoroni-micropython-with-libs.uf2`
 
-  Updates the firmware and libraries, and keeps the FX drive as it is. The examples on the drive are not updated, so newer ones can be downloaded from the [examples folder](#examples).
+  Updates the firmware and libraries, and keeps the FX drive as it is. It replaces everything else on the board, such as a main.py of your own, so copy your programs to your PC first. The examples on the drive are not updated, so newer ones can be downloaded from the [examples folder](#examples).
 
 * `<board>_drive-vX.X.X-pimoroni-micropython.uf2`
 

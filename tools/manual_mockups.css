@@ -1,5 +1,5 @@
 /* A picture of part of the picker, drawn by manual_mockups.py from simplified copies of its
-   parts. The sizes and colours follow the picker's own, so a change to the picker's look
+   parts. The sizes and colours follow the picker's own, so a change to the picker's appearance
    needs the matching change here */
 .mockup {
   --board: #3a4b56;
@@ -166,8 +166,8 @@
 .mockup .tabscreens i { width: 1.8rem; height: 1.8rem; border-radius: 3px; background: #fff; border: 1px solid var(--line); box-sizing: border-box; }
 .mockup .tabsound { display: block; width: 3.4rem; height: 1.8rem; border-radius: 3px; }
 
-/* The scenes: a grey tray that is Always on, its own card the first column and each scene a card
-   in its colour, then the folder tab holding the selected scene's settings */
+/* The scenes, a grey tray that is Always on with its own card as the first column and a card for
+   each scene in its colour. The folder tab under them holds the selected scene's settings */
 .mockup .scenetray {
   display: flex;
   gap: 0.45rem;
@@ -381,7 +381,7 @@
 .mockup .wirereset { flex: none; padding: 0.1rem 0.5rem; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 6px; color: #fff; font-weight: 600; }
 .mockup .wirereset.off { opacity: 0.35; }
 
-/* Split into, on a strip's stretch beside its Reverse, the two kept together */
+/* Split into beside Reverse on a strip's stretch, kept together */
 .mockup .setbuttons { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; }
 
 .mockup .toolset {

@@ -34,9 +34,10 @@
 #define PIMORONI_MIGHTYFX_PSRAM_CS_PIN 19
 
 // --- CLOCK ---
-// 225MHz, from the SDK's vcocalc.py. The SPI divides clk_peri by an even number, so a screen
-// driven at 37.5MHz needs clk_peri raised to the system clock and that clock a multiple of 75MHz.
-// 225MHz is the only one between the stock 150MHz and 300MHz.
+// 225MHz, from the SDK's vcocalc.py, to draw faster on the screens. set_sys_clock_khz() leaves
+// clk_peri on the 48MHz USB clock, so the screens' SPI runs as at the stock 150MHz. 225MHz is also
+// the only multiple of 75MHz between 150MHz and 300MHz, which a screen at 37.5MHz needs clk_peri to
+// be, raised to this clock with machine.freq(225_000_000, 225_000_000).
 #ifndef SYS_CLK_HZ
 #define PLL_SYS_REFDIV 2
 #define PLL_SYS_VCO_FREQ_HZ (1350000000)
@@ -52,20 +53,19 @@
 #endif
 
 // --- UART ---
+// SP/CE A's TX and RX lines, the pins UART0 reaches on the board's connectors
 #ifndef PICO_DEFAULT_UART
 #define PICO_DEFAULT_UART 0
 #endif
 #ifndef PICO_DEFAULT_UART_TX_PIN
-#define PICO_DEFAULT_UART_TX_PIN 0
+#define PICO_DEFAULT_UART_TX_PIN 32
 #endif
 #ifndef PICO_DEFAULT_UART_RX_PIN
-#define PICO_DEFAULT_UART_RX_PIN 1
+#define PICO_DEFAULT_UART_RX_PIN 33
 #endif
 
 // --- LED ---
-#ifndef PICO_DEFAULT_LED_PIN
-#define PICO_DEFAULT_LED_PIN 25
-#endif
+// no PICO_DEFAULT_LED_PIN
 // no PICO_DEFAULT_WS2812_PIN
 
 // --- I2C ---
@@ -80,20 +80,21 @@
 #endif
 
 // --- SPI ---
+// SP/CE A's SPI lines, the pins SPI0 reaches on the board's connectors
 #ifndef PICO_DEFAULT_SPI
 #define PICO_DEFAULT_SPI 0
 #endif
 #ifndef PICO_DEFAULT_SPI_SCK_PIN
-#define PICO_DEFAULT_SPI_SCK_PIN 18
+#define PICO_DEFAULT_SPI_SCK_PIN 34
 #endif
 #ifndef PICO_DEFAULT_SPI_TX_PIN
-#define PICO_DEFAULT_SPI_TX_PIN 19
+#define PICO_DEFAULT_SPI_TX_PIN 35
 #endif
 #ifndef PICO_DEFAULT_SPI_RX_PIN
-#define PICO_DEFAULT_SPI_RX_PIN 16
+#define PICO_DEFAULT_SPI_RX_PIN 32
 #endif
 #ifndef PICO_DEFAULT_SPI_CSN_PIN
-#define PICO_DEFAULT_SPI_CSN_PIN 17
+#define PICO_DEFAULT_SPI_CSN_PIN 33
 #endif
 
 // -- CYW43 Wireless --
@@ -101,9 +102,7 @@
 #define CYW43_WL_GPIO_COUNT 3
 #endif
 
-#ifndef CYW43_WL_GPIO_LED_PIN
-#define CYW43_WL_GPIO_LED_PIN 0
-#endif
+// None of the CYW43's GPIOs are wired, so there is no CYW43_WL_GPIO_LED_PIN
 
 // Keeps the cyw43 bus inside the chip's 50MHz limit, at a sixth of the 225MHz system clock
 #ifndef CYW43_PIO_CLOCK_DIV_INT

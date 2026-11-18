@@ -129,7 +129,7 @@ Show a static colour on all of Mighty FX's RGB outputs, using HSV.
 ### Blink
 [colour/blink.py](colour/blink.py)
 
-Chase a blink around Mighty FX's seven RGB outputs, each blink a different colour in turn.
+Chase a blink around Mighty FX's seven RGB outputs, each pass a different colour in turn.
 
 
 ### Rainbow

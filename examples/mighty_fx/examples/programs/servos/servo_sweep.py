@@ -7,9 +7,6 @@ Sweep a servo from end to end on the L connector.
 Plug a servo into the connector marked L. Both L and R share one power rail, so
 anything on R is live too once enable_rail() is called.
 
-L shares a PWM channel with SP/CE A's backlight and R with SP/CE B's, so a servo and a
-screen cannot have the same side and declaring both is refused.
-
 Press "Boot" to exit the program.
 
 Section: Motors and servos

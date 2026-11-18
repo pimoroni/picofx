@@ -134,10 +134,10 @@ MIRRORS = {"front": (False, False), "side": (False, True), "face": (True, False)
 
 # Is CREATURE one of them? Checked before the pair takes its few seconds to set up
 if CREATURE not in CREATURES:
-    raise ValueError(f"'{CREATURE}' is not one of the creatures! Set CREATURE to {', '.join(CREATURES)}")
+    raise ValueError(f"'{CREATURE}' is not one of the creatures! Set CREATURE to one of {', '.join(CREATURES)}")
 
 # Which screen is on both ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair needs both panels the same size
+# or what the effects file passes in args, the size first. Both ports take the same size here
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]

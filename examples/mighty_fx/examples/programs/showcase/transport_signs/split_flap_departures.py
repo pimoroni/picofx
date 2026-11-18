@@ -31,7 +31,7 @@ HEADING = color.rgb(232, 176, 24)       # The column headings, painted on the bo
 SPLIT = color.rgb(8, 8, 9)              # The line the cards are hinged on, and the gaps between them
 BOARD = color.black                     # What the cards are set into
 GAP = 1                                 # Between one card and the next inside a column
-COLUMN_GAP = 12                         # The least between columns, which carry no cards at all
+COLUMN_GAP = 12                         # The least between columns, where no card is laid
 COLON_W = 9                             # The colon in a time, painted on the board, not flapped
 
 # A card is sized to its letter, so rows do not run into each other
@@ -128,12 +128,12 @@ LETTERING_PER_PX = (REACH[1] - REACH[0] + 1) / REFERENCE
 # The largest lettering a card can carry, usually set by the width of the drum's W
 SIZE = min(LETTER_MAX / LETTERING_PER_PX, CELL_W / WIDTH_PER_PX)
 LETTER_H = round(LETTERING_PER_PX * SIZE)
-# Rounded up to even, so no row falls between the two halves
 CELL_H = LETTER_H + CARD_PAD * 2
+# Rounded up to even, so no row falls between the two halves
 CELL_H += CELL_H % 2
 HALF = CELL_H // 2
 
-# Where the lettering sits inside the em box, so a letter centres on its card, not its box centring
+# Where the lettering sits inside the em box, so a letter centres on its card by what it draws, not by its em box
 LETTERING_TOP = (CELL_H - LETTER_H) // 2 - round(lettering_rows(SIZE, "HW8O")[0])
 EM_BOX = round(SIZE) + 2
 
@@ -231,7 +231,7 @@ def half_of(index, lower):
 
 
 def settled(row, card, index):
-    """A card at rest, both halves showing the same character."""
+    """Draw a card at rest, both halves showing the same character."""
     left, top = place(row, card)
     drum = sheets[card_drum[card]]
     target.x, target.w = left, CELL_W

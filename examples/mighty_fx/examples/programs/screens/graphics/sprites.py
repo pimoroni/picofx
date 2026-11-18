@@ -27,7 +27,7 @@ SPRITE_PATH = "/examples/pictures/pirate_face.gif"
 LABEL_FACE = font.winds                 # The narrowest ROM pixel face
 WIDTHS = (18, 28, 40, 54)               # What the top row blits the sprite at, in pixels
 TURNS = (0, 30, 60)                     # Degrees the bottom row turns it
-TURNED_AT = 48                          # And how large, the turning needing room around it
+TURNED_AT = 48                          # And how large, since the turning needs room around it
 TOP_DOWN = 0.30                         # Where the blitted row sits, of the panel's height
 TURN_DOWN = 0.68                        # And the turned one
 
@@ -48,9 +48,9 @@ canvas.font = LABEL_FACE
 # A sprite out of a sheet, which is what a single frame GIF loads as
 try:
     sprite = spritesheet.load(SPRITE_PATH).sprite(0)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{SPRITE_PATH}' is missing! Check it is on the board") from None
+    raise RuntimeError(f"'{SPRITE_PATH}' is missing or corrupt! Check it is on the board") from None
 
 print(f"a {sprite.width}x{sprite.height} sprite with {sprite.palette_size} colours,"
       f" blitted at {WIDTHS} and turned {TURNS}")

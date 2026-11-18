@@ -476,9 +476,14 @@
    "files": [
     {
      "path": "examples/programs/infrared/mono/control_pulse_wave.py",
-     "size": 3061,
-     "hash": "913d6a16c1d1ae4af6edefa73e4e49d42b51c346",
-     "was": []
+     "size": 3052,
+     "hash": "f8ef5acd5985f8cc73e9e9580db483163879e650",
+     "was": [
+      {
+       "hash": "913d6a16c1d1ae4af6edefa73e4e49d42b51c346",
+       "size": 3061
+      }
+     ]
     }
    ]
   },

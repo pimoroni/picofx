@@ -11,7 +11,7 @@ Draw a lixie display that lights one engraved acrylic sheet at a time to show ea
 The engraving lets the light out, so a lit sheet reads as its digit in fine bright lines while the
 nine unlit ones stay a faint tracery. A sheet further back looks a size smaller, so the edges nest.
 
-The nine unlit sheets are drawn once into every frame's background, and the lit one straight onto it.
+Every sheet is drawn unlit into the background once a pass, and the lit one straight onto each frame.
 
 The glow goes on the frame, which is opaque, and not on any sheet.
 
@@ -76,7 +76,7 @@ SHEETS = len(ORDER)
 DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}
 SCALE_AT = tuple(DEPTH_SCALE ** depth for depth in range(SHEETS))
 
-# The nine unlit sheets, drawn once. It doubles as the scratch the measurement below uses
+# The stack of unlit sheets, drawn again only when the colour changes. It doubles as the scratch the measurement below uses
 stack = image(WIDTH, HEIGHT)
 stack.antialias = ANTIALIAS
 # The face goes on both, as a sheet is drawn onto the stack while unlit and onto the frame once lit

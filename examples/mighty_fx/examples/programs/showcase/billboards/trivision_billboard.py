@@ -23,7 +23,7 @@ HOLD = 3.0                          # How long a poster faces out before the boa
 # Shading waits for SHADE_FROM, so the steps between a channel's 16 levels
 # fall only on faces plainly turning
 SHADE_FROM = 20                     # How far a face turns before it is shaded at all, in degrees
-AMBIENT = 90                        # How lit it is by edge on, against 255 facing out
+AMBIENT = 90                        # How lit a face is once edge on, against 255 facing out
 BACKING = color.black               # Behind the slats, showing where one turns away from its neighbours
 
 # One poster to each of a slat's three faces, stretched to the board as it loads
@@ -46,7 +46,7 @@ APOTHEM = SLAT / (2 * math.sqrt(3))     # From a slat's axis out to the middle o
 
 def fitted(path):
     """
-    One file as a board-sized poster.
+    Load one file as a board-sized poster.
 
     A file smaller than the board arrives at its own size, so it is blitted up to fit.
     """
@@ -70,7 +70,7 @@ def showing(turn):
     Which faces of a slat show at this rotation, and at what angle, left to right.
 
     A slat is a three-sided prism, so at most two faces show. A face narrows by the cosine of its
-    angle and slides by the sine, which is why the wall shows through part way round.
+    angle and slides by the sine, which is why the backing shows through part way round.
     """
     faces = []
     for face in range(3):
@@ -82,7 +82,7 @@ def showing(turn):
     return faces
 
 
-# One source rect a slat and one target reused, so a frame allocates nothing
+# One source rect a slat and one target, reused every frame
 sources = [rect(slat * SLAT, 0, SLAT, canvas.height) for slat in range(SLATS)]
 target = rect(0, 0, SLAT, canvas.height)
 drawn = [None] * SLATS      # What each slat was last drawn at, so a still one is left alone

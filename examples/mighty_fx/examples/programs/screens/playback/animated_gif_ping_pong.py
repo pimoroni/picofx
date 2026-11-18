@@ -20,7 +20,7 @@ Args: Screen size = 2.8, Rotation = 90
 
 # Constants
 GIF_PATH = "/examples/pictures/pirate_coin.gif"   # The GIF to play
-HOLD = 1.0                       # Seconds to dwell at each end, both being the coin face
+HOLD = 1.0                       # Seconds to dwell at each end, since both are the coin face
 
 # Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
 # what the effects file passes in args, the size first
@@ -32,13 +32,13 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# ping_pong needs somewhere to turn around, and first_as_last needs a turn to put its extra
-# frame at, so a plain forward loop refuses both
+# first_as_last and hold= both need a turn to act at, which ping_pong gives, so a plain
+# forward loop refuses them
 try:
     player = GIFPlayer(GIF_PATH, ping_pong=True, first_as_last=True, hold=HOLD)
-except OSError:
+except (ValueError, OSError):
     mighty.shutdown()
-    raise RuntimeError(f"'{GIF_PATH}' is missing! Check it is on the board") from None
+    raise RuntimeError(f"'{GIF_PATH}' is missing or corrupt! Check it is on the board") from None
 
 # The background the file was authored over, read from its own corner
 background = player.image.get(0, 0)
@@ -46,7 +46,7 @@ background = player.image.get(0, 0)
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The screen refreshes faster than the GIF changes, so only send a new frame
+        # Check if the player has moved on, as the screen refreshes faster than the GIF changes
         if player.has_advanced():
             screen.update(player.image, bg_color=background)
 

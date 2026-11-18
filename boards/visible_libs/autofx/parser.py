@@ -9,17 +9,12 @@
 #   out3.g: blink speed=1.0 duty=0.3
 #   screenA: gif file="anim.gif"
 #
-# A [Heading: 30s] begins a scene that shows for its time. Scenes take turns, and entries
-# before the first heading are always on.
+# A [Heading: 30s] begins a scene, and entries before the first heading are always on.
+# Output settings sit left of the colon and effect settings right of it, and an entry may
+# run over several lines. A user reads output where the code says channel.
 #
-# Output settings sit left of the colon and effect settings right of it. An entry runs
-# until the next selector, so its settings may be laid over several lines. Everything a
-# user reads says output where the code says channel, a channel being a slot in a player
-# and an output the connector a channel drives.
-#
-# It knows nothing of the board beyond the example its messages give. It reports names,
-# which the loader resolves, and never raises. A line it cannot read is reported and
-# skipped, so one bad edit costs its own entry and not the whole file.
+# It reports names, which the loader resolves, and never raises. A line it cannot read is
+# reported and skipped, so one bad edit costs only its own entry.
 
 from .vocabulary import (BOARD, CHANNEL_KINDS, COLOURS, COMPONENTS, CURVES, HUB, HUB_POSITIONS,
                          OUTPUT_SETTINGS, SCREEN_SETTINGS, TILING, TILING_ALSO, TRIGGER_TIMING,
@@ -46,8 +41,8 @@ class Channel:
         self.colour = None
         self.fade = None
         self.ease = None
-        # A screen's own, sitting left of the colon with level and colour, for how it
-        # is mounted and lit and how its content is placed
+        # A screen's own, for how it is mounted and lit and how its content is placed. They are
+        # written left of the colon as an output's level and colour are
         self.rotation = None
         self.backlight = None
         self.mirror = None
@@ -138,7 +133,7 @@ def unquoted(text, char):
 
 
 def __is_number(text):
-    # A run of digits with at most one leading dash, which int() reads as written
+    # Whether the text is digits with at most one leading dash, which int() reads as written
     return (text[1:] if text[:1] == "-" else text).isdigit()
 
 
@@ -339,8 +334,7 @@ def expand(token, prefix, line, problems):
     item = token.lower()
 
     # A hub's positions are letters, so they are read apart from the numbered outputs.
-    # A bare letter or letter range after the first item carries the hub on, as a bare
-    # number does
+    # A bare letter or letter range after a hub item carries the hub on, as a bare number does
     bare = len(item) in (1, 3) and item[0].isalpha() and item[-1].isalpha() and \
         (len(item) == 1 or item[1] == "-")
     if item.startswith(HUB) or (prefix == HUB and bare):
@@ -358,7 +352,7 @@ def expand(token, prefix, line, problems):
             problems.append("line {}: '{}' is not one of r, g, b or *".format(line, suffix))
             return [], prefix
 
-    # A bare number carries the prefix the first item established
+    # A bare number carries on the name of the last item that had one
     digits = item
     while digits and not digits[0].isdigit():
         digits = digits[1:]
@@ -366,8 +360,8 @@ def expand(token, prefix, line, problems):
         prefix = item[:len(item) - len(digits)]
     elif not prefix:
         # Nothing established a name, so the correction carries whatever else was
-        # written. A bare number keeps its number and a bare component keeps that. A
-        # board that numbers no outputs takes its own LED's name in place of the number
+        # written. A bare number keeps its number and a bare component keeps that. A board
+        # that numbers no outputs takes the name of its own LED or else its first strip
         named = "out" + (digits or "1") if BOARD_EXAMPLE[0].startswith("out") \
             else BOARD_EXAMPLE[0]
         correction = named + ("." + suffix if suffix else "")
@@ -505,9 +499,9 @@ def __apply_channel_setting(channels, key, raw, line, problems):
                 setattr(channel, key, colour)
             continue
 
-        # Either curve is one value that may be written in two parts, since a light
-        # may come up and go out at its own rate. Each output may still have its own,
-        # the comma dividing those as it divides any other setting's
+        # Either curve is one value that may be written in two parts, since a light may
+        # come up and go out at its own rate. The comma still gives each output its own,
+        # as it does for any other setting
         if key in CURVES:
             other = CURVES[0] if key == CURVES[1] else CURVES[1]
             if getattr(channel, other) is not None:
@@ -659,7 +653,7 @@ def __parse_effect(tokens, line, problems, needs_effect=True):
 
 def __trigger_pairs(tokens):
     # A trigger entry's settings as (trigger, what it does, line). A word with no '=' carries
-    # on the one before it, so a scene's name needs no quotes, running on to the next trigger
+    # on the one before it, so a scene's name runs on to the next trigger and needs no quotes
     pairs = []
     for token, line in tokens:
         key, equals, value = token.partition("=")
@@ -720,8 +714,8 @@ def parse(text):
 
         entries.append(pending)
 
-    # A byte order mark is what Notepad puts at the front of a UTF-8 file. It is
-    # invisible, so it can only ever be reported as a character nobody can see
+    # A byte order mark is what Notepad's "UTF-8 with BOM" puts at the front of a file. It
+    # is invisible, so it can only ever be reported as a character nobody can see
     text = text.lstrip("\ufeff")
 
     explained = False
@@ -917,8 +911,8 @@ def __about_line(problem):
 
 def in_line_order(problems):
     """
-    In the order a reader meets them in the file, since they are found in the order
-    the work happens, everything the parser saw and then everything the loader did.
+    The problems in the order a reader meets them in the file. They arrive in the order the
+    work happens, so everything the parser saw comes before everything the loader did.
     """
     # The line is read once per problem, since MicroPython recomputes a sort key on
     # every comparison, and the position keeps one line's own order

@@ -9,7 +9,7 @@ from picovector import color, font, image, rect, shape
 Draw a nixie tube with each digit lighting up inside the glass. The digit carrying
 current glows red-orange through the anode mesh.
 
-The glass, the nine unlit cathodes and the glow at the tube's foot never change, so they are drawn
+The glass, the unlit cathodes and the glow at the tube's foot never change, so they are drawn
 once into the background every frame starts from. A frame is that background, the lit cathode
 over it, three filters, and the front of the glass.
 
@@ -267,7 +267,7 @@ def draw(showing):
 
 marked = time.ticks_ms()
 build()
-print(f"{CATHODES} cathodes drawn, the nine unlit ones into the background, in"
+print(f"{CATHODES} cathodes drawn unlit into the background, in"
       f" {time.ticks_diff(time.ticks_ms(), marked)}ms")
 
 shown = None

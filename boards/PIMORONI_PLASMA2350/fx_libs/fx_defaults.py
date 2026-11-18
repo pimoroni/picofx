@@ -2,18 +2,15 @@
 #
 # SPDX-License-Identifier: MIT
 
-# The hand-written files a fresh board writes for itself, one constant per file. Every
-# board folder has its own version of this module. EFFECTS, README and SECRETS go on the
-# FX drive and are rebuilt by fx_drive, SECRETS only on a board with a wireless module.
-# MAIN goes to the filesystem root and is rebuilt by boot.py.
-#
-# These are the only copies. Nothing ships main.py or secrets.py in the image, so a board
-# writes its own on first boot and there is no second version to drift from.
+# The hand-written files a fresh board writes for itself, one constant per file. fx_drive
+# rebuilds EFFECTS, README and SECRETS on the FX drive, SECRETS only on a board with a wireless
+# module, and boot.py rebuilds MAIN in the filesystem root. Nothing ships main.py or secrets.py
+# in the image, so these are the only copies.
 #
 # The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
 # fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
-# In single quotes, as the program it holds opens with a docstring
+# In single quotes, as the program it holds has a docstring
 MAIN = '''\
 from plasma_fx import PlasmaFX
 
@@ -28,18 +25,18 @@ Play the effects described by effects.txt on the FX drive.
 
 Plug the board into a computer and the drive appears. Edit effects.txt, eject the
 drive, and the new effects start straight away. Press "Boot" once to try an edit
-without putting the drive away, or twice to hide the drive and twice again to bring it back.
+without ejecting the drive, or twice to hide the drive and twice again to bring it back.
 
 Replace this file with your own program if you would rather write code. Deleting
-it brings this one back, and an empty one leaves the board quiet.
+it brings this one back, and an empty one leaves the board dark.
 """
 
 autofx.run(PlasmaFX, volume=fx_drive)
 '''
 
 # Exactly what the picker writes for its Rainbow look on the board's LED, so a fresh
-# board's file opens in the picker as that look. Change it with the picker's own output,
-# or the picker reads it as a file written by hand
+# board's file opens in the picker as that look. Replace it only with the picker's own
+# output, or the picker reads it as a file written by hand
 EFFECTS = """\
 # Written by the FX picker. Everything here can be edited by hand;
 # MANUAL.html on this drive explains every line.
@@ -67,8 +64,9 @@ When something is wrong, the board's LED flashes:
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
   blue, twice         something saved could not be read, or a drawing failed.
-                      "Check board" in the picker shows what. For a drawing it
-                      says so once "Boot" is pressed or this drive is ejected
+                      "Check board" in the picker, or errors.txt on this drive,
+                      says what. For a drawing it says so once "Boot" is pressed
+                      or this drive is ejected
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 

@@ -110,7 +110,7 @@ def backdrop():
     canvas.pen = brush.image(backdrop_art, placing)
     canvas.rectangle(0, 0, canvas.width, canvas.height)
 
-    # Taken down so the pens and their names read over it, the detail surviving underneath
+    # Taken down so the pens and their names read over it, while the detail survives underneath
     canvas.pen = OVERLAY.with_alpha(CALM)
     canvas.rectangle(0, 0, canvas.width, canvas.height)
 

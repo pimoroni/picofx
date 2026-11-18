@@ -9,7 +9,7 @@ from screens import Screen280
 Show a different poster on every screen of a Screen Hub and change them all together.
 
 A hub shares one SP/CE port, so panels with different pictures are sent one after another and the
-change ripples across the wall. There is no ScreenGroup, which sends one frame to every panel.
+change ripples across the wall. No ScreenGroup is used here, since a group sends one frame to every panel.
 
 One player feeds every panel. image_at() reads any frame without moving the player, so panel n
 takes the poster n along the folder and the folder is held once.
@@ -28,7 +28,7 @@ DWELL = 3.0                      # Seconds a poster is up for
 # How far the screens are turned, 0 or 180 for portrait posters, or what the effects file passes in args
 ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
 
-# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
+# Create a MightyFX object driving a Screen Hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
 # Build a screen on every hub port and keep those that answer, as a hub need not be full.

@@ -1,4 +1,4 @@
-# The packed pages fx_editor and fx_manual carry, and how each is written onto the drive
+# This module lists the packed pages fx_editor and fx_manual carry, and writes each onto the drive
 
 import binascii
 import deflate
@@ -12,7 +12,7 @@ PICKER_NAME = "PICKER.html"
 EDITOR_NAME = "EDITOR.html"
 CATALOGUE_NAME = "catalogue.js"
 
-# How much of a packed page is inflated onto the drive at a time
+# How much of a page is written to the drive at a time, inflated or as base64
 __INFLATE_CHUNK = 4096
 
 

@@ -5,7 +5,7 @@ from picovector import color, font, image, rect, shape
 from screens import SCREEN_TYPES
 
 """
-Fill the screen by doubling every pixel of a picture half its width and height.
+Fill the screen by doubling every pixel of a picture at half the screen's width and height.
 
 pixel_double= draws every source pixel as a two by two block, so an image half the panel's width
 and half its height covers all of it, for a quarter of the memory and of the pixels to convert.
@@ -20,7 +20,7 @@ Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants
-HOLD = 66                # Frames each state is held for, about three seconds
+HOLD = 66                # Frames each state is held for
 FACE_PATH = "/rom/fonts/Oswald.af"   # A vector face, so the lettering can be drawn at either size
 INSET = 3                # Border to card edge, in small-source pixels
 RING = 27                # Radius of the outlined circle, the curve doubling shows up in

@@ -66,9 +66,9 @@ class WavReader:
         if wav_file.read(4) != b"WAVE":
             raise ValueError("not a WAV file")
 
-        # Each chunk is an ID and a size, padded to an even length. Only the format and the
-        # samples are read, and anything else is stepped over, such as the LIST chunk an
-        # audio editor keeps its tags in
+        # Each chunk starts with an ID and a size, and its body is padded to an even length.
+        # Only the format and the samples are read. Anything else is stepped over, such as
+        # the LIST chunk an audio editor keeps its tags in
         has_format = False
         while True:
             header = wav_file.read(8)
@@ -102,7 +102,7 @@ class WavReader:
         if audio_format == 0xFFFE and len(fields) >= 26:
             audio_format = struct.unpack_from("<H", fields, 24)[0]
 
-        # PCM, at the two sample sizes the I2S peripheral takes
+        # Check if the audio is PCM at a sample size machine.I2S takes, 16 or 32 bits
         if audio_format != 1 or self.bits_per_sample not in (16, 32):
             raise ValueError("only 16-bit or 32-bit PCM audio is supported")
         if num_channels not in (1, 2):
@@ -110,8 +110,8 @@ class WavReader:
 
         self.format = I2S.MONO if num_channels == 1 else I2S.STEREO
 
-        # if sample_rate != 44_100 and sample_rate != 48_000:
-        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
+        # if self.sample_rate != 44_100 and self.sample_rate != 48_000:
+        #    raise ValueError(f"WAV sample rate of {self.sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
 
     def seek(self, pos):
         return self.wav_file.seek(pos + self.offset)
@@ -159,7 +159,7 @@ class WavPlayer:
     # or stopping mid-waveform would click
     FADE_MS = 40
 
-    # How long the computer's first write to the USB drive is held while a sound fades out,
+    # The longest the computer's first write to the USB drive is held while a sound fades out,
     # since each flash write stalls the audio
     WRITE_HOLD_MS = 500
 
@@ -197,7 +197,7 @@ class WavPlayer:
         self.__fade_length = 0          # The samples a fade takes at the current sound's rate
         self.__fade = 0                 # Samples still to rise from silence
         self.__fading_out = 0           # Samples still to fall to silence, the player pausing after
-        self.__holding = None           # The earlier write hold in milliseconds, restored once the sound ends
+        self.__holding = None           # The write hold the sound replaced in milliseconds, or None while it holds none
         self.__was_busy = False         # Whether the computer was writing at the last refill
         self.__writes_seen = 0          # The computer's write count at the last refill
         self.__from_drive = False       # Whether the WAV is read from the USB drive, so a write ends it
@@ -237,8 +237,8 @@ class WavPlayer:
             raise ValueError("volume out of range. Expected 0.0 to 1.0")
         self.__gain = int(volume * self.FULL_GAIN + 0.5)
 
-    # Where the file object has a changed() method, the WAV ends once the computer's writes to
-    # the USB drive finish if it answers True, and comes back otherwise
+    # Once the computer's writes to the USB drive finish, a WAV whose file object has a changed()
+    # method ends if it answers True. Otherwise the WAV comes back
     def play_wav(self, wav_file, loop=False, position=0):
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
 
@@ -328,7 +328,7 @@ class WavPlayer:
         else:
             self.__queued_scaled = bytearray(len(samples))
             self.__queued_samples = samples
-            # Standing aside for the computer's writes, the new tone waits for them too
+            # Is the player standing aside for the computer's writes? Then the new tone waits for them too
             if not self.__standing_aside:
                 self.__state = WavPlayer.PLAY
 
@@ -342,7 +342,7 @@ class WavPlayer:
             else:
                 self.__state = WavPlayer.PAUSE      # Enter the pause state on the next callback
                 self.__silent_at = self.__heard_by(self.WAV_BUFFER_LENGTH)
-        # The caller's pause from here, which the end of the computer's writes leaves alone
+        # Make this the caller's pause, which the end of the computer's writes leaves alone
         self.__standing_aside = False
 
     def resume(self):
@@ -489,7 +489,7 @@ class WavPlayer:
         return self.__mode == WavPlayer.MODE_TONE or self.__wav_file.bits_per_sample == 16
 
     def __arm_hold(self, from_drive):
-        # The computer's first write waits while the sound goes quiet
+        # Hold the computer's first write while the sound goes quiet, counting writes from now
         self.__from_drive = from_drive
         self.__stopping = False
         self.__standing_aside = False
@@ -500,7 +500,7 @@ class WavPlayer:
             self.__writes_seen = __drive_writes()
 
     def __end_hold(self):
-        # Puts back the hold the sound replaced and lets any write it held go. Read once, as
+        # Put back the hold the sound replaced and let any write it held go. Read once, as
         # the I2S callback ends the hold too and can land between a test and its use
         holding = self.__holding
         if holding is not None:
@@ -519,8 +519,8 @@ class WavPlayer:
         return arrived
 
     def __wait_out_writes(self):
-        # Quiet with the amplifier off, so the held write goes. The sound fades back in once the
-        # computer has finished, which busy turning false marks a second after its last write
+        # Let the held write go now the sound is quiet and the amplifier off. The sound resumes once
+        # busy turns false, a second after the computer's last write
         if not self.__aside_silent:
             self.__aside_silent = True
             __release_writes()
@@ -580,7 +580,7 @@ class WavPlayer:
                 # Has the computer begun writing? Its first write is held until the WAV is quiet
                 if self.__holding is not None and not self.__stopping and not self.__standing_aside \
                         and self.__write_arrived():
-                    # A WAV read from the drive ends, its reads being safe only while the write is held.
+                    # A WAV read from the drive ends, since its reads are safe only while the write is held.
                     # Any other stands aside until the computer has finished, fading out where it can
                     self.__stopping = self.__from_drive
                     self.__standing_aside = not self.__from_drive

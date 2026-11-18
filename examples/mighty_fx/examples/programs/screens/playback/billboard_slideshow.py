@@ -32,7 +32,7 @@ ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
-# A folder of images declares no delays, so the rate is named here. fps=False would leave the
+# These file names declare no delays, so the rate is named here. fps=False would leave the
 # timing out altogether and advance() would drive instead
 try:
     player = SequencePlayer(POSTERS, fps=1 / DWELL)
@@ -45,7 +45,7 @@ print(f"{player.frames} posters, {DWELL}s each")
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # Only send the poster when it changes
+        # Check if the poster has changed, as only a new one is sent
         if player.has_advanced():
             screen.update(player.image)
 

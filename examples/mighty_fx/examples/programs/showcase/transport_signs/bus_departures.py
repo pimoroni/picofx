@@ -83,7 +83,7 @@ NOTES = (("Stands A to E are on the near side of the road, past the taxi rank."
           " A time in full is as timetabled and may run early or late."))
 
 # Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
-# or what the effects file passes in args, the size first. A pair wants two of the same size. Upright
+# or what the effects file passes in args, the size first. Both ports take the same size here. Upright
 # is a television hung on its side, as signage often is, and 90 the usual way up
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
