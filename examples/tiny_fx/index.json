@@ -630,6 +630,32 @@
      "was": []
     }
    ]
+  },
+  {
+   "path": "examples/programs/wireless/cheerlights.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/wireless/cheerlights.py",
+     "size": 2497,
+     "hash": "5ff0cb7174c860b45a7738b80923172c8916ef9d",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/wireless/random.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/wireless/random.py",
+     "size": 2853,
+     "hash": "759c8f9d5b5d3bb06248d44714dc2ffcea80c181",
+     "was": []
+    }
+   ]
   }
  ]
 }

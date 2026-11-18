@@ -7,6 +7,7 @@
  "examples_index": "examples/tiny_fx/index.json",
  "examples_left_out": ["examples/programs/audio/photon_sword.py",
                        "examples/programs/audio/photon_sword"],
+ "wireless_examples": "examples/tiny_fx_w/",
  "outputs": [
   {"name": "out1", "kind": "mono"},
   {"name": "out2", "kind": "mono"},

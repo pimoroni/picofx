@@ -8,8 +8,8 @@ import {DRAW_AFTER, addStep, draw, drawFromLoad, drawSteps} from "../draw.js";
 import {drive, driveTrouble, nameShown} from "../drive.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../drive_files.js";
 import {
-  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, loadThumbs,
-  programFrom
+  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, driveHasCredentials, folderAt,
+  forgetMissingPrograms, loadThumbs, programFrom
 } from "../drive_programs.js";
 import {BOARD, VERSION} from "../looks.js";
 import {
@@ -583,7 +583,9 @@ function discoverIcon(name, className) {
 function discoverFound(kind) {
   var listed = discoverListedOn(kind);
   return {
-    waiting: Object.keys(listed).filter(function (path) { return !discover.newer[path]; }),
+    waiting: Object.keys(listed).filter(function (path) {
+      return !discover.newer[path] && discoverCanRun(kind, path);
+    }),
     updates: discoverUpdates(kind),
     newer: Object.keys(discover.newer).filter(function (path) {
       var entry = discoverEntry(path);
@@ -720,10 +722,18 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && discoverBrowsing) discoverCloseBrowser();
 });
 
+// Whether an example can run on this drive's board. As on the program tab, a program going online
+// needs the WiFi credentials on the drive
+function discoverCanRun(kind, path) {
+  return kind !== "program" || driveHasCredentials || usesOf(path).indexOf("wifi") < 0;
+}
+
 // The examples a gallery offers, as [path, name, what it does, section, kind], in name order
 function discoverOffers(kind) {
   var listed = discoverListedOn(kind);
-  return Object.keys(listed).map(function (path) {
+  return Object.keys(listed).filter(function (path) {
+    return discoverCanRun(kind, path);
+  }).map(function (path) {
     var held = listed[path];
     if (kind === "program")
       return [path, programTitle(path), held.does || "", held.section || "", "program"];

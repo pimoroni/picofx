@@ -24,6 +24,7 @@
    "examples/programs/audio/photon_sword.py",
    "examples/programs/audio/photon_sword"
   ],
+  "wireless_examples": "examples/tiny_fx_w/",
   "outputs": [
    {
     "name": "out1",
@@ -14314,7 +14315,7 @@ function discoverFound(kind) {
   var listed = discoverListedOn(kind);
   return {
     waiting: Object.keys(listed).filter(function(path) {
-      return !discover.newer[path];
+      return !discover.newer[path] && discoverCanRun(kind, path);
     }),
     updates: discoverUpdates(kind),
     newer: Object.keys(discover.newer).filter(function(path) {
@@ -14435,9 +14436,14 @@ function discoverCloseBrowser() {
 document.addEventListener("keydown", function(e) {
   if (e.key === "Escape" && discoverBrowsing) discoverCloseBrowser();
 });
+function discoverCanRun(kind, path) {
+  return kind !== "program" || driveHasCredentials || usesOf(path).indexOf("wifi") < 0;
+}
 function discoverOffers(kind) {
   var listed = discoverListedOn(kind);
-  return Object.keys(listed).map(function(path) {
+  return Object.keys(listed).filter(function(path) {
+    return discoverCanRun(kind, path);
+  }).map(function(path) {
     var held = listed[path];
     if (kind === "program")
       return [path, programTitle(path), held.does || "", held.section || "", "program"];

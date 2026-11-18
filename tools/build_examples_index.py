@@ -25,7 +25,9 @@ indexed, so an example still being written is left out until it is committed.
 versions or paths, for a release whose examples no drive has held before. A board whose
 description names no "examples_index" has none, and is passed over. A description's
 "examples_left_out" lists the drive paths of examples, and of their folders, that the board's drive
-build does not copy, so the index leaves them out too.
+build does not copy, so the index leaves them out too. A description's "wireless_examples" names a
+second folder, whose examples the wireless variant's drive build copies over the first's, and the
+index lists them too. The picker offers those that go online only to a drive holding WiFi credentials.
 """
 
 import argparse
@@ -222,11 +224,14 @@ def carried(name, hashed, size, before, gone):
     return entry
 
 
-def build(repo_dir, base, previous, left_out=()):
-    """The index, as text, for the examples under base, carrying forward the previous index."""
+def build(repo_dir, bases, previous, left_out=()):
+    """The index, as text, for the examples under each of bases, carrying forward the previous
+    index."""
     with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as handle:
         version = re.search(r'^PICOFX_VERSION = "([^"]+)"', handle.read(), re.MULTILINE).group(1)
-    files = read_files(repo_dir, base, left_out)
+    files = {}
+    for base in bases:
+        files.update(read_files(repo_dir, base, left_out))
     before = {}
     for example in (previous or {}).get("examples", []):
         for file in example["files"]:
@@ -271,7 +276,8 @@ def main():
     if os.path.exists(seed) and not args.fresh:
         with open(seed, encoding="utf-8") as handle:
             previous = json.load(handle)
-    text = build(repo_dir, base, previous, board.get("examples_left_out", ()))
+    bases = [base] + ([board["wireless_examples"]] if "wireless_examples" in board else [])
+    text = build(repo_dir, bases, previous, board.get("examples_left_out", ()))
     if args.check:
         with open(index_path, encoding="utf-8") as handle:
             if handle.read().replace("\r\n", "\n") != text:
