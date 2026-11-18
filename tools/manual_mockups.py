@@ -47,6 +47,63 @@ SETTING_ICONS = {
     "Trail": "<path d='M1.6 8h6.8M3.2 5.2h5.2M3.2 10.8h5.2'/><circle cx='12.4' cy='8' r='2.2'/>",
 }
 
+# The magnifying glasses that zoom a long strip out and in, beside how far it is zoomed
+ZOOM_OUT_ICON = ("<svg viewBox='0 0 17 17' width='13' height='13' aria-hidden='true'><circle cx='7.2' "
+                 "cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/><path d='M5 7.2 L9.4 7.2'/></svg>")
+ZOOM_IN_ICON = ("<svg viewBox='0 0 17 17' width='13' height='13' aria-hidden='true'><circle cx='7.2' "
+                "cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/><path d='M5 7.2 L9.4 7.2 M7.2 5 "
+                "L7.2 9.4'/></svg>")
+
+# The icons on the chips that filter the programs, by the chip's name, copied from FEATURES
+# in the picker's program.js with its holes() calculated
+FEATURE_ICONS = {
+    "outputs": ("<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' "
+        "r='3'/><circle class='f' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' "
+        "stroke-width='2.2'/>"),
+    "RGB": ("<circle class='f' cx='12' cy='8' r='5'/><circle cx='8' cy='15' r='5' "
+        "stroke-width='2'/><circle cx='16' cy='15' r='5' stroke-width='2'/>"),
+    "screen": ("<rect class='f' x='3' y='5' width='18' height='14' rx='2'/>"),
+    "1 or 2 screens": ("<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/><rect x='15' "
+        "y='7' width='7.5' height='10' rx='1.2' stroke-width='2'/>"),
+    "2 screens": ("<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/><rect "
+        "class='f' x='14' y='6' width='9.5' height='12' rx='1.6'/>"),
+    "hub": ("<rect class='f' x='1' y='4' width='6.3' height='7' rx='1.2'/><rect class='f' "
+        "x='8.85' y='4' width='6.3' height='7' rx='1.2'/><rect class='f' x='16.7' "
+        "y='4' width='6.3' height='7' rx='1.2'/><rect class='f' x='1' y='13' "
+        "width='6.3' height='7' rx='1.2'/><rect class='f' x='8.85' y='13' width='6.3' "
+        "height='7' rx='1.2'/><rect class='f' x='16.7' y='13' width='6.3' height='7' "
+        "rx='1.2'/>"),
+    "strip": ("<path class='f' fill-rule='evenodd' d='M1 2.5H17.5A6 6 0 0 1 17.5 14.5H6.5A1 "
+        "1 0 0 0 6.5 16.5H23V21.5H6.5A6 6 0 0 1 6.5 9.5H17.5A1 1 0 0 0 17.5 "
+        "7.5H1ZM3.15 5a1.35 1.35 0 1 0 2.7 0a1.35 1.35 0 1 0 -2.7 0M7.65 5a1.35 1.35 0 "
+        "1 0 2.7 0a1.35 1.35 0 1 0 -2.7 0M12.15 5a1.35 1.35 0 1 0 2.7 0a1.35 1.35 0 1 "
+        "0 -2.7 0M8.15 12a1.35 1.35 0 1 0 2.7 0a1.35 1.35 0 1 0 -2.7 0M12.65 12a1.35 "
+        "1.35 0 1 0 2.7 0a1.35 1.35 0 1 0 -2.7 0M9.15 19a1.35 1.35 0 1 0 2.7 0a1.35 "
+        "1.35 0 1 0 -2.7 0M13.65 19a1.35 1.35 0 1 0 2.7 0a1.35 1.35 0 1 0 -2.7 0M18.15 "
+        "19a1.35 1.35 0 1 0 2.7 0a1.35 1.35 0 1 0 -2.7 0'/>"),
+    "speaker": ("<g transform='scale(1.5)' stroke-width='1.2'><path class='fs' d='M2 "
+        "6h3l4-3v10l-4-3H2z'/><path d='M11 5.5q2 2.5 0 5M12.8 3.8q3.4 4.2 0 8.4'/></g>"),
+    "remote": ("<g transform='rotate(-35 12 12)'><path class='f' fill-rule='evenodd' d='M9.5 "
+        "7h5a2.5 2.5 0 0 1 2.5 2.5v11a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 "
+        "20.5v-11A2.5 2.5 0 0 1 9.5 7zM10.4 11a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 "
+        "0'/><path d='M9 4q3-2 6 0M7 1.2q5-3 10 0' stroke-width='2'/></g>"),
+    "Qw/ST": ("<path class='f' fill-rule='evenodd' d='M5 2h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 "
+        "2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 5.5h2v8H5zM9 5.5h2v8H9zM13 "
+        "5.5h2v8h-2zM17 5.5h2v8h-2z'/><rect class='f' x='10' y='17' width='4' "
+        "height='5.5'/>"),
+    "analog": ("<path d='M3 12h18' stroke-width='2.4'/><rect class='f' x='12' y='6' "
+        "width='5.5' height='12' rx='1.4'/>"),
+    "motors": ("<rect class='f' x='1.5' y='5' width='15' height='14' rx='3.5'/><rect "
+        "class='f' x='16.5' y='10.5' width='6' height='3' rx='1'/>"),
+    "servos": ("<rect class='f' x='4' y='10' width='16' height='11' rx='1.5'/><rect class='f' "
+        "x='1' y='13' width='22' height='3' rx='1'/><rect class='f' x='7' y='6.5' "
+        "width='4' height='4'/><path d='M9 5.5H17.5' stroke-width='3.2'/>"),
+    "Wi-Fi": ("<g transform='scale(1.5)' stroke-width='1.2'><path d='M1.5 6.5a9 9 0 0 1 13 "
+        "0M4 9a5.5 5.5 0 0 1 8 0'/><circle class='fs' cx='8' cy='12' r='1.4'/></g>"),
+    "Boot button": ("<rect x='3' y='3' width='18' height='18' rx='3'/><circle class='f' cx='12' "
+        "cy='12' r='4.5'/>"),
+}
+
 # The undo and redo arrows above a stretch bar
 UNDO_ICON = ("<svg viewBox='0 0 17 17' width='13' height='13' aria-hidden='true'><path d='M6.5 4.5 "
              "L2.5 8 L6.5 11.5'/><path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/></svg>")
@@ -223,14 +280,15 @@ def beads_apart(count):
 def head_steps(stretches, strip, standing_back):
     """
     Draw the steps at the right of a run's chip row, a strip's zoom then Undo, Redo and Join all.
-    Join all is greyed while there is one stretch, and the steps stand back in the outputs' wiring view.
+    Undo and Join all are greyed while there is one stretch, as nothing has been cut yet, and Redo
+    always is. The zoom starts out fully out, and the steps stand back in the outputs' wiring view.
     """
-    zoom = ('<span class="round">&#8722;</span><span class="dim">100%</span>'
-            '<span class="round">+</span>') if strip else ""
-    return ('<span class="headsteps{}">{}<span class="round">{}</span><span class="round">{}</span>'
-            '<span class="joinall{}">&#10231; Join all</span></span>').format(
-                " back" if standing_back else "", zoom, UNDO_ICON, REDO_ICON,
-                " off" if stretches < 2 else "")
+    zoom = ('<span class="round off">{}</span><span class="dim">100%</span>'
+            '<span class="round">{}</span>').format(ZOOM_OUT_ICON, ZOOM_IN_ICON) if strip else ""
+    return ('<span class="headsteps{}">{}<span class="round{}">{}</span><span class="round off">{}'
+            '</span><span class="joinall{}">&#10231; Join all</span></span>').format(
+                " back" if standing_back else "", zoom, " off" if stretches < 2 else "",
+                UNDO_ICON, REDO_ICON, " off" if stretches < 2 else "")
 
 
 def mockup_header(text):
@@ -239,23 +297,27 @@ def mockup_header(text):
     "Mighty FX Picker | Saved.", shows the drive as open, as the header then draws it.
     """
     title, _, status = text.partition("|")
+    # Save to board and its arrow are one split button, and both save and check wait for a drive
     if status:
-        buttons = ('<span class="button">Change drive</span><span class="button primary">Save to '
-                   'board</span>')
+        buttons = ('<span class="button">Change drive</span><span class="savesplit"><span '
+                   'class="button primary">Save to board</span><span class="button arrow">&#9662;'
+                   '</span></span><span class="button">Check board</span>')
         said = '<span class="status">{}</span>'.format(html.escape(status.strip()))
     else:
-        buttons = ('<span class="button primary">Open FX drive</span><span class="button off">Save '
-                   'to board</span>')
+        buttons = ('<span class="button primary">Open FX drive</span><span class="savesplit"><span '
+                   'class="button off">Save to board</span><span class="button arrow">&#9662;'
+                   '</span></span><span class="button off">Check board</span>')
         said = ""
-    return ('<div class="pickerhead"><b>{}</b>{}<span class="button arrow">&#9662;</span>'
-            '<span class="button">Check board</span>{}</div>').format(
-                html.escape(title.strip()), buttons, said)
+    return '<div class="pickerhead"><b>{}</b>{}{}</div>'.format(
+        html.escape(title.strip()), said, buttons)
 
 
 def mockup_save_menu():
     """Draw the menu under the arrow beside Save to board, with its first setting ticked."""
-    return ('<div class="savemenu"><span><i class="tick on"></i>Play saves without an eject'
-            '</span><span><i class="tick"></i>Keep the drive hidden at start</span></div>')
+    return ('<div class="savemenu"><span><i class="tick on"></i><span>Play saves without an eject'
+            '<small>the first save after turning this on still needs an eject</small></span></span>'
+            '<span><i class="tick"></i><span>Keep the drive hidden at start<small>double-press Boot '
+            'to show it</small></span></span></div>')
 
 
 def mockup_pages(text, scenes):
@@ -513,7 +575,8 @@ def mockup_cards(text, mono, group):
         stops = LOOK_COLOURS.get(name, [])
         faces = "".join('<span style="background:{}"></span>'.format(
             as_mono(colour) if mono else colour) for colour in stops)
-        mark = PALETTE_ICON if name in TAKES_COLOUR else ""
+        # A mono light takes no colour, so its cards carry no palette
+        mark = PALETTE_ICON if name in TAKES_COLOUR and not mono else ""
         cards.append('<span class="card{}{}"><span class="face">{}</span>'
                      '<span class="name">{}{}</span></span>'.format(
                          " picked" if selected else "", "" if stops else " nothing", faces,
@@ -800,10 +863,23 @@ def mockup_hero(text):
 
 
 def mockup_with(text):
-    """Draw the chips that filter the programs by what they use, all turned on, then all and none."""
+    """
+    Draw the chips that filter the programs by what they use, all turned on, then all and none.
+    Each chip is named as the picker names it, so it takes that chip's icon, and an empty line
+    draws all and none alone.
+    """
+    names = [name.strip() for name in text.split(",") if name.strip()]
+    for name in names:
+        # Check if the picker has this chip, since an unknown name would be drawn without its icon
+        if name not in FEATURE_ICONS:
+            sys.exit("a picker picture's with: line names {!r}, which is not one of the picker's "
+                     "chips".format(name))
+    chips = "".join('<span class="chip"><svg class="featureicon" viewBox="0 0 24 24" '
+                    'aria-hidden="true">{}</svg>{}</span>'.format(FEATURE_ICONS[name],
+                                                                  html.escape(name))
+                    for name in names)
     return '<div class="filters"><span class="dim">With:</span>{}<u>all</u><u>none</u></div>'.format(
-        "".join('<span class="chip">{}</span>'.format(html.escape(name.strip()))
-                for name in text.split(",")))
+        chips)
 
 
 def mockup_programs(heading, text):

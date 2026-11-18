@@ -37,3 +37,9 @@ installing the board's `-full` firmware from the
 [picofx releases](https://github.com/pimoroni/picofx/releases/latest).
 This erases everything on the drive, so copy off anything you want to
 keep first.
+
+For anything else, the foot of the picker, the editor and this page has two
+links. **Help** opens the Support section of the Pimoroni forum, the best place
+to ask how to do something. **Report a problem** opens a form on GitHub for
+something that isn't working as it should, with the board and its firmware
+version filled in.

@@ -2,7 +2,8 @@
 
 The quickest way to start is the picker. Open it in Chrome or Edge, with
 [[Picker]] at the top of this page or `PICKER.html` on this drive, then press
-[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Open FX drive]] and choose the drive named FX. When the browser asks whether
+the page may edit the drive's files, allow it. Choose a look from the cards and press
 [[Save to board]]. A few seconds later the drive disappears briefly, then comes
 back with your changes playing. [The picker](#the-picker) shows you everything
 else it can do.

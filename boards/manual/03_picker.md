@@ -74,15 +74,18 @@ removing anything, as every scene loses what it played there.
 
 Once the drive is open, the pictures and drawings on it appear on the
 **Screens** tab, under the screen. Press the button under a picture to show it
-there. Each screen has its own settings for the picture it shows, such as its
-backlight, rotation and position, and the timing of an animation.
+there. Each screen has its own backlight, and its own settings for the picture
+it shows, in sections on the screen's card. Orientation sets its rotation and
+mirroring, and Placement its position, tiling and pixel doubling. Background
+follows, then Playback for an animation or Drawing for a drawing.
+[Setting a screen](#setting-a-screen) and [Pictures](#pictures) explain each one.
 
 <!-- board picker_screens_picture -->
 <!-- end -->
 <!-- if screens -->
 
-To add your own, drop GIF, PNG or JPEG files or drawings onto the **add pictures
-or drawings** tile, and the picker copies them onto the drive. Each picture has a
+To add your own, press the **add pictures or drawings** tile and choose GIF, PNG
+or JPEG files or drawings, and the picker copies them onto the drive. Each picture has a
 button to delete it from the drive.
 <!-- end -->
 <!-- if two_screens -->
@@ -130,8 +133,8 @@ pictures: acrylic_lixie=1, skyline.png, gold_macaw_card.png, medscan.gif
 Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
 to play alongside the lights, or [[Nothing]] for none. [[Loop]] repeats it
 instead of playing it once, and the volume slider sets how loud the board plays
-it. To add your own, drop a WAV file onto the tab and the picker copies it onto
-the drive.
+it. To add your own, press the **add sounds** tile and choose WAV files, and the
+picker copies them onto the drive.
 
 ```picker
 sounds: *rain.wav, doorbell.wav, Nothing
@@ -233,7 +236,7 @@ wait, and "finish this first" acts when the wait is over, then does what the
 change back asks for.
 
 With a sensor fitted, a scene can wait instead of showing for a time. Choose
-"waits" in place of "shows for" on its card, and the scene stays until a button
+"waits" in place of "shows for" on its settings tab, and the scene stays until a button
 or motion changes it. A new scene waits to begin with. Without a sensor nothing
 can move a waiting scene on, and the picker warns you.
 <!-- end -->

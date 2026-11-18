@@ -46,7 +46,9 @@ stripsetup: 66
 On each strip's tab, set how many LEDs it has and its colour order. Change the
 order if red shows as another colour. [[remove]] takes off a strip you haven't
 fitted, and [[add this strip]] puts it back. An APA102 strip uses both terminals,
-so it replaces the other two. On **Screens**, set the size of
+so it replaces the other two. Its tab also has a strip brightness, about half to
+begin with, which dims the whole strip on top of each look's own level. On
+**Screens**, set the size of
 the screen.
 
 <!-- block picker_screens_picture -->
@@ -61,6 +63,8 @@ pictures: logo.png=A, sunset.jpg, waves.gif
 ```picker
 pages: Effects, *Programs=My lights
 note: my_lights.py
+hero: My lights | Play a rainbow wave along the strip. | programs/my_lights.py, on the drive
+with:
 programs On the drive | your own programs: *My lights
 ```
 

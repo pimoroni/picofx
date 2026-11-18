@@ -34,7 +34,7 @@ twinkle.
 badge: Wiring, the RGB output is one colour light
 mono: Wave 3, *Sparkle 3
 colour RGB: Rainbow 1
-settings: Sparkle, on outputs 4 to 6, Brightness 100
+settings: Sparkle, on outputs 4 to 6, Brightness 100, Speed 45
 cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
 ```
 
@@ -58,7 +58,8 @@ done.
 ```picker
 pages: Effects, *Programs=Ship thrusters
 note: ship_thrusters.py
-with: remote, Qw/ST, speaker
+hero: Ship thrusters | Play a set of flickering thruster effects on a model spaceship, with an RGB light used for planetshine underglow. | examples/programs/showcase/ship_thrusters.py, built in
+with: speaker, remote, Qw/ST, analog
 programs Model lighting | thrusters, beacons and lit postcards: Rescue vehicle, *Ship thrusters, Space tales
 ```
 

@@ -11,7 +11,8 @@ want to.
 
 The quickest way to start is the picker. Open it in Chrome or Edge, with
 [[Picker]] at the top of this page or `PICKER.html` on this drive, then press
-[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Open FX drive]] and choose the drive named FX. When the browser asks whether
+the page may edit the drive's files, allow it. Choose a look from the cards and press
 [[Save to board]]. A few seconds later the drive disappears briefly, then comes
 back with your changes playing. [The picker](#the-picker) shows you everything
 else it can do.
@@ -130,23 +131,28 @@ stripsetup: 66
 On each strip's tab, set how many LEDs it has and its colour order. Change the
 order if red shows as another colour. [[remove]] takes off a strip you haven't
 fitted, and [[add this strip]] puts it back. An APA102 strip uses both terminals,
-so it replaces the other two. On **Screens**, set the size of
+so it replaces the other two. Its tab also has a strip brightness, about half to
+begin with, which dims the whole strip on top of each look's own level. On
+**Screens**, set the size of
 the screen.
 
 ### Screens: Showing a picture
 
 Once the drive is open, the pictures and drawings on it appear on the
 **Screens** tab, under the screen. Press the button under a picture to show it
-there. Each screen has its own settings for the picture it shows, such as its
-backlight, rotation and position, and the timing of an animation.
+there. Each screen has its own backlight, and its own settings for the picture
+it shows, in sections on the screen's card. Orientation sets its rotation and
+mirroring, and Placement its position, tiling and pixel doubling. Background
+follows, then Playback for an animation or Drawing for a drawing.
+[Setting a screen](#setting-a-screen) and [Pictures](#pictures) explain each one.
 
 ```picker
 screen: 2.8 inch, logo.png
 pictures: logo.png=A, sunset.jpg, waves.gif
 ```
 
-To add your own, drop GIF, PNG or JPEG files or drawings onto the **add pictures
-or drawings** tile, and the picker copies them onto the drive. Each picture has a
+To add your own, press the **add pictures or drawings** tile and choose GIF, PNG
+or JPEG files or drawings, and the picker copies them onto the drive. Each picture has a
 button to delete it from the drive.
 
 ### Scenes: Playing one after another
@@ -214,6 +220,8 @@ how your own programs appear there.
 ```picker
 pages: Effects, *Programs=My lights
 note: my_lights.py
+hero: My lights | Play a rainbow wave along the strip. | programs/my_lights.py, on the drive
+with:
 programs On the drive | your own programs: *My lights
 ```
 
@@ -1022,6 +1030,12 @@ installing the board's `-full` firmware from the
 [picofx releases](https://github.com/pimoroni/picofx/releases/latest).
 This erases everything on the drive, so copy off anything you want to
 keep first.
+
+For anything else, the foot of the picker, the editor and this page has two
+links. **Help** opens the Support section of the Pimoroni forum, the best place
+to ask how to do something. **Report a problem** opens a form on GitHub for
+something that isn't working as it should, with the board and its firmware
+version filled in.
 
 ## More from Pimoroni
 

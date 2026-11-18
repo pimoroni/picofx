@@ -59,7 +59,20 @@
 }
 
 .mockup .pickerhead b { margin-right: auto; font-size: 0.95rem; }
-.mockup .status { order: 1; flex-basis: 100%; text-align: right; color: var(--dim); font-size: 0.78rem; }
+.mockup .savesplit { display: inline-flex; }
+.mockup .savesplit .button:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.mockup .savesplit .arrow { margin-left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* The Effects and Programs tabs hang from the header's foot, the chosen one open onto the page */
+.mockup .pickerhead:has(+ .toptabs) { margin-bottom: 0; padding-bottom: 0.5rem; border-bottom: 0; }
+.mockup .pickerhead + .toptabs {
+  margin: 0 -1.1rem 0.9rem;
+  padding: 0 1.1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.mockup .pickerhead + .toptabs .toptab { margin-bottom: -1px; }
+.mockup .status { color: var(--dim); font-size: 0.78rem; }
 
 .mockup .savemenu {
   display: flex;
@@ -73,6 +86,9 @@
   border-radius: 10px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
+.mockup .savemenu > span { display: flex; align-items: flex-start; }
+.mockup .savemenu > span .tick { flex: none; margin-top: 0.2rem; }
+.mockup .savemenu small { display: block; color: var(--dim); font-size: 0.75rem; }
 
 .mockup .tick {
   display: inline-block;
@@ -293,6 +309,7 @@
   background: #fff;
   color: var(--dim);
 }
+.mockup .round.off { opacity: 0.4; }
 
 /* A run of lights, a card for each stretch holding its lights over a band of what it plays */
 .mockup .runs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0 1rem; margin-top: 0.8rem; }
@@ -623,7 +640,10 @@
 .mockup .herothumb { flex: none; width: 8rem; height: 5.5rem; border: 6px solid #111; border-radius: 6px; }
 .mockup .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-top: 0.8rem; font-size: 0.75rem; }
 .mockup .filters u { color: #4d6170; }
-.mockup .chip { padding: 0.12rem 0.6rem; border-radius: 999px; background: #4d6170; color: #fff; font-weight: 600; }
+.mockup .chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.12rem 0.6rem; border-radius: 999px; background: #4d6170; color: #fff; font-weight: 600; }
+.mockup .featureicon { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mockup .featureicon .f { fill: currentColor; stroke: none; }
+.mockup .featureicon .fs { fill: currentColor; }
 .mockup .progcard .face { display: block; height: 5.5rem; }
 .mockup .progcard .name { display: block; padding: 0.35rem 0.5rem 0.45rem; font-size: 0.78rem; font-weight: 600; }
 .mockup .progcard.picked { border-color: #4d6170; box-shadow: 0 0 0 2px rgba(77, 97, 112, 0.25); }

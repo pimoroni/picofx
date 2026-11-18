@@ -11,7 +11,8 @@ want to.
 
 The quickest way to start is the picker. Open it in Chrome or Edge, with
 [[Picker]] at the top of this page or `PICKER.html` on this drive, then press
-[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Open FX drive]] and choose the drive named FX. When the browser asks whether
+the page may edit the drive's files, allow it. Choose a look from the cards and press
 [[Save to board]]. A few seconds later the drive disappears briefly, then comes
 back with your changes playing. [The picker](#the-picker) shows you everything
 else it can do.
@@ -105,7 +106,7 @@ twinkle.
 badge: Wiring, the RGB output is one colour light
 mono: Wave 3, *Sparkle 3
 colour RGB: Rainbow 1
-settings: Sparkle, on outputs 4 to 6, Brightness 100
+settings: Sparkle, on outputs 4 to 6, Brightness 100, Speed 45
 cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
 ```
 
@@ -142,8 +143,8 @@ done.
 Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
 to play alongside the lights, or [[Nothing]] for none. [[Loop]] repeats it
 instead of playing it once, and the volume slider sets how loud the board plays
-it. To add your own, drop a WAV file onto the tab and the picker copies it onto
-the drive.
+it. To add your own, press the **add sounds** tile and choose WAV files, and the
+picker copies them onto the drive.
 
 ```picker
 sounds: *rain.wav, doorbell.wav, Nothing
@@ -232,7 +233,7 @@ wait, and "finish this first" acts when the wait is over, then does what the
 change back asks for.
 
 With a sensor fitted, a scene can wait instead of showing for a time. Choose
-"waits" in place of "shows for" on its card, and the scene stays until a button
+"waits" in place of "shows for" on its settings tab, and the scene stays until a button
 or motion changes it. A new scene waits to begin with. Without a sensor nothing
 can move a waiting scene on, and the picker warns you.
 
@@ -249,7 +250,8 @@ how your own programs appear there.
 ```picker
 pages: Effects, *Programs=Ship thrusters
 note: ship_thrusters.py
-with: remote, Qw/ST, speaker
+hero: Ship thrusters | Play a set of flickering thruster effects on a model spaceship, with an RGB light used for planetshine underglow. | examples/programs/showcase/ship_thrusters.py, built in
+with: speaker, remote, Qw/ST, analog
 programs Model lighting | thrusters, beacons and lit postcards: Rescue vehicle, *Ship thrusters, Space tales
 ```
 
@@ -974,6 +976,12 @@ installing the board's `-full` firmware from the
 [picofx releases](https://github.com/pimoroni/picofx/releases/latest).
 This erases everything on the drive, so copy off anything you want to
 keep first.
+
+For anything else, the foot of the picker, the editor and this page has two
+links. **Help** opens the Support section of the Pimoroni forum, the best place
+to ask how to do something. **Report a problem** opens a form on GitHub for
+something that isn't working as it should, with the board and its firmware
+version filled in.
 
 ## More from Pimoroni
 

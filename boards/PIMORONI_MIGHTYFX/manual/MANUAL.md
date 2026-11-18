@@ -11,7 +11,8 @@ want to.
 
 The quickest way to start is the picker. Open it in Chrome or Edge, with
 [[Picker]] at the top of this page or `PICKER.html` on this drive, then press
-[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Open FX drive]] and choose the drive named FX. When the browser asks whether
+the page may edit the drive's files, allow it. Choose a look from the cards and press
 [[Save to board]]. A few seconds later the drive disappears briefly, then comes
 back with your changes playing. [The picker](#the-picker) shows you everything
 else it can do.
@@ -155,8 +156,11 @@ and the size of each screen.
 
 Once the drive is open, the pictures and drawings on it appear on the
 **Screens** tab, under the screen. Press the button under a picture to show it
-there. Each screen has its own settings for the picture it shows, such as its
-backlight, rotation and position, and the timing of an animation.
+there. Each screen has its own backlight, and its own settings for the picture
+it shows, in sections on the screen's card. Orientation sets its rotation and
+mirroring, and Placement its position, tiling and pixel doubling. Background
+follows, then Playback for an animation or Drawing for a drawing.
+[Setting a screen](#setting-a-screen) and [Pictures](#pictures) explain each one.
 
 ```picker
 screenmode:
@@ -165,8 +169,8 @@ screen B: 1.54 inch, pirate_coin.gif
 pictures: acrylic_lixie, skyline.png=A, gold_macaw_card.png, medscan.gif, pirate_coin.gif=B
 ```
 
-To add your own, drop GIF, PNG or JPEG files or drawings onto the **add pictures
-or drawings** tile, and the picker copies them onto the drive. Each picture has a
+To add your own, press the **add pictures or drawings** tile and choose GIF, PNG
+or JPEG files or drawings, and the picker copies them onto the drive. Each picture has a
 button to delete it from the drive.
 
 With two screens, each picture has an [[A]] and a [[B]] button, one for each
@@ -208,8 +212,8 @@ pictures: acrylic_lixie=1, skyline.png, gold_macaw_card.png, medscan.gif
 Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
 to play alongside the lights, or [[Nothing]] for none. [[Loop]] repeats it
 instead of playing it once, and the volume slider sets how loud the board plays
-it. To add your own, drop a WAV file onto the tab and the picker copies it onto
-the drive.
+it. To add your own, press the **add sounds** tile and choose WAV files, and the
+picker copies them onto the drive.
 
 ```picker
 sounds: *rain.wav, doorbell.wav, Nothing
@@ -303,7 +307,7 @@ wait, and "finish this first" acts when the wait is over, then does what the
 change back asks for.
 
 With a sensor fitted, a scene can wait instead of showing for a time. Choose
-"waits" in place of "shows for" on its card, and the scene stays until a button
+"waits" in place of "shows for" on its settings tab, and the scene stays until a button
 or motion changes it. A new scene waits to begin with. Without a sensor nothing
 can move a waiting scene on, and the picker warns you.
 
@@ -320,8 +324,8 @@ how your own programs appear there.
 ```picker
 pages: Effects, *Programs=Flip dot sign
 note: flip_dot_sign.py
-hero: Flip dot sign | Draw a flip-dot sign that spells its message by flipping one column of dots at a time. | examples/programs/showcase/retro_displays/flip_dot_sign.py, built in
-with: screen, 2 screens, hub, remote, servos
+hero: Flip dot sign | Draw a flip-dot sign on a 2.8" screen that spells its message in a sweep, each column of dots starting to flip just after the one before. | examples/programs/showcase/retro_displays/flip_dot_sign.py, built in
+with: screen, 2 screens, hub, speaker, remote, Qw/ST, analog, motors, servos
 programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
 ```
 
@@ -1376,6 +1380,12 @@ installing the board's `-full` firmware from the
 [picofx releases](https://github.com/pimoroni/picofx/releases/latest).
 This erases everything on the drive, so copy off anything you want to
 keep first.
+
+For anything else, the foot of the picker, the editor and this page has two
+links. **Help** opens the Support section of the Pimoroni forum, the best place
+to ask how to do something. **Report a problem** opens a form on GitHub for
+something that isn't working as it should, with the board and its firmware
+version filled in.
 
 ## More from Pimoroni
 

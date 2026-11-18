@@ -75,8 +75,8 @@ pictures: acrylic_lixie, skyline.png=A, gold_macaw_card.png, medscan.gif, pirate
 ```picker
 pages: Effects, *Programs=Flip dot sign
 note: flip_dot_sign.py
-hero: Flip dot sign | Draw a flip-dot sign that spells its message by flipping one column of dots at a time. | examples/programs/showcase/retro_displays/flip_dot_sign.py, built in
-with: screen, 2 screens, hub, remote, servos
+hero: Flip dot sign | Draw a flip-dot sign on a 2.8" screen that spells its message in a sweep, each column of dots starting to flip just after the one before. | examples/programs/showcase/retro_displays/flip_dot_sign.py, built in
+with: screen, 2 screens, hub, speaker, remote, Qw/ST, analog, motors, servos
 programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
 ```
 
