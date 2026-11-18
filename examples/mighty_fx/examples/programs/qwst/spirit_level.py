@@ -13,8 +13,8 @@ the board sets up as mighty.i2c.
 The bubble sits on the middle output when level and moves towards the lower side, spread
 across two outputs as it passes between them.
 
-The bubble is green while the board is level and reddens as it tilts, so a glance says
-both where it is and how far off it is. Rest the board on something and lift one edge.
+The bubble is green while the sensor is level and reddens as it tilts, so a glance says
+both where it is and how far off it is. Rest the sensor on something and lift one edge.
 
 Press "Boot" to exit the program.
 
@@ -25,11 +25,11 @@ Thumbnail: outputs level
 # Constants
 ACROSS, ALONG, THROUGH = 0, 1, 2    # The three axes the sensor measures
 
-AXIS = ALONG        # Which way of tilting the board moves the bubble
-SMOOTHING = 0.2     # How much of each reading is taken, the rest being what was there
+AXIS = ALONG        # Which way of tilting the sensor moves the bubble
+SMOOTHING = 0.2     # The share of each new reading mixed into the smoothed value
 BRIGHTNESS = 0.8    # The brightness to set the outputs
 TILT_EXTENT = 0.5   # The sideways pull, as a fraction of gravity, that reaches the end
-LEVEL_HUE = 0.333   # The hue of a level board, being green
+LEVEL_HUE = 0.333   # The hue when the sensor is level, being green
 TILTED_HUE = 0.0    # The hue at the ends of the travel, being red
 ONE_G = 16384       # What the sensor reads for gravity alone, at its default scale
 INTERVAL = 0.02     # How often to take a reading, in seconds

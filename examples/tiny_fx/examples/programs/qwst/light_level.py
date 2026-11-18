@@ -6,7 +6,7 @@ from picofx import MonoPlayer
 from picofx.mono import FlickerFX
 
 """
-Bring Tiny FX's lights up when the room gets dark, using a light sensor on Qw/ST.
+Light Tiny FX's mono outputs with a flicker when the room gets dark, using a light sensor on Qw/ST.
 
 Plug an LTR559 breakout into the Qw/ST connector, which the board sets up as tiny.i2c.
 
@@ -50,7 +50,7 @@ try:
     while not tiny.boot_pressed():
         reading = ltr.get_reading()
 
-        # The sensor has nothing new to give between its own measurements
+        # Check if the sensor has made a measurement since the last reading
         if reading is not None:
             lux = reading[BreakoutLTR559.LUX]
             print("Light level =", lux, "Lux")

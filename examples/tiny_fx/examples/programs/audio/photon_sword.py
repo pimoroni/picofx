@@ -9,7 +9,7 @@ from picofx.colour import WHITE
 Play sounds that react to motion with a Tiny FX.
 Grab yourself an MSA301 and attach it to the Qw/ST connector.
 
-This example needs the directory `photon_sword` copied over to your Tiny FX.
+This example needs the `photon_sword` directory copied to the top level of your Tiny FX's file system.
 
 Absolutely definitely not a l&%t s&^@*r.
 

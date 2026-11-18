@@ -10,7 +10,7 @@ The three lights go on output one's red, green and blue, each wired to a lamp th
 its own colour. colour/traffic_light.py has the player supply the colours instead.
 
 The lights ease on and off like the filament lamps of a real signal. The easing is set on the
-player, so it works the same for any effect.
+player, so the effect itself needs no change.
 
 Press "Boot" to exit the program.
 """

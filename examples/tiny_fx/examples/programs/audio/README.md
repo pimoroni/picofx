@@ -26,9 +26,7 @@ Play an evocative musical melody with accompanying lights on Tiny FX. Any resemb
 
 Play sounds that react to motion with a Tiny FX. Grab yourself an MSA301 and attach it to the Qw/ST connector.
 
-This example needs the directory `photon_sword` copied over to your Tiny FX.
-
 ### WAV Player
 [wav_player.py](wav_player.py)
 
-Play a WAV file saved to your Tiny FX when Boot is pressed, and stop it when Boot is pressed again. The RGB output shows when the board is ready and when the file is playing.
+Play a WAV file saved locally to Tiny FX.

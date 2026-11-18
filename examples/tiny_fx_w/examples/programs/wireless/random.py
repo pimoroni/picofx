@@ -5,7 +5,7 @@ import requests
 from tiny_fx import TinyFX
 
 """
-Show random colours and patterns obtained from the internet on Tiny FX's outputs.
+Show random colours and patterns obtained from the internet on Tiny FX W's outputs.
 
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.
 
@@ -28,7 +28,7 @@ MONO_NAMES = ("One", "Two", "Three", "Four", "Five", "Six")
 COLOUR_NAMES = ("R", "G", "B")
 CONNECTION_INTERVAL = 1.0               # The time to sleep between each connection check
 REQUEST_INTERVAL = 5.0                  # The time to sleep between each internet request
-COLOURS_URL = "https://random-flat-colors.vercel.app/api/random?count="     # Where random colours are read from, how many added on the end
+COLOURS_URL = "https://random-flat-colors.vercel.app/api/random?count="     # Where random colours are read from. The number wanted goes on the end
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board

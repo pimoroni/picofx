@@ -108,6 +108,6 @@ try:
         # This should be done as frequently as possible to avoid inputs feeling sluggish
         receiver.decode()
 
-# End the program by stopping any active systems, the receiver among them
+# End the program by stopping any active systems
 finally:
     mighty.shutdown()

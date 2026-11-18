@@ -10,7 +10,7 @@ TrafficLightFX brings no colour of its own, so the player gives each light its c
 the signal needs no coloured lamps.
 
 The lights ease on and off like the filament lamps of a real signal. The easing is set on the
-player, so it works the same for any effect.
+player, so the effect itself needs no change.
 
 Press "Boot" to exit the program.
 """

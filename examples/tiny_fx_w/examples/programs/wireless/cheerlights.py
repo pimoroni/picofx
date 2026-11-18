@@ -5,7 +5,7 @@ import requests
 from tiny_fx import TinyFX
 
 """
-Obtain the current CheerLights colour from the internet and show it on Tiny FX's RGB output.
+Obtain the current CheerLights colour from the internet and show it on Tiny FX W's RGB output.
 For more information about CheerLights, visit: https://cheerlights.com/
 
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.

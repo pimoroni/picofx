@@ -2,7 +2,7 @@
 
 These are micropython examples for the Pimoroni [Tiny FX](https://shop.pimoroni.com/products/tinyfx), a stamp-sized light and sound effects controller board for model making, construction kits, and dioramas.
 
-The examples are grouped by what they show, a folder each, and every folder has a README describing its examples.
+The examples are grouped into folders by what they show, and each folder has a README describing its examples.
 
 - [Function Examples](#function-examples)
 - [Effect Examples](#effect-examples)
@@ -16,7 +16,7 @@ The examples are grouped by what they show, a folder each, and every folder has 
 ## Function Examples
 [examples/programs/function](examples/programs/function)
 
-These are micropython examples for Tiny FX's onboard functions, being its Boot button, its sensor header and its voltage sense.
+These are micropython examples for Tiny FX's onboard functions, being its Boot button, its sensor connector and its voltage sense.
 
 
 ## Effect Examples
@@ -52,4 +52,4 @@ These are micropython examples for controlling other Tiny FX boards from this on
 ## Showcase Examples
 [examples/programs/showcase](examples/programs/showcase)
 
-This folder contains a collection of *Showcase* examples, that bring together concepts presented by the other examples to create functional projects.
+These are micropython examples that bring together what the other examples show to make complete projects.

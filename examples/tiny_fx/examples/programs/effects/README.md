@@ -86,7 +86,7 @@ Play a traffic light sequence on Tiny FX's outputs.
 ### Pelican Crossing
 [mono/pelican_crossing.py](mono/pelican_crossing.py)
 
-Play a pelican crossing sequence on five of Tiny FX's outputs, three for the traffic lights and two for the pedestrian figures.
+Play a pelican crossing on five of Tiny FX's outputs.
 
 ### Sweep
 [mono/sweep.py](mono/sweep.py)

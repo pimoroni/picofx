@@ -6,8 +6,8 @@ from picofx.mono import SweepFX
 """
 Sweep a light back and forth across Tiny FX's outputs with a trail behind it.
 
-The trail is a slow fade set on the player, so the same two lines add a trail to any
-effect. The sweep holds at each end until the trail clears.
+The trail is a slow fade set on the player, so the effect itself needs no change. The
+sweep holds at each end until the trail clears.
 
 Press "Boot" to exit the program.
 """

@@ -29,7 +29,7 @@ except ImportError:
 OUTPUT_NAMES = ("One", "Two", "Three", "Four", "Five", "Six", "Seven")
 CONNECTION_INTERVAL = 1.0               # The time to sleep between each connection check
 REQUEST_INTERVAL = 5.0                  # The time to sleep between each internet request
-COLOURS_URL = "https://random-flat-colors.vercel.app/api/random?count="     # Where random colours are read from, how many added on the end
+COLOURS_URL = "https://random-flat-colors.vercel.app/api/random?count="     # Where random colours are read from. The number wanted goes on the end
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board

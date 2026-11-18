@@ -55,7 +55,7 @@ try:
     while not mighty.boot_pressed():
         reading = ltr.get_reading()
 
-        # The sensor has nothing new to give between its own measurements
+        # Check if the sensor has made a measurement since the last reading
         if reading is not None:
             lux = reading[BreakoutLTR559.LUX]
             print("Light level =", lux, "Lux")

@@ -1,6 +1,6 @@
 # Tiny FX Micropython Function Examples <!-- omit in toc -->
 
-These are micropython examples for Tiny FX's onboard functions, being its Boot button, its sensor header and its voltage sense.
+These are micropython examples for Tiny FX's onboard functions, being its Boot button, its sensor connector and its voltage sense.
 
 - [Examples](#examples)
   - [Read Button](#read-button)

@@ -13,9 +13,9 @@ the board sets up as tiny.i2c.
 The bubble moves towards the lower side, spread across two outputs as it passes between
 them.
 
-Six outputs have no middle one, so a level board lights the middle two equally. The RGB
+Six outputs have no middle one, so a level sensor lights the middle two equally. The RGB
 output shows how far off level it is, green when level and redder as it tilts. Rest the
-board on something and lift one edge.
+sensor on something and lift one edge.
 
 Press "Boot" to exit the program.
 
@@ -26,11 +26,11 @@ Thumbnail: outputs level
 # Constants
 ACROSS, ALONG, THROUGH = 0, 1, 2    # The three axes the sensor measures
 
-AXIS = ALONG        # Which way of tilting the board moves the bubble
-SMOOTHING = 0.2     # How much of each reading is taken, the rest being what was there
+AXIS = ALONG        # Which way of tilting the sensor moves the bubble
+SMOOTHING = 0.2     # The share of each new reading mixed into the smoothed value
 BRIGHTNESS = 0.8    # The brightness to set the outputs
 TILT_EXTENT = 0.5   # The sideways pull, as a fraction of gravity, that reaches the end
-LEVEL_HUE = 0.333   # The hue of a level board, being green
+LEVEL_HUE = 0.333   # The hue when the sensor is level, being green
 TILTED_HUE = 0.0    # The hue at the ends of the travel, being red
 ONE_G = 16384       # What the sensor reads for gravity alone, at its default scale
 INTERVAL = 0.02     # How often to take a reading, in seconds

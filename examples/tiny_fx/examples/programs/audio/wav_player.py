@@ -6,7 +6,7 @@ from picofx.colour import GREEN
 Play a WAV file saved locally to Tiny FX.
 
 The RGB output is a quarter white while the board waits and green while a file plays. A
-press before the white appears is not seen, so the light says when the button is live.
+press before the white first appears is not seen, so the light says when the button is live.
 
 Press "Boot" to play the file, and again to stop it.
 """
@@ -14,7 +14,7 @@ Press "Boot" to play the file, and again to stop it.
 # Constants
 WAV_FILE = "My_File.wav"
 WAV_ROOT = "/"
-PLAYING_COLOUR = GREEN          # Bright enough to read across a room, and not a warning colour
+PLAYING_COLOUR = GREEN          # The RGB output while a file plays
 READY_COLOUR = (64, 64, 64)     # A quarter white, dim enough that playing stands out against it
 
 # Variables
@@ -27,7 +27,7 @@ try:
 
     # Loop forever
     while True:
-        # Has the boot button been tapped? Caught by interrupt, so a tap while a file starts still counts
+        # Has the Boot button been tapped? Caught by interrupt, so a tap while a file starts still counts
         if tiny.boot_taps():
             # Is nothing playing?
             if not tiny.wav.is_playing():

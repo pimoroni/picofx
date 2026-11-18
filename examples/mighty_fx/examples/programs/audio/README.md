@@ -23,4 +23,4 @@ Plays a simple boop, boop, boop, beeep countdown sound effect when you press Boo
 ### WAV Player
 [wav_player.py](wav_player.py)
 
-Play a WAV file saved to your Mighty FX when Boot is pressed, and stop it when Boot is pressed again. Output 4 shows when the board is ready and when the file is playing.
+Play a WAV file saved locally to Mighty FX.

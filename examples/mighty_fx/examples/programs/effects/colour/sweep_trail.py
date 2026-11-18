@@ -8,8 +8,8 @@ Sweep a red light back and forth across Mighty FX's outputs with a trail behind 
 the scanner a certain talking car wears across its nose.
 
 SweepFX brings no colour of its own, so the player draws it in SCANNER_COLOUR. The trail
-is a slow fade set on the player, so the same two lines add a trail to any effect. The
-sweep holds at each end until the trail clears.
+is a slow fade set on the player, so the effect itself needs no change. The sweep holds
+at each end until the trail clears.
 
 Press "Boot" to exit the program.
 """

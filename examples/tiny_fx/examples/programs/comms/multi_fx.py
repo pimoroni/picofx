@@ -16,10 +16,7 @@ Be sure to leave the red power wire disconnected / cut to avoid potential damage
 to your devices, caused by the boards all trying to power each other.
 
 All connected Tiny FX boards should be running the i2c_target.py example (save it as main.py
-to have it run from power-up), and each should have a unique address.
-
-A sound played alongside keeps up with about five other boards at an UPDATE_RATE of 30.
-More boards, or a faster rate, leave too little time to feed it.
+to have it run from power-up). Give each its own address, counting up from 68.
 
 Press "Boot" to exit the program.
 """
@@ -52,7 +49,7 @@ for i2c_tiny in i2c_tinys:
     outputs += i2c_tiny.outputs
     rgbs.append(i2c_tiny.rgb)
 
-# Create effects players to control the outputs of both boards
+# Create effect players to control the outputs of every board
 player = MonoPlayer(outputs)
 rgb_player = ColourPlayer(rgbs)
 
