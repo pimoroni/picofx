@@ -1486,6 +1486,11 @@ document.getElementById("save").onclick = async function () {
       throw differs;
     }
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
+    // Said once, where this save is the first to hide the drive
+    var hides = /\bdrive=manual\b/.test(uncommented(text)) &&
+                !/\bdrive=manual\b/.test(uncommented(running))
+      ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
+      : "";
     // Check if the board is running a program, which keeps it too busy for an eject or a press
     if (/\bprogram=/.test(uncommented(running))) {
       // Check if the file it started with lets a save restart it, as it does unless it says
@@ -1494,21 +1499,21 @@ document.getElementById("save").onclick = async function () {
         var runs = /\bprogram=/.test(uncommented(text));
         banner("Saved. The board is restarting to play this change...", "hold");
         var returned = await waitForReturn();
-        banner(!returned ? "Saved. The board is restarting to play this change."
-               : runs ? "Running the program on the board."
-               : "The board has restarted and is playing this change.");
+        banner((!returned ? "Saved. The board is restarting to play this change."
+                : runs ? "Running the program on the board."
+                : "The board has restarted and is playing this change.") + hides);
         return;
       }
       banner("Saved. The board is running a program, so press " + RESET_BUTTON +
-             " to play this change.");
+             " to play this change." + hides);
       return;
     }
     // Check if a board that plays its saves is given a program. It restarts to run it, so its
     // answer is the drive coming back
     if (errorsBefore !== undefined && /\bprogram=/.test(uncommented(text))) {
       banner("Saved. The board is restarting to run the program...", "hold");
-      banner(await waitForReturn() ? "Running the program on the board."
-             : "Saved. The board is restarting to run the program.");
+      banner((await waitForReturn() ? "Running the program on the board."
+              : "Saved. The board is restarting to run the program.") + hides);
       return;
     }
     if (errorsBefore === undefined) {
@@ -1516,14 +1521,14 @@ document.getElementById("save").onclick = async function () {
              ? "Eject the FX drive or press Boot once to play it. Future saves will play "
                + "automatically."
              : "Eject the FX drive to play it. Then double-press Boot to show the drive again "
-               + "and press 'Check board'."));
+               + "and press 'Check board'.") + hides);
       return;
     }
     banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     sayWhatHappened(await waitForBoard(was, function () {
       banner("Playing on the board. Checking for problems...", "hold");
-    }));
+    }), hides);
   } catch (e) {
     if (e.name === "QuotaExceededError") {
       // The drive is there but full, since saving first writes a temporary copy
