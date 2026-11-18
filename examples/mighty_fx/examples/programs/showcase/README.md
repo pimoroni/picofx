@@ -37,6 +37,8 @@ The billboards' posters are kept with the other example pictures in [pictures/bi
   - [Pool](#pool)
   - [Neon Corridor](#neon-corridor)
   - [Creature Eyes](#creature-eyes)
+- [Multi-Screen](#multi-screen)
+  - [Hub Clock](#hub-clock)
 - [Moving Things](#moving-things)
   - [Programmed Route](#programmed-route)
 
@@ -348,6 +350,20 @@ Walk without end down a corridor of neon, as rings of light come out of the haze
 [animated_scenes/creature_eyes.py](animated_scenes/creature_eyes.py)
 
 Draw a creature's eyes on two screens as they look around and blink. The cat, owl, goat, alien, robot and zombie each have their own eyes and their own way of looking about.
+
+<br clear="left">
+
+
+## Multi-Screen
+
+Pictures spread across two screens or a Screen Hub.
+
+### Hub Clock
+<img src="hub_clock/hub_clock.png" align="left" alt="Hub Clock">
+
+[hub_clock/hub_clock.py](hub_clock/hub_clock.py)
+
+Draw a clock in a choice of styles across a Screen Hub with one digit on each screen. Six panels show hours, minutes and seconds, and four show hours and minutes, or minutes and seconds. FACE chooses the split-flap, flip-dot, drums, lamp matrix, nixie, lixie, seven-segment or oscilloscope face, each kept in its own file in [hub_clock/clock_faces](hub_clock/clock_faces), and "Boot" steps to the next.
 
 <br clear="left">
 

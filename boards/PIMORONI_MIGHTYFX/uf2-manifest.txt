@@ -27,6 +27,8 @@ examples/programs/showcase/transport_signs/*.py
 examples/programs/showcase/retro_displays/*.py
 examples/programs/showcase/billboards/*.py
 examples/programs/showcase/animated_scenes/*.py
+examples/programs/showcase/hub_clock/*.py
+examples/programs/showcase/hub_clock/clock_faces/*.py
 examples/pictures/*.gif
 examples/pictures/*.png
 examples/pictures/billboards/portrait/*.png
