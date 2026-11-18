@@ -8,8 +8,8 @@
    "files": [
     {
      "path": "examples/drawings/acrylic_lixie.py",
-     "size": 7975,
-     "hash": "7ccad660e6d31917dbf7a64c28d8c1ce80893c3a",
+     "size": 7986,
+     "hash": "1bb550495e9a9c456cc82d2666ad99ef7aaf403d",
      "was": [
       {
        "hash": "4e5c31d9b3790b4d9bac71f6c4576de0f8c920d5",
@@ -22,6 +22,10 @@
       {
        "hash": "63e457701a5905967558559382be239ec2e29472",
        "size": 7957
+      },
+      {
+       "hash": "7ccad660e6d31917dbf7a64c28d8c1ce80893c3a",
+       "size": 7975
       },
       {
        "hash": "99e71fca9a75a354b1e4d45ed14e610a48862ea5",
@@ -70,8 +74,8 @@
    "files": [
     {
      "path": "examples/drawings/bus_departures.py",
-     "size": 15691,
-     "hash": "cde36fd13b668e0f69f35bedc4ded015695ff8f2",
+     "size": 15644,
+     "hash": "965f702609f7285d6080cda078db9fceb0868780",
      "was": [
       {
        "hash": "4261cfb12e4a1ea4560699efe9c4fe2b9e11ded0",
@@ -84,6 +88,10 @@
       {
        "hash": "a0a473dab88b74e3fb338d4ad8befd4a8a6885bc",
        "size": 15731
+      },
+      {
+       "hash": "cde36fd13b668e0f69f35bedc4ded015695ff8f2",
+       "size": 15691
       }
      ]
     },
@@ -102,8 +110,8 @@
    "files": [
     {
      "path": "examples/drawings/creature_eyes.py",
-     "size": 19125,
-     "hash": "9c5f6ec4ec93fff7475836c110c2e7d4b3e74ae8",
+     "size": 19183,
+     "hash": "463b0b02f612dcf71cb87a0515ea3f9d96ce5c9b",
      "was": [
       {
        "hash": "1f8c1ae3482f8361c6dab2aafed0654f66c33b4a",
@@ -116,6 +124,10 @@
       {
        "hash": "90613bb14c62116eddd5e30693c343415ccf648f",
        "size": 18384
+      },
+      {
+       "hash": "9c5f6ec4ec93fff7475836c110c2e7d4b3e74ae8",
+       "size": 19125
       },
       {
        "hash": "ebebe6eb3d036811ec9358235378ced2f922dcd0",
@@ -168,8 +180,8 @@
    "files": [
     {
      "path": "examples/drawings/crt_terminal.py",
-     "size": 12270,
-     "hash": "8d3d6ec81cf5cdee483b8f3120a4578e0a741018",
+     "size": 12292,
+     "hash": "83c1930ca111838d6d9d5b0ff1f40c69b1b431e7",
      "was": [
       {
        "hash": "5a6ea5326559f538ab6a88381fd8828b4f5c9d0c",
@@ -178,6 +190,10 @@
       {
        "hash": "6c696939c57da067ced91f261f630ef2e2d64ff7",
        "size": 12160
+      },
+      {
+       "hash": "8d3d6ec81cf5cdee483b8f3120a4578e0a741018",
+       "size": 12270
       },
       {
        "hash": "9ef5dcd32c772c695c9736d3f1ff166c91e9fe32",
@@ -200,12 +216,16 @@
    "files": [
     {
      "path": "examples/drawings/departures_list.py",
-     "size": 14219,
-     "hash": "9c83e8e8a63f5cbeb9cc2d6956b3df7cf023d877",
+     "size": 14245,
+     "hash": "6e16f24e4664c56f09c49bff34c2dd86ed1d4936",
      "was": [
       {
        "hash": "109314f568a96f57598abcab10fa41e62f989aa7",
        "size": 14175
+      },
+      {
+       "hash": "9c83e8e8a63f5cbeb9cc2d6956b3df7cf023d877",
+       "size": 14219
       }
      ]
     },
@@ -224,9 +244,14 @@
    "files": [
     {
      "path": "examples/drawings/fireplace.py",
-     "size": 7288,
-     "hash": "b9f8e698a60dad6167ba1975b0d5341550786a00",
-     "was": []
+     "size": 7365,
+     "hash": "fc9d382fb137e6fd1578d1533b2b56646d49eb0c",
+     "was": [
+      {
+       "hash": "b9f8e698a60dad6167ba1975b0d5341550786a00",
+       "size": 7288
+      }
+     ]
     },
     {
      "path": "examples/drawings/fireplace.png",
@@ -243,9 +268,13 @@
    "files": [
     {
      "path": "examples/drawings/flip_dot_sign.py",
-     "size": 9101,
-     "hash": "0385b8af5ac0cde09d90f645f6cd3e84950907a3",
+     "size": 9172,
+     "hash": "65898969047d36b637c488f0fe6bbd3bc77057ac",
      "was": [
+      {
+       "hash": "0385b8af5ac0cde09d90f645f6cd3e84950907a3",
+       "size": 9101
+      },
       {
        "hash": "3fde9ac7e6f58a88514d935fdf1a2fbff278aebc",
        "size": 8982
@@ -279,9 +308,13 @@
    "files": [
     {
      "path": "examples/drawings/lamp_matrix.py",
-     "size": 15277,
-     "hash": "10289b9c86e64399a5779cf3a98aee3f127b89ef",
+     "size": 15228,
+     "hash": "b46e6433c5de66e3e80f7be7801a4f4285f25988",
      "was": [
+      {
+       "hash": "10289b9c86e64399a5779cf3a98aee3f127b89ef",
+       "size": 15277
+      },
       {
        "hash": "516cabcd8724e9a8123c14570147318b822b1b81",
        "size": 15299
@@ -321,8 +354,8 @@
    "files": [
     {
      "path": "examples/drawings/laser_show.py",
-     "size": 9464,
-     "hash": "eabfd70f88310f7fb9574820944e4441a3dc1b17",
+     "size": 9486,
+     "hash": "0bca6eb2b515f6ccf6281638365b9073eb5a90bb",
      "was": [
       {
        "hash": "80630c59ab510313fa4ab96330284f8075041aba",
@@ -331,6 +364,10 @@
       {
        "hash": "ba73021ffb502c2574fd90e0e5f4993b803c75a0",
        "size": 9239
+      },
+      {
+       "hash": "eabfd70f88310f7fb9574820944e4441a3dc1b17",
+       "size": 9464
       }
      ]
     },
@@ -349,9 +386,13 @@
    "files": [
     {
      "path": "examples/drawings/neon_corridor.py",
-     "size": 14400,
-     "hash": "4b747799d81a59e1cdd86121bd55a0574508ac98",
+     "size": 14418,
+     "hash": "01ef64b5f194361fc21a86577300adb9964d1c06",
      "was": [
+      {
+       "hash": "4b747799d81a59e1cdd86121bd55a0574508ac98",
+       "size": 14400
+      },
       {
        "hash": "53e69a5b41684c362f6649266560b0acc312cc27",
        "size": 14422
@@ -401,8 +442,8 @@
    "files": [
     {
      "path": "examples/drawings/nixie_tube.py",
-     "size": 13364,
-     "hash": "ee0718d77be56b1cb076ada2f7951d8bd92879b0",
+     "size": 13387,
+     "hash": "28f9cef5ae10b41c89ed40730622b19d5509fac6",
      "was": [
       {
        "hash": "4a5c529aef6c63af2c8f75345c3b7d6a946dcce2",
@@ -423,6 +464,10 @@
       {
        "hash": "d4d2e8c41638e3665fc1481d831440a5bb173f71",
        "size": 13439
+      },
+      {
+       "hash": "ee0718d77be56b1cb076ada2f7951d8bd92879b0",
+       "size": 13364
       }
      ]
     },
@@ -441,9 +486,13 @@
    "files": [
     {
      "path": "examples/drawings/odometer.py",
-     "size": 12571,
-     "hash": "a6b92eeb5114b1abc9115c3c2f0e3842a142e4f3",
+     "size": 12633,
+     "hash": "a141746f6205963301af7fbac585d4fe79849ce1",
      "was": [
+      {
+       "hash": "a6b92eeb5114b1abc9115c3c2f0e3842a142e4f3",
+       "size": 12571
+      },
       {
        "hash": "d2b07a4c70be878b6119e854ee1e4eb14052563d",
        "size": 12594
@@ -469,8 +518,8 @@
    "files": [
     {
      "path": "examples/drawings/oscilloscope.py",
-     "size": 9593,
-     "hash": "86110cfc4bca717af036070da0986b5963f54f49",
+     "size": 9654,
+     "hash": "b14a5e2ac29aeb71587a522c4117b894c71c58ae",
      "was": [
       {
        "hash": "0234e7a5f92099afa9ed7778098cc7d4cecf61b4",
@@ -483,6 +532,10 @@
       {
        "hash": "7f0d8ccc0b26d90fae93095084a39b30f36e77d3",
        "size": 9828
+      },
+      {
+       "hash": "86110cfc4bca717af036070da0986b5963f54f49",
+       "size": 9593
       },
       {
        "hash": "d0d7757a277be2adc31bd7b1410d048b66c939cd",
@@ -505,12 +558,16 @@
    "files": [
     {
      "path": "examples/drawings/pool.py",
-     "size": 9443,
-     "hash": "35c7ca4ca42294e6ae0d3b37b28196b4e0e661f5",
+     "size": 9451,
+     "hash": "0312a9d5bb9bde578cd8fd43c3f7245f65fd6d73",
      "was": [
       {
        "hash": "0c0118a162bbb730bdce22de8745d14f49b14ef6",
        "size": 9384
+      },
+      {
+       "hash": "35c7ca4ca42294e6ae0d3b37b28196b4e0e661f5",
+       "size": 9443
       }
      ]
     },
@@ -535,9 +592,13 @@
    "files": [
     {
      "path": "examples/drawings/portal.py",
-     "size": 16985,
-     "hash": "237120209e05e0654ecc1af7b434b4f747a0b488",
+     "size": 17044,
+     "hash": "aded91cbec34d7a83709dce419e2bfcb45099561",
      "was": [
+      {
+       "hash": "237120209e05e0654ecc1af7b434b4f747a0b488",
+       "size": 16985
+      },
       {
        "hash": "5c4d37491148e3094e5574d506e8cd4775bdf636",
        "size": 17234
@@ -594,8 +655,8 @@
    "files": [
     {
      "path": "examples/drawings/roadworks_sign.py",
-     "size": 9192,
-     "hash": "d63f5d56c45a703ddb86094e992c037030bb6fe0",
+     "size": 9145,
+     "hash": "b0171e384ae3b12bc1e2586405dd636e6b09d87b",
      "was": [
       {
        "hash": "3362c76efb52d139a11efa40f2f0434b31a582ce",
@@ -604,6 +665,10 @@
       {
        "hash": "cebfdd8a06093b66121b2893464fe7a9c919285e",
        "size": 9188
+      },
+      {
+       "hash": "d63f5d56c45a703ddb86094e992c037030bb6fe0",
+       "size": 9192
       },
       {
        "hash": "daa7e608f785a8a0ba6a32a75c980bf7f8ed29b8",
@@ -630,8 +695,8 @@
    "files": [
     {
      "path": "examples/drawings/segment_clock.py",
-     "size": 13464,
-     "hash": "d72467738be9e4b9ec0a57b146a41a2e20facd1b",
+     "size": 13505,
+     "hash": "486c3cc1757703b9af840585373d5677d21c22b6",
      "was": [
       {
        "hash": "82b11ff328528ffc352172360edef0d6ad8826ee",
@@ -644,6 +709,10 @@
       {
        "hash": "9b091d8631d0d97c6df46668aae537f63225f183",
        "size": 12133
+      },
+      {
+       "hash": "d72467738be9e4b9ec0a57b146a41a2e20facd1b",
+       "size": 13464
       },
       {
        "hash": "e518d2e5503a5c910f947ee6fa35e3811b122906",
@@ -682,8 +751,8 @@
    "files": [
     {
      "path": "examples/drawings/segment_sign.py",
-     "size": 14084,
-     "hash": "f98d7d4000cb0f90f156d37661bde5fc355e5917",
+     "size": 14115,
+     "hash": "8e21747a93471b9a9cbbe7cf0907afb57db5e318",
      "was": [
       {
        "hash": "0f7a0501f66793dd1e9ad77adb0e6e6f72ef679d",
@@ -704,6 +773,10 @@
       {
        "hash": "846e269d858653bf4f0e6d7f35aeeb6679b4376e",
        "size": 13576
+      },
+      {
+       "hash": "f98d7d4000cb0f90f156d37661bde5fc355e5917",
+       "size": 14084
       }
      ]
     },
@@ -728,9 +801,13 @@
    "files": [
     {
      "path": "examples/drawings/split_flap_clock.py",
-     "size": 10684,
-     "hash": "1c1e846d7e3f98ad657278aa07fe7a53ae671241",
+     "size": 10764,
+     "hash": "fffb239483f8e093d7209f21ada63c8e0d6e5044",
      "was": [
+      {
+       "hash": "1c1e846d7e3f98ad657278aa07fe7a53ae671241",
+       "size": 10684
+      },
       {
        "hash": "33e1ec6d1c55ffe6ca3851cf82241b2bafd90ea0",
        "size": 10570
@@ -760,8 +837,8 @@
    "files": [
     {
      "path": "examples/drawings/split_flap_departures.py",
-     "size": 15551,
-     "hash": "7a9fb27a36884c2877da4e7b0a4ae5979877d83b",
+     "size": 15613,
+     "hash": "ebedf326d96d078058007b0d58040f53c98cf438",
      "was": [
       {
        "hash": "2f0b578114ee6135f6a70f40b571c8b69285aa39",
@@ -770,6 +847,10 @@
       {
        "hash": "4f53269b0bd07d63ca0ebe70eb28f66050594093",
        "size": 15476
+      },
+      {
+       "hash": "7a9fb27a36884c2877da4e7b0a4ae5979877d83b",
+       "size": 15551
       }
      ]
     },
@@ -788,8 +869,8 @@
    "files": [
     {
      "path": "examples/drawings/street_billboard.py",
-     "size": 5183,
-     "hash": "985718ae489c3403e7b6866ed55e815d952fb21d",
+     "size": 5263,
+     "hash": "551c67b6f8d67ef83c8fd898653c83ca52cffe17",
      "was": [
       {
        "hash": "0aa05fd2cf413d9c52e53efbdd0784a152522582",
@@ -798,6 +879,10 @@
       {
        "hash": "4e01ada4cc6b2bd90d507a1c0045394872cfd0e4",
        "size": 4416
+      },
+      {
+       "hash": "985718ae489c3403e7b6866ed55e815d952fb21d",
+       "size": 5183
       }
      ]
     },
@@ -882,12 +967,16 @@
    "files": [
     {
      "path": "examples/drawings/trivision_billboard.py",
-     "size": 6216,
-     "hash": "bde748639ccb068b55728fdf3ffa2c70ead5b316",
+     "size": 6241,
+     "hash": "4128bce94de22b9fa52c1cb02e7de85f0271e36a",
      "was": [
       {
        "hash": "0fce47c3f5c970bd320a36b9881ff7461c9dedd9",
        "size": 6075
+      },
+      {
+       "hash": "bde748639ccb068b55728fdf3ffa2c70ead5b316",
+       "size": 6216
       }
      ]
     },
@@ -7688,8 +7777,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/flip_dot_sign.py",
-     "size": 9398,
-     "hash": "4296890d98ba64c9447cfe7c6a8e589123a066a4",
+     "size": 9413,
+     "hash": "8de888f01e124d68ed073acd17fb2fca5568941c",
      "was": [
       {
        "hash": "0319059e1200651dddf3185f3cd2e76e7c21f21b",
@@ -7706,6 +7795,10 @@
       {
        "hash": "1bec92eee4a831cbec619e180923a982e45aaaad",
        "size": 9207
+      },
+      {
+       "hash": "4296890d98ba64c9447cfe7c6a8e589123a066a4",
+       "size": 9398
       },
       {
        "hash": "5255881c1cbd6f1ba757570e6dd397dd5b30715f",
@@ -8126,8 +8219,8 @@
    "files": [
     {
      "path": "examples/programs/showcase/retro_displays/split_flap_clock.py",
-     "size": 11569,
-     "hash": "be21df79b9da3f2521a408ae8adf68f72da11971",
+     "size": 11579,
+     "hash": "e74e3876c5d154262483c16ec7ba34f43ef0015e",
      "was": [
       {
        "hash": "1551ad2c80f4b8249bb5da2d8bc2a6e4eda67266",
@@ -8164,6 +8257,10 @@
       {
        "hash": "9e87f90136731277aa03aabe71d2eea5f541cc53",
        "size": 11208
+      },
+      {
+       "hash": "be21df79b9da3f2521a408ae8adf68f72da11971",
+       "size": 11569
       },
       {
        "hash": "c12117634222555365bbb139b646522e18a25481",
