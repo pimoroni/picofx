@@ -140,9 +140,9 @@ To delete one of your own programs from the drive, press the cross in the
 corner of its card. One in `programs` takes its pictures with it.
 
 A board with a wireless module keeps `secrets.py` directly on the drive for
-your WiFi network's name and password, and restores an empty one if it is
-deleted. Programs that go online, importing `network` or `requests`, are listed
-only when the drive has that file.
+your WiFi network's name and password and your [time zone](#time-zones), and
+restores an empty one if it is deleted. Programs that go online, importing
+`network` or `requests`, are listed only when the drive has that file.
 <!-- if examples -->
 An example is listed only in the section it names.
 `examples/programs/sections.txt` sets the order of the sections, one per line:
@@ -152,6 +152,61 @@ its name, then a `|` and a description.
 A file whose opening string has a `Drawing:` line is [a
 drawing](#drawing-from-code), so it is not listed.
 <!-- end -->
+
+### Time zones
+
+Programs that show the time of day take your time zone from `TIME_ZONE` in
+`secrets.py`, such as `TIME_ZONE = "uk"`. Left empty, they show UTC. Where a
+zone has summer time, the clock changes on the right dates by itself.
+
+| Name | Places | Time | Summer time |
+| --- | --- | --- | --- |
+| `american_samoa` | American Samoa | UTC-11 | no |
+| `hawaii` | Hawaii | UTC-10 | no |
+| `alaska` | Alaska | UTC-9 | yes |
+| `pacific` | US & Canada Pacific | UTC-8 | yes |
+| `arizona` | Arizona | UTC-7 | no |
+| `mountain` | US & Canada Mountain | UTC-7 | yes |
+| `mexico` | Mexico City | UTC-6 | no |
+| `central` | US & Canada Central | UTC-6 | yes |
+| `colombia` | Colombia, Peru & Panama | UTC-5 | no |
+| `cuba` | Cuba | UTC-5 | yes |
+| `eastern` | US & Canada Eastern | UTC-5 | yes |
+| `venezuela` | Venezuela, Bolivia & Puerto Rico | UTC-4 | no |
+| `atlantic` | Atlantic Canada | UTC-4 | yes |
+| `newfoundland` | Newfoundland | UTC-3:30 | yes |
+| `brazil` | Brazil & Argentina | UTC-3 | no |
+| `cape_verde` | Cape Verde | UTC-1 | no |
+| `azores` | Azores | UTC-1 | yes |
+| `utc` | UTC | UTC | no |
+| `uk` | UK, Ireland & Portugal | UTC | yes |
+| `west_africa` | West Africa | UTC+1 | no |
+| `central_europe` | Central Europe | UTC+1 | yes |
+| `eastern_europe` | Eastern Europe | UTC+2 | yes |
+| `egypt` | Egypt | UTC+2 | yes |
+| `south_africa` | South Africa | UTC+2 | no |
+| `moscow` | Moscow, Turkey & Saudi Arabia | UTC+3 | no |
+| `iran` | Iran | UTC+3:30 | no |
+| `gulf` | UAE & Oman | UTC+4 | no |
+| `pakistan` | Pakistan | UTC+5 | no |
+| `india` | India & Sri Lanka | UTC+5:30 | no |
+| `nepal` | Nepal | UTC+5:45 | no |
+| `bangladesh` | Bangladesh | UTC+6 | no |
+| `indochina` | Thailand, Vietnam & Jakarta | UTC+7 | no |
+| `china` | China, Singapore & Perth | UTC+8 | no |
+| `japan` | Japan & Korea | UTC+9 | no |
+| `darwin` | Darwin | UTC+9:30 | no |
+| `adelaide` | Adelaide | UTC+9:30 | yes |
+| `brisbane` | Brisbane | UTC+10 | no |
+| `sydney` | Sydney, Melbourne & Hobart | UTC+10 | yes |
+| `solomon` | Solomon Islands & New Caledonia | UTC+11 | no |
+| `fiji` | Fiji | UTC+12 | no |
+| `nz` | New Zealand | UTC+12 | yes |
+| `samoa_tonga` | Samoa & Tonga | UTC+13 | no |
+| `line_islands` | Kiribati Line Islands | UTC+14 | no |
+
+A place not listed can use a zone with the same time, but its clock may be an
+hour out for part of the year.
 
 <!-- if examples -->
 ### What is already on the board
