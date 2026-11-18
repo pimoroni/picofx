@@ -67,9 +67,10 @@ export function removeButton(what, act) {
     // The click goes no further, since what holds the button may pick itself on a click
     onclick: function (event) {
       event.stopPropagation();
-      // Check if there are scenes to lose it, since nothing brings back what they played on it
+      // Check if there are scenes to lose it, since adding it back leaves their settings for it empty
       if (state.scenes.length &&
-          !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
+          !confirm("Remove this " + what + " from every scene? You can add it back later, but " +
+                   "each scene's settings for it will be gone.")) return;
       act();
     }
   }, "remove");

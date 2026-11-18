@@ -10952,7 +10952,7 @@ function removeButton(what, act) {
     // The click goes no further, since what holds the button may pick itself on a click
     onclick: function(event) {
       event.stopPropagation();
-      if (state.scenes.length && !confirm("Remove this " + what + " from every scene? This cannot be undone.")) return;
+      if (state.scenes.length && !confirm("Remove this " + what + " from every scene? You can add it back later, but each scene's settings for it will be gone.")) return;
       act();
     }
   }, "remove");
