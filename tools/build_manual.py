@@ -111,7 +111,15 @@ def inline(text):
     escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
     escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
     escaped = BUTTON.sub(button, escaped)
-    return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', escaped)
+    return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", link_markup, escaped)
+
+
+def link_markup(found):
+    """Mark up a link, so one to another site opens in a new tab like the picker's."""
+    text, target = found.group(1), found.group(2)
+    if re.match(r"https?://", target):
+        return '<a href="{}" target="_blank" rel="noopener">{}</a>'.format(target, text)
+    return '<a href="{}">{}</a>'.format(target, text)
 
 
 def mark(role, text):
