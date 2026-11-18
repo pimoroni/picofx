@@ -822,10 +822,17 @@ function featureFilter() {
              }, featureIcon(feature[0]), feature[2]);
            }),
            // Buttons to turn every chip on, or every chip off to then turn on what is to hand. They
-           // are kept together in one box where the row wraps
+           // are kept together in one box where the row wraps, and leave the gallery's own chips be
            h("div", {className: "featureclears"},
-             [["all", function () { return []; }],
-              ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
+             [["all", function () {
+                return unhad.filter(function (key) {
+                  return !chips.some(function (feature) { return feature[0] === key; });
+                });
+              }],
+              ["none", function () {
+                return unhad.concat(chips.map(function (feature) { return feature[0]; })
+                  .filter(function (key) { return unhad.indexOf(key) < 0; }));
+              }]]
                .map(function (one) {
                  return h("button", {
                    type: "button", className: "featureclear",
