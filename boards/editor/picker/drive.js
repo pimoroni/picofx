@@ -72,8 +72,13 @@ var BOARD_AWAY_MS = 30000;
 
 var BOARD_POLL_MS = 250;
 
+// The file with each line's comment cut off, so a setting in a comment is not taken as set
+export function uncommented(text) {
+  return text.split("\n").map(function (line) { return line.split("#")[0]; }).join("\n");
+}
+
 export function playsItself(text) {
-  return !/\breload\s*=\s*manual\b/i.test(text);
+  return !/\breload\s*=\s*manual\b/i.test(uncommented(text));
 }
 
 // The marker a save writes into errors.txt for the board to clear. It must match the editor's, as

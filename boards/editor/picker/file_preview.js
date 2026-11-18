@@ -2,7 +2,8 @@ import {banner, reportedSave, saving, setReportedSave} from "./banner.js";
 import {DRAW_AFTER, addStep, drawParts, drawSteps} from "./draw.js";
 import {
   CAN_REACH_A_DRIVE, CHECKING, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking, openDrive,
-  overwriteQuestion, playsItself, readErrors, sayWhatHappened, waitForBoard, waitForReturn
+  overwriteQuestion, playsItself, readErrors, sayWhatHappened, uncommented, waitForBoard,
+  waitForReturn
 } from "./drive.js";
 import {BOARD} from "./looks.js";
 import {NOTHING_PLAYING, currentText} from "./writing.js";
@@ -133,17 +134,20 @@ document.getElementById("save").onclick = async function () {
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
+    // What each file sets, with a setting written in a comment left out
+    var setNow = uncommented(text);
+    var setBefore = uncommented(onBoard);
     // Said once, where this save is the first to hide the drive
-    var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
+    var hides = /\bdrive=manual\b/.test(setNow) && !/\bdrive=manual\b/.test(setBefore)
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
     // Check if the board is running a program. A program keeps it busy, so neither an eject nor a
     // press of Boot reaches it
-    if (/\bprogram=/.test(onBoard)) {
+    if (/\bprogram=/.test(setBefore)) {
       // Check if the file it started with lets a save restart it, as it does unless it says
       // reload=manual. The board then reads the new file as at power on
       if (playsItself(onBoard)) {
-        var running = /\bprogram=/.test(text);
+        var running = /\bprogram=/.test(setNow);
         banner("Saved. The board is restarting to play this change...", "hold");
         var returned = await waitForReturn();
         banner((!returned ? "Saved. The board is restarting to play this change."
@@ -158,7 +162,7 @@ document.getElementById("save").onclick = async function () {
       return;
     }
     // Check if a board that plays each save itself is given a program
-    if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
+    if (errorsBefore !== undefined && /\bprogram=/.test(setNow)) {
       // The board restarts to run the program, so its answer is the drive coming back
       banner("Saved. The board is restarting to run the program...", "hold");
       banner((await waitForReturn() ? "Running the program on the board."
