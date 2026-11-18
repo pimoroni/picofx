@@ -74,11 +74,11 @@ NOTES = (("Stands A to E are on the near side of the road, past the taxi rank."
          ("A time counting down is a tracked vehicle."
           " A time in full is as timetabled and may run early or late."))
 
-# The canvas is the size of the screen, as the effects file turns it. Upright is a television hung on
-# its side, as signage often is, and 90 the usual way up
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled.
+# Upright is a television hung on its side, as signage often is, and 90 the usual way up
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a smaller canvas, such as one pixel doubled
 SCALE = min(1, min(WIDTH, HEIGHT) / 240)
 (LETTER_H, TITLE_H, STATUS_H, STRIP_H, NOTE_H, MARGIN, PAD, ROW_PAD, ROW_DROP, GAP, CORNER, TITLE_GAP,
  LIST_GAP) = (max(1, round(length * SCALE)) for length in (LETTER_H, TITLE_H, STATUS_H, STRIP_H, NOTE_H, MARGIN, PAD,
@@ -302,7 +302,6 @@ def draw():
     A frame is the whole board, the header band, the column headings, a page of the listing and the note.
     """
     global shown
-    # Nothing on the board moves, so it is only drawn again when the minute or the page changes
     now = board_minute(ticks)
     frame = (now, int(ticks // (PAGE_HOLD * 1000)))
     # Is this what the screen already shows?

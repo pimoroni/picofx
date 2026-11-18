@@ -205,7 +205,7 @@ def falling(flap, from_index, to_index, part):
 
 
 def clock_now(elapsed):
-    """The time the board is showing, counted on from CLOCK_START."""
+    """Calculate the time the board is showing, counted on from CLOCK_START."""
     elapsed //= 1000
     hours, minutes, seconds = CLOCK_START
     total = (hours * 3600 + minutes * 60 + seconds + elapsed) % 86400

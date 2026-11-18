@@ -2,13 +2,12 @@ import random
 from picovector import color, image, rect, shape, vec2
 
 """
-Draw a three-line fourteen-segment LED sign in a brushed metal case.
-A row too long for its window scrolls through it.
+Draw a three-line fourteen-segment LED sign in a brushed metal case, or with its windows bare
+on black. A row too long for its window scrolls through it.
 
 Fourteen segments split a seven-segment digit's middle bar in two and add a vertical in two
 halves and four diagonals, which is enough to spell. Every segment, lit or not, is drawn once into
 the background every frame starts from, so an unlit one still shows faintly through the window.
-METAL_CASE = False leaves the windows bare on black.
 
 Drawing: Segment sign
 Defaults: Rotation = 90
@@ -106,11 +105,11 @@ LIGHTS = {
 }
 LIGHTS = {character: tuple(names.split()) for character, names in LIGHTS.items()}
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
-# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a smaller canvas, such as one pixel doubled
 PANEL_SCALE = min(1, min(WIDTH, HEIGHT) / 240)
 BORDER, WINDOW_GAP, WINDOW_PAD = (round(length * PANEL_SCALE) for length in (BORDER, WINDOW_GAP, WINDOW_PAD))
 CORNER = CORNER * PANEL_SCALE

@@ -3,8 +3,8 @@ from picovector import color, image, rect, shape
 
 """
 Draw a laser show of beams fanning and sweeping across a dark hall. Each scene runs a few
-seconds, switching its projectors on and off as it goes. An upright panel, like a square 1.54" one,
-has room for the outer two projectors only.
+seconds, switching its projectors on and off as it goes. An upright or square panel has room for
+the outer two projectors only.
 
 A beam is a line from its projector to the edge of the panel, a wide faint glow under a thin
 bright core. Each frame dims the last a little before drawing, so a sweeping beam leaves a fading
@@ -20,7 +20,7 @@ SCENE_SECONDS = 6                           # How long each scene runs
 SWITCH_SECONDS = 1.5                        # How long the projectors stay switched as they are, within a scene
 DIM = 90                                    # How much of the last frame dims away over DIM_MS, of 255, more giving a shorter afterglow
 DIM_MS = 125                                # The time DIM is taken over, an eighth of a second
-DIM_LEAST = 17                              # The faintest dim laid at once, one of the screens' 16 levels
+DIM_LEAST = 17                              # The faintest dim laid at once, the step between the screens' 16 levels
 # The angles in degrees each projector fires across, left, middle and right, 0 being straight up and positive
 # to the right. The outer two fire into the hall, leaning only a little towards their own wall
 ARCS = ((-15, 70), (-70, 70), (-70, 15))
@@ -46,7 +46,7 @@ LENS = 3                                    # A projector's lens radius
 RAISED = 6                                  # How far above the panel's foot a beam starts, a projector's housing reaching down to it
 HOUSING_W = 16                              # Across a projector's housing
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 NARROW = WIDTH <= HEIGHT            # Whether the hall is too narrow for the middle projector, being upright or square
@@ -169,7 +169,7 @@ canvas.clear()
 
 def draw():
     """
-    Draw the show for the time the drawing has played, the afterglow fading by time whatever the frame rate.
+    Draw the show for the time the drawing has played. The afterglow fades by time, whatever the frame rate.
 
     A frame is the last one dimmed into the hall, then the beams of the scene running now.
     """

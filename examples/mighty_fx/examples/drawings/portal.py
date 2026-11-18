@@ -3,10 +3,9 @@ import random
 from picovector import color, image, rect, shape, vec2
 
 """
-Draw a glowing portal with arms spiralling into a dark opening and specks of light
-falling in. Each arm dims to black before the opening, so it seems to fall away without
-end. SCHEME chooses its colours, violet, ember, ice or emerald, and STONES = True sets it
-into a stone wall.
+Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in.
+Each arm dims to black before the opening, so it seems to fall away without end. It glows violet,
+ember, ice or emerald, with a round or oval rim, set into a stone wall or alone on black.
 
 RIM_WIDTH and RIM_HEIGHT size the portal to a cutout in front of the panel, and by default it is as
 large as fits. Each frame dims the opening a little before drawing, so the motes leave fading streaks.
@@ -24,10 +23,10 @@ SCHEME = "violet"                   # The portal's colours, a name from SCHEMES,
 STONES = True                       # Whether the portal is set into a stone wall, unless the entry's style says bare
 RIM_WIDTH = None                    # Panel pixels across the rim, None for as large as fits
 RIM_HEIGHT = None                   # And down it
-OVAL = False                        # Whether the rim stretches to fill a panel wider than it is tall, unless the entry's style says round
+OVAL = False                        # Whether the rim stretches to the panel's shape, unless the entry's style names round or oval
 DIM = 60                            # How much of the last frame dims away over DIM_MS, of 255, more giving shorter streaks
 DIM_MS = 167                        # The time DIM is taken over, a sixth of a second
-DIM_LEAST = 17                      # The faintest dim laid at once, one of the screens' 16 levels
+DIM_LEAST = 17                      # The faintest dim laid at once, the step between the screens' 16 levels
 ANTIALIAS = image.X4
 
 # The portal's movement
@@ -64,7 +63,7 @@ SCHEMES = {
     "emerald": ((0, 153, 85), (0, 204, 119), (238, 255, 221), (17, 85, 17), (170, 255, 34), (0, 204, 119)),
 }
 
-# The entry's style, its choices joined by a dash, such as ember-bare, each a scheme, walled or bare, or round or oval
+# The entry's style, its choices joined by dashes, such as ember-bare. Each is a scheme, walled or bare, or round or oval
 for choice in style.split("-") if style else ():
     if choice in SCHEMES:
         SCHEME = choice
@@ -77,7 +76,7 @@ for choice in style.split("-") if style else ():
 
 # Is SCHEME one of them?
 if SCHEME not in SCHEMES:
-    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to {', '.join(SCHEMES)}")
+    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to one of {', '.join(SCHEMES)}")
 EDGE, PART_WAY, BRIGHTEST, DEEP, RIM_RGB, GLOW_RGB = SCHEMES[SCHEME]
 
 # From the rim in, an arm's colours dim towards the opening's dark, and a mote's pale to white and go out there
@@ -92,7 +91,7 @@ MORTAR = color.rgb(34, 34, 34)
 BACKGROUND = color.black            # Behind the portal where there is no stone wall
 SPILL = GLOW_RGB                    # The portal's light falling on the stones nearest it
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 MIDDLE_X, MIDDLE_Y = WIDTH / 2, HEIGHT / 2
@@ -149,7 +148,7 @@ for length in range(LENGTHS):
                         color.rgb(*rgb), CORE_W * (1 - 0.6 * narrowing)))
 
 # A mote's pen at each of 51 steps out from the opening, made once and not for every streak. A mote at the
-# rim starts four fifths along its colours, already lit pink, so it shows against the arms' violet
+# rim starts a fifth of the way into its colours, already paler than the arms' rim colour, so it shows against them
 MOTE_PENS = [color.rgb(*colour_at(MOTE_COLOURS, 0.8 * step / 50)) for step in range(51)]
 
 # The direction of each point round the rim, calculated once
@@ -298,7 +297,7 @@ canvas.shape(OPENING_SHAPE)
 
 def draw():
     """
-    Draw the portal moved on by the time since the last frame, the streaks fading by time whatever the frame rate.
+    Draw the portal moved on by the time since the last frame. The streaks fade by time, whatever the frame rate.
 
     A frame is the opening dimmed, the arms turned further, the motes, and the rim.
     """

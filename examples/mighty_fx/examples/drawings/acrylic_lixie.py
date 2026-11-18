@@ -2,14 +2,14 @@ from picovector import color, font, image, shape
 
 """
 Draw a lixie display that lights one engraved acrylic sheet at a time to show each digit.
+Its LEDs glow ice, pink, amber or green.
 
 The engraving lets the light out, so a lit sheet reads as its digit in fine bright lines while the
 nine unlit ones stay a faint tracery. A sheet further back looks a size smaller, so the edges nest.
 
-The nine unlit sheets are drawn once into every frame's background, and the lit one straight onto it.
+Every sheet is drawn unlit into the background once, and the lit one straight onto each frame.
 
-The glow goes on the frame, which is opaque, and not on any sheet. COLOUR chooses the LEDs' colour,
-ice, pink, amber or green.
+The glow goes on the frame, which is opaque, and not on any sheet.
 
 Drawing: Acrylic lixie
 Defaults: Rotation = 0
@@ -53,7 +53,7 @@ CURVE = 70                  # How far the picture falls away at the edges
 COUNT_MS = 1000             # A digit a second, this being the seconds place of a clock
 CHANGE_MS = 220             # One digit going out as the next comes up, so both are seen together
 
-# The entry's style, which names a colour
+# Check if the entry's style names a colour
 if style:
     if style not in COLOURS:
         raise ValueError(f"'{style}' is not one of the styles! Use {', '.join(COLOURS)}")
@@ -64,7 +64,7 @@ if COLOUR not in COLOURS:
     raise ValueError(f"'{COLOUR}' is not one of the colours! Set COLOUR to {', '.join(COLOURS)}")
 LIGHT = COLOURS[COLOUR]
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
@@ -83,7 +83,7 @@ SHEETS = len(ORDER)
 DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}
 SCALE_AT = tuple(DEPTH_SCALE ** depth for depth in range(SHEETS))
 
-# The nine unlit sheets, drawn once. It doubles as the scratch the measurement below uses
+# The stack of unlit sheets, drawn once. It doubles as the scratch the measurement below uses
 stack = image(WIDTH, HEIGHT)
 stack.antialias = ANTIALIAS
 # The face goes on both, as a sheet is drawn onto the stack while unlit and onto the frame once lit
@@ -156,8 +156,8 @@ def draw():
     A frame is the stack, the sheet or two with light in them, and the glow.
     """
     global shown
-    # Which digit the count is on, and how far into it. The count goes round the stack again and
-    # again, the last digit going out as the first comes up
+    # Which digit the count is on, and how far into it. The count goes round the stack again and again,
+    # and the last digit goes out as the first comes up
     count, into = divmod(ticks % (SHEETS * COUNT_MS), COUNT_MS)
 
     # A sheet's LED switches quickly, and for that moment the sheet losing it still has some light.

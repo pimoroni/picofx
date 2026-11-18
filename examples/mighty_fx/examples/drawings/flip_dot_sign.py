@@ -2,7 +2,8 @@ import math
 from picovector import color, font, image, mat3, shape
 
 """
-Draw a flip-dot sign that spells its message by flipping one column of dots at a time.
+Draw a flip-dot sign that spells its message in a sweep, each column of
+dots starting to flip just after the one before.
 
 Drawing: Flip-dot sign
 Defaults: Rotation = 90 or 270
@@ -38,8 +39,8 @@ MESSAGES = (
     ("WEST", "12:40"),
 )
 
-# The canvas is the size of the screen, as the effects file turns it. The pitch is for a 2.8 inch
-# panel, and scales with a canvas pixel doubled so the sign holds as many dots
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled.
+# The pitch is for a 2.8 inch panel, and scales with a smaller canvas so the sign holds as many dots
 CELL = max(4, round(CELL * min(1, min(canvas.width, canvas.height) / 240)))
 columns = canvas.width // CELL
 rows = canvas.height // CELL
@@ -124,7 +125,7 @@ unlit_steps = faces(UNLIT, STOP_ANGLE + 180)
 
 
 def dot_at(index):
-    """Where the dot at this position in the grid starts on the canvas."""
+    """Find where the dot at this position in the grid starts on the canvas."""
     return (index % columns) * CELL + DOT_INSET, (index // columns) * CELL + DOT_INSET
 
 
@@ -177,7 +178,7 @@ def turning(index, phase):
 
 def schedule(wanted):
     """
-    How far into the sweep each dot that has to change starts turning, each column later than the last.
+    Calculate how far into the sweep each dot that has to change starts turning, each column later than the last.
 
     Only what the message changed turns.
     """

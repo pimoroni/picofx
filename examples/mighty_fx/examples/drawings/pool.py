@@ -3,8 +3,8 @@ from picovector import color, image, rect
 
 """
 Draw the floor of a pool through rippling water that throws bright lines of
-light over the tiles. STYLE chooses the floor, a modern pool's
-blue mosaic or a Roman bath's cream stones round an octagon.
+light over the tiles. The floor is a modern pool's blue mosaic or a Roman
+bath's cream stones round an octagon.
 
 The water is a grid of heights, rippled by drops falling at random and the odd splash. At each step
 every cell takes half the sum of its four neighbours less its own height a step before, calmed a
@@ -28,7 +28,7 @@ BENDING = 9                                         # How little the water's slo
 LIGHT = 4                                           # How little the water's curve brightens the floor, as a shift, more for fainter light
 LIGHT_THRESHOLD = 4                                 # How far the curve must pass, after the LIGHT shift, before any light shows
 
-# Sizes, in canvas pixels, each shown as two panel pixels by two
+# Sizes, in canvas pixels, each shown as two panel pixels by two when pixel doubled
 STONE = 6                                           # Across a tile or stone, its grout included
 BORDER = 8                                          # Floor drawn beyond each edge of the panel, the furthest the bent light reaches being one less
 
@@ -41,8 +41,8 @@ TERRACOTTA = ((170, 85, 51), (187, 102, 68), (153, 68, 51))
 BATH_GROUT = (170, 170, 136)
 BATH_WATER = (0.75, 0.875, 0.86)                    # How much of each channel a bath's green water lets through
 
-# The canvas is the size of the screen, as the effects file turns it. pixel_double=true halves it and
-# shows each pixel as a block of four, which leaves a quarter of the cells to ripple
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled. Each
+# pixel then shows as a block of four, which leaves a quarter of the cells to ripple
 WIDTH, HEIGHT = canvas.width, canvas.height
 pixels = canvas.raw
 

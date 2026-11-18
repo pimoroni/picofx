@@ -4,7 +4,7 @@ from picovector import color, font, image, rect, shape
 Draw a nixie tube with each digit lighting up inside the glass. The digit carrying
 current glows red-orange through the anode mesh.
 
-The glass, the nine unlit cathodes and the glow at the tube's foot never change, so they are drawn
+The glass, the unlit cathodes and the glow at the tube's foot never change, so they are drawn
 once into the background every frame starts from. A frame is that background, the lit cathode
 over it, three filters, and the front of the glass.
 
@@ -67,7 +67,7 @@ CURVE = 80                          # How far the picture falls away at the edge
 COUNT_MS = 1000                     # A digit a second, this being the seconds place of a clock
 CHANGE_MS = 200                     # One digit going out as the next comes up, both seen together
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 

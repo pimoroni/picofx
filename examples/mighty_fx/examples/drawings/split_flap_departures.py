@@ -26,7 +26,7 @@ HEADING = color.rgb(232, 176, 24)       # The column headings, painted on the bo
 SPLIT = color.rgb(8, 8, 9)              # The line the cards are hinged on, and the gaps between them
 BOARD = color.black                     # What the cards are set into
 GAP = 1                                 # Between one card and the next inside a column
-COLUMN_GAP = 12                         # The least between columns, which carry no cards at all
+COLUMN_GAP = 12                         # The least between columns, where no card is laid
 COLON_W = 9                             # The colon in a time, painted on the board, not flapped
 
 # A card is sized to its letter, so rows do not run into each other
@@ -58,10 +58,10 @@ SERVICES = (
     ("17:45", "BERGEN", "B16"), ("18:02", "WARSAW", "C38"), ("18:20", "VENICE", "A64"),
 )
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a smaller canvas, such as one pixel doubled
 SCALE = min(1, min(WIDTH, HEIGHT) / 240)
 (GAP, COLUMN_GAP, COLON_W, CARD_PAD, ROW_GAP, SPLIT_H, EDGE, CORNER, MARGIN, HEADING_GAP, LETTER_MAX) = (
     max(1, round(length * SCALE)) for length in (GAP, COLUMN_GAP, COLON_W, CARD_PAD, ROW_GAP, SPLIT_H, EDGE, CORNER,
@@ -123,7 +123,7 @@ CELL_H = LETTER_H + CARD_PAD * 2
 CELL_H += CELL_H % 2
 HALF = CELL_H // 2
 
-# Where the lettering sits inside the em box, so a letter centres on its card, not its box centring
+# Where the lettering sits inside the em box, so a letter centres on its card by what it draws, not by its em box
 LETTERING_TOP = (CELL_H - LETTER_H) // 2 - round(lettering_rows(SIZE, "HW8O")[0])
 EM_BOX = round(SIZE) + 2
 
@@ -221,7 +221,7 @@ def half_of(index, lower):
 
 
 def settled(row, card, index):
-    """A card at rest, both halves showing the same character."""
+    """Draw a card at rest, both halves showing the same character."""
     left, top = place(row, card)
     drum = sheets[card_drum[card]]
     target.x, target.w = left, CELL_W

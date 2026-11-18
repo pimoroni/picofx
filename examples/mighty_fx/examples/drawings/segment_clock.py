@@ -3,14 +3,14 @@ from picovector import color, font, image, rect, shape, vec2
 
 """
 Draw a seven-segment LED clock behind a coloured filter.
+It glows red, amber or green, in a brushed metal case or bare on black.
 
 Every segment, lit or not, is drawn once into the background every frame starts from, which is
 how an unlit segment still shows faintly through the filter. A frame is that background with the
 lit segments over it.
 
 The window is set into a brushed gunmetal case, printed with what each pair of digits shows, as an
-instrument panel would be. COLOUR chooses red, amber or green, and METAL_CASE = False leaves it
-bare on black.
+instrument panel would be.
 
 Drawing: Segment clock
 Defaults: Rotation = 90
@@ -110,11 +110,11 @@ LIGHTS = {
     "9": ("a", "b", "c", "d", "f", "g"),
 }
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
-# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a smaller canvas, such as one pixel doubled
 PANEL_SCALE = min(1, min(WIDTH, HEIGHT) / 240)
 MARGIN, CORNER, LABEL_SIZE = MARGIN * PANEL_SCALE, CORNER * PANEL_SCALE, LABEL_SIZE * PANEL_SCALE
 PLATE_PAD, PLATE_GAP = round(PLATE_PAD * PANEL_SCALE), round(PLATE_GAP * PANEL_SCALE)
@@ -195,7 +195,7 @@ def capital_rows():
     """
     Measure the first and last rows a capital fills, below the y it is drawn at.
 
-    Read off a drawing, as the face's em box leaves room above its capitals for accents. A row counts
+    Read off what it draws, as the face's em box leaves room above its capitals for accents. A row counts
     where it is at least half covered, so a faint antialiased edge weighs the same at the top as the foot.
     """
     probe = image(round(LABEL_SIZE * 2), round(LABEL_SIZE * 2))

@@ -133,7 +133,7 @@ unlit_steps = faces(UNLIT, STOP_ANGLE + 180)
 
 
 def dot_at(index):
-    """Where the dot at this position in the grid starts on the canvas."""
+    """Find where the dot at this position in the grid starts on the canvas."""
     return (index % columns) * CELL + DOT_INSET, (index // columns) * CELL + DOT_INSET
 
 
@@ -186,7 +186,7 @@ def turning(index, phase):
 
 def schedule(wanted):
     """
-    How far into the sweep each dot that has to change starts turning, each column later than the last.
+    Calculate how far into the sweep each dot that has to change starts turning, each column later than the last.
 
     Only what the message changed turns.
     """

@@ -51,16 +51,16 @@ PAGES = {
     ),
 }
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a canvas pixel doubled so
-# the sign holds as many lamps
+# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a smaller canvas, such as one
+# pixel doubled, so the sign holds as many lamps
 SCALE = min(1, min(WIDTH, HEIGHT) / 240)
 LAMP = max(2, round(LAMP * SCALE))
 SOFTEN, BEACON_R = SOFTEN * SCALE, round(BEACON_R * SCALE)
 
-# The lamp grid the bands are drawn on, one pixel to a lamp
+# The lamp grid the message is drawn on, one pixel to a lamp
 COLUMNS = WIDTH // LAMP
 ROWS = HEIGHT // LAMP
 
@@ -95,7 +95,7 @@ LETTERING_TOP = LETTERING_ROWS[0]
 # What the face leaves right of a character, so a narrow one centres in its module from its advance
 BEARING = max(int(lamps.measure_text(letter, font_size=1)[0]) for letter in ALPHABET) - CELL_W
 
-# The beacons sit on the face above and below the bands, so their diameter is kept clear at each end
+# The beacons sit on the face above and below the modules, so their diameter is kept clear at each end
 MARGIN = (BEACON_R * 2 + LAMP - 1) // LAMP
 PITCH_W = CELL_W + BEZEL
 PITCH_H = CELL_H + LINE_BEZEL
@@ -135,7 +135,7 @@ def bake_module():
 
 def bake_mask():
     """
-    Bake the sign's face, clear to begin with, the modules laid a row at a time, then its margins filled.
+    Bake the sign's face, the modules laid a row at a time, then its margins filled.
 
     It starts clear, as a transparent pen cannot clear an opaque background back.
     """
@@ -168,7 +168,7 @@ def bake_mask():
 
 mask = bake_mask()
 
-# Every rect the frame needs, built once so a frame allocates nothing
+# Every rect the frame needs, built once
 SCALE_FROM = rect(0, 0, COLUMNS, ROWS)
 SCALE_TO = rect(0, 0, COLUMNS * LAMP, ROWS * LAMP)
 
@@ -210,7 +210,7 @@ def draw():
     # The page showing and which pair of beacons is lit, all a frame depends on
     frame = (int(ticks / (HOLD * 1000)) % len(MESSAGE), bool(ticks // BEACON_MS % 2))
 
-    # Nothing on the sign moves, so it is only drawn again when the page or the beacons change
+    # Is this what the screen already shows?
     if frame == shown:
         return False                # Nothing new, so no frame is sent
 

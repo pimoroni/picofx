@@ -1,7 +1,8 @@
 import random
 
 """
-Draw a fire burning up from below the screen, its flames breaking into tongues as they cool.
+Draw a fire burning up from below the screen, whose flames break into tongues as they cool. The fire
+fills the panel, leaving the surround to whatever it is mounted in.
 
 The fire is a grid of heat. Hot spots flare at random along its bed, bunched towards the middle,
 and at each step every cell takes the average of itself and the cells below it. A smooth field of
@@ -24,8 +25,8 @@ SMOOTHING = 4                                       # Passes smoothing the cooli
 STOPS = ((0.0, (0, 0, 0)), (0.28, (0, 0, 0)), (0.34, (170, 34, 0)), (0.45, (240, 110, 0)),
          (0.62, (255, 190, 40)), (0.85, (255, 240, 170)), (1.0, (255, 250, 210)))
 
-# The canvas is the size of the screen, as the effects file turns it. pixel_double=true halves it and
-# shows each pixel as a block of four, which suits a fire's soft shapes and leaves fewer cells to calculate
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled. Each
+# pixel then shows as a block of four, which suits a fire's soft shapes and leaves fewer cells to calculate
 WIDTH, HEIGHT = canvas.width, canvas.height
 pixels = canvas.raw
 

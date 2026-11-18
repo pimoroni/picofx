@@ -6,8 +6,8 @@ Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling s
 square wave a harmonic at a time and melts back, and then the scope switches to XY mode for a
 turning Lissajous figure.
 
-The afterglow is the previous frame dimmed a little each time, so the beam is only ever drawn
-where it is now.
+The afterglow is the previous frame dimmed by how long it has shown, so the beam is only ever
+drawn where it is now.
 
 Drawing: Oscilloscope
 Defaults: Rotation = 90
@@ -35,7 +35,7 @@ GRID = color.rgb(17, 68, 102)                       # The graticule's lines, a s
 FRAME = color.rgb(17, 17, 17)                       # The dark edge the face sits in
 CASE = color.rgb(221, 204, 187)                     # The case round the tube
 
-# Sizes, in panel pixels
+# The graticule and the beam
 DIVISIONS = (10, 8)                                 # Graticule squares across and down on a panel on its side, swapped upright
 DIVISION = 28                                       # Panel pixels a square
 TICKS = 4                                           # Ticks a square along the middle lines, evenly spaced where they divide into DIVISION
@@ -50,11 +50,11 @@ DIM_LEAST = 17                                      # The faintest dim laid at o
 SEGMENTS = 80                                       # Segments a sweep is drawn in, the figure taking twice as many
 ANTIALIAS = image.X4                                # A beam is all edge, so it wants smoothing
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
-# The sizes above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+# The sizes above are for a 2.8 inch panel, and scale with a smaller canvas, such as one pixel doubled
 SCALE = min(WIDTH, HEIGHT) / 240
 DIVISION = round(DIVISION * SCALE)
 CORE_W, HALO_W, CORNER = CORE_W * SCALE, HALO_W * SCALE, CORNER * SCALE
@@ -169,7 +169,7 @@ def draw():
     global undimmed
     undimmed += ticks_delta
     alpha = round(255 * (1 - (1 - DIM / 255) ** (undimmed / DIM_MS)))
-    # Whether the glass owed takes a channel down a level. A fainter one leaves the trace short of
+    # Check if the glass owed takes a channel down a level. A fainter one leaves the trace short of
     # black, so at a fast frame rate it is saved up for a later frame
     if alpha < DIM_LEAST:
         alpha = 0
@@ -181,7 +181,7 @@ def draw():
 
     # Kept in whole milliseconds until the fraction is wanted, as a float of hours of running loses it
     seconds = ticks % CYCLE_MS / 1000
-    # Whether the demonstration is on the wave or the figure, cutting between them as a real scope switches to XY
+    # Check if the demonstration is on the wave or the figure, cutting between them as a real scope switches to XY
     if seconds < WAVE_SECONDS:
         trace(wave(seconds))
     else:

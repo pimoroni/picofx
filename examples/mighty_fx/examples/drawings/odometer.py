@@ -58,11 +58,12 @@ SCREW_HEAD = color.rgb(153, 153, 170)               # And its dome
 SCREW_SLOT = color.rgb(51, 51, 51)
 SLOTS = (30, 110, 165, 75)                          # Each screw's slot, in degrees, tightened by hand so no two alike
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
-# The odometer scaled to the panel's width, so it keeps its shape on a narrower panel
+# The odometer scaled to the canvas's width, so it keeps its shape on a narrower panel
+# or a canvas pixel doubled
 SCALE = WIDTH / 320
 DRUM_W, DRUM_GAP, DRUM_H, ENGRAVE_SIZE, ENGRAVE_GAP, OPENING_PAD, CORNER, SCREW, SCREW_INSET = (
     round(length * SCALE) for length in (DRUM_W, DRUM_GAP, DRUM_H, ENGRAVE_SIZE, ENGRAVE_GAP, OPENING_PAD, CORNER, SCREW, SCREW_INSET))
@@ -81,7 +82,7 @@ def digit_rows(size):
     """
     Measure the first and last rows a digit fills, below the y it is drawn at.
 
-    Read off a drawing, as the face's em box leaves room above its capitals for accents. A row counts
+    Read off what it draws, as the face's em box leaves room above its capitals for accents. A row counts
     where it is at least half covered, so a faint antialiased edge weighs the same at the top as the foot.
     """
     probe = image(round(size) * 2, round(size) * 2)
@@ -136,7 +137,7 @@ for row, arc in enumerate(facing):
     below = int(brightness // 17) * 17
     for x in range(DRUM_W):
         level = below + 17 if (DITHER[row % 4 * 4 + x % 4] + 0.5) / 16 < (brightness - below) / 17 else below
-        # Whether the pixel falls below the face's own level
+        # Check if the pixel falls below the face's own level
         if level < FACE[0]:
             # Laid over with just enough black to bring the face down to it
             shade.pen = color.black.with_alpha(round(255 * (1 - level / FACE[0])))

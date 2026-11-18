@@ -3,15 +3,15 @@ import random
 from picovector import color, image, shape, vec2
 
 """
-Draw a creature's eye as it looks around and blinks. CREATURE chooses the cat, owl, goat, alien,
-robot or zombie, each with its own eyes and its own way of looking about.
+Draw a creature's eye as it looks around and blinks. The cat, owl, goat, alien,
+robot and zombie each have their own eyes and their own way of looking about.
 
 For a pair of eyes, name both screens in one entry, such as screenA,B, so the two look about
-together. The cat, owl, robot and zombie look forward, so both screens show it as drawn. A goat's
-eyes are either side of its head, so the second screen is mirrored, and the alien's slant outwards,
-so the first is, its outer corners then at the outside of the pair with SP/CE A on the left. A
-panel mirrors along its own width, so a mirrored screen on its side takes half a turn more,
-rotation=270 with mirror=true.
+together. The cat, owl, robot and zombie look forward, so both screens show the eye as drawn. A
+goat's eyes are either side of its head, so give the second screen mirror=true. The alien's slant
+outwards, so give the first mirror=true, which puts the outer corners at the outside of the pair
+with SP/CE A on the left. A panel mirrors along its own width, so a mirrored screen on its side
+takes half a turn more, such as rotation=90,270 mirror=false,true for a goat.
 
 Nothing is drawn while the eye holds still.
 
@@ -31,7 +31,7 @@ BLINK_MS = (70, 40, 120)    # How long a blink takes to close, stays closed and 
 GLINT = color.rgb(255, 255, 255, 221)       # The highlights, which stay put while the iris moves under them
 SHEEN = color.rgb(255, 255, 255, 51)        # A wet gleam along the top of a dark eye
 
-# What a creature takes unless its entry says otherwise. Sizes are in pixels for the SQUARE, and the
+# What a creature takes unless CREATURES says otherwise. Sizes are in pixels for the SQUARE, and the
 # front corner is on the canvas's left. The screens drive the panel at 12 bit, 16 levels a channel in
 # steps of 17, so the colours sit on those levels
 DEFAULTS = {
@@ -119,7 +119,7 @@ CREATURES = {
 
 # Is CREATURE one of them?
 if CREATURE not in CREATURES:
-    raise ValueError(f"'{CREATURE}' is not one of the creatures! Set style= or CREATURE to {', '.join(CREATURES)}")
+    raise ValueError(f"'{CREATURE}' is not one of the creatures! Set style= or CREATURE to one of {', '.join(CREATURES)}")
 
 canvas.antialias = image.X4
 
@@ -262,7 +262,7 @@ def draw_block(creature, gaze, openness):
     canvas.shape(shape.rounded_rectangle(cx - w / 2, cy - h / 2, w, h, corner))
 
 
-# The drawings an entry can name with "draw"
+# The drawings a creature in CREATURES can name with "draw"
 DRAWINGS = {"block": draw_block}
 
 
@@ -338,7 +338,7 @@ LENGTHS = ("front", "back", "top", "bottom", "iris_radius", "pupil_radius", "gli
 
 
 def choose(name, now):
-    """Build a creature from DEFAULTS and its entry, scaled and widened to suit the canvas, and the Eyes that move it."""
+    """Build a creature from DEFAULTS and CREATURES, scaled and widened to suit the canvas, and the Eyes that move it."""
     creature = dict(DEFAULTS)
     creature.update(CREATURES[name])
     for key in LENGTHS:

@@ -30,8 +30,7 @@ HEADINGS_ROW = 1                    # Where the column headings sit in the stack
 FIRST_ROW = 2                       # And where the listing starts, the module below them
 CLOCK_START = (14, 5, 0)            # The time the board counts on from, Mighty FX having no clock to read
 
-# Made up but for the stations. A service takes a row, and its via, its calling points and each note line
-# one more
+# Made up but for the stations. A service takes a row, and its via, its calling points and each note line one more
 ENTRIES = (
     {"departs": "14:02", "destination": "Leeds", "platform": "4A", "status": "Exp 14:07"},
     {"departs": "14:10", "destination": "Manchester Piccadilly", "platform": "2A", "status": "On time"},
@@ -50,7 +49,7 @@ ENTRIES = (
 )
 
 # Column positions measured from the widest thing each carries, so another BOARD_FONT moves them.
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 canvas.font = BOARD_FONT
 time_width = int(canvas.measure_text("00:00")[0])
 plat_width = int(canvas.measure_text("Plat")[0])

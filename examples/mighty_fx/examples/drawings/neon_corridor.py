@@ -2,15 +2,15 @@ from math import exp, sqrt
 
 """
 Walk without end down a corridor of neon, as rings of light come out of the haze
-towards you and a bright light shines at the far end. SCHEME sets its colours to
-neon, plaid, emerald, magenta or blueprint, SPEED sets a slow, normal, fast or
-ludicrous pace, and OBLONG = True stretches the corridor to the panel's shape.
+towards you and a bright light shines at the far end. It comes in neon, plaid,
+emerald, magenta or blueprint colours, at a slow, normal, fast or ludicrous
+pace, and square or stretched to the panel's shape.
 
 The drawing calculates the corridor once as it loads, and keeps a word for each pixel in one quarter
 with its depth, its nearest line and the far light on it. Each frame then moves the rings along, looks
 the quarter's colours up in a palette, and mirrors them into the other three quarters.
 
-Drawing: Neon Corridor
+Drawing: Neon corridor
 Defaults: Rotation = 90
 Styles: neon, plaid, emerald, magenta, blueprint
 Styles: square, oblong
@@ -25,7 +25,7 @@ SPEED = "normal"                    # How fast the walk goes, a name from SPEEDS
 SPEEDS = {"slow": 35, "normal": 70, "fast": 120, "ludicrous": 240}      # Depth steps a second at each pace
 
 # The corridor's shape
-OBLONG = False                      # Whether the corridor stretches to the panel's shape, unless the entry's style says square
+OBLONG = False                      # Whether the corridor stretches to the panel's shape, or stays square and shows more of its walls on the longer side, unless the entry's style names one
 ZOOM = 2                            # Where the panel's shorter edges meet the walls, in half-widths of the corridor down it. More narrows the view
 UNIT = 128                          # Depth steps in a half-width of the corridor
 RING = const(64)                    # Depth steps between rings, a quarter of the width for square cells. It must be a power of two up to 64, as the depth is kept in 6 bits
@@ -59,7 +59,7 @@ for choice in style.split("-") if style else ():
 
 # Is SCHEME one of them?
 if SCHEME not in SCHEMES:
-    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to {', '.join(SCHEME_NAMES)}")
+    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to one of {', '.join(SCHEME_NAMES)}")
 
 # Is SPEED one of them?
 if SPEED not in SPEEDS:
@@ -71,7 +71,7 @@ GLOW = const(2048)                  # Where a line's glow by its distance in qua
 LIGHT = const(2112)                 # Where the 16 levels of the far light start
 PALETTE_SIZE = 2128
 
-# The canvas is the size of the screen, as the effects file turns it. pixel_double=true halves its width and height
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 pixels = canvas.raw
 

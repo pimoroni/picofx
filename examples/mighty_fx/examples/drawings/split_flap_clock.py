@@ -21,7 +21,7 @@ SHADOW = color.rgb(17, 17, 19)          # The top edge of a card, recessed behin
 HOUSING = color.rgb(17, 17, 19)         # The case the cards are set into, a level between them and board
 KEYLINE = color.rgb(51, 51, 56)         # The case edge, which finds it against the board
 HIGHLIGHT = color.rgb(85, 85, 92)       # A lit edge along the top of the case, light coming from above
-TEXT_COLOUR = color.rgb(238, 238, 232)  # And the lettering on it
+TEXT_COLOUR = color.rgb(238, 238, 232)  # The lettering on a card
 SPLIT = color.rgb(8, 8, 9)              # The line the cards are hinged on, and the gaps between them
 BOARD = color.black                     # What the cards are set into
 GAP = 4                                 # Between one card and the next
@@ -31,14 +31,14 @@ CORNER = 6                              # How far the outer corners of a card ar
 SHADOW_H = 3                            # How deep the shadow on a card top reads
 BEZEL = 8                               # How far the case stands out around the cards
 MARGIN = 6                              # Around the whole row
-SEPARATOR = 14                          # The colons, which are painted on, not flapped
+SEPARATOR = 14                          # The space each colon takes, painted on the board, not flapped
 ANTIALIAS = image.X2                    # Lettering this size is worth smoothing
 CARD_ASPECT = 2.28                      # How many times taller a card is than wide
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the screen's size as the effects file turns it, halved where it is pixel doubled
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a smaller canvas, such as one pixel doubled
 SCALE = min(1, min(WIDTH, HEIGHT) / 240)
 GAP, SPLIT_H, EDGE, CORNER, SHADOW_H, BEZEL, MARGIN, SEPARATOR = (
     max(1, round(length * SCALE)) for length in (GAP, SPLIT_H, EDGE, CORNER, SHADOW_H, BEZEL, MARGIN, SEPARATOR))
@@ -151,7 +151,7 @@ def half_of(index, lower):
 
 
 def settled(flap, index):
-    """A card at rest, both halves showing the same character."""
+    """Draw a card at rest, both halves showing the same character."""
     target.x, target.w = places[flap], CELL_W
     for lower in (False, True):
         target.y, target.h = TOP + (HALF if lower else 0), HALF
@@ -192,7 +192,7 @@ def falling(flap, from_index, to_index, part):
 
 
 def clock_now(elapsed):
-    """The time the board is showing, counted on from CLOCK_START."""
+    """Calculate the time the board is showing, counted on from CLOCK_START."""
     elapsed //= 1000
     hours, minutes, seconds = CLOCK_START
     total = (hours * 3600 + minutes * 60 + seconds + elapsed) % 86400
