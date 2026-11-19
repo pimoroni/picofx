@@ -14934,6 +14934,7 @@ async function discoverDownload(path, quiet) {
   var own = discover.files[entry.files[0].path];
   var was = own.at;
   var kept = null;
+  var made = [];
   try {
     if (own.state === "changed" && (entry.kind === "program" || entry.kind === "drawing"))
       kept = entry.kind === "program" ? await copyProgram(was) : "drawings/" + await discoverKinds.drawing.copy(was);
@@ -14944,9 +14945,11 @@ async function discoverDownload(path, quiet) {
       var blob = await (await fetch(discoverFileUrl(file.path, entry))).blob();
       if (await discoverHash(new Uint8Array(await blob.arrayBuffer())) !== file.hash)
         throw new Error("The downloaded file did not match. Try again.");
+      if (!held.at) made.push(file.path);
       await discoverWrite(file.path, blob);
       written[file.path] = blob;
     }
+    made = [];
     for (file of entry.files) {
       held = discover.files[file.path];
       if (held.at && held.at !== file.path) await discoverRemove(held.at);
@@ -14965,6 +14968,12 @@ async function discoverDownload(path, quiet) {
       "Could not download " + nameShown(path) + ". " + await discoverTrouble(e),
       true
     );
+    for (var name of made) {
+      try {
+        await discoverRemove(name);
+      } catch (left) {
+      }
+    }
     done = false;
   }
   delete discover.busy[path];
@@ -15007,7 +15016,7 @@ async function discoverListed(entry, written, fresh, was) {
   }
   delete discoverDrawings[path];
   delete discoverSounds[path];
-  delete state.art[path];
+  if (state.art) delete state.art[path];
   for (var tries = 0; tries < 20; tries++) {
     await scanMedia(state.dirHandle);
     if (discoverKinds[entry.kind].onDrive(path)) return;

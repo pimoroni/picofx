@@ -449,6 +449,9 @@ async function discoverDownload(path, quiet) {
   var own = discover.files[entry.files[0].path];
   var was = own.at;
   var kept = null;
+  // The files new to the drive, removed again where the download fails, so none is left part
+  // written, such as on a full drive
+  var made = [];
   try {
     // Check if the user changed the example's own file. A program or drawing then keeps the change
     // as a copy, as Customise makes one. A picture or sound has no Customise, so it is replaced
@@ -462,9 +465,12 @@ async function discoverDownload(path, quiet) {
       var blob = await (await fetch(discoverFileUrl(file.path, entry))).blob();
       if (await discoverHash(new Uint8Array(await blob.arrayBuffer())) !== file.hash)
         throw new Error("The downloaded file did not match. Try again.");
+      if (!held.at) made.push(file.path);
       await discoverWrite(file.path, blob);
       written[file.path] = blob;
     }
+    // Every file is whole now, so a later failure leaves them on the drive
+    made = [];
     // What was left where the example used to be kept goes, now it is in its new place
     for (file of entry.files) {
       held = discover.files[file.path];
@@ -482,6 +488,13 @@ async function discoverDownload(path, quiet) {
   } catch (e) {
     discoverSay(tab, "Could not download " + nameShown(path) + ". " + await discoverTrouble(e),
               true);
+    for (var name of made) {
+      try {
+        await discoverRemove(name);
+      } catch (left) {
+        // A file that cannot be removed is shown on the drive, to delete by hand
+      }
+    }
     done = false;
   }
   delete discover.busy[path];
@@ -525,7 +538,8 @@ async function discoverListed(entry, written, fresh, was) {
   }
   delete discoverDrawings[path];
   delete discoverSounds[path];
-  delete state.art[path];
+  // Only a board with screens keeps art for its pictures and drawings
+  if (state.art) delete state.art[path];
   for (var tries = 0; tries < 20; tries++) {
     await scanMedia(state.dirHandle);
     if (discoverKinds[entry.kind].onDrive(path)) return;
