@@ -34,6 +34,7 @@
 * Add FX drive builds of Tiny FX, Tiny FX W, Mighty FX and Plasma 2350
 * Each drive build comes with a -full uf2 that writes the whole board, FX drive included, and a -with-libs uf2 that updates the firmware and libraries and keeps the drive
 * A drive build writes its own main.py, which lights the outputs dim with `wake()` while autofx loads, and a wireless board's drive holds the WiFi credentials file
+* Add the timezones library, giving the UTC offset for the `TIME_ZONE` set in the WiFi credentials file, summer time included
 * Pressing BOOT twice hides the drive, and twice again brings it back
 * The WAV player fades out while a computer writes to the FX drive, and returns once it finishes
 * The outputs show a bar while autofx loads the effects file
@@ -45,6 +46,7 @@
 * Two screens can show one picture or drawing together, written as `screenA,B` in the effects file or chosen with the picker's Paired toggle
 * The picker has a Sensor tab for the IR remote and PIR Stick, a volume for each sound, and scene cards that choose how each scene ends
 * The picker says when newer firmware is released for the board, and offers the one file the board needs, with what's new and how to install it
+* Deleting an example program in the picker also deletes the folder of modules it brings, such as the hub clock's faces
 * tools/build_editor.py and tools/build_manual.py build each board's picker and manual from shared parts, and CI checks every board's are rebuilt
 
 **Tiny FX**
@@ -83,6 +85,7 @@
 * Add the Mighty FX examples for screens and the Screen Hub, with the pictures they show, most taking a 1.54" screen as well as a 2.8" and a rotation in args
 * Add the Mighty FX showcases, bringing the examples together as projects
 * Example drawings of the showcase signs and scenes come with a picture of each and play from a `drawing` entry or the picker's Screens tab
+* Add the hub clock showcase, a digit on each of a Screen Hub's screens in eight styles, showing the time in `TIME_ZONE` when it can reach the internet over WiFi
 
 1.1.2
 -----
