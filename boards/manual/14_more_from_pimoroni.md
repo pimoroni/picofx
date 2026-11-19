@@ -2,7 +2,7 @@
 
 ### Boards and accessories
 
-- [Mighty FX](https://shop.pimoroni.com/products/mightyfx)
+- [Mighty FX](https://shop.pimoroni.com/products/mighty-fx)
 - [Tiny FX](https://shop.pimoroni.com/products/tinyfx)
 - [Tiny FX W](https://shop.pimoroni.com/products/tiny-fx-w)
 - [Plasma 2350](https://shop.pimoroni.com/products/plasma-2350)

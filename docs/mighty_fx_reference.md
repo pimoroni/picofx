@@ -1,6 +1,6 @@
 # Pimoroni Mighty FX - Library Reference <!-- omit in toc -->
 
-This is the library reference for the [Pimoroni Mighty FX](https://shop.pimoroni.com/products/mightyfx), a light, motion and screen effects controller, powered by the Raspberry Pi RP2350.
+This is the library reference for the [Pimoroni Mighty FX](https://shop.pimoroni.com/products/mighty-fx), a light, motion and screen effects controller, powered by the Raspberry Pi RP2350.
 
 
 ## Table of Content <!-- omit in toc -->

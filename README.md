@@ -32,7 +32,7 @@ Tiny FX is a programmable, RP2040-based controller board for adding smart light 
 
 ## Get Mighty and Tiny FX
 
-* [Mighty FX](https://shop.pimoroni.com/products/mightyfx)
+* [Mighty FX](https://shop.pimoroni.com/products/mighty-fx)
 * [Tiny FX](https://shop.pimoroni.com/products/tinyfx)
 * [Tiny FX W](https://shop.pimoroni.com/products/tiny-fx-w) (with wireless connectivity)
 

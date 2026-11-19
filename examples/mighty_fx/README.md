@@ -1,6 +1,6 @@
 # Mighty FX Micropython Examples <!-- omit in toc -->
 
-These are micropython examples for the Pimoroni [Mighty FX](https://shop.pimoroni.com/products/mightyfx), a programmable, RP2350-based controller board that goes further with effects by adding motion and screens.
+These are micropython examples for the Pimoroni [Mighty FX](https://shop.pimoroni.com/products/mighty-fx), a programmable, RP2350-based controller board that goes further with effects by adding motion and screens.
 
 Most of the examples are [programs](#programs), complete Python programs that take over the board while they run. The [drawings](#drawings) are different, each drawing a picture on a screen while `effects.txt` plays everything else.
 
