@@ -990,10 +990,12 @@ function discoverRenderBrowser() {
   var busy = discoverFetching || check.refreshing ||
              chosen.some(function (offer) { return discover.busy[offer[0]]; });
   var notice = discoverNotice(check);
+  // A failure stays in the foot over the examples still chosen, which the Download button counts
+  var failed = check.notice && check.notice[1] === true;
   var downloading = busy && !check.refreshing;
   var foot = h("div", {className: "discoversheetfoot"},
                h("div", {className: "discoverfootsays"},
-                 notice && (!chosen.length || busy) ? notice
+                 notice && (!chosen.length || busy || failed) ? notice
                  : chosen.length === 1 ? h("b", {}, chosen[0][1])
                  : chosen.length ? h("b", {}, discoverCount(chosen.length, "example", "examples") +
                                               " chosen")

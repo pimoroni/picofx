@@ -15439,6 +15439,7 @@ function discoverRenderBrowser() {
     return discover.busy[offer[0]];
   });
   var notice = discoverNotice(check);
+  var failed = check.notice && check.notice[1] === true;
   var downloading = busy && !check.refreshing;
   var foot = h(
     "div",
@@ -15446,7 +15447,7 @@ function discoverRenderBrowser() {
     h(
       "div",
       { className: "discoverfootsays" },
-      notice && (!chosen.length || busy) ? notice : chosen.length === 1 ? h("b", {}, chosen[0][1]) : chosen.length ? h("b", {}, discoverCount(chosen.length, "example", "examples") + " chosen") : check.refreshing ? h(
+      notice && (!chosen.length || busy || failed) ? notice : chosen.length === 1 ? h("b", {}, chosen[0][1]) : chosen.length ? h("b", {}, discoverCount(chosen.length, "example", "examples") + " chosen") : check.refreshing ? h(
         "span",
         { className: "discoverhint" },
         "Checking the drive for changes..."
