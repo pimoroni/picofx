@@ -1,6 +1,6 @@
 # Changelog
 
-1.1.3
+1.2.0
 -----
 
 **PicoFX library**
@@ -46,8 +46,13 @@
 * Two screens can show one picture or drawing together, written as `screenA,B` in the effects file or chosen with the picker's Paired toggle
 * The picker has a Sensor tab for the IR remote and PIR Stick, a volume for each sound, and scene cards that choose how each scene ends
 * The picker says when newer firmware is released for the board, and offers the one file the board needs, with what's new and how to install it
+* The picker's Discover buttons download more example programs, pictures, drawings and sounds from GitHub, and Check for updates fetches newer versions, keeping a changed copy in `programs`
+* Discover offers Mighty FX and Tiny FX 72 looping example sounds from fx-sounds, from sirens, alarms and train horns to engines, sci-fi effects and ambience, and the Sound tab links to its gallery for more
 * Deleting an example program in the picker also deletes the folder of modules it brings, such as the hub clock's faces
+* Each FX drive build carries the example programs worth running as demos, with Mighty FX's pictures and drawings, and Discover offers the rest
+* The picker, editor and manual link to help and to a problem report that fills in the board and firmware version
 * tools/build_editor.py and tools/build_manual.py build each board's picker and manual from shared parts, and CI checks every board's are rebuilt
+* tools/build_examples_index.py writes each board's examples index for Discover, and CI checks it is current
 
 **Tiny FX**
 

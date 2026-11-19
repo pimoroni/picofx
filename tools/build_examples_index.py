@@ -16,9 +16,10 @@ changed, and finds an example kept where it used to be. Those are carried forwar
 at the latest release tag, so a file gains at most one earlier version for each release. That
 needs the repository's tags, and before the first release with an index it carries nothing.
 
-Each example takes the picofx version the index is written at as the lowest firmware it runs on,
-unless its opening string has a "Firmware:" line naming another. Only files git tracks are
-indexed, so an example still being written is left out until it is committed.
+Each example gives the lowest firmware it runs on in a "Firmware:" line of its opening string.
+Without one, an example the latest release's index lists keeps the firmware given there, and any
+other takes the picofx version the index is written at. Only files git tracks are indexed, so an
+example still being written is left out until it is committed.
 
     python3 tools/build_examples_index.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_examples_index.py --check boards/PIMORONI_MIGHTYFX
@@ -29,6 +30,9 @@ description names no "examples_index" has none, and is passed over. A descriptio
 build does not copy, so the index leaves them out too. A description's "wireless_examples" names a
 second folder, whose examples the wireless variant's drive build copies over the first's, and the
 index lists them too. The picker offers those that go online only to a drive holding WiFi credentials.
+A description's "shared_examples" names a folder of examples several boards offer, such as the
+example sounds, which no drive build copies. An example from either folder names it as its
+"repo_folder", so the picker fetches it from there and not from beside the index.
 """
 
 import argparse
@@ -146,7 +150,7 @@ def section_of(sections, member):
     return ""
 
 
-def code_examples(files, version, listed_only=False):
+def code_examples(files, listed_only=False):
     """The example programs and drawings, as index entries less their files' entries."""
     found = []
     for path in sorted(files):
@@ -163,12 +167,12 @@ def code_examples(files, version, listed_only=False):
             continue
         firmware = FIRMWARE_LINE.search(said)
         found.append(({"path": path, "kind": "drawing" if drawing else "program",
-                       "firmware": firmware.group(1) if firmware else version},
+                       "firmware": firmware.group(1) if firmware else None},
                       brought(path, source, files)))
     return found
 
 
-def pictures(files, version):
+def pictures(files):
     """The example pictures as the picker's walk finds them: a file at the top of the pictures
     folder, a folder of pictures as one slideshow, and each file of a folder its section splits.
     A folder holding only folders is walked into."""
@@ -185,14 +189,14 @@ def pictures(files, version):
         items = [(name[len(folder):], [name], False) for name in held] \
             if not inner or inner in split else [(inner, held, True)]
         for member, names, slideshow in items:
-            found.append(({"path": folder + member, "kind": "picture", "firmware": version,
+            found.append(({"path": folder + member, "kind": "picture", "firmware": None,
                            "name": member.rsplit("/", 1)[-1],
                            "section": section_of(sections, member), "slideshow": slideshow},
                           names))
     return found
 
 
-def sounds(files, version):
+def sounds(files):
     """The example sounds, every WAV file under the sounds folder its own, as the picker walks
     into any folder there."""
     folder = "examples/sounds/"
@@ -201,7 +205,7 @@ def sounds(files, version):
     for name in sorted(files):
         if name.startswith(folder) and SOUND_FILE.search(name):
             member = name[len(folder):]
-            found.append(({"path": name, "kind": "sound", "firmware": version,
+            found.append(({"path": name, "kind": "sound", "firmware": None,
                            "name": member.rsplit("/", 1)[-1],
                            "section": section_of(sections, member)}, [name]))
     return found
@@ -230,15 +234,21 @@ def carried(name, hashed, size, before, gone):
 
 
 def build(repo_dir, bases, previous, left_out=(), listed_only=False):
-    """The index, as text, for the examples under each of bases, carrying forward the previous
-    index."""
+    """The index, as text, for the examples under each of bases, the first being the folder the
+    index sits in, carrying forward the previous index."""
     with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as handle:
         version = re.search(r'^PICOFX_VERSION = "([^"]+)"', handle.read(), re.MULTILINE).group(1)
     files = {}
+    # The folder each drive path is read from, as a later folder's file replaces an earlier one's
+    folder_of = {}
     for base in bases:
-        files.update(read_files(repo_dir, base, left_out))
+        read = read_files(repo_dir, base, left_out)
+        files.update(read)
+        folder_of.update(dict.fromkeys(read, base))
     before = {}
+    released_firmware = {}
     for example in (previous or {}).get("examples", []):
+        released_firmware[example["path"]] = example["firmware"]
         for file in example["files"]:
             before[file["path"]] = file
     # A file the last index had that is no longer there, by its hash, to find where it moved
@@ -247,8 +257,18 @@ def build(repo_dir, bases, previous, left_out=(), listed_only=False):
         if name not in files:
             gone.setdefault(file["hash"], name)
     examples = []
-    for entry, names in code_examples(files, version, listed_only) + pictures(files, version) + \
-            sounds(files, version):
+    for entry, names in code_examples(files, listed_only) + pictures(files) + sounds(files):
+        # Keep the firmware the last release gave an example, so a version bump between releases
+        # does not mark every example as needing newer firmware
+        if entry["firmware"] is None:
+            entry["firmware"] = released_firmware.get(entry["path"], version)
+        folders = {folder_of[name] for name in names}
+        # Check if the example's files come from two folders, which one address cannot serve
+        if len(folders) > 1:
+            sys.exit("{} brings files from {}".format(entry["path"], ", ".join(sorted(folders))))
+        folder = folders.pop()
+        if folder != bases[0]:
+            entry["repo_folder"] = folder
         entry["files"] = [carried(name, files[name][0], files[name][1], before, gone)
                           for name in names]
         examples.append(entry)
@@ -306,7 +326,8 @@ def main():
             previous = json.load(handle)
     else:
         previous = released_index(repo_dir, board["examples_index"])
-    bases = [base] + ([board["wireless_examples"]] if "wireless_examples" in board else [])
+    bases = [base] + [board[key] for key in ("wireless_examples", "shared_examples")
+                      if key in board]
     text = build(repo_dir, bases, previous, board.get("examples_left_out", ()),
                  board.get("examples_listed_only", False))
     if args.check:

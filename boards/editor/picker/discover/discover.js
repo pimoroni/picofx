@@ -33,10 +33,13 @@ var DISCOVER_BRANCH = "main";
 var DISCOVER_SOURCE = "https://raw.githubusercontent.com/pimoroni/picofx/refs/heads/" +
                       DISCOVER_BRANCH + "/";
 
-// A file's address, by its path on the drive. The index sits beside the examples folder it lists
-function discoverFileUrl(path) {
+// A file's address, by its path on the drive. The index sits beside the examples folder it lists,
+// and an example from another folder names it as its repo_folder
+function discoverFileUrl(path, entry) {
   var index = BOARD.examples_index;
-  return DISCOVER_SOURCE + index.slice(0, index.lastIndexOf("/") + 1) + path;
+  var folder = entry && entry.repo_folder ? entry.repo_folder
+                                          : index.slice(0, index.lastIndexOf("/") + 1);
+  return DISCOVER_SOURCE + folder + path;
 }
 
 // The firmware's version, which an example may need newer than
@@ -288,7 +291,7 @@ async function discoverFetchMissing(kind, offered, same) {
       if (entry.kind === "picture") {
         if (!discoverThumbs[entry.path]) {
           discoverThumbs[entry.path] = URL.createObjectURL(
-            await (await fetch(discoverFileUrl(entry.files[0].path))).blob());
+            await (await fetch(discoverFileUrl(entry.files[0].path, entry))).blob());
         }
         listed[entry.path] = {name: entry.path, kind: "picture", offered: true,
                               picture: {title: entry.name, section: entry.section,
@@ -298,22 +301,22 @@ async function discoverFetchMissing(kind, offered, same) {
       // A sound is known by its header alone, fetched as its first few bytes, which say how long
       // it plays. It is heard from GitHub as it is, unfetched
       if (entry.kind === "sound") {
-        var head = await (await fetch(discoverFileUrl(entry.path),
+        var head = await (await fetch(discoverFileUrl(entry.path, entry),
                                       {headers: {Range: "bytes=0-4095"}})).arrayBuffer();
         listed[entry.path] = {name: entry.path, kind: "sound", offered: true,
                               sound: {title: entry.name, section: entry.section,
                                       seconds: discoverWavSeconds(head, entry.files[0].size),
-                                      url: discoverFileUrl(entry.path)}};
+                                      url: discoverFileUrl(entry.path, entry)}};
         return;
       }
-      var source = await (await fetch(discoverFileUrl(entry.path))).text();
+      var source = await (await fetch(discoverFileUrl(entry.path, entry))).text();
       var stem = entry.path.replace(/\.py$/i, "");
       // Its thumbnail, and a second screen's beside it where it has one
       for (var suffix of [".png", "-2.png"]) {
         var held = suffix === ".png" ? discoverThumbs : discoverSecondThumbs;
         var thumb = entry.files.filter(function (file) { return file.path === stem + suffix; })[0];
         if (thumb && !held[entry.path]) {
-          var blob = await (await fetch(discoverFileUrl(thumb.path))).blob();
+          var blob = await (await fetch(discoverFileUrl(thumb.path, entry))).blob();
           held[entry.path] = URL.createObjectURL(blob);
         }
       }
@@ -446,6 +449,9 @@ async function discoverDownload(path, quiet) {
   var own = discover.files[entry.files[0].path];
   var was = own.at;
   var kept = null;
+  // The files new to the drive, removed again where the download fails, so none is left part
+  // written, such as on a full drive
+  var made = [];
   try {
     // Check if the user changed the example's own file. A program or drawing then keeps the change
     // as a copy, as Customise makes one. A picture or sound has no Customise, so it is replaced
@@ -456,12 +462,15 @@ async function discoverDownload(path, quiet) {
     for (var file of entry.files) {
       var held = discover.files[file.path];
       if (held.state === "same" && held.at === file.path) continue;
-      var blob = await (await fetch(discoverFileUrl(file.path))).blob();
+      var blob = await (await fetch(discoverFileUrl(file.path, entry))).blob();
       if (await discoverHash(new Uint8Array(await blob.arrayBuffer())) !== file.hash)
         throw new Error("The downloaded file did not match. Try again.");
+      if (!held.at) made.push(file.path);
       await discoverWrite(file.path, blob);
       written[file.path] = blob;
     }
+    // Every file is whole now, so a later failure leaves them on the drive
+    made = [];
     // What was left where the example used to be kept goes, now it is in its new place
     for (file of entry.files) {
       held = discover.files[file.path];
@@ -479,6 +488,13 @@ async function discoverDownload(path, quiet) {
   } catch (e) {
     discoverSay(tab, "Could not download " + nameShown(path) + ". " + await discoverTrouble(e),
               true);
+    for (var name of made) {
+      try {
+        await discoverRemove(name);
+      } catch (left) {
+        // A file that cannot be removed is shown on the drive, to delete by hand
+      }
+    }
     done = false;
   }
   delete discover.busy[path];
@@ -522,7 +538,8 @@ async function discoverListed(entry, written, fresh, was) {
   }
   delete discoverDrawings[path];
   delete discoverSounds[path];
-  delete state.art[path];
+  // Only a board with screens keeps art for its pictures and drawings
+  if (state.art) delete state.art[path];
   for (var tries = 0; tries < 20; tries++) {
     await scanMedia(state.dirHandle);
     if (discoverKinds[entry.kind].onDrive(path)) return;
@@ -973,10 +990,12 @@ function discoverRenderBrowser() {
   var busy = discoverFetching || check.refreshing ||
              chosen.some(function (offer) { return discover.busy[offer[0]]; });
   var notice = discoverNotice(check);
+  // A failure stays in the foot over the examples still chosen, which the Download button counts
+  var failed = check.notice && check.notice[1] === true;
   var downloading = busy && !check.refreshing;
   var foot = h("div", {className: "discoversheetfoot"},
                h("div", {className: "discoverfootsays"},
-                 notice && (!chosen.length || busy) ? notice
+                 notice && (!chosen.length || busy || failed) ? notice
                  : chosen.length === 1 ? h("b", {}, chosen[0][1])
                  : chosen.length ? h("b", {}, discoverCount(chosen.length, "example", "examples") +
                                               " chosen")

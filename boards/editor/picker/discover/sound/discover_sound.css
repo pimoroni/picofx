@@ -1,0 +1,10 @@
+/* The link under the Sound tab's Discover button to the gallery the example sounds come from */
+.discovergallery {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-s);
+  color: var(--dim-strong);
+
+  a {
+    color: var(--discover, var(--accent));
+  }
+}

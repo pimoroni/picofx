@@ -1,44 +1,188 @@
 {"format": 1, "examples": [
- {"path": "examples/programs/audio/fair_use_encounters.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/audio/fair_use_encounters.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/audio/fair_use_encounters.py", "size": 2553, "hash": "e7aeb9b4139c8bd2f930c43ad1d6bf6089c3b6da", "was": []}]},
- {"path": "examples/programs/audio/race_start.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/audio/race_start.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/audio/race_start.py", "size": 1978, "hash": "00b31a0df234325c3aa39e4bec83605d60ed009d", "was": []}]},
- {"path": "examples/programs/function/sensor_meter.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/function/sensor_meter.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/function/sensor_meter.py", "size": 1986, "hash": "bdd24124bcc0c0ce16b5bc58a3e9f1c797d1d5d9", "was": []}]},
- {"path": "examples/programs/function/sensor_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/function/sensor_wave.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/function/sensor_wave.py", "size": 2559, "hash": "9f6d916718a90636be4accd7687a8a0e28442e9a", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "size": 3798, "hash": "ca6d6793cea6ced351e522d3c3e819f5e7a7fe28", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "size": 4004, "hash": "3386341033b7ea844d49ea8c41b0ef66687dd4c4", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rainbow.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rainbow.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rainbow.py", "size": 3490, "hash": "2415bad7e11135d6f2e1d23050a188cd337e065e", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "size": 2109, "hash": "f59ce1ab58b9845cdb78adb52f52a9f9574d29e2", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "size": 2402, "hash": "dc7b63def3825b5b14e01de3e6cb40e97e45d13e", "was": []}]},
- {"path": "examples/programs/infrared/mono/control_channels.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/mono/control_channels.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/mono/control_channels.py", "size": 3159, "hash": "994ff17069d3a6e97e4e7e8fdf0f4bd0fc579803", "was": []}]},
- {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "size": 3052, "hash": "f8ef5acd5985f8cc73e9e9580db483163879e650", "was": []}]},
- {"path": "examples/programs/infrared/mono/toggle_effects.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/mono/toggle_effects.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/mono/toggle_effects.py", "size": 2434, "hash": "91b3940a838a850119d9b984458fa18601af0c37", "was": []}]},
- {"path": "examples/programs/qwst/light_level.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/qwst/light_level.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/qwst/light_level.py", "size": 2410, "hash": "88d95dbe6d3f4a83a1a595398371df85a1e1bedd", "was": []}]},
- {"path": "examples/programs/qwst/spirit_level.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/qwst/spirit_level.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/qwst/spirit_level.py", "size": 3387, "hash": "54ce3901dc8d5ada116005ef8501f7e09ec7068d", "was": []}]},
- {"path": "examples/programs/qwst/temperature_reading.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/qwst/temperature_reading.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/qwst/temperature_reading.py", "size": 2751, "hash": "b77f24d6bec56b43961923622e67a91d13eae711", "was": []}]},
- {"path": "examples/programs/showcase/rescue_vehicle.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/rescue_vehicle.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/rescue_vehicle.py", "size": 1751, "hash": "913c0ad95871b9d33811d0cebb06d02dc1cf42be", "was": []}]},
- {"path": "examples/programs/showcase/ship_thrusters.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/ship_thrusters.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/ship_thrusters.py", "size": 2924, "hash": "9e8ed283b3d3aeecb216ea5a27f7a11364659f6a", "was": []}]},
- {"path": "examples/programs/showcase/space_tales.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/space_tales.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/space_tales.py", "size": 1038, "hash": "a3e98a85819bceb242b2b4ff014af6e3b16a2ae2", "was": []}]},
- {"path": "examples/programs/showcase/space_tales_with_pir.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/space_tales_with_pir.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/space_tales_with_pir.py", "size": 1770, "hash": "a6f906e7da42a51b9d3e3a00a52a163f9a1e5877", "was": []}]},
- {"path": "examples/programs/wireless/cheerlights.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/wireless/cheerlights.py", "kind": "program", "firmware": "1.2.0", "repo_folder": "examples/tiny_fx_w/", "files": [
   {"path": "examples/programs/wireless/cheerlights.py", "size": 2497, "hash": "5ff0cb7174c860b45a7738b80923172c8916ef9d", "was": []}]},
- {"path": "examples/programs/wireless/random.py", "kind": "program", "firmware": "1.1.3", "files": [
-  {"path": "examples/programs/wireless/random.py", "size": 2853, "hash": "759c8f9d5b5d3bb06248d44714dc2ffcea80c181", "was": []}]}
+ {"path": "examples/programs/wireless/random.py", "kind": "program", "firmware": "1.2.0", "repo_folder": "examples/tiny_fx_w/", "files": [
+  {"path": "examples/programs/wireless/random.py", "size": 2853, "hash": "759c8f9d5b5d3bb06248d44714dc2ffcea80c181", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_car.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_car.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_car.wav", "size": 77288, "hash": "b7719f61152713c20d6b374eb16d1f1e1e26179e", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_reversing.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_reversing.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_reversing.wav", "size": 44212, "hash": "968749200a55069ff0166bfcf5289d5a856c7455", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_smoke.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_smoke.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_smoke.wav", "size": 176512, "hash": "cacc61e05a6706f852044efaff873b6cc8799b51", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_uk_fire_sounder.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_uk_fire_sounder.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_uk_fire_sounder.wav", "size": 44212, "hash": "c5ea40b1d9168b86819b0c4bc9e19d3dcde562a3", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_us_t3_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_us_t3_horn.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_us_t3_horn.wav", "size": 176512, "hash": "88c1f7eadb7c3ee72e9ad48c7464114584173540", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_bubbles.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_bubbles.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_bubbles.wav", "size": 352912, "hash": "997610e2b5266000b5380c3ae410ebb88020ca86", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_cafe.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_cafe.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_cafe.wav", "size": 352912, "hash": "e31152d50bfbaffd7dfc999891abe6eb2591bedf", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_city_traffic.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_city_traffic.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_city_traffic.wav", "size": 529312, "hash": "ef4d5173f655a23eb3ac659fbc838c6f585547f4", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_desert_night.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_desert_night.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_desert_night.wav", "size": 264712, "hash": "1e778e126634ab7eafa16e47ebca01f269223fda", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_desert_wind.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_desert_wind.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_desert_wind.wav", "size": 441112, "hash": "e420243e4427384360e936bdb4e3faf2b197c0e1", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_facility.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_facility.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_facility.wav", "size": 352912, "hash": "3c4a87b7e085d0c974535c6638b7d6484ff2bb27", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_forest_birds.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_forest_birds.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_forest_birds.wav", "size": 352912, "hash": "463f23080a1209c86a9d4dc23fb5bfa1eedce720", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_rain.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_rain.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_rain.wav", "size": 264712, "hash": "4b9fc8dc23114841954db941f421817fc6873acc", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_sea_waves.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_sea_waves.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_sea_waves.wav", "size": 352912, "hash": "58226e7c26c940148c78a48bea159e068cb0555a", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_stream.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_stream.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_stream.wav", "size": 352912, "hash": "27e50577f10c97b1fcb1920307901a48811a6d99", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_thunderstorm.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_thunderstorm.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_thunderstorm.wav", "size": 529312, "hash": "5bbf7e1247970decc78602846b6ee028b2c886fc", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_waterfall.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_waterfall.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_waterfall.wav", "size": 352912, "hash": "23e0acc0b8a81e796151ee8954821fdec5ce89a6", "was": []}]},
+ {"path": "examples/sounds/civil/civil_attack_wail.wav", "kind": "sound", "firmware": "1.2.0", "name": "civil_attack_wail.wav", "section": "Civil defence", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/civil/civil_attack_wail.wav", "size": 441112, "hash": "3a3111f978baaf0eb944984a8d015d1ad76d0711", "was": []}]},
+ {"path": "examples/sounds/civil/civil_tornado_siren.wav", "kind": "sound", "firmware": "1.2.0", "name": "civil_tornado_siren.wav", "section": "Civil defence", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/civil/civil_tornado_siren.wav", "size": 441112, "hash": "b56d254b1f94efd68ffe314b8793e38124f78569", "was": []}]},
+ {"path": "examples/sounds/electric/elec_arc_buzz.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_arc_buzz.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_arc_buzz.wav", "size": 88312, "hash": "e55066a243fca060b85921f1841d7cdd27285357", "was": []}]},
+ {"path": "examples/sounds/electric/elec_fence.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_fence.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_fence.wav", "size": 88312, "hash": "cf7413bb7d8bc100a283075293ad4a5823eb233a", "was": []}]},
+ {"path": "examples/sounds/electric/elec_jacobs_ladder.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_jacobs_ladder.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_jacobs_ladder.wav", "size": 110362, "hash": "aea7bf12b302872895fc68545c15e300d68e852f", "was": []}]},
+ {"path": "examples/sounds/electric/elec_sparks.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_sparks.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_sparks.wav", "size": 132412, "hash": "938dfb9c0ed6d4ba2fa69d6c4a3a0d3efa31d8d2", "was": []}]},
+ {"path": "examples/sounds/electric/elec_tesla_coil.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_tesla_coil.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_tesla_coil.wav", "size": 176512, "hash": "75628eabea326d66083fedd9685fcdd17cee9675", "was": []}]},
+ {"path": "examples/sounds/engines/engine_diesel_idle.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_diesel_idle.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_diesel_idle.wav", "size": 88312, "hash": "1df684d7602be14d89ce8678113a25a8d4905cbb", "was": []}]},
+ {"path": "examples/sounds/engines/engine_fire_truck.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_fire_truck.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_fire_truck.wav", "size": 88312, "hash": "11be8b4e05f36028a38652c5f7056c0c01f18325", "was": []}]},
+ {"path": "examples/sounds/engines/engine_helicopter.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_helicopter.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_helicopter.wav", "size": 88312, "hash": "85097c9ccc0e197d2c03ba389bee8615493e90de", "was": []}]},
+ {"path": "examples/sounds/engines/engine_starship.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_starship.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_starship.wav", "size": 176512, "hash": "852cb6950b774b46f566f4883ea8c1aa0cc27b5c", "was": []}]},
+ {"path": "examples/sounds/engines/engine_v8_idle.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_v8_idle.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_v8_idle.wav", "size": 132412, "hash": "c8914d4ea7ffbd77a664fdd681e146acf204388a", "was": []}]},
+ {"path": "examples/sounds/fire/fire_blaze.wav", "kind": "sound", "firmware": "1.2.0", "name": "fire_blaze.wav", "section": "Fire", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/fire/fire_blaze.wav", "size": 264712, "hash": "540c378521979d3579c43f1f862344705de5ef4c", "was": []}]},
+ {"path": "examples/sounds/fire/fire_campfire.wav", "kind": "sound", "firmware": "1.2.0", "name": "fire_campfire.wav", "section": "Fire", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/fire/fire_campfire.wav", "size": 176512, "hash": "40ce92d3e094ae03a199ed25ba6a6caa588fee80", "was": []}]},
+ {"path": "examples/sounds/maritime/maritime_foghorn.wav", "kind": "sound", "firmware": "1.2.0", "name": "maritime_foghorn.wav", "section": "Ships", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/maritime/maritime_foghorn.wav", "size": 352912, "hash": "2985a6f25488bbe724281f0156dfac1305b273b6", "was": []}]},
+ {"path": "examples/sounds/maritime/maritime_ship_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "maritime_ship_horn.wav", "section": "Ships", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/maritime/maritime_ship_horn.wav", "size": 264712, "hash": "0783623d330d6175fb9ce5c44751b7e69b112a55", "was": []}]},
+ {"path": "examples/sounds/phones/phone_dial.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_dial.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_dial.wav", "size": 44212, "hash": "5549b4f89b68ff2722bda7374bed99f7cc8631fa", "was": []}]},
+ {"path": "examples/sounds/phones/phone_uk_engaged.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_uk_engaged.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_uk_engaged.wav", "size": 66262, "hash": "610c392f1b7fc9062dffdcc24720a7e564719d99", "was": []}]},
+ {"path": "examples/sounds/phones/phone_uk_ring.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_uk_ring.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_uk_ring.wav", "size": 132412, "hash": "9f38b47d24af9320330dfe82989354bcea2d9d15", "was": []}]},
+ {"path": "examples/sounds/phones/phone_uk_unobtainable.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_uk_unobtainable.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_uk_unobtainable.wav", "size": 44212, "hash": "bb5c0208543b15dd0d71cf97921e5f361a4b2f66", "was": []}]},
+ {"path": "examples/sounds/phones/phone_us_busy.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_us_busy.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_us_busy.wav", "size": 44212, "hash": "edb3b0a6a92e0a014d2d1e3b156b9c1ad4dbbcfa", "was": []}]},
+ {"path": "examples/sounds/phones/phone_us_reorder.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_us_reorder.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_us_reorder.wav", "size": 44212, "hash": "3fba57c58341e77466354a0000755cae312c0ac1", "was": []}]},
+ {"path": "examples/sounds/phones/phone_us_ring.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_us_ring.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_us_ring.wav", "size": 264712, "hash": "20740a56992908eed563137300ce48d5668139cd", "was": []}]},
+ {"path": "examples/sounds/rail/rail_uk_train_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_uk_train_horn.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_uk_train_horn.wav", "size": 132412, "hash": "7708ed01db784d8fcdaf41532694adf373995f31", "was": []}]},
+ {"path": "examples/sounds/rail/rail_uk_yodel.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_uk_yodel.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_uk_yodel.wav", "size": 105952, "hash": "95dfaab30be067d5ce1ebc064a938861f8128009", "was": []}]},
+ {"path": "examples/sounds/rail/rail_us_crossing_bell.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_us_crossing_bell.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_us_crossing_bell.wav", "size": 97132, "hash": "92db0197af80ba0799ae8a59715b482a56b2276d", "was": []}]},
+ {"path": "examples/sounds/rail/rail_us_train_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_us_train_horn.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_us_train_horn.wav", "size": 88312, "hash": "10cbfef6b06e62ac37fbef3baa33d1d0ea627eb1", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_computer.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_computer.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_computer.wav", "size": 176512, "hash": "de604abc90ffdec8301061a26bb31a591ca6e14f", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_dive.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_dive.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_dive.wav", "size": 53032, "hash": "bdccc6591ee1fc0e3a7a74b957b664c78cb45e7e", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_evacuate.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_evacuate.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_evacuate.wav", "size": 22162, "hash": "8bbaf7bd5cf978a7c337c7e3904c51e6d81009e8", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_klaxon.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_klaxon.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_klaxon.wav", "size": 35392, "hash": "767b681648f7bd42ac008bbdd95b0e239b7a9a31", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_red_alert.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_red_alert.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_red_alert.wav", "size": 44212, "hash": "280c0a094c023e250a986e4b9723e1a9858a6301", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_self_destruct.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_self_destruct.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_self_destruct.wav", "size": 44212, "hash": "a5a35b8d8e0838ed2578751616531d1a7abea1d2", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_teleporter.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_teleporter.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_teleporter.wav", "size": 132412, "hash": "8e9f712a447a8497cd0ddb1046357c1351d8eeca", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_tractor_beam.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_tractor_beam.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_tractor_beam.wav", "size": 88312, "hash": "894a131751be994fd6b8eb6fde7ad58e79bd4bf2", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_warble.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_warble.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_warble.wav", "size": 44212, "hash": "26882ba62efa99a9f95ef2e784bbaf58e65ce812", "was": []}]},
+ {"path": "examples/sounds/signals/signal_flatline.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_flatline.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_flatline.wav", "size": 44212, "hash": "f9203233cd4d1730fb1c88d992b24437a3950358", "was": []}]},
+ {"path": "examples/sounds/signals/signal_geiger.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_geiger.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_geiger.wav", "size": 264712, "hash": "61c8c6b2153a092df1b283d9f542b6fd9f12562e", "was": []}]},
+ {"path": "examples/sounds/signals/signal_heart_monitor.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_heart_monitor.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_heart_monitor.wav", "size": 264712, "hash": "9d92f4977d9cf53849d8f00b2f0dd58c9d8060cd", "was": []}]},
+ {"path": "examples/sounds/signals/signal_morse_sos.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_morse_sos.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_morse_sos.wav", "size": 120064, "hash": "e9a627c849b88e6662f5315f54628a56b0669ff7", "was": []}]},
+ {"path": "examples/sounds/signals/signal_sonar_ping.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_sonar_ping.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_sonar_ping.wav", "size": 176512, "hash": "d79b1bd46e58770c5cf2cbe6dff30644885dffe3", "was": []}]},
+ {"path": "examples/sounds/uk/uk_air_raid_alert.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_air_raid_alert.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_air_raid_alert.wav", "size": 352912, "hash": "fe0de93833b56ea556667a652a245c212f88f64e", "was": []}]},
+ {"path": "examples/sounds/uk/uk_air_raid_all_clear.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_air_raid_all_clear.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_air_raid_all_clear.wav", "size": 88312, "hash": "4733e433b6fe83e49ce676b2f218e937945bec0c", "was": []}]},
+ {"path": "examples/sounds/uk/uk_hi_lo.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_hi_lo.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_hi_lo.wav", "size": 70672, "hash": "cf1e75fd22ad25c6f98e91015fad2bb4aa56805d", "was": []}]},
+ {"path": "examples/sounds/uk/uk_priority.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_priority.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_priority.wav", "size": 42448, "hash": "b1e0e27c2907642a7e36d68a5ef07474a655276b", "was": []}]},
+ {"path": "examples/sounds/uk/uk_two_tone.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_two_tone.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_two_tone.wav", "size": 105952, "hash": "2d4c87ba12957520de4bd312f5cce336c874a0f3", "was": []}]},
+ {"path": "examples/sounds/uk/uk_wail.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_wail.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_wail.wav", "size": 176512, "hash": "ec88f395346a0b1620b835cab1c7bc9e75074e1f", "was": []}]},
+ {"path": "examples/sounds/uk/uk_yelp.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_yelp.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_yelp.wav", "size": 84784, "hash": "4123c8887d1b5840c8749db740967b3ad74d5cfb", "was": []}]},
+ {"path": "examples/sounds/us/us_air_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_air_horn.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_air_horn.wav", "size": 44212, "hash": "3aca44a313eb558d18d025419510af3b2558ab91", "was": []}]},
+ {"path": "examples/sounds/us/us_hi_lo.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_hi_lo.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_hi_lo.wav", "size": 79492, "hash": "6e2fa0eeba6c2443d13e847aff48d96ad38cdf72", "was": []}]},
+ {"path": "examples/sounds/us/us_mechanical.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_mechanical.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_mechanical.wav", "size": 264712, "hash": "0ccf3c17cda79005cdfe4efc705bac3884c7cf8a", "was": []}]},
+ {"path": "examples/sounds/us/us_phaser.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_phaser.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_phaser.wav", "size": 42448, "hash": "99f647d935c72385f23b77db0d6670876c58b562", "was": []}]},
+ {"path": "examples/sounds/us/us_rumbler.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_rumbler.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_rumbler.wav", "size": 90076, "hash": "8f991719e02cdbabf70f02de9138bd5e8fe649e5", "was": []}]},
+ {"path": "examples/sounds/us/us_wail.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_wail.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_wail.wav", "size": 220612, "hash": "280bb760b406c9268535988a218c50014ad2b82b", "was": []}]},
+ {"path": "examples/sounds/us/us_yelp.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_yelp.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_yelp.wav", "size": 90076, "hash": "97eb6c6fbc56bf949a564a61feefa775d6e129a3", "was": []}]}
 ]}

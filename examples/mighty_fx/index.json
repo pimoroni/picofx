@@ -1,14 +1,14 @@
 {"format": 1, "examples": [
- {"path": "examples/drawings/acrylic_lixie.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/acrylic_lixie.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/acrylic_lixie.py", "size": 7986, "hash": "1bb550495e9a9c456cc82d2666ad99ef7aaf403d", "was": []},
   {"path": "examples/drawings/acrylic_lixie-amber.png", "size": 10365, "hash": "c9a9d185c13415509ed244a72cac74938d758407", "was": []},
   {"path": "examples/drawings/acrylic_lixie-green.png", "size": 11621, "hash": "3ec478d4ec472783ec299306c32beb706d5402f2", "was": []},
   {"path": "examples/drawings/acrylic_lixie-pink.png", "size": 10904, "hash": "0bee5fbb35f61c29f64010da054d83871f688894", "was": []},
   {"path": "examples/drawings/acrylic_lixie.png", "size": 10409, "hash": "bf93ec428deb6fc436cc742bfc555b2bb1cef431", "was": []}]},
- {"path": "examples/drawings/bus_departures.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/bus_departures.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/bus_departures.py", "size": 15644, "hash": "965f702609f7285d6080cda078db9fceb0868780", "was": []},
   {"path": "examples/drawings/bus_departures.png", "size": 24685, "hash": "6d44549c3630f8c419877b384cd9f5a90790ebe5", "was": []}]},
- {"path": "examples/drawings/creature_eyes.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/creature_eyes.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/creature_eyes.py", "size": 19183, "hash": "463b0b02f612dcf71cb87a0515ea3f9d96ce5c9b", "was": []},
   {"path": "examples/drawings/creature_eyes-alien.png", "size": 4607, "hash": "ce66991d140448eb6ad02cf0bc5bd404f08bdbef", "was": []},
   {"path": "examples/drawings/creature_eyes-goat.png", "size": 9395, "hash": "9cdb37acbbd996cdd7b100f956860ea1dd8ffc54", "was": []},
@@ -16,70 +16,70 @@
   {"path": "examples/drawings/creature_eyes-robot.png", "size": 3430, "hash": "cbdf2d23eec99531004f39fefda389a0171552ee", "was": []},
   {"path": "examples/drawings/creature_eyes-zombie.png", "size": 6753, "hash": "f80775b9abd980cc51ab8492f058d33d2a73026d", "was": []},
   {"path": "examples/drawings/creature_eyes.png", "size": 7300, "hash": "112c6443b69d561d2805bcff003a2bb83d0d1356", "was": []}]},
- {"path": "examples/drawings/crt_terminal.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/crt_terminal.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/crt_terminal.py", "size": 12292, "hash": "83c1930ca111838d6d9d5b0ff1f40c69b1b431e7", "was": []},
   {"path": "examples/drawings/crt_terminal.png", "size": 26443, "hash": "df9928f5b6572a13340c73af3d9f0395f63e3531", "was": []}]},
- {"path": "examples/drawings/departures_list.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/departures_list.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/departures_list.py", "size": 14245, "hash": "6e16f24e4664c56f09c49bff34c2dd86ed1d4936", "was": []},
   {"path": "examples/drawings/departures_list.png", "size": 15042, "hash": "8d3c007c960149665d389d7ae4cfed207cf1f70b", "was": []}]},
- {"path": "examples/drawings/fireplace.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/fireplace.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/fireplace.py", "size": 7365, "hash": "fc9d382fb137e6fd1578d1533b2b56646d49eb0c", "was": []},
   {"path": "examples/drawings/fireplace.png", "size": 9818, "hash": "af1b00cf06d874f9b5f1449e363b78f175fa791c", "was": []}]},
- {"path": "examples/drawings/flip_dot_sign.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/flip_dot_sign.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/flip_dot_sign.py", "size": 9172, "hash": "65898969047d36b637c488f0fe6bbd3bc77057ac", "was": []},
   {"path": "examples/drawings/flip_dot_sign.png", "size": 2529, "hash": "56fe0d2a39ed4694eb7c6a1d3279bce92fbfce1b", "was": []}]},
- {"path": "examples/drawings/lamp_matrix.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/lamp_matrix.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/lamp_matrix.py", "size": 15228, "hash": "b46e6433c5de66e3e80f7be7801a4f4285f25988", "was": []},
   {"path": "examples/drawings/lamp_matrix-led.png", "size": 22820, "hash": "b1efc4f50e074a1badf05471280a589001c29490", "was": []},
   {"path": "examples/drawings/lamp_matrix.png", "size": 25269, "hash": "6bea1d62df1588d07a68fd2ca58bb49dd6e03008", "was": []}]},
- {"path": "examples/drawings/laser_show.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/laser_show.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/laser_show.py", "size": 9486, "hash": "0bca6eb2b515f6ccf6281638365b9073eb5a90bb", "was": []},
   {"path": "examples/drawings/laser_show.png", "size": 39808, "hash": "f2b6863aaed91a94a127da57dcc7a0ee6e1ef886", "was": []}]},
- {"path": "examples/drawings/neon_corridor.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/neon_corridor.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/neon_corridor.py", "size": 14418, "hash": "01ef64b5f194361fc21a86577300adb9964d1c06", "was": []},
   {"path": "examples/drawings/neon_corridor-blueprint.png", "size": 20133, "hash": "53f34477a5fc4cda6ab39611047e2a781e5c299d", "was": []},
   {"path": "examples/drawings/neon_corridor-emerald.png", "size": 20538, "hash": "29704e500da3c9627398debbc6686f11c2a2160a", "was": []},
   {"path": "examples/drawings/neon_corridor-magenta.png", "size": 20833, "hash": "f6569b027b9030bc61aa2c69d5ce1bff0369dfb0", "was": []},
   {"path": "examples/drawings/neon_corridor-plaid.png", "size": 20188, "hash": "edfa4a40cbd90553d8b864f8b437c8fa65418157", "was": []},
   {"path": "examples/drawings/neon_corridor.png", "size": 20786, "hash": "b470e0498c652849f12aecf5306c6a8dc44dbce9", "was": []}]},
- {"path": "examples/drawings/nixie_tube.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/nixie_tube.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/nixie_tube.py", "size": 13387, "hash": "28f9cef5ae10b41c89ed40730622b19d5509fac6", "was": []},
   {"path": "examples/drawings/nixie_tube.png", "size": 13537, "hash": "203c82c6c1e6439e8e9a97742ca613790e7cf03b", "was": []}]},
- {"path": "examples/drawings/odometer.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/odometer.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/odometer.py", "size": 12633, "hash": "a141746f6205963301af7fbac585d4fe79849ce1", "was": []},
   {"path": "examples/drawings/odometer.png", "size": 16335, "hash": "8fe6d1fd109bc895159195219a43f717bf4da851", "was": []}]},
- {"path": "examples/drawings/oscilloscope.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/oscilloscope.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/oscilloscope.py", "size": 9654, "hash": "b14a5e2ac29aeb71587a522c4117b894c71c58ae", "was": []},
   {"path": "examples/drawings/oscilloscope.png", "size": 8727, "hash": "4bed934fbf359b2545641fa907187e75017405dc", "was": []}]},
- {"path": "examples/drawings/pool.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/pool.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/pool.py", "size": 9451, "hash": "0312a9d5bb9bde578cd8fd43c3f7245f65fd6d73", "was": []},
   {"path": "examples/drawings/pool-roman.png", "size": 24539, "hash": "5181730758499d47ee5f1376e1e6f1db7821702f", "was": []},
   {"path": "examples/drawings/pool.png", "size": 24433, "hash": "7c81f8b7567216f8709970c78e87761df53ad603", "was": []}]},
- {"path": "examples/drawings/portal.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/portal.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/portal.py", "size": 17044, "hash": "aded91cbec34d7a83709dce419e2bfcb45099561", "was": []},
   {"path": "examples/drawings/portal-ember.png", "size": 29908, "hash": "838c1b9270d993182896c7436e26d06dbe4444b5", "was": []},
   {"path": "examples/drawings/portal-emerald.png", "size": 30039, "hash": "4f54143af79fd251bf40694278610387f80be90d", "was": []},
   {"path": "examples/drawings/portal-ice.png", "size": 30694, "hash": "9b3ac860e16538e5f246e9c96c0a76f3979ce572", "was": []},
   {"path": "examples/drawings/portal.png", "size": 30277, "hash": "541b199c42afd660400d530f06d3fd898a21f323", "was": []}]},
- {"path": "examples/drawings/roadworks_sign.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/roadworks_sign.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/roadworks_sign.py", "size": 9145, "hash": "b0171e384ae3b12bc1e2586405dd636e6b09d87b", "was": []},
   {"path": "examples/drawings/roadworks_sign.png", "size": 3832, "hash": "d9d8dd1e79f7104424f0d8f100837343b9abd170", "was": []}]},
- {"path": "examples/drawings/segment_clock.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/segment_clock.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/segment_clock.py", "size": 13505, "hash": "486c3cc1757703b9af840585373d5677d21c22b6", "was": []},
   {"path": "examples/drawings/segment_clock-amber.png", "size": 15369, "hash": "9ffd6165b6dfb8a3694c16d5dfd06659c4e3b8a6", "was": []},
   {"path": "examples/drawings/segment_clock-green.png", "size": 15730, "hash": "d17ad45b73a5fe8db0396f9defdd3f64be000b2f", "was": []},
   {"path": "examples/drawings/segment_clock.png", "size": 14581, "hash": "072c0034dd6679cb3c1d54c0078cd2bda76fbd37", "was": []}]},
- {"path": "examples/drawings/segment_sign.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/segment_sign.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/segment_sign.py", "size": 14115, "hash": "8e21747a93471b9a9cbbe7cf0907afb57db5e318", "was": []},
   {"path": "examples/drawings/segment_sign-bare.png", "size": 20572, "hash": "f89606836ed57d02f0665ce49cf1f24f1b66496f", "was": []},
   {"path": "examples/drawings/segment_sign.png", "size": 23675, "hash": "56d0a58138739df1252663ee74a0d025c9f3ac21", "was": []}]},
- {"path": "examples/drawings/split_flap_clock.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/split_flap_clock.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/split_flap_clock.py", "size": 10764, "hash": "fffb239483f8e093d7209f21ada63c8e0d6e5044", "was": []},
   {"path": "examples/drawings/split_flap_clock.png", "size": 4391, "hash": "01f37d4714d2cea1b353a62571f669afee9dabf6", "was": []}]},
- {"path": "examples/drawings/split_flap_departures.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/split_flap_departures.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/split_flap_departures.py", "size": 15613, "hash": "ebedf326d96d078058007b0d58040f53c98cf438", "was": []},
   {"path": "examples/drawings/split_flap_departures.png", "size": 14077, "hash": "cec1dc4c85da184d647a7636f8e4c4e1dd6a58ff", "was": []}]},
- {"path": "examples/drawings/street_billboard.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/street_billboard.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/street_billboard.py", "size": 5263, "hash": "551c67b6f8d67ef83c8fd898653c83ca52cffe17", "was": []},
   {"path": "examples/drawings/street_billboard.png", "size": 19216, "hash": "eddb743549478a3edae0bab7a3bc4905c338285b", "was": []},
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []},
@@ -93,105 +93,105 @@
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []},
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []},
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/drawings/trivision_billboard.py", "kind": "drawing", "firmware": "1.1.3", "files": [
+ {"path": "examples/drawings/trivision_billboard.py", "kind": "drawing", "firmware": "1.2.0", "files": [
   {"path": "examples/drawings/trivision_billboard.py", "size": 6241, "hash": "4128bce94de22b9fa52c1cb02e7de85f0271e36a", "was": []},
   {"path": "examples/drawings/trivision_billboard.png", "size": 14846, "hash": "ecc634735f701e069d4b32f0f43e0a69cdba5d2b", "was": []},
   {"path": "examples/pictures/billboards/landscape/lambo.png", "size": 17255, "hash": "612493f82e25781ccab5ab467e357df0f6a5bb4e", "was": []},
   {"path": "examples/pictures/billboards/landscape/tufty.png", "size": 45296, "hash": "4d30aebc66aafe1b247c477f9fd1743a427950ab", "was": []},
   {"path": "examples/pictures/billboards/landscape/frum.png", "size": 25440, "hash": "e108649ee5fe28b6789dfcf3adedf1213522f3ef", "was": []}]},
- {"path": "examples/programs/audio/fair_use_encounters.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/audio/fair_use_encounters.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/audio/fair_use_encounters.py", "size": 2592, "hash": "734324f33f78448d02620d699085abecfbfbc8cd", "was": []}]},
- {"path": "examples/programs/audio/race_start.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/audio/race_start.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/audio/race_start.py", "size": 2201, "hash": "625ff286eab6cf5e118f8de713afbbfb5ddef72e", "was": []}]},
- {"path": "examples/programs/function/motion_light.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/function/motion_light.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/function/motion_light.py", "size": 1835, "hash": "e93e26139679819e0e39a1e69b7f756aac81c9e3", "was": []}]},
- {"path": "examples/programs/function/sensor_meter.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/function/sensor_meter.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/function/sensor_meter.py", "size": 2396, "hash": "38aca70a5ba1d5ea7f8beceffc8cbf2772a754ba", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_hsv_direct.py", "size": 3960, "hash": "195903cbf7d2570f83d132f54ceb5ea3f7dd7276", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_hsv_fx.py", "size": 4086, "hash": "bb8537111208a33eb77dccc39af239084550bfff", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rainbow.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rainbow.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rainbow.py", "size": 3583, "hash": "e08c9aeb29f6206a3a0ad4be8e5082dc0a14ff39", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rainbow_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rainbow_wave.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rainbow_wave.py", "size": 4034, "hash": "6e63f6050e71939ad86b4a44d84cb56f1857a06b", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rgb_direct.py", "size": 2133, "hash": "c04f8227ac7a0ef20b51eeef80417da82e6dfcb3", "was": []}]},
- {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/colour/control_rgb_fx.py", "size": 2481, "hash": "683f8da8fff6e821b3c13d1cdb6b26ed7fac43d6", "was": []}]},
- {"path": "examples/programs/infrared/mono/control_channels.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/mono/control_channels.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/mono/control_channels.py", "size": 3542, "hash": "c89c70e3cd08876066b698784b469671ecbdfe5d", "was": []}]},
- {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/mono/control_pulse_wave.py", "size": 3093, "hash": "96ba1d4ffd3e3068c8c14b16107d5f8a0f46f24f", "was": []}]},
- {"path": "examples/programs/infrared/mono/toggle_effects.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/infrared/mono/toggle_effects.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/infrared/mono/toggle_effects.py", "size": 3111, "hash": "d8d7fafda1d904787680962541c4ba3feb3fcf1d", "was": []}]},
- {"path": "examples/programs/motors/motor_movements.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/motors/motor_movements.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/motors/motor_movements.py", "size": 2522, "hash": "badbd4dc32ca12f6f479cc8a3ae347e4a57c690e", "was": []}]},
- {"path": "examples/programs/motors/motor_pair.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/motors/motor_pair.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/motors/motor_pair.py", "size": 1198, "hash": "71ea0fc1c420244c7004fd756b2a61a93616987d", "was": []}]},
- {"path": "examples/programs/motors/motor_song.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/motors/motor_song.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/motors/motor_song.py", "size": 2424, "hash": "755295f61fa02d37b09eb81dad168d26bef67826", "was": []}]},
- {"path": "examples/programs/motors/remote_robot.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/motors/remote_robot.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/motors/remote_robot.py", "size": 4143, "hash": "2ce53444832d03903d18e7a7fd8eb5ad0455b7b0", "was": []}]},
- {"path": "examples/programs/qwst/light_level.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/qwst/light_level.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/qwst/light_level.py", "size": 2617, "hash": "935c9c5870d13ab2a78cc7ac7bd51156a849fb4b", "was": []}]},
- {"path": "examples/programs/qwst/spirit_level.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/qwst/spirit_level.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/qwst/spirit_level.py", "size": 3373, "hash": "0b90e11c205f8e58068a08f4605f91e55b395b36", "was": []}]},
- {"path": "examples/programs/qwst/temperature_reading.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/qwst/temperature_reading.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/qwst/temperature_reading.py", "size": 3013, "hash": "f3648b202478ea0a614d7fb77345cc7a061f5f49", "was": []}]},
- {"path": "examples/programs/screens/graphics/color_wheel.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/color_wheel.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/color_wheel.py", "size": 2460, "hash": "34e9861458084fb8de9913671ef03d50f42a9392", "was": []},
   {"path": "examples/programs/screens/graphics/color_wheel.png", "size": 9667, "hash": "01e36e0970a79d72bae0418b57cb6882b55d1a78", "was": []}]},
- {"path": "examples/programs/screens/graphics/colours.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/colours.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/colours.py", "size": 5743, "hash": "0b78e952186936019f67781d259dd3adc8aa3144", "was": []},
   {"path": "examples/programs/screens/graphics/colours.png", "size": 16739, "hash": "1873b8af2f1af16b8141b9e82121f078e754ff2a", "was": []}]},
- {"path": "examples/programs/screens/graphics/easing_curves.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/easing_curves.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/easing_curves.py", "size": 4755, "hash": "1446c1acd8f8b3f02b14511e6aaa48e74c8d3657", "was": []},
   {"path": "examples/programs/screens/graphics/easing_curves.png", "size": 11725, "hash": "4ba82da823acfbf6a58d7d66228fafa1f1686bda", "was": []}]},
- {"path": "examples/programs/screens/graphics/filters.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/filters.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/filters.py", "size": 4002, "hash": "53ef0e3b982b2988050b41648ca2d49951d013b2", "was": []},
   {"path": "examples/programs/screens/graphics/filters.png", "size": 39573, "hash": "0cd5e6921d6a6c0d987ee3a39bf62ce8230b7535", "was": []},
   {"path": "examples/pictures/gold_macaw_card.png", "size": 63750, "hash": "3b8bb2627a8aab3721ec470e0dd6d37425238df9", "was": []}]},
- {"path": "examples/programs/screens/graphics/led_matrix.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/led_matrix.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/led_matrix.py", "size": 5141, "hash": "dfdbf02b9c703fe33a76edec523dda05e1ad5e32", "was": []},
   {"path": "examples/programs/screens/graphics/led_matrix.png", "size": 3796, "hash": "2950a5fc70c1dcb5b6d5b8dc689d2ee87b5fa672", "was": []}]},
- {"path": "examples/programs/screens/graphics/paths.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/paths.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/paths.py", "size": 5249, "hash": "d876944a19b7b21ab38bb72bf715b51ede30e8ab", "was": []},
   {"path": "examples/programs/screens/graphics/paths.png", "size": 12160, "hash": "52968e0ac4b727815e54a7ecb2347dff1c2fb431", "was": []}]},
- {"path": "examples/programs/screens/graphics/pens.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/pens.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/pens.py", "size": 6685, "hash": "c7607bbab6f88af6184bad161481a73ae185d9bb", "was": []},
   {"path": "examples/programs/screens/graphics/pens.png", "size": 31309, "hash": "04ecc126ee6eab8e4eb2b55ef900a070cf01495e", "was": []},
   {"path": "examples/pictures/traces/traces3.png", "size": 24527, "hash": "54962baa83ff1ec78c455ceb468e3e1a5ebe6f02", "was": []},
   {"path": "examples/pictures/gold_macaw_card.png", "size": 63750, "hash": "3b8bb2627a8aab3721ec470e0dd6d37425238df9", "was": []}]},
- {"path": "examples/programs/screens/graphics/pixel_fonts.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/pixel_fonts.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/pixel_fonts.py", "size": 4830, "hash": "896c1b2c5f7f4ac095381b6aa04a77ca7441b5a1", "was": []},
   {"path": "examples/programs/screens/graphics/pixel_fonts.png", "size": 19616, "hash": "936a4b231914b21e6d53f0e5cb1fd3e8f7d061d2", "was": []}]},
- {"path": "examples/programs/screens/graphics/shapes.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/shapes.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/shapes.py", "size": 3566, "hash": "feb6c0da3fa4068c4d4fe9caa09c579af73f6507", "was": []},
   {"path": "examples/programs/screens/graphics/shapes.png", "size": 15669, "hash": "5ab61ad23382b8bb60075e6fa5788a6737a51ff7", "was": []}]},
- {"path": "examples/programs/screens/graphics/sprites.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/sprites.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/sprites.py", "size": 4076, "hash": "9c8f74dadb88535d5ebea7f25b3c2e9c88308fdf", "was": []},
   {"path": "examples/programs/screens/graphics/sprites.png", "size": 12319, "hash": "3595c50a2c36a7d9376af29e13a9c78b95e4b704", "was": []},
   {"path": "examples/pictures/pirate_face.gif", "size": 514, "hash": "d45dabdf160ca8b2bf3ab64b6ea6804feaedbf2b", "was": []}]},
- {"path": "examples/programs/screens/graphics/starfield.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/starfield.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/starfield.py", "size": 2486, "hash": "0481784e2a7a26b2e08f9a0c3f0cf7ecf8977643", "was": []},
   {"path": "examples/programs/screens/graphics/starfield.png", "size": 2912, "hash": "d470c0fd82d0e76f8d9d97b81bc54cd8658f5825", "was": []}]},
- {"path": "examples/programs/screens/graphics/text_layout.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/text_layout.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/text_layout.py", "size": 5204, "hash": "6e7db6a07289e52e299b31ba06db28cff0540103", "was": []},
   {"path": "examples/programs/screens/graphics/text_layout.png", "size": 13432, "hash": "218d713ba2eb5eac6e459b2315cb26866578c332", "was": []}]},
- {"path": "examples/programs/screens/graphics/vector_fonts.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/graphics/vector_fonts.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/graphics/vector_fonts.py", "size": 3673, "hash": "d2f66ff7f51945583472d3ea14d662b830f0a385", "was": []},
   {"path": "examples/programs/screens/graphics/vector_fonts.png", "size": 14110, "hash": "abc55af9a90be9ec3a90628cc60be06662c15601", "was": []}]},
- {"path": "examples/programs/screens/hub/chevron_banks.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/hub/chevron_banks.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/hub/chevron_banks.py", "size": 4298, "hash": "2a53fa349cd5783dab77de175f0e62aac36ec648", "was": []},
   {"path": "examples/programs/screens/hub/chevron_banks.png", "size": 9254, "hash": "134c763840a5302032d8e11915f4fa83c17856f0", "was": []}]},
- {"path": "examples/programs/screens/hub/detect_hub.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/hub/detect_hub.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/hub/detect_hub.py", "size": 4220, "hash": "dd0aa429951fd560d15cfc8fd3d083a5c1fa1bc7", "was": []},
   {"path": "examples/programs/screens/hub/detect_hub.png", "size": 5137, "hash": "1f3206927fa643d6b7bb01cd6b6b73fbd402c317", "was": []}]},
- {"path": "examples/programs/screens/hub/starfield_wall.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/hub/starfield_wall.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/hub/starfield_wall.py", "size": 3271, "hash": "75e4b0bb4867c2d3025a3c6390aa51e604ac6dec", "was": []},
   {"path": "examples/programs/screens/hub/starfield_wall.png", "size": 7903, "hash": "60f2eeaaadfca9f41f6b28139b011cdb408d71d7", "was": []}]},
- {"path": "examples/programs/screens/images/alternating_images.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/images/alternating_images.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/images/alternating_images.py", "size": 1996, "hash": "7e939ab09d0d4a6d6a1ab701f9ebd8261f64b517", "was": []},
   {"path": "examples/programs/screens/images/alternating_images.png", "size": 21330, "hash": "217c8db8f5640de5c94c9ad7c06a1302f6038963", "was": []},
   {"path": "examples/pictures/gold_macaw_card.png", "size": 63750, "hash": "3b8bb2627a8aab3721ec470e0dd6d37425238df9", "was": []},
@@ -202,69 +202,69 @@
   {"path": "examples/pictures/red_macaw_card.png", "size": 57593, "hash": "3d338741eb169e7b79a0604f9803e49b22758181", "was": []},
   {"path": "examples/pictures/sections.txt", "size": 680, "hash": "b7b5077b7eefe155623b35fe0ebd2b992c62d647", "was": []},
   {"path": "examples/pictures/skyline.png", "size": 2494, "hash": "5ec7a38bc221a3c43f81b39df8d6ab78243a648c", "was": []}]},
- {"path": "examples/programs/screens/images/poster_ticker.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/images/poster_ticker.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/images/poster_ticker.py", "size": 4588, "hash": "6b9cae3f96e49bde02fc61374d0854a177fa9b2d", "was": []},
   {"path": "examples/programs/screens/images/poster_ticker.png", "size": 46177, "hash": "994d053e5bb1beb7926ee929e59d9bfb07095c02", "was": []},
   {"path": "examples/pictures/billboards/portrait/scooshers.png", "size": 56299, "hash": "6a7d99d350e3798ebf0201d78024f8aa7a23288f", "was": []}]},
- {"path": "examples/programs/screens/layout/bouncing_logo.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/layout/bouncing_logo.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/layout/bouncing_logo.py", "size": 4008, "hash": "fbd839d2d76748c16003ecc5c86703815e85b38f", "was": []},
   {"path": "examples/programs/screens/layout/bouncing_logo.png", "size": 3188, "hash": "8616eaca9fa7662414ec1884ca9a05fe295542a8", "was": []},
   {"path": "examples/pictures/pirate_face.gif", "size": 514, "hash": "d45dabdf160ca8b2bf3ab64b6ea6804feaedbf2b", "was": []}]},
- {"path": "examples/programs/screens/layout/kaleidoscope.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/layout/kaleidoscope.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/layout/kaleidoscope.py", "size": 5265, "hash": "fcdafc2f9c3710de8468813f30fd82a44537bc6a", "was": []},
   {"path": "examples/programs/screens/layout/kaleidoscope.png", "size": 5969, "hash": "de7b86461fc47a25321d34a8e7f61daed5cf60dc", "was": []}]},
- {"path": "examples/programs/screens/layout/orientations.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/layout/orientations.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/layout/orientations.py", "size": 5628, "hash": "d83e5c1eed2d5fc2112caed63b78d8bb058071ab", "was": []},
   {"path": "examples/programs/screens/layout/orientations.png", "size": 2505, "hash": "2dba116798678d32c77c39e55fcd9ad9be2547b5", "was": []}]},
- {"path": "examples/programs/screens/layout/pixel_doubled.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/layout/pixel_doubled.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/layout/pixel_doubled.py", "size": 5656, "hash": "6125d81534cbe7387b788656edbec0e38d1d6666", "was": []},
   {"path": "examples/programs/screens/layout/pixel_doubled.png", "size": 14293, "hash": "caa43ba0ff3114d63d7c97f7840cd6ca11d6f96a", "was": []}]},
- {"path": "examples/programs/screens/layout/tiled_arrows.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/layout/tiled_arrows.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/layout/tiled_arrows.py", "size": 2858, "hash": "16c3323472f994d74f026f650bb7fd1a8136b2cd", "was": []},
   {"path": "examples/programs/screens/layout/tiled_arrows.png", "size": 1244, "hash": "d5ea70a96fa9a57780a93f22d7b6e6b96b049d8e", "was": []}]},
- {"path": "examples/programs/screens/layout/tiled_bricks.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/layout/tiled_bricks.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/layout/tiled_bricks.py", "size": 3056, "hash": "7dbdb2b205d675d9c2185da203c96f2d70a41762", "was": []},
   {"path": "examples/programs/screens/layout/tiled_bricks.png", "size": 918, "hash": "456f15179834fd31bafca1d05f8e62c93d33f87d", "was": []}]},
- {"path": "examples/programs/screens/pair/color_wheel_facing.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/pair/color_wheel_facing.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/pair/color_wheel_facing.py", "size": 3011, "hash": "b928c83b38ebbad1916506f5f2a177f3f2c0aeaa", "was": []},
   {"path": "examples/programs/screens/pair/color_wheel_facing-2.png", "size": 10003, "hash": "d44b6b1af80665b74c77b633559946e7ff320b56", "was": []},
   {"path": "examples/programs/screens/pair/color_wheel_facing.png", "size": 9992, "hash": "425ce3d1edbb4b49e5f015f2b7dec6d704038491", "was": []}]},
- {"path": "examples/programs/screens/pair/color_wheel_paired.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/pair/color_wheel_paired.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/pair/color_wheel_paired.py", "size": 3176, "hash": "f89c26530d916ac6846a2a55b1653b5337979445", "was": []},
   {"path": "examples/programs/screens/pair/color_wheel_paired-2.png", "size": 9992, "hash": "425ce3d1edbb4b49e5f015f2b7dec6d704038491", "was": []},
   {"path": "examples/programs/screens/pair/color_wheel_paired.png", "size": 9992, "hash": "425ce3d1edbb4b49e5f015f2b7dec6d704038491", "was": []}]},
- {"path": "examples/programs/screens/pair/color_wheel_unpaired.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/pair/color_wheel_unpaired.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/pair/color_wheel_unpaired.py", "size": 2996, "hash": "dbe254a15d459e76155b59aeb9707987f50418da", "was": []},
   {"path": "examples/programs/screens/pair/color_wheel_unpaired-2.png", "size": 9992, "hash": "425ce3d1edbb4b49e5f015f2b7dec6d704038491", "was": []},
   {"path": "examples/programs/screens/pair/color_wheel_unpaired.png", "size": 9992, "hash": "425ce3d1edbb4b49e5f015f2b7dec6d704038491", "was": []}]},
- {"path": "examples/programs/screens/pair/drifting_carpets.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/pair/drifting_carpets.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/pair/drifting_carpets.py", "size": 6542, "hash": "e41ee4d878ba0c4879e4d7d357d5d047007afd72", "was": []},
   {"path": "examples/programs/screens/pair/drifting_carpets-2.png", "size": 3051, "hash": "db28fdd780fa8138acd33c7843bb7c29c8d19429", "was": []},
   {"path": "examples/programs/screens/pair/drifting_carpets.png", "size": 3623, "hash": "d9ab3a79cfeb79c8875b181f75a47add0b488bbb", "was": []}]},
- {"path": "examples/programs/screens/pair/test_cards_paired.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/pair/test_cards_paired.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/pair/test_cards_paired.py", "size": 4455, "hash": "a488a3c32afbfd7c2ded7c02e8fb3dafc4afcef0", "was": []},
   {"path": "examples/programs/screens/pair/test_cards_paired-2.png", "size": 22476, "hash": "c2fdc3eab974a436961b45a800cac9f2befd0814", "was": []},
   {"path": "examples/programs/screens/pair/test_cards_paired.png", "size": 23473, "hash": "368f2123f37fed800438cc28b0a75edf377cb7ad", "was": []},
   {"path": "examples/pictures/gold_macaw_card.png", "size": 63750, "hash": "3b8bb2627a8aab3721ec470e0dd6d37425238df9", "was": []},
   {"path": "examples/pictures/red_macaw_card.png", "size": 57593, "hash": "3d338741eb169e7b79a0604f9803e49b22758181", "was": []}]},
- {"path": "examples/programs/screens/playback/animated_gif.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/animated_gif.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/animated_gif.py", "size": 1980, "hash": "418684850ea5159ccdd754b5e99f93fc80b36611", "was": []},
   {"path": "examples/programs/screens/playback/animated_gif.png", "size": 20298, "hash": "ccec75429ed99a0828bf36632801b4710d869290", "was": []},
   {"path": "examples/pictures/pirate_coin.gif", "size": 131121, "hash": "75bb56f9ebbc00b64128569a26067d6db24b5d5f", "was": []}]},
- {"path": "examples/programs/screens/playback/animated_gif_paired.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/animated_gif_paired.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/animated_gif_paired.py", "size": 2103, "hash": "5c2db67979a7e47df9f82f48a96c372c132ad1f7", "was": []},
   {"path": "examples/programs/screens/playback/animated_gif_paired-2.png", "size": 18107, "hash": "35cd7b9aa0113f1579b69ad196731dc35656d857", "was": []},
   {"path": "examples/programs/screens/playback/animated_gif_paired.png", "size": 18107, "hash": "35cd7b9aa0113f1579b69ad196731dc35656d857", "was": []},
   {"path": "examples/pictures/pirate_coin.gif", "size": 131121, "hash": "75bb56f9ebbc00b64128569a26067d6db24b5d5f", "was": []}]},
- {"path": "examples/programs/screens/playback/animated_gif_ping_pong.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/animated_gif_ping_pong.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/animated_gif_ping_pong.py", "size": 2108, "hash": "6a7c57c1f6c8dd65eb0df08c8c31197ba3d00a1f", "was": []},
   {"path": "examples/programs/screens/playback/animated_gif_ping_pong.png", "size": 18464, "hash": "4a074ecf1baa42d3426faae830a0345eccf8dc18", "was": []},
   {"path": "examples/pictures/pirate_coin.gif", "size": 131121, "hash": "75bb56f9ebbc00b64128569a26067d6db24b5d5f", "was": []}]},
- {"path": "examples/programs/screens/playback/animated_gif_recoloured.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/animated_gif_recoloured.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/animated_gif_recoloured.py", "size": 3193, "hash": "8332efb0f8172e18b01396feadba67c8610b90b2", "was": []},
   {"path": "examples/programs/screens/playback/animated_gif_recoloured.png", "size": 17243, "hash": "9d03fa63152da665bd529bbde94310569a1600a1", "was": []},
   {"path": "examples/pictures/medscan.gif", "size": 80101, "hash": "eabccd6374899ba8b8c1f1a43e4ae1013dee4f16", "was": []}]},
- {"path": "examples/programs/screens/playback/billboard_folders.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/billboard_folders.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/billboard_folders.py", "size": 2922, "hash": "4908f095ace67ffb2d839375c380e47b334617b1", "was": []},
   {"path": "examples/programs/screens/playback/billboard_folders.png", "size": 40721, "hash": "dc3a20ba0036abe129f2051ca9709fffce92514f", "was": []},
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []},
@@ -281,7 +281,7 @@
   {"path": "examples/pictures/billboards/landscape/frum.png", "size": 25440, "hash": "e108649ee5fe28b6789dfcf3adedf1213522f3ef", "was": []},
   {"path": "examples/pictures/billboards/landscape/lambo.png", "size": 17255, "hash": "612493f82e25781ccab5ab467e357df0f6a5bb4e", "was": []},
   {"path": "examples/pictures/billboards/landscape/tufty.png", "size": 45296, "hash": "4d30aebc66aafe1b247c477f9fd1743a427950ab", "was": []}]},
- {"path": "examples/programs/screens/playback/billboard_paired.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/billboard_paired.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/billboard_paired.py", "size": 2106, "hash": "e210cf8aa11a642ba5756cb3304d98f4d3880b5b", "was": []},
   {"path": "examples/programs/screens/playback/billboard_paired-2.png", "size": 4982, "hash": "c9e16e099d1497b1a602c9d26e1d9178329d4f3e", "was": []},
   {"path": "examples/programs/screens/playback/billboard_paired.png", "size": 43483, "hash": "e2e1536cf4de195e471b36198615c2f189765d6b", "was": []},
@@ -296,7 +296,7 @@
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []},
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []},
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/programs/screens/playback/billboard_slideshow.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/billboard_slideshow.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/billboard_slideshow.py", "size": 1815, "hash": "4f0391fc94fae08c7abf55aa35fefd8c1a376c89", "was": []},
   {"path": "examples/programs/screens/playback/billboard_slideshow.png", "size": 14443, "hash": "b28dfe7801491f79c4c1f3f58eb881ede440feea", "was": []},
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []},
@@ -310,7 +310,7 @@
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []},
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []},
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/programs/screens/playback/billboard_wall.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/billboard_wall.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/billboard_wall.py", "size": 2652, "hash": "60ef3cb154ba8b86c9632561fc6b0291ef1733bb", "was": []},
   {"path": "examples/programs/screens/playback/billboard_wall.png", "size": 69188, "hash": "c7d8e188f4396bf495f0d1633b2f50c8ccd4e7bd", "was": []},
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []},
@@ -324,19 +324,19 @@
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []},
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []},
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/programs/screens/playback/dual_animated_gifs.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/dual_animated_gifs.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/dual_animated_gifs.py", "size": 2860, "hash": "8a203604582cadb31dd736bae6c1ccc2063c4299", "was": []},
   {"path": "examples/programs/screens/playback/dual_animated_gifs-2.png", "size": 13744, "hash": "59e38c69996c461947f2bc3e7fdb59adaad73e07", "was": []},
   {"path": "examples/programs/screens/playback/dual_animated_gifs.png", "size": 15200, "hash": "c6e81efce392576777855a02771cd96f882661cc", "was": []},
   {"path": "examples/pictures/pirate_coin.gif", "size": 131121, "hash": "75bb56f9ebbc00b64128569a26067d6db24b5d5f", "was": []},
   {"path": "examples/pictures/medscan.gif", "size": 80101, "hash": "eabccd6374899ba8b8c1f1a43e4ae1013dee4f16", "was": []}]},
- {"path": "examples/programs/screens/playback/neon_ping_pong.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/neon_ping_pong.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/neon_ping_pong.py", "size": 2284, "hash": "77f1c3d0f41c5da1f5c60e8b6e270488d32f5f59", "was": []},
   {"path": "examples/programs/screens/playback/neon_ping_pong.png", "size": 33687, "hash": "31d4b0823e972837a18394330130c03e08c4755a", "was": []},
   {"path": "examples/pictures/rosie/rosie1.png", "size": 45557, "hash": "08003755300681ad620bcc204bdaa1cf5b78a73a", "was": []},
   {"path": "examples/pictures/rosie/rosie2.png", "size": 45233, "hash": "fa8f1b44aaa1f70ab088f9f7a1af5cbe9c535474", "was": []},
   {"path": "examples/pictures/rosie/rosie3.png", "size": 45210, "hash": "f4b7e8702759c0a24e609c8d5492c8b5576204c4", "was": []}]},
- {"path": "examples/programs/screens/playback/traces_scroll.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/traces_scroll.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/traces_scroll.py", "size": 3878, "hash": "f6a674860c5e4d7a2d722b7b1920a3f0597d6387", "was": []},
   {"path": "examples/programs/screens/playback/traces_scroll.png", "size": 28952, "hash": "fe4f03f563c05b4ee6792efd47f76e5cdf439529", "was": []},
   {"path": "examples/pictures/traces/traces1.png", "size": 22781, "hash": "c38378db01d96b156daec0342b46c615da740c3f", "was": []},
@@ -347,7 +347,7 @@
   {"path": "examples/pictures/traces/traces6.png", "size": 25260, "hash": "5946e124872df85815e83acdbc643f61f115696e", "was": []},
   {"path": "examples/pictures/traces/traces7.png", "size": 24576, "hash": "9ba3afd9124b81e4805464605db5bceeffef69f7", "was": []},
   {"path": "examples/pictures/traces/traces8.png", "size": 23555, "hash": "a011656635f7fb35dea5559cc277ce74def5a647", "was": []}]},
- {"path": "examples/programs/screens/playback/traces_wall.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/playback/traces_wall.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/playback/traces_wall.py", "size": 2425, "hash": "d71d422073f5564d482725d5545c383663035b7a", "was": []},
   {"path": "examples/programs/screens/playback/traces_wall.png", "size": 40500, "hash": "9700d48399f20acae48d717751fe7aeccaf2234e", "was": []},
   {"path": "examples/pictures/traces/traces1.png", "size": 22781, "hash": "c38378db01d96b156daec0342b46c615da740c3f", "was": []},
@@ -358,46 +358,46 @@
   {"path": "examples/pictures/traces/traces6.png", "size": 25260, "hash": "5946e124872df85815e83acdbc643f61f115696e", "was": []},
   {"path": "examples/pictures/traces/traces7.png", "size": 24576, "hash": "9ba3afd9124b81e4805464605db5bceeffef69f7", "was": []},
   {"path": "examples/pictures/traces/traces8.png", "size": 23555, "hash": "a011656635f7fb35dea5559cc277ce74def5a647", "was": []}]},
- {"path": "examples/programs/screens/single/detect_screens.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/screens/single/detect_screens.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/screens/single/detect_screens.py", "size": 3625, "hash": "c96166841875cebdca7da1638f8842b1ca528f2c", "was": []},
   {"path": "examples/programs/screens/single/detect_screens-2.png", "size": 1440, "hash": "1392abc2cef1ba1d98b8e06efefd65fa6faf11c7", "was": []},
   {"path": "examples/programs/screens/single/detect_screens.png", "size": 1495, "hash": "1d7965eeae46b56a94bdf15258766e43550ccbac", "was": []}]},
- {"path": "examples/programs/servos/remote_robot.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/servos/remote_robot.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/servos/remote_robot.py", "size": 4083, "hash": "afc890868b52f77f71be09669955b8e9e4aae5c2", "was": []}]},
- {"path": "examples/programs/servos/servo_easing.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/servos/servo_easing.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/servos/servo_easing.py", "size": 2569, "hash": "487bd1cb4e76452f1133deeaca4a906bb9e94c66", "was": []}]},
- {"path": "examples/programs/servos/servo_pair.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/servos/servo_pair.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/servos/servo_pair.py", "size": 2723, "hash": "401398130b5f8e0a717a02ecfc4da94a4dda1347", "was": []}]},
- {"path": "examples/programs/servos/servo_sweep.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/servos/servo_sweep.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/servos/servo_sweep.py", "size": 1399, "hash": "1a492d493f2944c622d368e3c67e4bc17548610c", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/creature_eyes.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/creature_eyes.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/creature_eyes.py", "size": 22389, "hash": "6e4746449533d4b13e1655f4014b678e11620bb5", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/creature_eyes-2.png", "size": 7300, "hash": "112c6443b69d561d2805bcff003a2bb83d0d1356", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/creature_eyes.png", "size": 7300, "hash": "112c6443b69d561d2805bcff003a2bb83d0d1356", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/fireplace.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/fireplace.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/fireplace.py", "size": 9732, "hash": "e83740e7fb5d15fbc585c0ed08ff867314cd3d91", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/fireplace.png", "size": 9818, "hash": "af1b00cf06d874f9b5f1449e363b78f175fa791c", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/isometric_flight.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/isometric_flight.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/isometric_flight.py", "size": 13458, "hash": "701db2cf1b49c601bfd968006f9c93f5f5192686", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/isometric_flight-2.png", "size": 29602, "hash": "85de2fee1227c4d4f78358842e1c9c0d44bb2d8c", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/isometric_flight.png", "size": 40641, "hash": "8da828897651deea6ec0b94cbee410da2e3fd725", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/laser_show.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/laser_show.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/laser_show.py", "size": 9369, "hash": "98812a79b748d714667b2535beff3eab888beffb", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/laser_show.png", "size": 39808, "hash": "f2b6863aaed91a94a127da57dcc7a0ee6e1ef886", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/neon_corridor.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/neon_corridor.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/neon_corridor.py", "size": 15784, "hash": "06e74693fbbce54a7362e6a7a5ed4923c32249a9", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/neon_corridor.png", "size": 20684, "hash": "8cb28d835d8ad9421ed489c8452f8ac195696dad", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/pool.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/pool.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/pool.py", "size": 11956, "hash": "270cd77bd8f6656549f44ceea69287d424985909", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/pool.png", "size": 24433, "hash": "7c81f8b7567216f8709970c78e87761df53ad603", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/portal.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/portal.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/portal.py", "size": 15410, "hash": "eb2d05ae1d030fa2edab67b032c76e6221560407", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/portal.png", "size": 31268, "hash": "a3e1ea95183b5db92fbf0652e27de4359e8c58bc", "was": []}]},
- {"path": "examples/programs/showcase/animated_scenes/skyline.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/animated_scenes/skyline.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/animated_scenes/skyline.py", "size": 5594, "hash": "326d9756c78796dfe807895ed7141bca615c49b3", "was": []},
   {"path": "examples/programs/showcase/animated_scenes/skyline.png", "size": 10857, "hash": "022359da0fd43815a78f712830916d63af61b19a", "was": []},
   {"path": "examples/pictures/skyline.png", "size": 2494, "hash": "5ec7a38bc221a3c43f81b39df8d6ab78243a648c", "was": []}]},
- {"path": "examples/programs/showcase/billboards/scrolling_billboard.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/billboards/scrolling_billboard.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/billboards/scrolling_billboard.py", "size": 4296, "hash": "b494f26371659162e1f2b68c407957d09e0cf542", "was": []},
   {"path": "examples/programs/showcase/billboards/scrolling_billboard.png", "size": 40596, "hash": "2ccad817d141daebdbed238e8511c46020303057", "was": []},
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []},
@@ -411,7 +411,7 @@
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []},
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []},
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/programs/showcase/billboards/street_billboard.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/billboards/street_billboard.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/billboards/street_billboard.py", "size": 4813, "hash": "b4e80f578c7d85c464fb9df88c84aeeb916cd526", "was": []},
   {"path": "examples/programs/showcase/billboards/street_billboard.png", "size": 19216, "hash": "eddb743549478a3edae0bab7a3bc4905c338285b", "was": []},
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []},
@@ -425,13 +425,13 @@
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []},
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []},
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/programs/showcase/billboards/trivision_billboard.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/billboards/trivision_billboard.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/billboards/trivision_billboard.py", "size": 6904, "hash": "e4ff827f31e9942ba9a46a31078e64b85193d0ca", "was": []},
   {"path": "examples/programs/showcase/billboards/trivision_billboard.png", "size": 14846, "hash": "ecc634735f701e069d4b32f0f43e0a69cdba5d2b", "was": []},
   {"path": "examples/pictures/billboards/landscape/lambo.png", "size": 17255, "hash": "612493f82e25781ccab5ab467e357df0f6a5bb4e", "was": []},
   {"path": "examples/pictures/billboards/landscape/tufty.png", "size": 45296, "hash": "4d30aebc66aafe1b247c477f9fd1743a427950ab", "was": []},
   {"path": "examples/pictures/billboards/landscape/frum.png", "size": 25440, "hash": "e108649ee5fe28b6789dfcf3adedf1213522f3ef", "was": []}]},
- {"path": "examples/programs/showcase/hub_clock/hub_clock.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/hub_clock/hub_clock.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/hub_clock/hub_clock.py", "size": 26857, "hash": "8ffe412df1682f08c5b2bab946e149b78316881d", "was": []},
   {"path": "examples/programs/showcase/hub_clock/hub_clock.png", "size": 10926, "hash": "8677b3ea4c328c8a5e36030cae3bc4b4d085fa09", "was": []},
   {"path": "examples/programs/showcase/hub_clock/clock_faces/drums.py", "size": 14798, "hash": "22743de5e5ff784f497f4a1bdcc9444f7638dc82", "was": []},
@@ -442,117 +442,117 @@
   {"path": "examples/programs/showcase/hub_clock/clock_faces/scope.py", "size": 11345, "hash": "06da51dd4852f8614cbd298c1ee9a907140fa475", "was": []},
   {"path": "examples/programs/showcase/hub_clock/clock_faces/seven_segment.py", "size": 6004, "hash": "3c2a65ecf09d98300af23208cf5bc2d6246cbeb4", "was": []},
   {"path": "examples/programs/showcase/hub_clock/clock_faces/split_flap.py", "size": 10836, "hash": "24b61e73714485ec64d3141f94e59acc7dec3227", "was": []}]},
- {"path": "examples/programs/showcase/programmed_route.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/programmed_route.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/programmed_route.py", "size": 10211, "hash": "7a44b7d9c205892eeb05311f3bca0f3b7d735c03", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/acrylic_lixie.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/acrylic_lixie.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/acrylic_lixie.py", "size": 8401, "hash": "b67d2c9f9914344edc85a6c97c7acd4652126b3b", "was": []},
   {"path": "examples/programs/showcase/retro_displays/acrylic_lixie.png", "size": 10409, "hash": "bf93ec428deb6fc436cc742bfc555b2bb1cef431", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/crt_terminal.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/crt_terminal.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/crt_terminal.py", "size": 13238, "hash": "c043ae430cceb382c741151f2216d74c38ebd145", "was": []},
   {"path": "examples/programs/showcase/retro_displays/crt_terminal.png", "size": 26443, "hash": "df9928f5b6572a13340c73af3d9f0395f63e3531", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/flip_dot_sign.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/flip_dot_sign.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/flip_dot_sign.py", "size": 9413, "hash": "8de888f01e124d68ed073acd17fb2fca5568941c", "was": []},
   {"path": "examples/programs/showcase/retro_displays/flip_dot_sign.png", "size": 2529, "hash": "56fe0d2a39ed4694eb7c6a1d3279bce92fbfce1b", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/lamp_matrix.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/lamp_matrix.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/lamp_matrix.py", "size": 15574, "hash": "96bd6d8e890bcab7d80771c3f35dccc0b8ea194d", "was": []},
   {"path": "examples/programs/showcase/retro_displays/lamp_matrix.png", "size": 25269, "hash": "6bea1d62df1588d07a68fd2ca58bb49dd6e03008", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/nixie_tube.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/nixie_tube.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/nixie_tube.py", "size": 14148, "hash": "e451a5018855588d2907cbc8b42e0294d6be755b", "was": []},
   {"path": "examples/programs/showcase/retro_displays/nixie_tube.png", "size": 13537, "hash": "203c82c6c1e6439e8e9a97742ca613790e7cf03b", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/odometer.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/odometer.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/odometer.py", "size": 13666, "hash": "74e0d96909d612b1d6c86eee1a20808a4401190a", "was": []},
   {"path": "examples/programs/showcase/retro_displays/odometer.png", "size": 16335, "hash": "8fe6d1fd109bc895159195219a43f717bf4da851", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/oscilloscope.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/oscilloscope.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/oscilloscope.py", "size": 11453, "hash": "542ebcec794ae2f0c7f0899ffbb1917e19d402a7", "was": []},
   {"path": "examples/programs/showcase/retro_displays/oscilloscope.png", "size": 8727, "hash": "4bed934fbf359b2545641fa907187e75017405dc", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/segment_clock.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/segment_clock.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/segment_clock.py", "size": 13500, "hash": "e7e856e112d131543ebc64da98e4c30d45ccd54a", "was": []},
   {"path": "examples/programs/showcase/retro_displays/segment_clock.png", "size": 14581, "hash": "072c0034dd6679cb3c1d54c0078cd2bda76fbd37", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/segment_sign.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/segment_sign.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/segment_sign.py", "size": 14496, "hash": "effcb857f50179afb8cf46796dbdbf15b78f1798", "was": []},
   {"path": "examples/programs/showcase/retro_displays/segment_sign.png", "size": 23675, "hash": "56d0a58138739df1252663ee74a0d025c9f3ac21", "was": []}]},
- {"path": "examples/programs/showcase/retro_displays/split_flap_clock.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/retro_displays/split_flap_clock.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/retro_displays/split_flap_clock.py", "size": 11579, "hash": "e74e3876c5d154262483c16ec7ba34f43ef0015e", "was": []},
   {"path": "examples/programs/showcase/retro_displays/split_flap_clock.png", "size": 4391, "hash": "01f37d4714d2cea1b353a62571f669afee9dabf6", "was": []}]},
- {"path": "examples/programs/showcase/status_panel.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/status_panel.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/status_panel.py", "size": 18035, "hash": "ddb9d587930d079b5b4bce204e8c41c65a6145c8", "was": []},
   {"path": "examples/programs/showcase/status_panel.png", "size": 20272, "hash": "e4798fd3197467f40aa356e902453767f9d7b676", "was": []},
   {"path": "examples/pictures/pirate_coin_emblem.gif", "size": 4745, "hash": "a90a480a98c1013d59f590248b58d3106e25c561", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/bus_departures.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/bus_departures.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/bus_departures.py", "size": 17903, "hash": "8803b4195eb39f2a0296d393fd7aaabe87d4bffb", "was": []},
   {"path": "examples/programs/showcase/transport_signs/bus_departures-2.png", "size": 22802, "hash": "e9ca5134aedeba7210a2cf3ae475394e96740e7d", "was": []},
   {"path": "examples/programs/showcase/transport_signs/bus_departures.png", "size": 26075, "hash": "d98d8609b964c3b9f69348c7393163c5b3ff4469", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/departure_board.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/departure_board.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/departure_board.py", "size": 13004, "hash": "63d180a307f5b9df29fea4cfd0f82e9e31f05c55", "was": []},
   {"path": "examples/programs/showcase/transport_signs/departure_board.png", "size": 26652, "hash": "9ebf786f1cf07b10235735ba31b71cabce7ac871", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/departures_list.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/departures_list.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/departures_list.py", "size": 16418, "hash": "1795df46eee469c1edc7745515c16eb662836aac", "was": []},
   {"path": "examples/programs/showcase/transport_signs/departures_list-2.png", "size": 14946, "hash": "b8d015c69d00ae404e93ce608a83bc0bf9a62114", "was": []},
   {"path": "examples/programs/showcase/transport_signs/departures_list.png", "size": 15042, "hash": "8d3c007c960149665d389d7ae4cfed207cf1f70b", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/lane_control_gantry.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/lane_control_gantry.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/lane_control_gantry.py", "size": 20268, "hash": "ed3b971b4c3afe142c6408df39eb479919cc5320", "was": []},
   {"path": "examples/programs/showcase/transport_signs/lane_control_gantry.png", "size": 8451, "hash": "3549ca6e00c100a3d7d3e76f8ec9380fdd2dc756", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/roadworks_sign.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/roadworks_sign.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/roadworks_sign.py", "size": 10241, "hash": "979010e4c3a600bfa5254b5ddd206c722ee32905", "was": []},
   {"path": "examples/programs/showcase/transport_signs/roadworks_sign.png", "size": 3832, "hash": "d9d8dd1e79f7104424f0d8f100837343b9abd170", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/split_flap_departures.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/split_flap_departures.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/split_flap_departures.py", "size": 15651, "hash": "9e071a825cf21238b7d95572c8c99471e997e852", "was": []},
   {"path": "examples/programs/showcase/transport_signs/split_flap_departures.png", "size": 14077, "hash": "cec1dc4c85da184d647a7636f8e4c4e1dd6a58ff", "was": []}]},
- {"path": "examples/programs/showcase/transport_signs/tram_stop_sign.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/showcase/transport_signs/tram_stop_sign.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/showcase/transport_signs/tram_stop_sign.py", "size": 11831, "hash": "c374774f83f2369171e21d2d330c86fedb2b9b6a", "was": []},
   {"path": "examples/programs/showcase/transport_signs/tram_stop_sign-2.png", "size": 3670, "hash": "d36b3e49ffe797097bb14ff878129b8066975550", "was": []},
   {"path": "examples/programs/showcase/transport_signs/tram_stop_sign.png", "size": 4261, "hash": "9e2ae0403cdfb62f84543b9cd34d2bafd540529d", "was": []}]},
- {"path": "examples/programs/wireless/cheerlights.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/wireless/cheerlights.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/wireless/cheerlights.py", "size": 2557, "hash": "b62b1d0c3ca864e582d21ae70ae540a660619914", "was": []}]},
- {"path": "examples/programs/wireless/random.py", "kind": "program", "firmware": "1.1.3", "files": [
+ {"path": "examples/programs/wireless/random.py", "kind": "program", "firmware": "1.2.0", "files": [
   {"path": "examples/programs/wireless/random.py", "size": 2519, "hash": "6890376126456bc8ac3a42a8c8aff094e514335d", "was": []}]},
- {"path": "examples/pictures/gold_macaw_card.png", "kind": "picture", "firmware": "1.1.3", "name": "gold_macaw_card.png", "section": "Still pictures", "slideshow": false, "files": [
+ {"path": "examples/pictures/gold_macaw_card.png", "kind": "picture", "firmware": "1.2.0", "name": "gold_macaw_card.png", "section": "Still pictures", "slideshow": false, "files": [
   {"path": "examples/pictures/gold_macaw_card.png", "size": 63750, "hash": "3b8bb2627a8aab3721ec470e0dd6d37425238df9", "was": []}]},
- {"path": "examples/pictures/medscan.gif", "kind": "picture", "firmware": "1.1.3", "name": "medscan.gif", "section": "Animations", "slideshow": false, "files": [
+ {"path": "examples/pictures/medscan.gif", "kind": "picture", "firmware": "1.2.0", "name": "medscan.gif", "section": "Animations", "slideshow": false, "files": [
   {"path": "examples/pictures/medscan.gif", "size": 80101, "hash": "eabccd6374899ba8b8c1f1a43e4ae1013dee4f16", "was": []}]},
- {"path": "examples/pictures/pirate_coin.gif", "kind": "picture", "firmware": "1.1.3", "name": "pirate_coin.gif", "section": "Animations", "slideshow": false, "files": [
+ {"path": "examples/pictures/pirate_coin.gif", "kind": "picture", "firmware": "1.2.0", "name": "pirate_coin.gif", "section": "Animations", "slideshow": false, "files": [
   {"path": "examples/pictures/pirate_coin.gif", "size": 131121, "hash": "75bb56f9ebbc00b64128569a26067d6db24b5d5f", "was": []}]},
- {"path": "examples/pictures/pirate_coin_emblem.gif", "kind": "picture", "firmware": "1.1.3", "name": "pirate_coin_emblem.gif", "section": "Animations", "slideshow": false, "files": [
+ {"path": "examples/pictures/pirate_coin_emblem.gif", "kind": "picture", "firmware": "1.2.0", "name": "pirate_coin_emblem.gif", "section": "Animations", "slideshow": false, "files": [
   {"path": "examples/pictures/pirate_coin_emblem.gif", "size": 4745, "hash": "a90a480a98c1013d59f590248b58d3106e25c561", "was": []}]},
- {"path": "examples/pictures/pirate_face.gif", "kind": "picture", "firmware": "1.1.3", "name": "pirate_face.gif", "section": "Still pictures", "slideshow": false, "files": [
+ {"path": "examples/pictures/pirate_face.gif", "kind": "picture", "firmware": "1.2.0", "name": "pirate_face.gif", "section": "Still pictures", "slideshow": false, "files": [
   {"path": "examples/pictures/pirate_face.gif", "size": 514, "hash": "d45dabdf160ca8b2bf3ab64b6ea6804feaedbf2b", "was": []}]},
- {"path": "examples/pictures/red_macaw_card.png", "kind": "picture", "firmware": "1.1.3", "name": "red_macaw_card.png", "section": "Still pictures", "slideshow": false, "files": [
+ {"path": "examples/pictures/red_macaw_card.png", "kind": "picture", "firmware": "1.2.0", "name": "red_macaw_card.png", "section": "Still pictures", "slideshow": false, "files": [
   {"path": "examples/pictures/red_macaw_card.png", "size": 57593, "hash": "3d338741eb169e7b79a0604f9803e49b22758181", "was": []}]},
- {"path": "examples/pictures/skyline.png", "kind": "picture", "firmware": "1.1.3", "name": "skyline.png", "section": "Still pictures", "slideshow": false, "files": [
+ {"path": "examples/pictures/skyline.png", "kind": "picture", "firmware": "1.2.0", "name": "skyline.png", "section": "Still pictures", "slideshow": false, "files": [
   {"path": "examples/pictures/skyline.png", "size": 2494, "hash": "5ec7a38bc221a3c43f81b39df8d6ab78243a648c", "was": []}]},
- {"path": "examples/pictures/billboards/landscape/frum.png", "kind": "picture", "firmware": "1.1.3", "name": "frum.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/landscape/frum.png", "kind": "picture", "firmware": "1.2.0", "name": "frum.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/landscape/frum.png", "size": 25440, "hash": "e108649ee5fe28b6789dfcf3adedf1213522f3ef", "was": []}]},
- {"path": "examples/pictures/billboards/landscape/lambo.png", "kind": "picture", "firmware": "1.1.3", "name": "lambo.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/landscape/lambo.png", "kind": "picture", "firmware": "1.2.0", "name": "lambo.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/landscape/lambo.png", "size": 17255, "hash": "612493f82e25781ccab5ab467e357df0f6a5bb4e", "was": []}]},
- {"path": "examples/pictures/billboards/landscape/tufty.png", "kind": "picture", "firmware": "1.1.3", "name": "tufty.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/landscape/tufty.png", "kind": "picture", "firmware": "1.2.0", "name": "tufty.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/landscape/tufty.png", "size": 45296, "hash": "4d30aebc66aafe1b247c477f9fd1743a427950ab", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/amityville.png", "kind": "picture", "firmware": "1.1.3", "name": "amityville.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/amityville.png", "kind": "picture", "firmware": "1.2.0", "name": "amityville.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/amityville.png", "size": 13255, "hash": "6aef4fd69a67734ea771bcd87c92c4a9799bf625", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/comedy.png", "kind": "picture", "firmware": "1.1.3", "name": "comedy.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/comedy.png", "kind": "picture", "firmware": "1.2.0", "name": "comedy.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/comedy.png", "size": 12786, "hash": "9cedd08fd32d2c2dad8c5bc07db361e13394f42d", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/crunchweet.png", "kind": "picture", "firmware": "1.1.3", "name": "crunchweet.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/crunchweet.png", "kind": "picture", "firmware": "1.2.0", "name": "crunchweet.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/crunchweet.png", "size": 49119, "hash": "e062f0f9d585d2ddbd85b7bcce13ae46ab2dc819", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/falconmouse.png", "kind": "picture", "firmware": "1.1.3", "name": "falconmouse.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/falconmouse.png", "kind": "picture", "firmware": "1.2.0", "name": "falconmouse.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/falconmouse.png", "size": 4580, "hash": "ee201262d3f7aab82c06e6b46a9e53737945de4a", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/jk7.png", "kind": "picture", "firmware": "1.1.3", "name": "jk7.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/jk7.png", "kind": "picture", "firmware": "1.2.0", "name": "jk7.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/jk7.png", "size": 46155, "hash": "cd7f52ac9eaad342014bc94753ef5dcc98c30cc5", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/radical.png", "kind": "picture", "firmware": "1.1.3", "name": "radical.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/radical.png", "kind": "picture", "firmware": "1.2.0", "name": "radical.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/radical.png", "size": 42305, "hash": "bbe999685c8ec84c46d25dd111b5df9fbbb65834", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/scooshers.png", "kind": "picture", "firmware": "1.1.3", "name": "scooshers.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/scooshers.png", "kind": "picture", "firmware": "1.2.0", "name": "scooshers.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/scooshers.png", "size": 56299, "hash": "6a7d99d350e3798ebf0201d78024f8aa7a23288f", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/travel.png", "kind": "picture", "firmware": "1.1.3", "name": "travel.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/travel.png", "kind": "picture", "firmware": "1.2.0", "name": "travel.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/travel.png", "size": 20595, "hash": "4fb7f329e64f8a07b445f2017fab7db75561027b", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/vitaminy.png", "kind": "picture", "firmware": "1.1.3", "name": "vitaminy.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/vitaminy.png", "kind": "picture", "firmware": "1.2.0", "name": "vitaminy.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/vitaminy.png", "size": 51679, "hash": "a243a1b77094fadc99a13b6109663d79506212ae", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/weevil.png", "kind": "picture", "firmware": "1.1.3", "name": "weevil.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/weevil.png", "kind": "picture", "firmware": "1.2.0", "name": "weevil.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/weevil.png", "size": 53241, "hash": "dc1c5303b396922c1ea906d87a769beb159f8bf4", "was": []}]},
- {"path": "examples/pictures/billboards/portrait/zeropoint.png", "kind": "picture", "firmware": "1.1.3", "name": "zeropoint.png", "section": "Billboards", "slideshow": false, "files": [
+ {"path": "examples/pictures/billboards/portrait/zeropoint.png", "kind": "picture", "firmware": "1.2.0", "name": "zeropoint.png", "section": "Billboards", "slideshow": false, "files": [
   {"path": "examples/pictures/billboards/portrait/zeropoint.png", "size": 47452, "hash": "25fdc2679033735bed9abe31b4a22e8b32bfa732", "was": []}]},
- {"path": "examples/pictures/rosie", "kind": "picture", "firmware": "1.1.3", "name": "rosie", "section": "Slideshows", "slideshow": true, "files": [
+ {"path": "examples/pictures/rosie", "kind": "picture", "firmware": "1.2.0", "name": "rosie", "section": "Slideshows", "slideshow": true, "files": [
   {"path": "examples/pictures/rosie/rosie1.png", "size": 45557, "hash": "08003755300681ad620bcc204bdaa1cf5b78a73a", "was": []},
   {"path": "examples/pictures/rosie/rosie2.png", "size": 45233, "hash": "fa8f1b44aaa1f70ab088f9f7a1af5cbe9c535474", "was": []},
   {"path": "examples/pictures/rosie/rosie3.png", "size": 45210, "hash": "f4b7e8702759c0a24e609c8d5492c8b5576204c4", "was": []}]},
- {"path": "examples/pictures/traces", "kind": "picture", "firmware": "1.1.3", "name": "traces", "section": "Slideshows", "slideshow": true, "files": [
+ {"path": "examples/pictures/traces", "kind": "picture", "firmware": "1.2.0", "name": "traces", "section": "Slideshows", "slideshow": true, "files": [
   {"path": "examples/pictures/traces/traces1.png", "size": 22781, "hash": "c38378db01d96b156daec0342b46c615da740c3f", "was": []},
   {"path": "examples/pictures/traces/traces2.png", "size": 23614, "hash": "0dcc2eca66c53518392dcba8d7271d31f7fd7fbc", "was": []},
   {"path": "examples/pictures/traces/traces3.png", "size": 24527, "hash": "54962baa83ff1ec78c455ceb468e3e1a5ebe6f02", "was": []},
@@ -560,5 +560,149 @@
   {"path": "examples/pictures/traces/traces5.png", "size": 25733, "hash": "782b3cba6a2625da4f29f89df88544cd125a0b13", "was": []},
   {"path": "examples/pictures/traces/traces6.png", "size": 25260, "hash": "5946e124872df85815e83acdbc643f61f115696e", "was": []},
   {"path": "examples/pictures/traces/traces7.png", "size": 24576, "hash": "9ba3afd9124b81e4805464605db5bceeffef69f7", "was": []},
-  {"path": "examples/pictures/traces/traces8.png", "size": 23555, "hash": "a011656635f7fb35dea5559cc277ce74def5a647", "was": []}]}
+  {"path": "examples/pictures/traces/traces8.png", "size": 23555, "hash": "a011656635f7fb35dea5559cc277ce74def5a647", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_car.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_car.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_car.wav", "size": 77288, "hash": "b7719f61152713c20d6b374eb16d1f1e1e26179e", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_reversing.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_reversing.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_reversing.wav", "size": 44212, "hash": "968749200a55069ff0166bfcf5289d5a856c7455", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_smoke.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_smoke.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_smoke.wav", "size": 176512, "hash": "cacc61e05a6706f852044efaff873b6cc8799b51", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_uk_fire_sounder.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_uk_fire_sounder.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_uk_fire_sounder.wav", "size": 44212, "hash": "c5ea40b1d9168b86819b0c4bc9e19d3dcde562a3", "was": []}]},
+ {"path": "examples/sounds/alarms/alarm_us_t3_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "alarm_us_t3_horn.wav", "section": "Alarms", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/alarms/alarm_us_t3_horn.wav", "size": 176512, "hash": "88c1f7eadb7c3ee72e9ad48c7464114584173540", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_bubbles.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_bubbles.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_bubbles.wav", "size": 352912, "hash": "997610e2b5266000b5380c3ae410ebb88020ca86", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_cafe.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_cafe.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_cafe.wav", "size": 352912, "hash": "e31152d50bfbaffd7dfc999891abe6eb2591bedf", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_city_traffic.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_city_traffic.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_city_traffic.wav", "size": 529312, "hash": "ef4d5173f655a23eb3ac659fbc838c6f585547f4", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_desert_night.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_desert_night.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_desert_night.wav", "size": 264712, "hash": "1e778e126634ab7eafa16e47ebca01f269223fda", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_desert_wind.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_desert_wind.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_desert_wind.wav", "size": 441112, "hash": "e420243e4427384360e936bdb4e3faf2b197c0e1", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_facility.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_facility.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_facility.wav", "size": 352912, "hash": "3c4a87b7e085d0c974535c6638b7d6484ff2bb27", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_forest_birds.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_forest_birds.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_forest_birds.wav", "size": 352912, "hash": "463f23080a1209c86a9d4dc23fb5bfa1eedce720", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_rain.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_rain.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_rain.wav", "size": 264712, "hash": "4b9fc8dc23114841954db941f421817fc6873acc", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_sea_waves.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_sea_waves.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_sea_waves.wav", "size": 352912, "hash": "58226e7c26c940148c78a48bea159e068cb0555a", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_stream.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_stream.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_stream.wav", "size": 352912, "hash": "27e50577f10c97b1fcb1920307901a48811a6d99", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_thunderstorm.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_thunderstorm.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_thunderstorm.wav", "size": 529312, "hash": "5bbf7e1247970decc78602846b6ee028b2c886fc", "was": []}]},
+ {"path": "examples/sounds/ambience/amb_waterfall.wav", "kind": "sound", "firmware": "1.2.0", "name": "amb_waterfall.wav", "section": "Ambience", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/ambience/amb_waterfall.wav", "size": 352912, "hash": "23e0acc0b8a81e796151ee8954821fdec5ce89a6", "was": []}]},
+ {"path": "examples/sounds/civil/civil_attack_wail.wav", "kind": "sound", "firmware": "1.2.0", "name": "civil_attack_wail.wav", "section": "Civil defence", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/civil/civil_attack_wail.wav", "size": 441112, "hash": "3a3111f978baaf0eb944984a8d015d1ad76d0711", "was": []}]},
+ {"path": "examples/sounds/civil/civil_tornado_siren.wav", "kind": "sound", "firmware": "1.2.0", "name": "civil_tornado_siren.wav", "section": "Civil defence", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/civil/civil_tornado_siren.wav", "size": 441112, "hash": "b56d254b1f94efd68ffe314b8793e38124f78569", "was": []}]},
+ {"path": "examples/sounds/electric/elec_arc_buzz.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_arc_buzz.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_arc_buzz.wav", "size": 88312, "hash": "e55066a243fca060b85921f1841d7cdd27285357", "was": []}]},
+ {"path": "examples/sounds/electric/elec_fence.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_fence.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_fence.wav", "size": 88312, "hash": "cf7413bb7d8bc100a283075293ad4a5823eb233a", "was": []}]},
+ {"path": "examples/sounds/electric/elec_jacobs_ladder.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_jacobs_ladder.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_jacobs_ladder.wav", "size": 110362, "hash": "aea7bf12b302872895fc68545c15e300d68e852f", "was": []}]},
+ {"path": "examples/sounds/electric/elec_sparks.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_sparks.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_sparks.wav", "size": 132412, "hash": "938dfb9c0ed6d4ba2fa69d6c4a3a0d3efa31d8d2", "was": []}]},
+ {"path": "examples/sounds/electric/elec_tesla_coil.wav", "kind": "sound", "firmware": "1.2.0", "name": "elec_tesla_coil.wav", "section": "Electric", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/electric/elec_tesla_coil.wav", "size": 176512, "hash": "75628eabea326d66083fedd9685fcdd17cee9675", "was": []}]},
+ {"path": "examples/sounds/engines/engine_diesel_idle.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_diesel_idle.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_diesel_idle.wav", "size": 88312, "hash": "1df684d7602be14d89ce8678113a25a8d4905cbb", "was": []}]},
+ {"path": "examples/sounds/engines/engine_fire_truck.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_fire_truck.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_fire_truck.wav", "size": 88312, "hash": "11be8b4e05f36028a38652c5f7056c0c01f18325", "was": []}]},
+ {"path": "examples/sounds/engines/engine_helicopter.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_helicopter.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_helicopter.wav", "size": 88312, "hash": "85097c9ccc0e197d2c03ba389bee8615493e90de", "was": []}]},
+ {"path": "examples/sounds/engines/engine_starship.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_starship.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_starship.wav", "size": 176512, "hash": "852cb6950b774b46f566f4883ea8c1aa0cc27b5c", "was": []}]},
+ {"path": "examples/sounds/engines/engine_v8_idle.wav", "kind": "sound", "firmware": "1.2.0", "name": "engine_v8_idle.wav", "section": "Engines", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/engines/engine_v8_idle.wav", "size": 132412, "hash": "c8914d4ea7ffbd77a664fdd681e146acf204388a", "was": []}]},
+ {"path": "examples/sounds/fire/fire_blaze.wav", "kind": "sound", "firmware": "1.2.0", "name": "fire_blaze.wav", "section": "Fire", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/fire/fire_blaze.wav", "size": 264712, "hash": "540c378521979d3579c43f1f862344705de5ef4c", "was": []}]},
+ {"path": "examples/sounds/fire/fire_campfire.wav", "kind": "sound", "firmware": "1.2.0", "name": "fire_campfire.wav", "section": "Fire", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/fire/fire_campfire.wav", "size": 176512, "hash": "40ce92d3e094ae03a199ed25ba6a6caa588fee80", "was": []}]},
+ {"path": "examples/sounds/maritime/maritime_foghorn.wav", "kind": "sound", "firmware": "1.2.0", "name": "maritime_foghorn.wav", "section": "Ships", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/maritime/maritime_foghorn.wav", "size": 352912, "hash": "2985a6f25488bbe724281f0156dfac1305b273b6", "was": []}]},
+ {"path": "examples/sounds/maritime/maritime_ship_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "maritime_ship_horn.wav", "section": "Ships", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/maritime/maritime_ship_horn.wav", "size": 264712, "hash": "0783623d330d6175fb9ce5c44751b7e69b112a55", "was": []}]},
+ {"path": "examples/sounds/phones/phone_dial.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_dial.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_dial.wav", "size": 44212, "hash": "5549b4f89b68ff2722bda7374bed99f7cc8631fa", "was": []}]},
+ {"path": "examples/sounds/phones/phone_uk_engaged.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_uk_engaged.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_uk_engaged.wav", "size": 66262, "hash": "610c392f1b7fc9062dffdcc24720a7e564719d99", "was": []}]},
+ {"path": "examples/sounds/phones/phone_uk_ring.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_uk_ring.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_uk_ring.wav", "size": 132412, "hash": "9f38b47d24af9320330dfe82989354bcea2d9d15", "was": []}]},
+ {"path": "examples/sounds/phones/phone_uk_unobtainable.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_uk_unobtainable.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_uk_unobtainable.wav", "size": 44212, "hash": "bb5c0208543b15dd0d71cf97921e5f361a4b2f66", "was": []}]},
+ {"path": "examples/sounds/phones/phone_us_busy.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_us_busy.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_us_busy.wav", "size": 44212, "hash": "edb3b0a6a92e0a014d2d1e3b156b9c1ad4dbbcfa", "was": []}]},
+ {"path": "examples/sounds/phones/phone_us_reorder.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_us_reorder.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_us_reorder.wav", "size": 44212, "hash": "3fba57c58341e77466354a0000755cae312c0ac1", "was": []}]},
+ {"path": "examples/sounds/phones/phone_us_ring.wav", "kind": "sound", "firmware": "1.2.0", "name": "phone_us_ring.wav", "section": "Phones", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/phones/phone_us_ring.wav", "size": 264712, "hash": "20740a56992908eed563137300ce48d5668139cd", "was": []}]},
+ {"path": "examples/sounds/rail/rail_uk_train_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_uk_train_horn.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_uk_train_horn.wav", "size": 132412, "hash": "7708ed01db784d8fcdaf41532694adf373995f31", "was": []}]},
+ {"path": "examples/sounds/rail/rail_uk_yodel.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_uk_yodel.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_uk_yodel.wav", "size": 105952, "hash": "95dfaab30be067d5ce1ebc064a938861f8128009", "was": []}]},
+ {"path": "examples/sounds/rail/rail_us_crossing_bell.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_us_crossing_bell.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_us_crossing_bell.wav", "size": 97132, "hash": "92db0197af80ba0799ae8a59715b482a56b2276d", "was": []}]},
+ {"path": "examples/sounds/rail/rail_us_train_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "rail_us_train_horn.wav", "section": "Rail", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/rail/rail_us_train_horn.wav", "size": 88312, "hash": "10cbfef6b06e62ac37fbef3baa33d1d0ea627eb1", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_computer.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_computer.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_computer.wav", "size": 176512, "hash": "de604abc90ffdec8301061a26bb31a591ca6e14f", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_dive.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_dive.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_dive.wav", "size": 53032, "hash": "bdccc6591ee1fc0e3a7a74b957b664c78cb45e7e", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_evacuate.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_evacuate.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_evacuate.wav", "size": 22162, "hash": "8bbaf7bd5cf978a7c337c7e3904c51e6d81009e8", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_klaxon.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_klaxon.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_klaxon.wav", "size": 35392, "hash": "767b681648f7bd42ac008bbdd95b0e239b7a9a31", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_red_alert.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_red_alert.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_red_alert.wav", "size": 44212, "hash": "280c0a094c023e250a986e4b9723e1a9858a6301", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_self_destruct.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_self_destruct.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_self_destruct.wav", "size": 44212, "hash": "a5a35b8d8e0838ed2578751616531d1a7abea1d2", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_teleporter.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_teleporter.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_teleporter.wav", "size": 132412, "hash": "8e9f712a447a8497cd0ddb1046357c1351d8eeca", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_tractor_beam.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_tractor_beam.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_tractor_beam.wav", "size": 88312, "hash": "894a131751be994fd6b8eb6fde7ad58e79bd4bf2", "was": []}]},
+ {"path": "examples/sounds/scifi/scifi_warble.wav", "kind": "sound", "firmware": "1.2.0", "name": "scifi_warble.wav", "section": "Sci-fi", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/scifi/scifi_warble.wav", "size": 44212, "hash": "26882ba62efa99a9f95ef2e784bbaf58e65ce812", "was": []}]},
+ {"path": "examples/sounds/signals/signal_flatline.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_flatline.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_flatline.wav", "size": 44212, "hash": "f9203233cd4d1730fb1c88d992b24437a3950358", "was": []}]},
+ {"path": "examples/sounds/signals/signal_geiger.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_geiger.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_geiger.wav", "size": 264712, "hash": "61c8c6b2153a092df1b283d9f542b6fd9f12562e", "was": []}]},
+ {"path": "examples/sounds/signals/signal_heart_monitor.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_heart_monitor.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_heart_monitor.wav", "size": 264712, "hash": "9d92f4977d9cf53849d8f00b2f0dd58c9d8060cd", "was": []}]},
+ {"path": "examples/sounds/signals/signal_morse_sos.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_morse_sos.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_morse_sos.wav", "size": 120064, "hash": "e9a627c849b88e6662f5315f54628a56b0669ff7", "was": []}]},
+ {"path": "examples/sounds/signals/signal_sonar_ping.wav", "kind": "sound", "firmware": "1.2.0", "name": "signal_sonar_ping.wav", "section": "Signals", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/signals/signal_sonar_ping.wav", "size": 176512, "hash": "d79b1bd46e58770c5cf2cbe6dff30644885dffe3", "was": []}]},
+ {"path": "examples/sounds/uk/uk_air_raid_alert.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_air_raid_alert.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_air_raid_alert.wav", "size": 352912, "hash": "fe0de93833b56ea556667a652a245c212f88f64e", "was": []}]},
+ {"path": "examples/sounds/uk/uk_air_raid_all_clear.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_air_raid_all_clear.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_air_raid_all_clear.wav", "size": 88312, "hash": "4733e433b6fe83e49ce676b2f218e937945bec0c", "was": []}]},
+ {"path": "examples/sounds/uk/uk_hi_lo.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_hi_lo.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_hi_lo.wav", "size": 70672, "hash": "cf1e75fd22ad25c6f98e91015fad2bb4aa56805d", "was": []}]},
+ {"path": "examples/sounds/uk/uk_priority.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_priority.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_priority.wav", "size": 42448, "hash": "b1e0e27c2907642a7e36d68a5ef07474a655276b", "was": []}]},
+ {"path": "examples/sounds/uk/uk_two_tone.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_two_tone.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_two_tone.wav", "size": 105952, "hash": "2d4c87ba12957520de4bd312f5cce336c874a0f3", "was": []}]},
+ {"path": "examples/sounds/uk/uk_wail.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_wail.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_wail.wav", "size": 176512, "hash": "ec88f395346a0b1620b835cab1c7bc9e75074e1f", "was": []}]},
+ {"path": "examples/sounds/uk/uk_yelp.wav", "kind": "sound", "firmware": "1.2.0", "name": "uk_yelp.wav", "section": "UK sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/uk/uk_yelp.wav", "size": 84784, "hash": "4123c8887d1b5840c8749db740967b3ad74d5cfb", "was": []}]},
+ {"path": "examples/sounds/us/us_air_horn.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_air_horn.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_air_horn.wav", "size": 44212, "hash": "3aca44a313eb558d18d025419510af3b2558ab91", "was": []}]},
+ {"path": "examples/sounds/us/us_hi_lo.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_hi_lo.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_hi_lo.wav", "size": 79492, "hash": "6e2fa0eeba6c2443d13e847aff48d96ad38cdf72", "was": []}]},
+ {"path": "examples/sounds/us/us_mechanical.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_mechanical.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_mechanical.wav", "size": 264712, "hash": "0ccf3c17cda79005cdfe4efc705bac3884c7cf8a", "was": []}]},
+ {"path": "examples/sounds/us/us_phaser.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_phaser.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_phaser.wav", "size": 42448, "hash": "99f647d935c72385f23b77db0d6670876c58b562", "was": []}]},
+ {"path": "examples/sounds/us/us_rumbler.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_rumbler.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_rumbler.wav", "size": 90076, "hash": "8f991719e02cdbabf70f02de9138bd5e8fe649e5", "was": []}]},
+ {"path": "examples/sounds/us/us_wail.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_wail.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_wail.wav", "size": 220612, "hash": "280bb760b406c9268535988a218c50014ad2b82b", "was": []}]},
+ {"path": "examples/sounds/us/us_yelp.wav", "kind": "sound", "firmware": "1.2.0", "name": "us_yelp.wav", "section": "US sirens", "repo_folder": "examples/shared/", "files": [
+  {"path": "examples/sounds/us/us_yelp.wav", "size": 90076, "hash": "97eb6c6fbc56bf949a564a61feefa775d6e129a3", "was": []}]}
 ]}

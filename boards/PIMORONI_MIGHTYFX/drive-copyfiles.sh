@@ -15,3 +15,8 @@ find "$TARGET" -type f -name '*.md' -exec rm -v {} \;
 # offers the others that name a section to download
 python3 "$SCRIPT_PATH/../../tools/drive_programs.py" "$TARGET/examples" \
     "$SCRIPT_PATH/drive-programs.txt" || exit 1
+
+# The example sounds are downloaded through Discover, so only their sections go on the drive, for
+# the picker to group them by
+mkdir -p "$TARGET/examples/sounds"
+cp -v "$SCRIPT_PATH/../../examples/shared/examples/sounds/sections.txt" "$TARGET/examples/sounds/"

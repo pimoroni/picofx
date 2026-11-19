@@ -7,7 +7,7 @@ from collections import namedtuple
 
 from machine import PWM, Pin, Timer
 
-PICOFX_VERSION = "1.1.3"
+PICOFX_VERSION = "1.2.0"
 
 # An eased curve halves its distance this many times over its length, which looks
 # arrived on a lit output, so it finishes with a fade of the same length

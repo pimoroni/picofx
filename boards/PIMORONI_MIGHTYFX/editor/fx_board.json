@@ -5,6 +5,7 @@
              "reset_button": "Reset"},
  "examples_index": "examples/mighty_fx/index.json",
  "examples_listed_only": true,
+ "shared_examples": "examples/shared/",
  "outputs": [
   {"name": "out1", "kind": "colour", "breaks_out": true},
   {"name": "out2", "kind": "colour", "breaks_out": true},

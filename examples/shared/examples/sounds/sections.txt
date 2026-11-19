@@ -1,0 +1,16 @@
+# Sections for the example sounds on the picker's Sound tab, in the order they appear.
+# Each line is a section name, a short description, and its sounds separated by commas.
+# Write folder/* to list each sound in that folder separately.
+UK sirens | emergency vehicles and the wartime air raid siren | uk/*
+US sirens | emergency vehicles and an air horn | us/*
+Civil defence | tornado and attack warning sirens | civil/*
+Alarms | smoke, fire, car and reversing alarms | alarms/*
+Rail | level crossing alarms and train horns | rail/*
+Ships | a foghorn and a ship's horn | maritime/*
+Engines | idling engines, a fire truck, a helicopter and a starship | engines/*
+Fire | a crackling campfire and a blaze | fire/*
+Electric | arcs, sparks, a Jacob's ladder, a Tesla coil and an electric fence | electric/*
+Sci-fi | alerts, klaxons, a teleporter, a tractor beam and a computer | scifi/*
+Signals | sonar, a heart monitor, a Geiger counter and Morse code | signals/*
+Phones | ringing, engaged and dial tones | phones/*
+Ambience | rain, water, wind, waves, birds, a cafe and city traffic | ambience/*
