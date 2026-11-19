@@ -33,10 +33,13 @@ var DISCOVER_BRANCH = "main";
 var DISCOVER_SOURCE = "https://raw.githubusercontent.com/pimoroni/picofx/refs/heads/" +
                       DISCOVER_BRANCH + "/";
 
-// A file's address, by its path on the drive. The index sits beside the examples folder it lists
-function discoverFileUrl(path) {
+// A file's address, by its path on the drive. The index sits beside the examples folder it lists,
+// and an example from another folder names it as its repo_folder
+function discoverFileUrl(path, entry) {
   var index = BOARD.examples_index;
-  return DISCOVER_SOURCE + index.slice(0, index.lastIndexOf("/") + 1) + path;
+  var folder = entry && entry.repo_folder ? entry.repo_folder
+                                          : index.slice(0, index.lastIndexOf("/") + 1);
+  return DISCOVER_SOURCE + folder + path;
 }
 
 // The firmware's version, which an example may need newer than
@@ -288,7 +291,7 @@ async function discoverFetchMissing(kind, offered, same) {
       if (entry.kind === "picture") {
         if (!discoverThumbs[entry.path]) {
           discoverThumbs[entry.path] = URL.createObjectURL(
-            await (await fetch(discoverFileUrl(entry.files[0].path))).blob());
+            await (await fetch(discoverFileUrl(entry.files[0].path, entry))).blob());
         }
         listed[entry.path] = {name: entry.path, kind: "picture", offered: true,
                               picture: {title: entry.name, section: entry.section,
@@ -298,22 +301,22 @@ async function discoverFetchMissing(kind, offered, same) {
       // A sound is known by its header alone, fetched as its first few bytes, which say how long
       // it plays. It is heard from GitHub as it is, unfetched
       if (entry.kind === "sound") {
-        var head = await (await fetch(discoverFileUrl(entry.path),
+        var head = await (await fetch(discoverFileUrl(entry.path, entry),
                                       {headers: {Range: "bytes=0-4095"}})).arrayBuffer();
         listed[entry.path] = {name: entry.path, kind: "sound", offered: true,
                               sound: {title: entry.name, section: entry.section,
                                       seconds: discoverWavSeconds(head, entry.files[0].size),
-                                      url: discoverFileUrl(entry.path)}};
+                                      url: discoverFileUrl(entry.path, entry)}};
         return;
       }
-      var source = await (await fetch(discoverFileUrl(entry.path))).text();
+      var source = await (await fetch(discoverFileUrl(entry.path, entry))).text();
       var stem = entry.path.replace(/\.py$/i, "");
       // Its thumbnail, and a second screen's beside it where it has one
       for (var suffix of [".png", "-2.png"]) {
         var held = suffix === ".png" ? discoverThumbs : discoverSecondThumbs;
         var thumb = entry.files.filter(function (file) { return file.path === stem + suffix; })[0];
         if (thumb && !held[entry.path]) {
-          var blob = await (await fetch(discoverFileUrl(thumb.path))).blob();
+          var blob = await (await fetch(discoverFileUrl(thumb.path, entry))).blob();
           held[entry.path] = URL.createObjectURL(blob);
         }
       }
@@ -456,7 +459,7 @@ async function discoverDownload(path, quiet) {
     for (var file of entry.files) {
       var held = discover.files[file.path];
       if (held.state === "same" && held.at === file.path) continue;
-      var blob = await (await fetch(discoverFileUrl(file.path))).blob();
+      var blob = await (await fetch(discoverFileUrl(file.path, entry))).blob();
       if (await discoverHash(new Uint8Array(await blob.arrayBuffer())) !== file.hash)
         throw new Error("The downloaded file did not match. Try again.");
       await discoverWrite(file.path, blob);

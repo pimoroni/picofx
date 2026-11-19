@@ -30,6 +30,8 @@ description names no "examples_index" has none, and is passed over. A descriptio
 build does not copy, so the index leaves them out too. A description's "wireless_examples" names a
 second folder, whose examples the wireless variant's drive build copies over the first's, and the
 index lists them too. The picker offers those that go online only to a drive holding WiFi credentials.
+An example from that folder names it as its "repo_folder", so the picker fetches it from there and
+not from beside the index.
 """
 
 import argparse
@@ -231,13 +233,17 @@ def carried(name, hashed, size, before, gone):
 
 
 def build(repo_dir, bases, previous, left_out=(), listed_only=False):
-    """The index, as text, for the examples under each of bases, carrying forward the previous
-    index."""
+    """The index, as text, for the examples under each of bases, the first being the folder the
+    index sits in, carrying forward the previous index."""
     with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as handle:
         version = re.search(r'^PICOFX_VERSION = "([^"]+)"', handle.read(), re.MULTILINE).group(1)
     files = {}
+    # The folder each drive path is read from, as a later folder's file replaces an earlier one's
+    folder_of = {}
     for base in bases:
-        files.update(read_files(repo_dir, base, left_out))
+        read = read_files(repo_dir, base, left_out)
+        files.update(read)
+        folder_of.update(dict.fromkeys(read, base))
     before = {}
     released_firmware = {}
     for example in (previous or {}).get("examples", []):
@@ -255,6 +261,13 @@ def build(repo_dir, bases, previous, left_out=(), listed_only=False):
         # does not mark every example as needing newer firmware
         if entry["firmware"] is None:
             entry["firmware"] = released_firmware.get(entry["path"], version)
+        folders = {folder_of[name] for name in names}
+        # Check if the example's files come from two folders, which one address cannot serve
+        if len(folders) > 1:
+            sys.exit("{} brings files from {}".format(entry["path"], ", ".join(sorted(folders))))
+        folder = folders.pop()
+        if folder != bases[0]:
+            entry["repo_folder"] = folder
         entry["files"] = [carried(name, files[name][0], files[name][1], before, gone)
                           for name in names]
         examples.append(entry)
