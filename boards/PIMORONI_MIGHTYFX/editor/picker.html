@@ -18,6 +18,7 @@
   },
   "examples_index": "examples/mighty_fx/index.json",
   "examples_listed_only": true,
+  "shared_examples": "examples/shared/",
   "outputs": [
    {
     "name": "out1",
@@ -6720,6 +6721,16 @@ body.setupall #soundPanel {
 .discoversounds .sound .hear {
   z-index: 3;
 }
+/* The link under the Sound tab's Discover button to the gallery the example sounds come from */
+.discovergallery {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-s);
+  color: var(--dim-strong);
+
+  a {
+    color: var(--discover, var(--accent));
+  }
+}
 /* Under the chosen stretch's name, what the board plays where the scene leaves it empty */
 .chosen .underhint {
   font-size: var(--text-m);
@@ -13277,7 +13288,7 @@ function exampleSectionsFrom(text, root, kind) {
       return member.trim();
     }).filter(Boolean).map(function(member) {
       return root + member;
-    }), true];
+    }), kind === "pictures"];
   });
 }
 function isExampleMedia(name) {
@@ -13314,7 +13325,7 @@ function exampleGroups(kind, files) {
     });
     return [section[0], section[1], held, section[3]];
   });
-  groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  groups.push([OTHER_EXAMPLES[kind], "", left, kind === "pictures"]);
   return groups;
 }
 function sectionHolds(section, media) {
@@ -22468,6 +22479,7 @@ addStep(TAB_PANELS, FEATURE_TABS, "sound", "soundPanel");
 keptOpen("soundPanel");
 
 // boards/editor/picker/discover/sound/discover_sound.js
+var SOUND_GALLERY = "https://pimoroni.github.io/fx-sounds/";
 soundTileSteps.push(function(tile, name) {
   if (!name) return;
   tile.dataset.name = name;
@@ -22478,7 +22490,17 @@ soundTileSteps.push(function(tile, name) {
 });
 soundSteps.push(function() {
   var row = document.querySelector("#sound .sounds");
-  if (row && state.fileHandle) discoverPlaceBar(row, "sound");
+  if (!row || !state.fileHandle) return;
+  discoverPlaceBar(row, "sound");
+  row.querySelector(":scope > .discoverbar").appendChild(
+    h(
+      "p",
+      { className: "discovergallery" },
+      "More sounds are in the ",
+      h("a", { href: SOUND_GALLERY, target: "_blank", rel: "noopener" }, "fx-sounds gallery"),
+      ". Download one there, then add it with the add sounds tile."
+    )
+  );
 });
 function discoverSoundFace(path) {
   var sound = discoverSounds[path].sound;

@@ -27,8 +27,8 @@ var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds
 var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 
 // Each example folder's sections, as [name, what it holds, members, whether it starts folded], in
-// its sections.txt's order. A drawing joins a section with a Section: line, as a program does, and
-// a section of pictures or sounds always starts folded
+// its sections.txt's order. A drawing joins a section with a Section: line, as a program does. A
+// section of pictures always starts folded, as the drive comes with many, and one of sounds open
 export var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
@@ -45,7 +45,7 @@ function exampleSectionsFrom(text, root, kind) {
     var members = third ? third.split(",") : [];
     return [section[0], parts[0].trim(), members.map(function (member) {
       return member.trim();
-    }).filter(Boolean).map(function (member) { return root + member; }), true];
+    }).filter(Boolean).map(function (member) { return root + member; }), kind === "pictures"];
   });
 }
 
@@ -84,7 +84,7 @@ export function exampleGroups(kind, files) {
     left = left.filter(function (one) { return held.indexOf(one) < 0; });
     return [section[0], section[1], held, section[3]];
   });
-  groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  groups.push([OTHER_EXAMPLES[kind], "", left, kind === "pictures"]);
   return groups;
 }
 

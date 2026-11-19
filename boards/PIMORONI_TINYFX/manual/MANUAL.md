@@ -144,7 +144,8 @@ Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
 to play alongside the lights, or [[Nothing]] for none. [[Loop]] repeats it
 instead of playing it once, and the volume slider sets how loud the board plays
 it. To add your own, press the **add sounds** tile and choose WAV files, and the
-picker copies them onto the drive.
+picker copies them onto the drive. The link under the Discover button opens the
+fx-sounds gallery, which has more sounds to download and add this way.
 
 ```picker
 sounds: *rain.wav, doorbell.wav, Nothing

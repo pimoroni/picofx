@@ -12074,7 +12074,7 @@ function exampleSectionsFrom(text, root, kind) {
       return member.trim();
     }).filter(Boolean).map(function(member) {
       return root + member;
-    }), true];
+    }), kind === "pictures"];
   });
 }
 function isExampleMedia(name) {
@@ -12111,7 +12111,7 @@ function exampleGroups(kind, files) {
     });
     return [section[0], section[1], held, section[3]];
   });
-  groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  groups.push([OTHER_EXAMPLES[kind], "", left, kind === "pictures"]);
   return groups;
 }
 function sectionHolds(section, media) {

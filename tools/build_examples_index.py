@@ -30,8 +30,9 @@ description names no "examples_index" has none, and is passed over. A descriptio
 build does not copy, so the index leaves them out too. A description's "wireless_examples" names a
 second folder, whose examples the wireless variant's drive build copies over the first's, and the
 index lists them too. The picker offers those that go online only to a drive holding WiFi credentials.
-An example from that folder names it as its "repo_folder", so the picker fetches it from there and
-not from beside the index.
+A description's "shared_examples" names a folder of examples several boards offer, such as the
+example sounds, which no drive build copies. An example from either folder names it as its
+"repo_folder", so the picker fetches it from there and not from beside the index.
 """
 
 import argparse
@@ -325,7 +326,8 @@ def main():
             previous = json.load(handle)
     else:
         previous = released_index(repo_dir, board["examples_index"])
-    bases = [base] + ([board["wireless_examples"]] if "wireless_examples" in board else [])
+    bases = [base] + [board[key] for key in ("wireless_examples", "shared_examples")
+                      if key in board]
     text = build(repo_dir, bases, previous, board.get("examples_left_out", ()),
                  board.get("examples_listed_only", False))
     if args.check:

@@ -9,9 +9,12 @@ import {state} from "../../scenes.js";
 import {hearing, setHearing, soundSteps, soundTileSteps, stopHearing} from "../../sound/sound.js";
 
 // ---- examples to discover, on the Sound tab -----------------------------------------------------
-// The Sound tab's examples line, where its example sounds start. An example sound on the drive
-// can be deleted, as it can be downloaded again, and carries its Update or Needs mark.
-// discover.js does the rest.
+// The Sound tab's examples line, where its example sounds start, with a link to the gallery the
+// example sounds come from. An example sound on the drive can be deleted, as it can be downloaded
+// again, and carries its Update or Needs mark. discover.js does the rest.
+
+// The fx-sounds gallery, which has more sounds than Discover offers, to download by hand
+var SOUND_GALLERY = "https://pimoroni.github.io/fx-sounds/";
 
 soundTileSteps.push(function (tile, name) {
   if (!name) return;
@@ -24,7 +27,12 @@ soundTileSteps.push(function (tile, name) {
 
 soundSteps.push(function () {
   var row = document.querySelector("#sound .sounds");
-  if (row && state.fileHandle) discoverPlaceBar(row, "sound");
+  if (!row || !state.fileHandle) return;
+  discoverPlaceBar(row, "sound");
+  row.querySelector(":scope > .discoverbar").appendChild(
+    h("p", {className: "discovergallery"}, "More sounds are in the ",
+      h("a", {href: SOUND_GALLERY, target: "_blank", rel: "noopener"}, "fx-sounds gallery"),
+      ". Download one there, then add it with the add sounds tile."));
 });
 
 // A sound as the Sound tab shows one, its name and how long it plays, with a way to hear it from
