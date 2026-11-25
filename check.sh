@@ -53,7 +53,7 @@ if [[ "$LIBRARY_VERSION" != "$JSON_VERSION" ]]; then
 fi
 
 inform "Checking for trailing whitespace..."
-if grep -IUrn --color "[[:blank:]]$" --exclude-dir=audio --exclude-dir=build --exclude-dir=dist --exclude-dir=.tox --exclude-dir=.git --exclude=PKG-INFO; then
+if grep -IUrn --color "[[:blank:]]$" --exclude-dir=audio --exclude-dir=build --exclude-dir=dist --exclude-dir=.tox --exclude-dir=.git --exclude=PKG-INFO --exclude='*-OFL.txt'; then
     warning "Trailing whitespace found!"
     exit 1
 else
