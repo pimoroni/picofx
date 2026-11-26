@@ -8795,6 +8795,7 @@ function freeSceneName() {
 
 // boards/editor/picker/drive.js
 var SAVING_TAIL_MS = 920;
+var REMEMBERED_WAIT_MS = 1e3;
 function rememberDrive(handle) {
   try {
     var open = indexedDB.open("fx-pages", 1);
@@ -8803,12 +8804,31 @@ function rememberDrive(handle) {
     };
     open.onsuccess = function() {
       try {
-        open.result.transaction("handles", "readwrite").objectStore("handles").put(handle, "drive");
+        var store2 = open.result.transaction("handles", "readwrite").objectStore("handles");
+        if (handle) store2.put(handle, "drive");
+        else store2.delete("drive");
       } catch (e) {
       }
     };
   } catch (e) {
   }
+}
+function withinTime(promise, ms) {
+  return new Promise(function(settle2) {
+    var timer = setTimeout(function() {
+      settle2(null);
+    }, ms);
+    promise.then(
+      function(value) {
+        clearTimeout(timer);
+        settle2(value);
+      },
+      function() {
+        clearTimeout(timer);
+        settle2(null);
+      }
+    );
+  });
 }
 function rememberedDrive() {
   return new Promise(function(settle2) {
@@ -8839,14 +8859,13 @@ function rememberedDrive() {
   });
 }
 async function pickDrive(fresh) {
-  var kept = await rememberedDrive();
+  var kept = await withinTime(rememberedDrive(), REMEMBERED_WAIT_MS);
   if (kept && !fresh) {
-    try {
-      if (await kept.requestPermission({ mode: "readwrite" }) === "granted") {
-        await kept.getFileHandle("effects.txt");
-        return kept;
-      }
-    } catch (e) {
+    var allowed = await withinTime(kept.queryPermission({ mode: "readwrite" }), REMEMBERED_WAIT_MS);
+    if (allowed === "granted" && await withinTime(kept.getFileHandle("effects.txt"), REMEMBERED_WAIT_MS)) return kept;
+    if (allowed !== "prompt") {
+      rememberDrive(null);
+      kept = null;
     }
   }
   var picked;
@@ -8963,7 +8982,10 @@ async function openDrive(fresh) {
     await connect(fresh);
     banner("");
   } catch (e) {
-    if (e.name === "AbortError") return;
+    if (e.name === "AbortError") {
+      banner("No drive was opened.");
+      return;
+    }
     if (e.name === "NotAnFxDrive") {
       banner("That folder has no effects.txt, so it is not an FX drive. Choose the drive named FX.", true);
       return;

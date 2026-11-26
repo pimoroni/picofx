@@ -3,6 +3,13 @@
 1.2.1
 -----
 
+**FX drive**
+
+* Fixed Open FX drive in the picker and editor doing nothing when the drive they last opened had gone
+* After the browser restarts, Open FX drive shows the folder chooser at the FX drive instead of asking to restore access
+* Open FX drive says when no drive was opened, such as after Cancel
+* The editor's Save to board stays disabled after a failed save until a drive is opened again, as the picker's does
+
 **Mighty FX**
 
 * Fixed a SP/CE connector's lines reading high after `release()` on an RP2350 A2

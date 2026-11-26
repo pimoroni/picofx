@@ -12,17 +12,33 @@ import {state} from "./scenes.js";
 // 500ms after the last write, then runs one pass of half-steps, which is 920ms for seven lights
 export var SAVING_TAIL_MS = 920;
 
+// How long opening a drive waits on the remembered drive at each step. The browser can leave a
+// question about a drive that has gone unanswered for ever, and a click opens the dialog only
+// within a few seconds of it
+var REMEMBERED_WAIT_MS = 1000;
+
+// Remember the drive for the next visit, or forget it where handle is null
 function rememberDrive(handle) {
   try {
     var open = indexedDB.open("fx-pages", 1);
     open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
     open.onsuccess = function () {
       try {
-        open.result.transaction("handles", "readwrite")
-            .objectStore("handles").put(handle, "drive");
+        var store = open.result.transaction("handles", "readwrite").objectStore("handles");
+        if (handle) store.put(handle, "drive");
+        else store.delete("drive");
       } catch (e) {}
     };
   } catch (e) {}
+}
+
+// Settle as the promise does, or with null where it fails or is still waiting after ms
+function withinTime(promise, ms) {
+  return new Promise(function (settle) {
+    var timer = setTimeout(function () { settle(null); }, ms);
+    promise.then(function (value) { clearTimeout(timer); settle(value); },
+                 function () { clearTimeout(timer); settle(null); });
+  });
 }
 
 function rememberedDrive() {
@@ -43,14 +59,19 @@ function rememberedDrive() {
 }
 
 async function pickDrive(fresh) {
-  var kept = await rememberedDrive();
+  var kept = await withinTime(rememberedDrive(), REMEMBERED_WAIT_MS);
+  // Check if the page may still reach the remembered drive, as it may after a reload, so it
+  // reopens without the dialog. A new browser session asks again through the dialog
   if (kept && !fresh) {
-    try {
-      if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
-        await kept.getFileHandle("effects.txt");
-        return kept;
-      }
-    } catch (e) {}
+    var allowed = await withinTime(kept.queryPermission({mode: "readwrite"}), REMEMBERED_WAIT_MS);
+    if (allowed === "granted" &&
+        await withinTime(kept.getFileHandle("effects.txt"), REMEMBERED_WAIT_MS)) return kept;
+    // Check if the drive has gone or the browser gave no answer, and forget it. A drive only
+    // waiting for permission still starts the dialog
+    if (allowed !== "prompt") {
+      rememberDrive(null);
+      kept = null;
+    }
   }
   var picked;
   try {
@@ -191,7 +212,11 @@ export async function openDrive(fresh) {
     await connect(fresh);
     banner("");
   } catch (e) {
-    if (e.name === "AbortError") return;
+    // Check if the dialog, or the browser's question about editing files, was cancelled or closed
+    if (e.name === "AbortError") {
+      banner("No drive was opened.");
+      return;
+    }
     if (e.name === "NotAnFxDrive") {
       banner("That folder has no effects.txt, so it is " +
              "not an FX drive. Choose the drive named FX.", true);
