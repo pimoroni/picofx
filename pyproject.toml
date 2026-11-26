@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "picofx"
-version = "1.2.0"
+version = "1.2.1"
 dynamic = ["readme"]
 authors = [
     { name = "Chris P", email = "chris@pimoroni.com" },
