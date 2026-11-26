@@ -188,6 +188,7 @@ class SPCEPort(ScreenPort):
         # on a motor input drives it before that thing's own code has run
         if self.__pins is not None:
             for pin in self.__pins:     # All five, including any that are another port's chip selects
+                pin.init(Pin.OUT, value=0)      # Low first, as an RP2350 A2 pad left high stays high under a pull-down
                 pin.init(Pin.IN, Pin.PULL_DOWN)
 
 

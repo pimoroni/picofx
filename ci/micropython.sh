@@ -16,7 +16,8 @@ PIMORONI_AYE_ARR_VERSION="patch/receive-by-dma"
 PIMORONI_PICOVECTOR_VERSION="rgba4444-pixel-format"
 
 PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
-PIMORONI_SPIDISPLAY_VERSION="v1.0.0"
+# v1.0.0 with the RP2350 A2 fixes for a screen pair's TE reads and a released port's lines
+PIMORONI_SPIDISPLAY_VERSION="patch/a2-te-reads"
 
 PIMORONI_LSM6DS3_FLAVOUR="pimoroni"
 PIMORONI_LSM6DS3_VERSION="v0.0.3"
