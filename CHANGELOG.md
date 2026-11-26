@@ -1,5 +1,13 @@
 # Changelog
 
+1.2.1
+-----
+
+**Mighty FX**
+
+* Fixed a SP/CE connector's lines reading high after `release()` on an RP2350 A2
+* Fixed a screen pair's first frame after a pause running about a quarter of a second late on an RP2350 A2
+
 1.2.0
 -----
 
