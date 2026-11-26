@@ -50,7 +50,7 @@ These go before the colon, separate from what it plays:
 | --- | --- | --- |
 | `rotation` | 0, 90, 180 or 270, for how the screen is mounted | 0 |
 | `backlight` | backlight brightness, 0 to 1, such as 0.5 or 50% | 1 |
-| `mirror` | true to flip the picture left to right | no |
+| `mirror` | true to flip the whole screen left to right | no |
 | `offset` | the picture's position, as `x\|y` | centred |
 | `background` | the colour behind the picture, or `bg` for short | black |
 | `pixel_double` | true to draw each pixel at double size, so a half size picture fills the screen | no |
@@ -64,6 +64,10 @@ __SCREEN__ tile=repeat: image file=bricks.png
 
 A picture is centred unless `offset` places it, and a `*` in place of either
 number centres it on that axis.
+
+`mirror` flips everything on the screen, so an `offset` counts from the right
+instead of the left. A mirrored screen at 90 or 270 is mounted the other way
+round from one that is not, as the picker's drawing of the screen shows.
 
 `tile` fills the screen with copies of a small picture instead of a
 background. `repeat` lays copies side by side, so a picture drawn to join up

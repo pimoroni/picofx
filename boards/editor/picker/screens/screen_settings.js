@@ -130,10 +130,11 @@ function lightSlider(value, change, title, words) {
 
 // ---- orientation ----
 
-// The module's driver chip is at its bottom edge, so the mark is there
-function rotationMark(turn) {
+// The module's driver chip is at its bottom edge, so the mark is there. It turns as the module
+// drawing does, the other way to the picture unless mirrored
+function rotationMark(turn, mirrored) {
   return "<svg width='12' height='12' viewBox='0 0 12 12' aria-hidden='true'><g transform='rotate(" +
-         turn + " 6 6)'><rect x='3' y='1' width='6' height='10' rx='1' fill='none' " +
+         (mirrored ? turn : -turn) + " 6 6)'><rect x='3' y='1' width='6' height='10' rx='1' fill='none' " +
          "stroke='currentColor' stroke-width='1.3'/><rect x='4.5' y='8.8' width='3' height='1.4' " +
          "fill='currentColor'/></g></svg>";
 }
@@ -149,11 +150,11 @@ function orientationFold(key, held) {
   var look = held.look;
   var turn = Number(held.turn || 0);
   var rotation = segment([0, 90, 180, 270].map(function (value) {
-    return [value, rotationMark(value) + value + "&deg;"];
+    return [value, rotationMark(value, look.mirror) + value + "&deg;"];
   }), turn, function (value) { setTurn(held, value); }, "Screen rotation", "Rotation");
   rotation.classList.add("rotationseg");
   var mirror = toggle("&#8646;", "Mirror", look.mirror, function (on) { look.mirror = on; },
-                      "Flip the picture left to right");
+                      "Flip the whole screen left to right");
   return foldSection(key, "Orientation", turn + "\u00b0, " + (look.mirror ? "mirrored"
                                                                           : "not mirrored"),
                      sline(named("Rotation"), rotation, mirror));

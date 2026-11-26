@@ -37,6 +37,9 @@ function panelDrawing(screen) {
   var made = MODULE[screen.size] || MODULE["2.8"];
   var turn = Number(screen.turn || 0);
   var quarter = turn % 180 === 90;
+  // The board turns the picture clockwise on the panel, so the module turns the other way to show
+  // it upright. A mirrored screen is the mirror image of that mounting, which turns with the picture
+  var drawnTurn = screen.look && screen.look.mirror ? turn : -turn;
 
   var boardW = made.board[0];
   var boardH = made.board[1];
@@ -113,7 +116,7 @@ function panelDrawing(screen) {
   var holder = h("div", {
     className: "holder",
     html: "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " +
-          extent + "'><g transform='rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) +
+          extent + "'><g transform='rotate(" + drawnTurn + " " + (extent / 2) + " " + (extent / 2) +
           ")'>" + parts.join("") + "</g></svg>"
   });
   if (!art) return holder;
@@ -430,7 +433,7 @@ function artImage(art) {
 var composed = new WeakMap();
 
 // The panel as the board would draw it, with the background, then the picture where the look puts
-// it, doubled, flipped or tiled, under the light's dimming. Sized to the panel as it is turned,
+// it, doubled, tiled or mirrored, under the light's dimming. Sized to the panel as it is turned,
 // so the module drawing shows it whole
 function composedArt(screen, look, art) {
   var panel = PANEL_PX[screen.size] || PANEL_PX["2.8"];
@@ -455,6 +458,12 @@ function composeOnto(g, screen, look, art, image, wide, high) {
   g.imageSmoothingEnabled = false;
   g.fillStyle = look.bg;
   g.fillRect(0, 0, wide, high);
+  // Mirror the whole panel left to right, placement and tiling included, as the board does
+  g.save();
+  if (look.mirror) {
+    g.translate(wide, 0);
+    g.scale(-1, 1);
+  }
 
   var scale = look.double ? 2 : 1;
   var pictureW = art.w * scale;
@@ -482,10 +491,11 @@ function composeOnto(g, screen, look, art, image, wide, high) {
     for (var x = firstX; x <= lastX; x += pictureW) {
       var across = Math.round((x - left) / pictureW);
       var down = Math.round((y - top) / pictureH);
-      copy(x, y, look.mirror !== (look.tile === "mirror" && across % 2 !== 0),
+      copy(x, y, look.tile === "mirror" && across % 2 !== 0,
            tileDown === "mirror" && down % 2 !== 0);
     }
   }
+  g.restore();
 
   if (look.backlight < 1) {
     g.fillStyle = "rgba(0,0,0," + ((1 - look.backlight) * 0.9) + ")";
