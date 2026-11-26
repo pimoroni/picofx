@@ -1598,8 +1598,8 @@ document.getElementById("save").onclick = async function () {
       banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
              "is showing, double-press Boot if it is not, then try again.", true);
   } finally {
-    button.disabled = false;
-    // A failed save lets go of the drive, and Check board has nothing to read until it is opened
+    // A failed save lets go of the drive, so neither button works until it is opened again
+    button.disabled = !state.fileHandle;
     check.disabled = !state.dirHandle;
   }
 };
