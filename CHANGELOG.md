@@ -9,6 +9,8 @@
 * After the browser restarts, Open FX drive shows the folder chooser at the FX drive instead of asking to restore access
 * Open FX drive says when no drive was opened, such as after Cancel
 * The editor's Save to board stays disabled after a failed save until a drive is opened again, as the picker's does
+* Fixed the picker drawing a screen at rotation 90 or 270 mounted the wrong way round
+* The picker previews a mirrored screen as the board shows it, with its placement and tiling flipped too
 
 **Mighty FX**
 
