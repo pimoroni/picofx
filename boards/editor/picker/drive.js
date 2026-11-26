@@ -232,6 +232,11 @@ function openFresh() { openDrive(true); }
 
 export var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
+// Whether the computer runs Linux, not counting Android or ChromeOS. Linux writes a save's contents
+// at once, but the directory entry naming them waits long past this page's wait for the board,
+// unless the drive is ejected first
+export var ON_LINUX = /Linux/.test(navigator.platform) && !/Android|CrOS/.test(navigator.userAgent);
+
 
 // The drive's handles, and the page's text as it was last read from or saved to the drive, which
 // says whether the page holds changes not yet saved

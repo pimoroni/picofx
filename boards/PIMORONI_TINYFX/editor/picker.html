@@ -9492,6 +9492,7 @@ function openFresh() {
   openDrive(true);
 }
 var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
+var ON_LINUX = /Linux/.test(navigator.platform) && !/Android|CrOS/.test(navigator.userAgent);
 var drive = { dirHandle: null, fileHandle: null, text: null };
 var WROTE_KEY = "fx-picker-wrote";
 function overwriteQuestion() {
@@ -11910,6 +11911,14 @@ function renderPreview() {
   }
 }
 drawParts.preview = renderPreview;
+function linuxEjectWords(onBoard, setBefore, setNow) {
+  var programBefore = /\bprogram=/.test(setBefore);
+  if (programBefore && !playsItself(onBoard))
+    return " and then press " + BOARD.release.reset_button + " to play this change.";
+  if (playsItself(onBoard) && (programBefore || /\bprogram=/.test(setNow)))
+    return " to play this change." + (/\bdrive=manual\b/.test(setNow) ? "" : " The drive will come back once the board restarts.");
+  return " to play it. Then double-press Boot to show the drive again and press 'Check board'.";
+}
 document.getElementById("save").onclick = async function() {
   var button = this;
   var check = document.getElementById("check");
@@ -11950,6 +11959,11 @@ document.getElementById("save").onclick = async function() {
     var setNow = uncommented(text);
     var setBefore = uncommented(onBoard);
     var hides = /\bdrive=manual\b/.test(setNow) && !/\bdrive=manual\b/.test(setBefore) ? " The drive will be hidden next time the board starts. Double-press Boot to show it." : "";
+    if (ON_LINUX) {
+      banner("Saved. On Linux eject the FX drive" + linuxEjectWords(onBoard, setBefore, setNow) + hides);
+      setReportedSave(text);
+      return;
+    }
     if (/\bprogram=/.test(setBefore)) {
       if (playsItself(onBoard)) {
         var running = /\bprogram=/.test(setNow);

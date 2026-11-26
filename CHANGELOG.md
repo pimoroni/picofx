@@ -11,6 +11,7 @@
 * The editor's Save to board stays disabled after a failed save until a drive is opened again, as the picker's does
 * Fixed the picker drawing a screen at rotation 90 or 270 mounted the wrong way round
 * The picker previews a mirrored screen as the board shows it, with its placement and tiling flipped too
+* The picker and editor say to eject the FX drive after a save on Linux as it holds back part of each save for a minute or more
 
 **Mighty FX**
 

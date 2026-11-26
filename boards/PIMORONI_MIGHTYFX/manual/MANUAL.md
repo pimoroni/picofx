@@ -1380,6 +1380,12 @@ If the FX drive doesn't appear on your computer, double-press **Boot** to show
 it. This can happen on a Mac that was locked when the board was plugged in or
 restarted. The Mac ejects the drive, and it stays hidden after you log in.
 
+Linux holds back part of each save for a minute or more and the board keeps
+playing the old effects meanwhile. Ejecting the FX drive sends the save at
+once. On Linux eject the drive after each save and then double-press **Boot**
+to show it again. Pressing **Reset** before the save has arrived
+loses it.
+
 A drive that cannot be repaired can be returned to how it shipped by
 installing the board's `-full` firmware from the
 [picofx releases](https://github.com/pimoroni/picofx/releases/latest).

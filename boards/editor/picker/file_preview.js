@@ -1,8 +1,8 @@
 import {banner, reportedSave, saving, setReportedSave} from "./banner.js";
 import {DRAW_AFTER, addStep, draw, drawParts, drawSteps} from "./draw.js";
 import {
-  CAN_REACH_A_DRIVE, CHECKING, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking, openDrive,
-  overwriteQuestion, playsItself, readErrors, sayWhatHappened, uncommented, waitForBoard,
+  CAN_REACH_A_DRIVE, CHECKING, ON_LINUX, SAVING_TAIL_MS, WROTE_KEY, connect, drive, markChecking,
+  openDrive, overwriteQuestion, playsItself, readErrors, sayWhatHappened, uncommented, waitForBoard,
   waitForReturn
 } from "./drive.js";
 import {BOARD} from "./looks.js";
@@ -105,6 +105,20 @@ export function renderPreview() {
 }
 drawParts.preview = renderPreview;
 
+// The words after "eject the FX drive" for a save on Linux. A program that does not restart on a
+// save needs a reset to read it. A board that restarts shows the drive again itself unless the
+// file says drive=manual, and one that plays the save in place keeps it hidden until Boot is
+// double-pressed
+function linuxEjectWords(onBoard, setBefore, setNow) {
+  var programBefore = /\bprogram=/.test(setBefore);
+  if (programBefore && !playsItself(onBoard))
+    return " and then press " + BOARD.release.reset_button + " to play this change.";
+  if (playsItself(onBoard) && (programBefore || /\bprogram=/.test(setNow)))
+    return " to play this change." + (/\bdrive=manual\b/.test(setNow)
+           ? "" : " The drive will come back once the board restarts.");
+  return " to play it. Then double-press Boot to show the drive again and press 'Check board'.";
+}
+
 document.getElementById("save").onclick = async function () {
   var button = this;
   var check = document.getElementById("check");
@@ -142,6 +156,13 @@ document.getElementById("save").onclick = async function () {
     var hides = /\bdrive=manual\b/.test(setNow) && !/\bdrive=manual\b/.test(setBefore)
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
+    // Check if the computer runs Linux, where the board sees the save promptly only after an eject
+    if (ON_LINUX) {
+      banner("Saved. On Linux eject the FX drive" + linuxEjectWords(onBoard, setBefore, setNow) +
+             hides);
+      setReportedSave(text);
+      return;
+    }
     // Check if the board is running a program. A program keeps it busy, so neither an eject nor a
     // press of Boot reaches it
     if (/\bprogram=/.test(setBefore)) {
