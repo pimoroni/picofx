@@ -1369,6 +1369,11 @@ async function askByInput() {
 // Whether the browser can hand the page a folder to write to, as only Chromium browsers can
 var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
+// Whether the computer runs Linux, not counting Android or ChromeOS. Linux writes a save's contents
+// at once, but the directory entry naming them waits long past this page's wait for the board,
+// unless the drive is ejected first
+var ON_LINUX = /Linux/.test(navigator.platform) && !/Android|CrOS/.test(navigator.userAgent);
+
 // Edge is named only on Windows, which comes with it
 var ONE_CLICK_BROWSERS = "Chrome" + (/Win/.test(navigator.platform) ? " or Edge" : "") +
                          ", or another browser built on Chromium,";
@@ -1396,6 +1401,20 @@ var BOARD_POLL_MS = 250;
 
 // The board's own name for its reset button, as its description gives it
 var RESET_BUTTON = "__RESET_BUTTON__";
+
+// The words after "eject the FX drive" for a save on Linux. A program that does not restart on a
+// save needs a reset to read it. A board that restarts shows the drive again itself unless the
+// file says drive=manual, and one that plays the save in place keeps it hidden until Boot is
+// double-pressed
+function linuxEjectWords(onBoard, setBefore, setNow) {
+  var programBefore = /\bprogram=/.test(setBefore);
+  if (programBefore && !playsItself(onBoard))
+    return " and then press " + RESET_BUTTON + " to play this change.";
+  if (playsItself(onBoard) && (programBefore || /\bprogram=/.test(setNow)))
+    return " to play this change." + (/\bdrive=manual\b/.test(setNow)
+           ? "" : " The drive will come back once the board restarts.");
+  return " to play it. Then double-press Boot to show the drive again and press 'Check board'.";
+}
 
 // The file with each line's comment cut off, so a setting in a comment is not taken as set
 function uncommented(text) {
@@ -1544,6 +1563,12 @@ document.getElementById("save").onclick = async function () {
                 !/\bdrive=manual\b/.test(uncommented(running))
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
+    // Check if the computer runs Linux, where the board sees the save promptly only after an eject
+    if (ON_LINUX) {
+      banner("Saved. On Linux eject the FX drive" +
+             linuxEjectWords(running, uncommented(running), uncommented(text)) + hides);
+      return;
+    }
     // Check if the board is running a program, which keeps it too busy for an eject or a press
     if (/\bprogram=/.test(uncommented(running))) {
       // Check if the file it started with lets a save restart it, as it does unless it says
