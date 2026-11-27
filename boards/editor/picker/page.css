@@ -277,6 +277,8 @@ button.round {
    stretch is off */
 :root {
   --through: repeating-linear-gradient(45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px, transparent 6px, transparent 12px);
+  /* The same stripes for something flipped left to right, which turns them back to 45 degrees */
+  --through-mirrored: repeating-linear-gradient(-45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px, transparent 6px, transparent 12px);
 }
 
 .sec .lit.through {
@@ -2363,6 +2365,11 @@ html {
   border-radius: var(--radius-xs);
   background: var(--unlit) center/cover no-repeat;
   box-shadow: inset 0 0 0 1.5px var(--cell);
+}
+
+/* A mirrored screen's picture, flipped left to right as the board shows it */
+.screencell.mirrored {
+  transform: scaleX(-1);
 }
 
 /* The Screens tab has room across, so its screens sit beside its name at the tab's full

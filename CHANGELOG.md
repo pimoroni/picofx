@@ -1,5 +1,12 @@
 # Changelog
 
+1.2.2
+-----
+
+**FX drive**
+
+* Fixed the Screens tab's small pictures showing a mirrored screen the wrong way round
+
 1.2.1
 -----
 
