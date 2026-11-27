@@ -223,6 +223,12 @@ export function mediaArt(name, style) {
   return styled ? mediaArt(name) : null;
 }
 
+// The stripes of nothing for a swatch cell. A mirrored cell takes them at the other angle, so they
+// lie as every other cell's do once the cell is flipped
+export function throughFor(mirrored) {
+  return mirrored ? "var(--through-mirrored)" : "var(--through)";
+}
+
 // The tab's swatch is a cell for each screen, showing what it shows
 tabSwatches.screensPanel = function (swatch) {
   swatch.className = "accswatch screenswatch";
@@ -236,10 +242,14 @@ tabSwatches.screensPanel = function (swatch) {
     // A picture with no thumbnail yet is a white tile, since its screen does show something
     var marked = !screen.there ? "absent" : screen.off ? "off" : art ? ""
                : shown ? "blank" : under && under.off ? "dark" : "nothing";
+    // Always on's picture shows in Always on's settings, and a mirrored one flips as the board does
+    var look = under && under.always ? state.always.body.screens[letter].look || screen.look : screen.look;
+    var mirrored = !!(art && look && look.mirror);
     // Always on's picture wears the stripes of nothing over it
     return h("span", {
-      className: "screencell " + letter.toLowerCase() + (marked ? " " + marked : ""),
-      style: {"background-image": art ? (under && under.always ? "var(--through), " : "") +
+      className: "screencell " + letter.toLowerCase() + (marked ? " " + marked : "") +
+                 (mirrored ? " mirrored" : ""),
+      style: {"background-image": art ? (under && under.always ? throughFor(mirrored) + ", " : "") +
                                         "url(" + art.url + ")" : null}
     });
   }));

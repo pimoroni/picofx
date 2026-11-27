@@ -5,7 +5,7 @@ import {
   BODY_ORDER, DRIVE_ORDER, allBodies, apply, bodyParts, driveParts, otherScenes, slotAt, state,
   store
 } from "../scenes.js";
-import {mediaArt} from "../screens/screen_art.js";
+import {mediaArt, throughFor} from "../screens/screen_art.js";
 import {chosenAfresh} from "../screens/screen_settings.js";
 import {ASSET_ORDER, HEAD_AFTER, assetSteps, screensHeadSteps} from "../screens/screens.js";
 import {tabSwatches} from "../tabs.js";
@@ -300,9 +300,12 @@ tabSwatches.screensPanel = function (swatch) {
     // A picture with no thumbnail yet is a white tile, since its position does show something
     var marked = !placeThere(place) ? "absent" : held.off ? "off" : art ? ""
                : shown ? "blank" : under && under.off ? "dark" : "nothing";
+    // Always on's picture shows in Always on's settings, and a mirrored one flips as the board does
+    var look = !held.shows && under && under.always ? under.always.look || held.look : held.look;
+    var mirrored = !!(art && look && look.mirror);
     return h("span", {
-      className: "screencell " + hubInk() + (marked ? " " + marked : ""),
-      style: {"background-image": art ? (under && under.always ? "var(--through), " : "") +
+      className: "screencell " + hubInk() + (marked ? " " + marked : "") + (mirrored ? " mirrored" : ""),
+      style: {"background-image": art ? (under && under.always ? throughFor(mirrored) + ", " : "") +
                                         "url(" + art.url + ")" : null}
     });
   }));
